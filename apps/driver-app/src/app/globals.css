@@ -1,22 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap');
 
-:root {
-  --bg-dark: #090d16;
-  --bg-card: #151c2e;
-  --primary: #10b981;
-  --primary-hover: #059669;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+/* Dynamic CSS Theme System */
+[data-theme="dark"] {
+  --bg-app: #090d16;
+  --bg-card: rgba(15, 23, 42, 0.85);
+  --bg-subbox: rgba(2, 6, 23, 0.6);
+  --bg-banner: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%);
+  --border-card: rgba(255, 255, 255, 0.08);
+  --border-banner: rgba(16, 185, 129, 0.35);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-accent: #34d399;
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --header-bg: #0f172a;
+}
+
+[data-theme="light"] {
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subbox: #f1f5f9;
+  --bg-banner: #ffffff;
+  --border-card: #e2e8f0;
+  --border-banner: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-accent: #059669;
+  --shadow-card: 0 4px 18px rgba(15, 23, 42, 0.04);
+  --header-bg: #ffffff;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   background-color: #020617;
-  color: var(--text-main);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -28,7 +46,8 @@ body {
   width: 100%;
   max-width: 440px;
   height: 860px;
-  background: var(--bg-dark);
+  background: var(--bg-app);
+  color: var(--text-primary);
   border-radius: 40px;
   border: 10px solid #1e293b;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
@@ -36,21 +55,94 @@ body {
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-.sos-button {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 0.85rem;
-  font-weight: 800;
-  font-size: 1rem;
+/* Hide Native Scrollbar Tracks Globally */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+}
+
+* {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Semantic Theme Utility Classes */
+.card-ui {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-card) !important;
+  box-shadow: var(--shadow-card) !important;
+  color: var(--text-primary) !important;
+  border-radius: 18px;
+}
+
+.banner-card {
+  background: var(--bg-banner) !important;
+  border: 1px solid var(--border-banner) !important;
+  box-shadow: var(--shadow-card) !important;
+  color: var(--text-primary) !important;
+  border-radius: 20px;
+}
+
+.subbox-ui {
+  background: var(--bg-subbox) !important;
+  border: 1px solid var(--border-card) !important;
+  color: var(--text-primary) !important;
+  border-radius: 14px;
+}
+
+.text-title {
+  color: var(--text-primary) !important;
+}
+
+.text-muted-custom {
+  color: var(--text-secondary) !important;
+}
+
+/* Animations */
+@keyframes pulseDriver {
+  0% { transform: scale(0.96); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 0 45px rgba(16, 185, 129, 0.65); }
+  100% { transform: scale(0.96); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+}
+
+.driver-emblem {
+  animation: pulseDriver 2.5s ease-in-out infinite;
+}
+
+/* Sidebar Drawer Overlay */
+.sidebar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 250;
+  animation: fadeIn 0.2s ease;
+}
+
+.sidebar-drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 290px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-card);
+  z-index: 300;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
-  cursor: pointer;
-  width: 100%;
+  flex-direction: column;
+  animation: slideRight 0.25s ease;
+}
+
+@keyframes slideRight {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

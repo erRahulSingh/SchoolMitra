@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { SchoolModel } from "../../models/School";
+import { SchoolModel } from "../../models/AuthSchemas";
 
 export const getAllSchools = async (req: Request, res: Response) => {
   const schools = await SchoolModel.find().lean();

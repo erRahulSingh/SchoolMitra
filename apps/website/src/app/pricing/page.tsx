@@ -72,7 +72,8 @@ export default function PricingPage() {
             </div>
           </div>
           <Link href="/pricing" className="nav-link" style={{ color: "var(--primary)", fontWeight: 800 }}>Pricing</Link>
-          <Link href="/contact" className="nav-link">Contact</Link>
+          <Link href="/resources" className="nav-link">Resources</Link>
+          <Link href="/about" className="nav-link">About Us</Link>
         </div>
 
         {/* Right Nav Actions */}

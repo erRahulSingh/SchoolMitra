@@ -50,11 +50,10 @@ const NAV_SECTIONS = [
     items: [
       { label: "Fee Collection", href: "/fees", icon: CreditCard },
       { label: "Live Bus Transport", href: "/transport", icon: Bus },
-      { label: "Library Catalog", href: "/library", icon: Library },
-      { label: "Inventory & Assets", href: "/inventory", icon: Package },
-      { label: "HR & Staff Payroll", href: "/hr", icon: Briefcase },
-      { label: "Communication Center", href: "/communication", icon: MessageSquare },
+      { label: "Notifications Hub", href: "/notifications", icon: MessageSquare },
+      { label: "Activity Audit Logs", href: "/activity-logs", icon: ClipboardList },
       { label: "Reports & Analytics", href: "/reports", icon: BarChart3 },
+      { label: "School Profile", href: "/profile", icon: Building2 },
       { label: "School Settings", href: "/settings", icon: Settings },
     ]
   }

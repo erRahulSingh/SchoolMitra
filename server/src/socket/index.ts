@@ -37,6 +37,14 @@ export const initSocketServer = (io: SocketIOServer) => {
       });
     });
 
+    // Student Boarding / Drop Status Broadcast
+    socket.on("driver:student_status_changed", (data: { studentId: string; studentName: string; status: string; timestamp: string }) => {
+      io.emit("parent:student_status_update", {
+        ...data,
+        notificationText: `${data.studentName} is marked as ${data.status} at ${data.timestamp}`
+      });
+    });
+
     socket.on("disconnect", () => {
       console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
     });

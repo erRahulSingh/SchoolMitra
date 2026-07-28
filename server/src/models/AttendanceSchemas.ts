@@ -1,6 +1,127 @@
+// ═══════════════════════════════════════════════════════════
+// SchoolMitra — Module 3: Attendance Collections (3)
+// ═══════════════════════════════════════════════════════════
+
 import { Schema, model } from "mongoose";
 
-// 3. Attendance Collections
-export const StudentAttendanceModel = model("studentAttendance", new Schema({ studentId: Schema.Types.ObjectId, date: String, status: String, class: String }, { timestamps: true }));
-export const TeacherAttendanceModel = model("teacherAttendance", new Schema({ teacherId: Schema.Types.ObjectId, date: String, status: String }, { timestamps: true }));
-export const StaffAttendanceModel = model("staffAttendance", new Schema({ staffId: Schema.Types.ObjectId, date: String, status: String }, { timestamps: true }));
+// ──────────── 16. STUDENT ATTENDANCE ────────────
+const studentAttendanceSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  studentId: {
+    type: Schema.Types.ObjectId,
+    ref: "students",
+    required: true,
+    index: true,
+  },
+  classId: {
+    type: Schema.Types.ObjectId,
+    ref: "classes",
+    required: true,
+  },
+  sectionId: {
+    type: Schema.Types.ObjectId,
+    ref: "sections",
+    required: true,
+  },
+  date: {
+    type: Date,
+    required: [true, "Date is required"],
+    index: true,
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ["Present", "Absent", "Late", "HalfDay", "Holiday", "Leave"],
+    default: "Present",
+  },
+  markedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+  },
+  remark: { type: String, trim: true, maxlength: 200 },
+}, { timestamps: true });
+
+studentAttendanceSchema.index({ schoolId: 1, classId: 1, date: -1 });
+studentAttendanceSchema.index({ schoolId: 1, studentId: 1, date: -1 });
+// Prevent duplicate attendance per student per day
+studentAttendanceSchema.index({ schoolId: 1, studentId: 1, date: 1 }, { unique: true });
+export const StudentAttendanceModel = model("studentAttendance", studentAttendanceSchema);
+
+// ──────────── 17. TEACHER ATTENDANCE ────────────
+const teacherAttendanceSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  teacherId: {
+    type: Schema.Types.ObjectId,
+    ref: "teachers",
+    required: true,
+    index: true,
+  },
+  date: {
+    type: Date,
+    required: true,
+    index: true,
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ["Present", "Absent", "Late", "HalfDay", "Holiday", "Leave"],
+    default: "Present",
+  },
+  checkInTime: { type: String },
+  checkOutTime: { type: String },
+  markedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+  },
+}, { timestamps: true });
+
+teacherAttendanceSchema.index({ schoolId: 1, date: -1 });
+teacherAttendanceSchema.index({ schoolId: 1, teacherId: 1, date: 1 }, { unique: true });
+export const TeacherAttendanceModel = model("teacherAttendance", teacherAttendanceSchema);
+
+// ──────────── 18. STAFF ATTENDANCE ────────────
+const staffAttendanceSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  staffId: {
+    type: Schema.Types.ObjectId,
+    ref: "staff",
+    required: true,
+    index: true,
+  },
+  date: {
+    type: Date,
+    required: true,
+    index: true,
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ["Present", "Absent", "Late", "HalfDay", "Holiday", "Leave"],
+    default: "Present",
+  },
+  checkInTime: { type: String },
+  checkOutTime: { type: String },
+  markedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+  },
+}, { timestamps: true });
+
+staffAttendanceSchema.index({ schoolId: 1, date: -1 });
+staffAttendanceSchema.index({ schoolId: 1, staffId: 1, date: 1 }, { unique: true });
+export const StaffAttendanceModel = model("staffAttendance", staffAttendanceSchema);

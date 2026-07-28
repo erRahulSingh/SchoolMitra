@@ -1,143 +1,211 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { 
-  ShieldCheck, 
-  Building2, 
-  DollarSign, 
-  Users, 
-  HardDrive, 
-  Activity, 
-  Plus, 
-  ToggleLeft, 
-  ToggleRight, 
-  Search,
-  Server,
-  FileText,
-  Key
+  Building2, CheckCircle2, Clock, AlertCircle, 
+  GraduationCap, Users, Bus, DollarSign, TrendingUp, 
+  LogIn, Activity, Plus, Search, Shield, Eye, Edit3, 
+  Trash2, Ban, ChevronRight, Download, Server, Sparkles 
 } from "lucide-react";
 
-export default function SuperAdminPage() {
-  const [schools, setSchools] = useState([
-    { id: "sch-101", name: "Delhi Public School", city: "New Delhi", code: "DPS-DEL", plan: "Enterprise", status: "Active", mrr: 185000, gpsEnabled: true, feesEnabled: true },
-    { id: "sch-102", name: "GD Goenka Public School", city: "Gurugram", code: "GDS-GUG", plan: "Pro", status: "Active", mrr: 120000, gpsEnabled: true, feesEnabled: true },
-    { id: "sch-103", name: "Ryan International", city: "Noida", plan: "Pro", status: "Active", mrr: 145000, gpsEnabled: false, feesEnabled: true },
-    { id: "sch-104", name: "St. Xavier Academy", city: "Faridabad", code: "SXA-FAR", plan: "Starter", status: "Active", mrr: 9999, gpsEnabled: true, feesEnabled: false },
+export default function SuperAdminDashboard() {
+  const [metrics] = useState({
+    totalSchools: 148,
+    activeSchools: 124,
+    trialSchools: 18,
+    expiredSchools: 6,
+    totalStudents: "1,42,850",
+    totalParents: "2,10,400",
+    totalDrivers: "3,240",
+    totalRevenue: "₹ 1.84 Cr",
+    monthlyRevenue: "₹ 24.8L",
+    todaysLogins: "48,920",
+    activeSessions: "8,450"
+  });
+
+  const [recentSchools] = useState([
+    { id: "SCH-101", name: "Delhi Public School (Dwarka)", plan: "Enterprise Pro", status: "Active", students: 1420, parents: 2100, drivers: 18, mrr: "₹ 45,000", expiry: "12 Dec 2027" },
+    { id: "SCH-102", name: "St. Xavier's Senior Secondary School", plan: "Growth Plan", status: "Active", students: 980, parents: 1450, drivers: 12, mrr: "₹ 32,000", expiry: "15 Oct 2026" },
+    { id: "SCH-103", name: "DAV Public School (Vasant Kunj)", plan: "Trial (14 Days)", status: "Trial", students: 1100, parents: 1600, drivers: 14, mrr: "₹ 0 (Trial)", expiry: "05 Aug 2026" },
+    { id: "SCH-104", name: "Kendriya Vidyalaya Sector 8", plan: "Starter Plan", status: "Expired", students: 650, parents: 900, drivers: 8, mrr: "₹ 18,000", expiry: "20 Jul 2026" },
+    { id: "SCH-105", name: "Modern School (Barakhamba Road)", plan: "Enterprise Pro", status: "Active", students: 2400, parents: 3600, drivers: 28, mrr: "₹ 75,000", expiry: "01 Jan 2028" }
   ]);
 
-  const toggleGps = (id: string) => {
-    setSchools(schools.map(s => s.id === id ? { ...s, gpsEnabled: !s.gpsEnabled } : s));
-  };
-
-  const totalMRR = schools.reduce((acc, s) => acc + s.mrr, 0);
-
   return (
-    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
+      
+      {/* HERO BANNER */}
+      <div className="glass-card" style={{
+        background: "linear-gradient(135deg, rgba(139, 92, 246, 0.22) 0%, rgba(99, 102, 241, 0.12) 100%)",
+        border: "1px solid var(--border-glow)",
+        padding: "1.75rem 2rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <ShieldCheck size={28} color="var(--primary)" />
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Super Admin SaaS Console</h1>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(139, 92, 246, 0.2)", border: "1px solid rgba(139, 92, 246, 0.4)", color: "#c084fc", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
+            <Sparkles size={14} /> SaaS HQ Master Command Center
           </div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-            Internal platform for multi-tenant governance, revenue billing, feature flags, and server telemetry.
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.02em" }}>
+            SchoolMitra Enterprise Operations Dashboard
+          </h1>
+          <p style={{ color: "var(--text-muted)", marginTop: 4, fontSize: "0.875rem" }}>
+            Real-time multi-tenant telemetry, subscription revenue analytics, and server cluster activity.
           </p>
         </div>
-        <button style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '0.5rem', 
-          padding: '0.6rem 1.2rem', 
-          borderRadius: '8px', 
-          background: 'var(--primary)', 
-          color: '#fff', 
-          fontWeight: 700, 
-          border: 'none', 
-          cursor: 'pointer' 
-        }}>
-          <Plus size={16} />
-          <span>Onboard New School</span>
-        </button>
-      </div>
 
-      {/* Top Level SaaS Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-        <div className="glass-card" style={{ padding: '1.25rem' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Monthly Recurring Revenue (MRR)</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: '0.2rem', color: '#fff' }}>
-            ₹ {(totalMRR / 100000).toFixed(2)} Lakhs
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--success)', marginTop: '0.2rem' }}>+14.2% growth this month</div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '1.25rem' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Active Onboarded Schools</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: '0.2rem', color: '#fff' }}>
-            {schools.length} Schools
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>across 4 cities</div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '1.25rem' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Server Health & API Latency</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: '0.2rem', color: 'var(--success)' }}>
-            99.98% Uptime
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>24ms avg response time</div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '1.25rem' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Database Storage Usage</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: '0.2rem', color: '#fff' }}>
-            14.2 GB / 100 GB
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>MongoDB Cluster Alpha</div>
+        <div style={{ display: "flex", gap: "0.85rem" }}>
+          <button className="btn btn-secondary">
+            <Download size={16} /> Export Investor Report
+          </button>
+          <a href="/schools" className="btn btn-primary">
+            <Plus size={16} /> Add School Tenant
+          </a>
         </div>
       </div>
 
-      {/* Onboarded Schools Management Table */}
-      <div className="glass-card" style={{ padding: '1.5rem' }}>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>Multi-Tenant Onboarded Schools & Feature Toggles</h3>
+      {/* ════════════ 11 CORE METRICS GRID ════════════ */}
 
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
-              <th style={{ padding: '0.75rem' }}>School Name</th>
-              <th style={{ padding: '0.75rem' }}>Tenant Code</th>
-              <th style={{ padding: '0.75rem' }}>Location</th>
-              <th style={{ padding: '0.75rem' }}>Subscription Plan</th>
-              <th style={{ padding: '0.75rem' }}>Monthly Bill</th>
-              <th style={{ padding: '0.75rem' }}>Live GPS Feature</th>
-              <th style={{ padding: '0.75rem' }}>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schools.map((s) => (
-              <tr key={s.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1 style', fontWeight: 600 }}>{s.name}</td>
-                <td style={{ padding: '1rem', fontFamily: 'monospace', color: 'var(--primary)' }}>{s.code}</td>
-                <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{s.city}</td>
-                <td style={{ padding: '1rem' }}>
-                  <span className="badge badge-warning">{s.plan}</span>
-                </td>
-                <td style={{ padding: '1rem', fontWeight: 700 }}>₹ {s.mrr.toLocaleString('en-IN')}</td>
-                <td style={{ padding: '1rem' }}>
-                  <button 
-                    onClick={() => toggleGps(s.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: s.gpsEnabled ? 'var(--success)' : 'var(--text-muted)' }}
-                  >
-                    {s.gpsEnabled ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
-                  </button>
-                </td>
-                <td style={{ padding: '1rem' }}>
-                  <span className="badge badge-success">{s.status}</span>
-                </td>
+      {/* SECTION 1: SCHOOL TENANTS (4 CARDS) */}
+      <div>
+        <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <Building2 size={16} color="var(--primary)" /> <span>School Tenant Subscriptions</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" }}>
+          {[
+            { label: "Total Schools", value: metrics.totalSchools, sub: "Registered Tenants", color: "#8b5cf6", icon: Building2 },
+            { label: "Active Schools", value: metrics.activeSchools, sub: "Paid Subscribers", color: "#10b981", icon: CheckCircle2 },
+            { label: "Trial Schools", value: metrics.trialSchools, sub: "14-Day Active Trial", color: "#f59e0b", icon: Clock },
+            { label: "Expired Schools", value: metrics.expiredSchools, sub: "Action Required", color: "#ef4444", icon: AlertCircle }
+          ].map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div key={idx} className="glass-card" style={{ padding: "1.35rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>{item.label}</div>
+                  <div style={{ fontSize: "1.9rem", fontWeight: 900, color: item.color, marginTop: 4 }}>{item.value}</div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: 4, fontWeight: 600 }}>{item.sub}</div>
+                </div>
+                <div style={{ width: 46, height: 46, borderRadius: "var(--radius-md)", background: `${item.color}18`, border: `1px solid ${item.color}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Icon size={22} color={item.color} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* SECTION 2: END-USER ECOSYSTEM (3 CARDS) */}
+      <div>
+        <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <Users size={16} color="#38bdf8" /> <span>End-User Ecosystem Load</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
+          {[
+            { label: "Total Active Students", value: metrics.totalStudents, sub: "Across 148 schools", color: "#38bdf8", icon: GraduationCap },
+            { label: "Total Parent Accounts", value: metrics.totalParents, sub: "Mobile PWA Users", color: "#c084fc", icon: Users },
+            { label: "Total Bus Pilots", value: metrics.totalDrivers, sub: "Driver Cockpit App Users", color: "#f472b6", icon: Bus }
+          ].map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div key={idx} className="glass-card" style={{ padding: "1.35rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>{item.label}</div>
+                  <div style={{ fontSize: "1.85rem", fontWeight: 900, color: item.color, marginTop: 4 }}>{item.value}</div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: 4, fontWeight: 600 }}>{item.sub}</div>
+                </div>
+                <div style={{ width: 46, height: 46, borderRadius: "var(--radius-md)", background: `${item.color}18`, border: `1px solid ${item.color}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Icon size={22} color={item.color} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* SECTION 3: REVENUE & TRAFFIC (4 CARDS) */}
+      <div>
+        <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <DollarSign size={16} color="#34d399" /> <span>Revenue & Live System Traffic</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" }}>
+          {[
+            { label: "Total SaaS Revenue", value: metrics.totalRevenue, sub: "ARR Billing", color: "#34d399", icon: DollarSign },
+            { label: "Monthly Revenue (MRR)", value: metrics.monthlyRevenue, sub: "+12.4% vs last month", color: "#818cf8", icon: TrendingUp },
+            { label: "Today's Auth Logins", value: metrics.todaysLogins, sub: "Auth Hits", color: "#fbbf24", icon: LogIn },
+            { label: "Active WebSockets", value: metrics.activeSessions, sub: "Live Connections", color: "#34d399", icon: Activity }
+          ].map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div key={idx} className="glass-card" style={{ padding: "1.35rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 700 }}>{item.label}</div>
+                  <div style={{ fontSize: "1.85rem", fontWeight: 900, color: item.color, marginTop: 4 }}>{item.value}</div>
+                  <div style={{ fontSize: "0.72rem", color: item.color, marginTop: 4, fontWeight: 700 }}>{item.sub}</div>
+                </div>
+                <div style={{ width: 46, height: 46, borderRadius: "var(--radius-md)", background: `${item.color}18`, border: `1px solid ${item.color}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Icon size={22} color={item.color} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* RECENT TENANTS TABLE */}
+      <div className="glass-card" style={{ padding: "1.75rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+          <div>
+            <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "#ffffff" }}>Recent School Tenant Accounts</h3>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 2 }}>Overview of latest active, trial, and expired subscriptions.</p>
+          </div>
+          <a href="/schools" className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
+            Manage All 148 Schools <ChevronRight size={16} />
+          </a>
+        </div>
+
+        <div className="table-container">
+          <table className="custom-table">
+            <thead>
+              <tr>
+                <th>School Tenant & ID</th>
+                <th>SaaS Plan</th>
+                <th>Ecosystem Users</th>
+                <th>Monthly MRR</th>
+                <th>Plan Expiry</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {recentSchools.map((sch) => (
+                <tr key={sch.id}>
+                  <td>
+                    <div style={{ fontWeight: 800, color: "#ffffff", fontSize: "0.925rem" }}>{sch.name}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 700, marginTop: 2 }}>{sch.id}</div>
+                  </td>
+                  <td>
+                    <span className="badge badge-info">{sch.plan}</span>
+                  </td>
+                  <td style={{ fontSize: "0.825rem", color: "var(--text-muted)" }}>
+                    <strong style={{ color: "#fff" }}>{sch.students}</strong> STU • <strong style={{ color: "#fff" }}>{sch.parents}</strong> PAR • <strong style={{ color: "#fff" }}>{sch.drivers}</strong> DRV
+                  </td>
+                  <td style={{ fontWeight: 900, color: "#34d399", fontSize: "0.95rem" }}>{sch.mrr}</td>
+                  <td style={{ fontSize: "0.825rem", color: "var(--text-muted)" }}>{sch.expiry}</td>
+                  <td>
+                    <span className={`badge ${
+                      sch.status === "Active" ? "badge-success" : sch.status === "Trial" ? "badge-warning" : "badge-danger"
+                    }`}>
+                      {sch.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
   );
 }

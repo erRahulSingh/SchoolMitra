@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { GraduationCap, ArrowRight, Sun, Moon, ChevronDown, FileText, Bus, Smartphone } from "lucide-react";
 
-export function Navbar() {
+export default function Navbar() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const pathname = usePathname();
 
   useEffect(() => {
     const currentTheme = document.documentElement.getAttribute("data-theme") as "light" | "dark";
@@ -22,17 +24,19 @@ export function Navbar() {
     <nav className="site-nav">
       {/* Brand Logo */}
       <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.65rem" }}>
-        <div style={{
-          width: 38,
-          height: 38,
-          borderRadius: 10,
-          background: "linear-gradient(135deg, #4338ca, #3b82f6)",
-          display: "flex",
-          alignItems: "center",
-          justify-content: "center",
-          color: "#ffffff",
-          boxShadow: "0 4px 12px rgba(67, 56, 202, 0.3)"
-        }}>
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 10,
+            background: "linear-gradient(135deg, #4338ca, #3b82f6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#ffffff",
+            boxShadow: "0 4px 12px rgba(67, 56, 202, 0.3)"
+          }}
+        >
           <GraduationCap size={22} />
         </div>
         <span style={{ fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
@@ -43,9 +47,24 @@ export function Navbar() {
 
       {/* Navigation Links */}
       <div className="nav-links">
-        <Link href="/features" className="nav-link">Features</Link>
+        <Link href="/" className={`nav-link ${pathname === "/" ? "active" : ""}`}>
+          Home
+        </Link>
+        <Link href="/features" className={`nav-link ${pathname === "/features" ? "active" : ""}`}>
+          Features
+        </Link>
         <div className="nav-dropdown">
-          <span className="nav-link" style={{ cursor: "pointer" }}>
+          <span
+            className={`nav-link ${
+              pathname?.startsWith("/solutions") ||
+              pathname === "/school-erp" ||
+              pathname === "/transport" ||
+              pathname === "/parent-app"
+                ? "active"
+                : ""
+            }`}
+            style={{ cursor: "pointer" }}
+          >
             Solutions <ChevronDown size={14} />
           </span>
           <div className="nav-dropdown-menu">
@@ -60,8 +79,15 @@ export function Navbar() {
             </Link>
           </div>
         </div>
-        <Link href="/pricing" className="nav-link">Pricing</Link>
-        <Link href="/contact" className="nav-link">Contact</Link>
+        <Link href="/pricing" className={`nav-link ${pathname === "/pricing" ? "active" : ""}`}>
+          Pricing
+        </Link>
+        <Link href="/resources" className={`nav-link ${pathname === "/resources" ? "active" : ""}`}>
+          Resources
+        </Link>
+        <Link href="/about" className={`nav-link ${pathname === "/about" ? "active" : ""}`}>
+          About Us
+        </Link>
       </div>
 
       {/* Right Nav Actions */}
@@ -77,7 +103,7 @@ export function Navbar() {
         <Link href="/login" className="btn-ghost-nav">
           Login
         </Link>
-        
+
         <Link href="/contact" className="btn-primary-nav">
           Get Started <ArrowRight size={15} />
         </Link>
@@ -86,4 +112,5 @@ export function Navbar() {
   );
 }
 
-export default Navbar;
+export { Navbar };
+
