@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # 1. Backend Express API & Socket.IO Telemetry Server
+  api-server:
+    build:
+      context: ../
+      dockerfile: ./server/Dockerfile
+    container_name: schoolmitra-backend-api
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb+srv://rahulengineer492_db_user:mrx3zFPgAttlcFrk@schoolmitra.qztpv50.mongodb.net/
+      - JWT_SECRET=schoolmitra-super-secret-key-2026
+      - NODE_ENV=production
+    restart: always
+
+  # 2. Product 1: SchoolMitra Website (Next.js)
+  website:
+    build:
+      context: ../
+      dockerfile: ./apps/website/Dockerfile
+    container_name: schoolmitra-website
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: always
+
+  # 3. Product 2: Super Admin Panel (Next.js)
+  super-admin:
+    build:
+      context: ../
+      dockerfile: ./apps/super-admin/Dockerfile
+    container_name: schoolmitra-super-admin
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+    restart: always
+
+  # 4. Product 3: School ERP Admin Panel (Next.js)
+  school-admin:
+    build:
+      context: ../
+      dockerfile: ./apps/school-admin/Dockerfile
+    container_name: schoolmitra-school-admin
+    ports:
+      - "3004:3000"
+    environment:
+      - NODE_ENV=production
+    restart: always
+
+  # 5. Redis Cache (Future Telemetry Buffer)
+  redis-cache:
+    image: redis:alpine
+    container_name: schoolmitra-redis
+    ports:
+      - "6379:6379"
+    restart: always
