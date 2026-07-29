@@ -20,13 +20,42 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: Install Monorepo Dependencies
-        run: npm ci --if-present
+      - name: Build & Verify Backend Server
+        run: |
+          cd server
+          npm install
+          npm run build --if-present
 
-      - name: Run TypeScript Verification & Build
-        run: npm run build --if-present
+      - name: Build & Verify Parent App
+        run: |
+          cd apps/parent-app
+          npm install
+          npm run build
+
+      - name: Build & Verify Driver App
+        run: |
+          cd apps/driver-app
+          npm install
+          npm run build
+
+      - name: Build & Verify School Admin App
+        run: |
+          cd apps/school-admin
+          npm install
+          npm run build
+
+      - name: Build & Verify Super Admin App
+        run: |
+          cd apps/super-admin
+          npm install
+          npm run build
+
+      - name: Build & Verify Website
+        run: |
+          cd apps/website
+          npm install
+          npm run build
 
   # ════════════ STAGE 2: DOCKER CONTAINER BUILDS ════════════
   docker-build:

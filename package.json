@@ -1,0 +1,9 @@
+{
+  "name": "schoolmitra-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SchoolMitra Monorepo Architecture",
+  "scripts": {
+    "build": "npm --prefix server run build && npm --prefix apps/parent-app run build && npm --prefix apps/driver-app run build && npm --prefix apps/school-admin run build && npm --prefix apps/super-admin run build && npm --prefix apps/website run build"
+  }
+}
