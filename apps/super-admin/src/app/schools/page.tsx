@@ -167,22 +167,15 @@ export default function SchoolsPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
       
       {/* PAGE HEADER */}
-      <div className="glass-card" style={{
-        background: "linear-gradient(135deg, rgba(139, 92, 246, 0.22) 0%, rgba(99, 102, 241, 0.12) 100%)",
-        border: "1px solid var(--border-glow)",
-        padding: "1.75rem 2rem",
-        display: "flex",
-        justify: "space-between",
-        alignItems: "center"
-      }}>
+      <div className="hero-banner">
         <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(139, 92, 246, 0.2)", border: "1px solid rgba(139, 92, 246, 0.4)", color: "#c084fc", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(255, 255, 255, 0.18)", border: "1px solid rgba(255, 255, 255, 0.3)", color: "#ffffff", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
             <Building2 size={14} /> Multi-Tenant Provisioning Engine
           </div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.02em" }}>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.02em" }}>
             School Tenant Management Module
           </h1>
-          <p style={{ color: "var(--text-muted)", marginTop: 4, fontSize: "0.875rem" }}>
+          <p style={{ marginTop: 4, fontSize: "0.875rem" }}>
             Onboard new schools, manage SaaS subscriptions, view tenant 360° dossiers, suspend accounts, and configure permissions.
           </p>
         </div>

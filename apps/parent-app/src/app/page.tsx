@@ -50,6 +50,8 @@ import {
   BarChart3
 } from "lucide-react";
 
+import { parentApi } from "@/lib/api";
+
 export default function MobileAppShell() {
   const [activeTab, setActiveTab] = useState<
     "home" | "child" | "attendance" | "homework" | "exams" | 
@@ -58,6 +60,16 @@ export default function MobileAppShell() {
   >("home");
 
   const [showSplash, setShowSplash] = useState(true);
+  const [inboxCount, setInboxCount] = useState(3);
+
+  useEffect(() => {
+    // Fetch live inbox count from backend API
+    parentApi.getInbox().then((res) => {
+      if (res.success && res.unreadCount !== undefined) {
+        setInboxCount(res.unreadCount);
+      }
+    });
+  }, []);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [language, setLanguage] = useState<"en" | "hi">("en");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -174,92 +186,32 @@ export default function MobileAppShell() {
       }}>
         <div className="mobile-notch" />
 
-        {/* Full-screen Splash Background Image Fallback & Overlay */}
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "url('/splash-logo.jpg'), url('/splash-logo.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          opacity: 0.95,
-          zIndex: 1
-        }} />
+        {/* Crisp Full-Screen Splash Graphic */}
+        <img
+          src="/splash.png"
+          alt="SchoolMitra Parent Splash"
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover", zIndex: 1
+          }}
+        />
 
-        {/* Soft Dark Vignette Gradient Overlay */}
+        {/* Minimal Bottom Loading Bar Overlay */}
         <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(180deg, rgba(2,6,23,0.35) 0%, rgba(2,6,23,0.15) 40%, rgba(2,6,23,0.85) 100%)",
-          zIndex: 2
-        }} />
-
-        {/* Content Container */}
-        <div style={{
-          position: "relative", zIndex: 10, height: "100%", width: "100%",
-          padding: "3.5rem 1.5rem 2rem 1.5rem",
-          display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center",
-          textAlign: "center"
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          padding: "1.5rem 1.5rem 2.25rem 1.5rem",
+          background: "linear-gradient(0deg, rgba(2,6,23,0.92) 0%, rgba(2,6,23,0.4) 70%, transparent 100%)",
+          backdropFilter: "blur(6px)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "0.65rem",
+          zIndex: 10
         }}>
-
-          {/* Animated Gold Emblem Seal Header */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div className="splash-emblem" style={{
-              width: 145, height: 145, borderRadius: "50%",
-              border: "3px solid #f59e0b",
-              background: "radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, rgba(15, 23, 42, 0.92) 100%)",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              padding: "0.8rem", color: "#fbbf24"
-            }}>
-              <div className="splash-icon-float">
-                <BookOpen size={42} color="#fbbf24" />
-              </div>
-              <div style={{ fontSize: "0.78rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.05em", color: "#fff", marginTop: 4 }}>
-                EDU-CARE PARENT
-              </div>
-              <div style={{ fontSize: "0.68rem", color: "#fcd34d", fontWeight: 800 }}>
-                &lsquo;हर कदम साथ&rsquo;
-              </div>
-            </div>
+          <div style={{ width: "70%", maxWidth: 240, height: 4, background: "rgba(255,255,255,0.2)", borderRadius: 99, overflow: "hidden" }}>
+            <div style={{ width: "100%", height: "100%", background: "linear-gradient(90deg, #38bdf8, #6366f1, #f59e0b)", borderRadius: 99, animation: "fadeIn 0.5s ease" }} />
           </div>
-
-          {/* Animated Center Headline */}
-          <div className="splash-headline" style={{ margin: "1.5rem 0" }}>
-            <h1 style={{ fontSize: "1.35rem", fontWeight: 800, color: "#f8fafc", lineHeight: 1.3, letterSpacing: "-0.01em" }}>
-              Track. Understand. Engage.
-            </h1>
-            <h2 style={{ fontSize: "1.55rem", fontWeight: 900, color: "#fbbf24", marginTop: 4, textShadow: "0 2px 10px rgba(245, 158, 11, 0.4)" }}>
-              Succeed Together.
-            </h2>
+          <div style={{ fontSize: "0.72rem", color: "#e2e8f0", fontWeight: 800, letterSpacing: "0.02em" }}>
+            Initializing Parental Portal...
           </div>
-
-          {/* Progress Bar & Staggered Animated Feature Badges */}
-          <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "1.25rem" }}>
-            
-            {/* Animated Loading Bar */}
-            <div style={{ width: "85%", maxWidth: 260, height: 6, background: "rgba(255,255,255,0.15)", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ width: "100%", height: "100%", background: "linear-gradient(90deg, #f59e0b, #fbbf24)", borderRadius: 99, animation: "fadeIn 0.5s ease" }} />
-            </div>
-            <div style={{ fontSize: "0.72rem", color: "#cbd5e1", fontWeight: 800 }}>
-              Initializing Parental Portal...
-            </div>
-
-            {/* Bottom 4 Feature Badges with Staggered Entrance */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.6rem", width: "100%" }}>
-              {[
-                { icon: Clock, label: "Attendance", color: "#ef4444", bg: "rgba(239,68,68,0.2)", cls: "splash-badge-1" },
-                { icon: BarChart3, label: "Report Cards", color: "#f59e0b", bg: "rgba(245,158,11,0.2)", cls: "splash-badge-2" },
-                { icon: Bus, label: "Bus Tracking", color: "#10b981", bg: "rgba(16,185,129,0.2)", cls: "splash-badge-3" },
-                { icon: CreditCard, label: "Fee Payments", color: "#8b5cf6", bg: "rgba(139,92,246,0.2)", cls: "splash-badge-4" }
-              ].map((item, idx) => (
-                <div key={idx} className={item.cls} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.3rem" }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: item.bg, border: `1.5px solid ${item.color}`, display: "flex", alignItems: "center", justifyContent: "center", color: item.color, boxShadow: `0 4px 14px ${item.bg}` }}>
-                    <item.icon size={20} />
-                  </div>
-                  <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#e2e8f0" }}>{item.label}</span>
-                </div>
-              ))}
-            </div>
-
-          </div>
-
         </div>
       </div>
     );
@@ -272,14 +224,8 @@ export default function MobileAppShell() {
         <div className="mobile-notch" />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{
-            width: '56px', height: '56px', borderRadius: '16px',
-            background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 24px rgba(99, 102, 241, 0.35)',
-            marginBottom: '1.25rem'
-          }}>
-            <GraduationCap size={30} color="#fff" />
+          <div style={{ marginBottom: '1.25rem' }}>
+            <img src="/logo.png" alt="SchoolMitra Logo" style={{ height: '48px', maxWidth: '200px', objectFit: 'contain' }} />
           </div>
 
           <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff' }}>Parent Portal Login</h2>

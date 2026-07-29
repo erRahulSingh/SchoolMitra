@@ -1,16 +1,28 @@
+// ═══════════════════════════════════════════════════════════
+// SchoolMitra Backend — Fee Management Routes
+// ═══════════════════════════════════════════════════════════
+
 import { Router } from "express";
-import { getInvoices, createInvoice, recordPayment, sendDueReminder } from "./fees.controller";
+import {
+  getFeeStructures,
+  createFeeStructure,
+  getInvoices,
+  createInvoice,
+  recordPayment,
+  getPaymentReceipts,
+  getFeeDueReport,
+  sendDueReminder
+} from "./fees.controller";
 
 const router = Router();
 
-// Invoices
+router.get("/structures", getFeeStructures);
+router.post("/structures", createFeeStructure);
 router.get("/invoices", getInvoices);
 router.post("/invoices", createInvoice);
-
-// Payments
-router.post("/payments", recordPayment);
-
-// Reminders
-router.post("/remind", sendDueReminder);
+router.post("/payments/collect", recordPayment);
+router.get("/receipts", getPaymentReceipts);
+router.get("/due-report", getFeeDueReport);
+router.post("/due-reminder", sendDueReminder);
 
 export default router;

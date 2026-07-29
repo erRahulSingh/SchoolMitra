@@ -49,29 +49,22 @@ export default function UsersPage() {
     }
   };
 
-  const inputStyle: React.CSSProperties = { width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem" };
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "0.7rem", fontSize: "0.85rem" };
   const labelStyle: React.CSSProperties = { fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
       
       {/* PAGE HEADER */}
-      <div className="glass-card" style={{
-        background: "linear-gradient(135deg, rgba(99, 102, 241, 0.22) 0%, rgba(168, 85, 247, 0.12) 100%)",
-        border: "1px solid var(--border-glow)",
-        padding: "1.75rem 2rem",
-        display: "flex",
-        justify: "space-between",
-        alignItems: "center"
-      }}>
+      <div className="hero-banner">
         <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(99, 102, 241, 0.2)", border: "1px solid rgba(99, 102, 241, 0.4)", color: "#818cf8", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(255, 255, 255, 0.18)", border: "1px solid rgba(255, 255, 255, 0.3)", color: "#ffffff", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
             <Users size={14} /> Company Staff & Credentials
           </div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.02em" }}>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.02em" }}>
             User Management & Permissions
           </h1>
-          <p style={{ color: "var(--text-muted)", marginTop: 4, fontSize: "0.875rem" }}>
+          <p style={{ marginTop: 4, fontSize: "0.875rem" }}>
             Manage SchoolMitra corporate admins, support specialists, view active system access, and assign roles & permissions.
           </p>
         </div>
@@ -113,14 +106,14 @@ export default function UsersPage() {
                 .map((u) => (
                   <tr key={u.id}>
                     <td style={{ fontWeight: 700, color: "var(--primary)", fontFamily: "monospace" }}>{u.id}</td>
-                    <td style={{ fontWeight: 800, color: "#fff" }}>{u.name}</td>
-                    <td style={{ color: "#38bdf8" }}>{u.email}</td>
+                    <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{u.name}</td>
+                    <td style={{ color: "var(--primary)", fontWeight: 600 }}>{u.email}</td>
                     <td style={{ color: "var(--text-muted)" }}>{u.phone}</td>
                     <td><span className="badge badge-info">{u.role}</span></td>
                     <td>
                       <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
                         {u.permissions.map((p, pi) => (
-                          <span key={pi} style={{ padding: "0.2rem 0.5rem", borderRadius: "4px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border-color)", fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                          <span key={pi} style={{ padding: "0.2rem 0.5rem", borderRadius: "4px", background: "var(--btn-secondary-bg)", border: "1px solid var(--border-color)", fontSize: "0.7rem", color: "var(--text-muted)" }}>
                             {p}
                           </span>
                         ))}
@@ -128,7 +121,7 @@ export default function UsersPage() {
                     </td>
                     <td><span className="badge badge-success">{u.status}</span></td>
                     <td style={{ textAlign: "right" }}>
-                      <button onClick={() => handleDeleteUser(u.id)} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem", color: "#f87171", borderColor: "rgba(239, 68, 68, 0.3)" }}>
+                      <button onClick={() => handleDeleteUser(u.id)} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
                         <Trash2 size={14} /> Revoke
                       </button>
                     </td>
@@ -142,12 +135,12 @@ export default function UsersPage() {
       {/* ADD USER MODAL */}
       {isAddUserOpen && (
         <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)",
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)",
           zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem"
         }}>
           <div className="glass-card" style={{ padding: "2rem", width: "100%", maxWidth: 500, borderRadius: "var(--radius-lg)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#fff" }}>Add Corporate User</h3>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-heading)" }}>Add Corporate User</h3>
               <button onClick={() => setIsAddUserOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
             </div>
 
@@ -165,9 +158,9 @@ export default function UsersPage() {
               <div>
                 <label style={labelStyle}>ASSIGN CORPORATE ROLE</label>
                 <select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value)} style={inputStyle}>
-                  <option style={{ background: "#0b0f19" }}>Company Admin</option>
-                  <option style={{ background: "#0b0f19" }}>Support Team L2</option>
-                  <option style={{ background: "#0b0f19" }}>Support Team L1</option>
+                  <option>Company Admin</option>
+                  <option>Support Team L2</option>
+                  <option>Support Team L1</option>
                 </select>
               </div>
 

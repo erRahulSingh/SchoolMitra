@@ -7,8 +7,37 @@ import {
   Sparkles, History, Route, Info, ArrowUpRight, ShieldCheck
 } from "lucide-react";
 
+import { createSocketConnection } from "@/lib/socketClient";
+
 export default function TransportPage() {
   const [activeTab, setActiveTab] = useState<"liveBus" | "route" | "stops" | "trips" | "driver" | "emergency">("liveBus");
+  const [liveSpeed, setLiveSpeed] = useState<number>(34);
+  const [liveEta, setLiveEta] = useState<string>("8 mins");
+  const [liveStatus, setLiveStatus] = useState<string>("Broadcasting");
+
+  // Connect Socket.IO Telemetry Listener
+  React.useEffect(() => {
+    let socket: any = null;
+    try {
+      socket = createSocketConnection("http://localhost:5000");
+
+      socket.on("connect", () => {
+        socket.emit("bus:join_room", { routeId: "Route 1" });
+      });
+
+      socket.on("bus:location_changed", (data: any) => {
+        if (data.speed !== undefined) setLiveSpeed(data.speed);
+        if (data.eta !== undefined) setLiveEta(data.eta);
+        if (data.status !== undefined) setLiveStatus(data.status);
+      });
+    } catch (e) {
+      console.warn("Parent App Socket error:", e);
+    }
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, []);
 
   const busStops = [
     { no: 1, name: "Dwarka Sector 6 Metro Station", time: "07:15 AM", status: "Passed", done: true },
@@ -48,8 +77,8 @@ export default function TransportPage() {
         </div>
 
         <div style={{ textAlign: "right" }}>
-          <div className="banner-sub" style={{ fontSize: "0.68rem", fontWeight: 700 }}>LIVE SPEED</div>
-          <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "#0284c7", marginTop: 1 }}>34 km/h</div>
+          <div className="banner-sub" style={{ fontSize: "0.68rem", fontWeight: 700 }}>LIVE SPEED • ETA {liveEta}</div>
+          <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "#0284c7", marginTop: 1 }}>{liveSpeed} km/h</div>
         </div>
       </div>
 

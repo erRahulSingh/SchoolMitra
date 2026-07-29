@@ -6,12 +6,38 @@ import {
   Plus, X, Search, Filter, Fuel, Wrench, CheckCircle2, Clock, 
   UserCheck, ArrowRight, Radio, Shield, Download, ChevronRight, Eye 
 } from "lucide-react";
+import { createSocketConnection } from "@/lib/socketClient";
 import { MOCK_BUSES } from "@/lib/mockData";
 
 export default function TransportPage() {
   const [activeTab, setActiveTab] = useState<
     "live" | "buses" | "drivers" | "routes" | "student_map" | "logs" | "maintenance"
   >("live");
+
+  const [sosAlertBanner, setSosAlertBanner] = useState<string | null>(null);
+
+  // Connect Socket.IO Telemetry Listener for School Admin
+  React.useEffect(() => {
+    let socket: any = null;
+    try {
+      socket = createSocketConnection("http://localhost:5000");
+
+      socket.on("admin:bus_location_update", (data: any) => {
+        // live telemetry update
+        console.log("[Admin Telemetry] Received bus location:", data);
+      });
+
+      socket.on("alert:emergency_sos", (data: any) => {
+        setSosAlertBanner(data.message || `🚨 Emergency SOS alert triggered from Bus ${data.busId}`);
+      });
+    } catch (e) {
+      console.warn("School Admin Socket error:", e);
+    }
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, []);
 
   // ── 1. BUSES STATE ──
   const [buses, setBuses] = useState([

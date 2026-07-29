@@ -6,6 +6,8 @@ import {
   User, MapPin, Search, Filter, PhoneCall, Sparkles 
 } from "lucide-react";
 
+import { createSocketConnection } from "@/lib/socketClient";
+
 export default function StudentPickupPage() {
   const [selectedStopFilter, setSelectedStopFilter] = useState<string>("all");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -22,11 +24,27 @@ export default function StudentPickupPage() {
     setStudents(prev => prev.map(st => st.id === id ? { ...st, status: newStatus } : st));
 
     const targetStudent = students.find(st => st.id === id);
-    if (targetStudent && newStatus === "Picked") {
+    if (targetStudent) {
       const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const msg = `🔔 Notification Sent: "${targetStudent.name.split(" ")[0]} boarded the bus at ${nowTime}."`;
-      setToastMessage(msg);
-      setTimeout(() => setToastMessage(null), 3500);
+      if (newStatus === "Picked") {
+        const msg = `🔔 Notification Sent: "${targetStudent.name.split(" ")[0]} boarded the bus at ${nowTime}."`;
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 3500);
+      }
+
+      // Socket.IO Real-Time Broadcast to Parent App
+      try {
+        const socket = createSocketConnection("http://localhost:5000");
+        socket.emit("driver:student_status_changed", {
+          studentId: id,
+          studentName: targetStudent.name,
+          status: newStatus,
+          timestamp: nowTime
+        });
+        setTimeout(() => socket.disconnect(), 1000);
+      } catch (err) {
+        console.warn("Socket emission error:", err);
+      }
     }
   };
 

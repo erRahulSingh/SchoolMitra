@@ -76,17 +76,11 @@ export default function DriverLoginPage({ onLoginSuccess }: { onLoginSuccess?: (
         
         {/* HEADER BRANDING */}
         <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: 18,
-            background: "linear-gradient(135deg, #10b981, #059669)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 1rem auto",
-            boxShadow: "0 8px 24px rgba(16, 185, 129, 0.35)"
-          }}>
-            <Bus size={32} color="#fff" />
+          <div style={{ marginBottom: "1rem" }}>
+            <img src="/logo.png" alt="SchoolMitra Logo" style={{ height: "48px", maxWidth: "220px", objectFit: "contain", margin: "0 auto" }} />
           </div>
 
-          <h2 style={{ fontSize: "1.45rem", fontWeight: 900, letterSpacing: "-0.01em" }}>Driver Cockpit Login</h2>
+          <h2 style={{ fontSize: "1.4rem", fontWeight: 900, letterSpacing: "-0.01em" }}>Driver Cockpit Login</h2>
           <p style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: 4 }}>
             Enter assigned vehicle driver credentials
           </p>

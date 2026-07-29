@@ -43,22 +43,15 @@ export default function SubscriptionsPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
       
       {/* PAGE HEADER */}
-      <div className="glass-card" style={{
-        background: "linear-gradient(135deg, rgba(139, 92, 246, 0.22) 0%, rgba(99, 102, 241, 0.12) 100%)",
-        border: "1px solid var(--border-glow)",
-        padding: "1.75rem 2rem",
-        display: "flex",
-        justify: "space-between",
-        alignItems: "center"
-      }}>
+      <div className="hero-banner">
         <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(139, 92, 246, 0.2)", border: "1px solid rgba(139, 92, 246, 0.4)", color: "#c084fc", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(255, 255, 255, 0.18)", border: "1px solid rgba(255, 255, 255, 0.3)", color: "#ffffff", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
             <CreditCard size={14} /> SaaS Billing & Subscriptions Engine
           </div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.02em" }}>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.02em" }}>
             Subscription Plans, Trials & Renewals
           </h1>
-          <p style={{ color: "var(--text-muted)", marginTop: 4, fontSize: "0.875rem" }}>
+          <p style={{ marginTop: 4, fontSize: "0.875rem" }}>
             Manage SaaS tier plans, monitor active 14-day trials, trigger plan upgrades, manage renewals, and configure discount promo codes.
           </p>
         </div>

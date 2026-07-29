@@ -53,22 +53,15 @@ export default function PaymentsPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
       
       {/* PAGE HEADER */}
-      <div className="glass-card" style={{
-        background: "linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(99, 102, 241, 0.12) 100%)",
-        border: "1px solid var(--border-glow)",
-        padding: "1.75rem 2rem",
-        display: "flex",
-        justify: "space-between",
-        alignItems: "center"
-      }}>
+      <div className="hero-banner">
         <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(16, 185, 129, 0.2)", border: "1px solid rgba(16, 185, 129, 0.4)", color: "#34d399", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(255, 255, 255, 0.18)", border: "1px solid rgba(255, 255, 255, 0.3)", color: "#ffffff", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
             <DollarSign size={14} /> SaaS Financial Ledger & GST compliance
           </div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.02em" }}>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.02em" }}>
             Payments & Invoicing Management
           </h1>
-          <p style={{ color: "var(--text-muted)", marginTop: 4, fontSize: "0.875rem" }}>
+          <p style={{ marginTop: 4, fontSize: "0.875rem" }}>
             Track SaaS transactions, download GST Tax Invoices (18% GST auto-split), handle refunds, and review payment gateway logs.
           </p>
         </div>

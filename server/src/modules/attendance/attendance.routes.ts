@@ -1,9 +1,22 @@
+// ═══════════════════════════════════════════════════════════
+// SchoolMitra Backend — Attendance Management Routes
+// ═══════════════════════════════════════════════════════════
+
 import { Router } from "express";
-import { markAttendance, getAttendanceReport } from "./attendance.controller";
+import {
+  markStudentAttendance,
+  getClassAttendance,
+  getStudentAttendanceSummary,
+  markStaffAttendance,
+  getAttendanceReport
+} from "./attendance.controller";
 
 const router = Router();
 
-router.post("/mark", markAttendance);
+router.post("/student/mark", markStudentAttendance);
+router.get("/student/class", getClassAttendance);
+router.get("/student/summary", getStudentAttendanceSummary);
+router.post("/staff/mark", markStaffAttendance);
 router.get("/report", getAttendanceReport);
 
 export default router;

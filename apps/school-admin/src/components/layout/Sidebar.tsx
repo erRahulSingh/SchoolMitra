@@ -50,6 +50,7 @@ const NAV_SECTIONS = [
     items: [
       { label: "Fee Collection", href: "/fees", icon: CreditCard },
       { label: "Live Bus Transport", href: "/transport", icon: Bus },
+      { label: "Support Requests", href: "/support", icon: MessageSquare },
       { label: "Notifications Hub", href: "/notifications", icon: MessageSquare },
       { label: "Activity Audit Logs", href: "/activity-logs", icon: ClipboardList },
       { label: "Reports & Analytics", href: "/reports", icon: BarChart3 },

@@ -19,9 +19,11 @@ export default function Footer() {
       <div className="footer-grid">
         <div>
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1rem" }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #4338ca, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff" }}>
-              <GraduationCap size={18} />
-            </div>
+            <img
+              src="/images/resources/logo.png"
+              alt="SchoolMitra Logo"
+              style={{ height: "34px", width: "auto", objectFit: "contain", borderRadius: "6px" }}
+            />
             <span style={{ fontSize: "1.25rem", fontWeight: 800 }}>
               <span style={{ color: "var(--text-main)" }}>School</span>
               <span style={{ color: "var(--primary)" }}>Mitra</span>

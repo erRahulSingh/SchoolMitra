@@ -18,6 +18,7 @@ import {
   User, ShieldCheck, Radio, MapPin, Building, Home, Clock, 
   Menu, X, Compass, History, Settings, Sun, Moon, Globe, LogOut, ChevronRight 
 } from "lucide-react";
+import { driverApi } from "@/lib/api";
 
 export default function DriverCockpitShell() {
   const [showSplash, setShowSplash] = useState(true);
@@ -79,61 +80,43 @@ export default function DriverCockpitShell() {
   if (showSplash) {
     return (
       <div className="driver-frame" data-theme={theme} style={{
-        background: "radial-gradient(circle at 50% 30%, #064e3b 0%, #090d16 65%, #020617 100%)",
+        padding: "0",
+        position: "relative",
+        overflow: "hidden",
+        background: "#020617",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        alignItems: "center",
-        padding: "3.5rem 1.5rem 2.5rem 1.5rem",
-        textAlign: "center"
+        alignItems: "center"
       }}>
         <div className="mobile-notch" />
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "1rem" }}>
-          <div className="driver-emblem" style={{
-            width: 130, height: 130, borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(9, 13, 22, 0.95) 100%)",
-            border: "3px solid #10b981",
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 40px rgba(16, 185, 129, 0.4)"
-          }}>
-            <Bus size={48} color="#10b981" />
-            <span style={{ fontSize: "0.68rem", color: "#34d399", fontWeight: 800, textTransform: "uppercase", marginTop: 4 }}>
-              GPS COCKPIT
-            </span>
-          </div>
-        </div>
+        {/* Crisp Full-Screen Splash Graphic */}
+        <img
+          src="/splash.png"
+          alt="SchoolMitra Driver Cockpit Splash"
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover", zIndex: 1
+          }}
+        />
 
-        <div>
-          <h1 style={{ fontSize: "1.45rem", fontWeight: 900, color: "#f8fafc", letterSpacing: "-0.01em" }}>
-            {t.appTitle}
-          </h1>
-          <p style={{ fontSize: "0.82rem", color: "#94a3b8", marginTop: 4, fontWeight: 700 }}>
-            {t.subtitle}
-          </p>
-        </div>
-
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "1.25rem" }}>
-          <div style={{ width: "85%", maxWidth: 260, height: 6, background: "rgba(255,255,255,0.1)", borderRadius: 99, overflow: "hidden" }}>
+        {/* Minimal Bottom GPS Satellites Progress Overlay */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          padding: "1.5rem 1.5rem 2.25rem 1.5rem",
+          background: "linear-gradient(0deg, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.4) 70%, transparent 100%)",
+          backdropFilter: "blur(6px)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "0.65rem",
+          zIndex: 10
+        }}>
+          <div style={{ width: "75%", maxWidth: 260, height: 5, background: "rgba(255,255,255,0.15)", borderRadius: 99, overflow: "hidden" }}>
             <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #10b981, #34d399)", borderRadius: 99, transition: "width 0.15s ease" }} />
           </div>
-          <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.35rem" }}>
+          <div style={{ fontSize: "0.72rem", color: "#e2e8f0", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <Radio size={14} color="#10b981" /> Connecting GPS Satellites... {progress}%
           </div>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem", width: "100%" }}>
-          {[
-            { icon: Navigation, label: "Live GPS", color: "#38bdf8" },
-            { icon: Bus, label: "Stops", color: "#10b981" },
-            { icon: CheckSquare, label: "Roster", color: "#a78bfa" },
-            { icon: AlertTriangle, label: "SOS Alert", color: "#ef4444" }
-          ].map((item, idx) => (
-            <div key={idx} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "0.6rem 0.3rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem" }}>
-              <item.icon size={18} color={item.color} />
-              <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#cbd5e1" }}>{item.label}</span>
-            </div>
-          ))}
         </div>
       </div>
     );
@@ -331,29 +314,25 @@ export default function DriverCockpitShell() {
         {activeTab === "profile" && <DriverProfilePage language={language} onLogout={handleLogout} />}
       </div>
 
-      {/* BOTTOM DRIVER NAVIGATION BAR (5 EXACT TABS) */}
-      <div style={{
-        height: 65, background: "var(--header-bg)", borderTop: "1px solid var(--border-card)",
-        display: "flex", justifyContent: "space-around", alignItems: "center",
-        position: "absolute", bottom: 0, left: 0, right: 0
-      }}>
-        <button onClick={() => setActiveTab("dashboard")} style={{ background: "none", border: "none", color: activeTab === "dashboard" ? "#10b981" : "var(--text-secondary)", fontSize: "0.7rem", fontWeight: 800, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }}>
+      {/* FLOATING GLASSMORTIC DRIVER TAB BAR */}
+      <div className="bottom-nav">
+        <button onClick={() => setActiveTab("dashboard")} className={`driver-tab ${activeTab === "dashboard" ? "active" : ""}`}>
           <Home size={18} />
           <span>Home</span>
         </button>
-        <button onClick={() => setActiveTab("route")} style={{ background: "none", border: "none", color: activeTab === "route" ? "#10b981" : "var(--text-secondary)", fontSize: "0.7rem", fontWeight: 800, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }}>
+        <button onClick={() => setActiveTab("route")} className={`driver-tab ${activeTab === "route" ? "active" : ""}`}>
           <Navigation size={18} />
           <span>Route</span>
         </button>
-        <button onClick={() => setActiveTab("pickup")} style={{ background: "none", border: "none", color: activeTab === "pickup" ? "#10b981" : "var(--text-secondary)", fontSize: "0.7rem", fontWeight: 800, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }}>
+        <button onClick={() => setActiveTab("pickup")} className={`driver-tab ${activeTab === "pickup" ? "active" : ""}`}>
           <CheckSquare size={18} />
           <span>Pickup</span>
         </button>
-        <button onClick={() => setActiveTab("history")} style={{ background: "none", border: "none", color: activeTab === "history" ? "#10b981" : "var(--text-secondary)", fontSize: "0.7rem", fontWeight: 800, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }}>
+        <button onClick={() => setActiveTab("history")} className={`driver-tab ${activeTab === "history" ? "active" : ""}`}>
           <History size={18} />
           <span>History</span>
         </button>
-        <button onClick={() => setActiveTab("profile")} style={{ background: "none", border: "none", color: activeTab === "profile" ? "#10b981" : "var(--text-secondary)", fontSize: "0.7rem", fontWeight: 800, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }}>
+        <button onClick={() => setActiveTab("profile")} className={`driver-tab ${activeTab === "profile" ? "active" : ""}`}>
           <User size={18} />
           <span>Profile</span>
         </button>

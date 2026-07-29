@@ -219,3 +219,94 @@ const pushLogSchema = new Schema({
 
 pushLogSchema.index({ schoolId: 1, status: 1 });
 export const PushLogModel = model("pushLogs", pushLogSchema);
+
+// ──────────── 51. SUPPORT REQUESTS ────────────
+const requestSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  studentId: {
+    type: Schema.Types.ObjectId,
+    ref: "students",
+    required: true,
+    index: true,
+  },
+  parentId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+    index: true,
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: [
+      "Attendance Issue",
+      "Leave Application",
+      "Fee & Payment Issue",
+      "Exam & Report Card",
+      "Homework",
+      "Bus / Transport",
+      "Student Information",
+      "Complaint",
+      "Suggestion",
+      "General Inquiry"
+    ],
+    index: true,
+  },
+  subject: { type: String, required: true, trim: true },
+  description: { type: String, required: true, trim: true },
+  priority: {
+    type: String,
+    enum: ["Low", "Medium", "High", "Urgent"],
+    default: "Medium",
+    index: true,
+  },
+  status: {
+    type: String,
+    enum: ["Submitted", "Under Review", "In Progress", "Waiting For Parent", "Resolved", "Closed"],
+    default: "Submitted",
+    index: true,
+  },
+  assignedTo: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+  },
+}, { timestamps: true });
+
+requestSchema.index({ schoolId: 1, parentId: 1, status: 1 });
+export const RequestModel = model("requests", requestSchema);
+
+// ──────────── 52. REQUEST MESSAGES THREAD ────────────
+const requestMessageSchema = new Schema({
+  requestId: {
+    type: Schema.Types.ObjectId,
+    ref: "requests",
+    required: true,
+    index: true,
+  },
+  senderRole: {
+    type: String,
+    enum: ["Parent", "SchoolAdmin", "Teacher"],
+    required: true,
+  },
+  senderId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+  },
+  message: { type: String, required: true, trim: true },
+  attachments: [{
+    fileName: { type: String },
+    fileUrl: { type: String },
+    fileSize: { type: String },
+    mimeType: { type: String },
+  }],
+}, { timestamps: true });
+
+requestMessageSchema.index({ requestId: 1, createdAt: 1 });
+export const RequestMessageModel = model("request_messages", requestMessageSchema);
+

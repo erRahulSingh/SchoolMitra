@@ -6,6 +6,8 @@ import {
   Bus, ShieldAlert, ArrowUpRight, CheckCircle2, RotateCw 
 } from "lucide-react";
 
+import { createSocketConnection } from "@/lib/socketClient";
+
 export default function LiveNavigationPage() {
   const [speed, setSpeed] = useState(38);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -13,17 +15,44 @@ export default function LiveNavigationPage() {
   const [etaMins, setEtaMins] = useState(8);
   const [distanceKm, setDistanceKm] = useState(1.4);
 
-  // Speed Simulation
+  // Speed & Socket.IO GPS Broadcast Simulation
   useEffect(() => {
+    let socket: any = null;
+    try {
+      socket = createSocketConnection("http://localhost:5000");
+    } catch (e) {
+      console.warn("Socket connection warning:", e);
+    }
+
     const timer = setInterval(() => {
       setSpeed((prev) => {
         const delta = Math.random() > 0.5 ? 2 : -2;
         const next = prev + delta;
-        return next > 48 ? 42 : next < 24 ? 30 : next;
-      });
-    }, 2000);
+        const currentSpeed = next > 48 ? 42 : next < 24 ? 30 : next;
 
-    return () => clearInterval(timer);
+        // Emit live GPS location update to backend Socket.IO server
+        if (socket && socket.connected) {
+          socket.emit("driver:location_update", {
+            busId: "Bus #01",
+            routeId: "Route 1",
+            latitude: 28.5921 + (Math.random() - 0.5) * 0.005,
+            longitude: 77.0460 + (Math.random() - 0.5) * 0.005,
+            speed: currentSpeed,
+            currentStop: "Sector 10 Stop",
+            nextStop: "Dwarka Sector 12 Market Gate",
+            distanceToNextStopMeters: 1400,
+            etaMinutes: Math.max(1, Math.round(1.4 / (currentSpeed / 60)))
+          });
+        }
+
+        return currentSpeed;
+      });
+    }, 3000);
+
+    return () => {
+      clearInterval(timer);
+      if (socket) socket.disconnect();
+    };
   }, []);
 
   return (

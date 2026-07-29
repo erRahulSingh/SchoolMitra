@@ -7,6 +7,8 @@ import {
   GraduationCap, Sparkles, ShieldCheck, MapPin, Tag, ArrowLeft, Key
 } from "lucide-react";
 
+import { websiteApi } from "@/lib/api";
+
 export default function SchoolRegistrationPage() {
   const [step, setStep] = useState(1);
   const [schoolName, setSchoolName] = useState("");
@@ -27,23 +29,18 @@ export default function SchoolRegistrationPage() {
     setErrorMsg("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/v1/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          schoolName,
-          city,
-          plan,
-          adminName,
-          email,
-          password,
-          phone
-        })
+      const data = await websiteApi.registerSchool({
+        schoolName,
+        city,
+        plan,
+        adminName,
+        email,
+        password,
+        phone
       });
 
-      const data = await res.json();
       if (data.success) {
-        setSchoolCode(data.schoolCode || `${schoolName.substring(0, 3).toUpperCase()}-${city.substring(0, 3).toUpperCase()}`);
+        setSchoolCode(data.data?.schoolCode || data.schoolCode || `${schoolName.substring(0, 3).toUpperCase()}-${city.substring(0, 3).toUpperCase()}`);
         setStep(3); // Registration success screen
       } else {
         setErrorMsg(data.message || "Failed to complete registration.");

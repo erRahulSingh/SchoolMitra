@@ -24,21 +24,11 @@ export default function Navbar() {
     <nav className="site-nav">
       {/* Brand Logo */}
       <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.65rem" }}>
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 10,
-            background: "linear-gradient(135deg, #4338ca, #3b82f6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#ffffff",
-            boxShadow: "0 4px 12px rgba(67, 56, 202, 0.3)"
-          }}
-        >
-          <GraduationCap size={22} />
-        </div>
+        <img
+          src="/images/resources/logo.png"
+          alt="SchoolMitra Logo"
+          style={{ height: "38px", width: "auto", objectFit: "contain", borderRadius: "8px" }}
+        />
         <span style={{ fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
           <span style={{ color: "var(--text-main)" }}>School</span>
           <span style={{ color: "var(--primary)" }}>Mitra</span>

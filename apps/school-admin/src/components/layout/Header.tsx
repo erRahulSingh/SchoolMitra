@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Bell, Calendar, ChevronDown, User, Sparkles } from "lucide-react";
+import { Search, Bell, Calendar, ChevronDown } from "lucide-react";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 export default function Header() {
   const [user, setUser] = useState({ name: "Principal Office", email: "admin@dps.edu.in", schoolName: "Delhi Public School" });
@@ -40,7 +41,7 @@ export default function Header() {
         />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         {/* Academic Year Switcher */}
         <div style={{ 
           display: 'flex', 
@@ -48,20 +49,23 @@ export default function Header() {
           gap: '0.5rem', 
           padding: '0.4rem 0.8rem', 
           borderRadius: 'var(--radius-sm)',
-          background: 'rgba(255,255,255,0.04)',
+          background: 'var(--bg-input)',
           border: '1px solid var(--border-color)',
           fontSize: '0.8rem',
           color: 'var(--text-muted)'
         }}>
-          <Calendar size={14} className="text-primary" />
-          <span>Session: <strong>2026 - 2027</strong></span>
+          <Calendar size={14} color="var(--primary)" />
+          <span>Session: <strong style={{ color: "var(--text-main)" }}>2026 - 2027</strong></span>
           <ChevronDown size={14} />
         </div>
+
+        {/* Theme Toggle Component */}
+        <ThemeToggle />
 
         {/* Quick Notification Bell */}
         <Link href="/notifications" style={{ 
           position: 'relative',
-          background: 'rgba(255,255,255,0.04)',
+          background: 'var(--bg-input)',
           border: '1px solid var(--border-color)',
           padding: '0.55rem',
           borderRadius: 'var(--radius-sm)',
@@ -90,7 +94,7 @@ export default function Header() {
           gap: '0.75rem',
           padding: '0.35rem 0.6rem 0.35rem 0.35rem',
           borderRadius: '99px',
-          background: 'rgba(255,255,255,0.04)',
+          background: 'var(--bg-input)',
           border: '1px solid var(--border-color)',
           textDecoration: 'none'
         }}>

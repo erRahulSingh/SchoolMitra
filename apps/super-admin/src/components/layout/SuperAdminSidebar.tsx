@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Building2, CreditCard, DollarSign, FileText, 
   LifeBuoy, Megaphone, Sliders, Tag, Ticket, BarChart3, 
   ShieldCheck, Bell, Settings, TrendingUp, Users, Activity, 
-  HardDrive, Server, Database, Sparkles 
+  HardDrive, Server, Database 
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -60,7 +60,7 @@ export default function SuperAdminSidebar() {
     <aside style={{
       width: "260px",
       minHeight: "100vh",
-      background: "rgba(10, 13, 22, 0.95)",
+      background: "var(--bg-sidebar)",
       backdropFilter: "blur(20px)",
       borderRight: "1px solid var(--border-color)",
       display: "flex",
@@ -69,7 +69,8 @@ export default function SuperAdminSidebar() {
       left: 0,
       top: 0,
       bottom: 0,
-      zIndex: 50
+      zIndex: 50,
+      transition: "background 0.25s ease, border-color 0.25s ease"
     }}>
       {/* Brand Header */}
       <div style={{
@@ -89,7 +90,7 @@ export default function SuperAdminSidebar() {
           <ShieldCheck size={20} />
         </div>
         <div>
-          <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
+          <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
             SchoolMitra
           </div>
           <div style={{ fontSize: "0.65rem", color: "var(--primary)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em" }}>
@@ -124,7 +125,7 @@ export default function SuperAdminSidebar() {
                     borderRadius: "var(--radius-md)",
                     fontSize: "0.825rem",
                     fontWeight: isActive ? 800 : 600,
-                    color: isActive ? "#ffffff" : "var(--text-muted)",
+                    color: isActive ? "var(--text-main)" : "var(--text-muted)",
                     background: isActive ? "linear-gradient(90deg, rgba(139, 92, 246, 0.22) 0%, rgba(99, 102, 241, 0.08) 100%)" : "transparent",
                     borderLeft: isActive ? "3px solid var(--primary)" : "3px solid transparent",
                     textDecoration: "none",

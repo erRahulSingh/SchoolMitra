@@ -1,143 +1,60 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Tag, Sparkles, Plus, AlertCircle } from "lucide-react";
+import React, { useState } from "react";
+import { Tag, Check, Sparkles, Plus, Edit3 } from "lucide-react";
 
-export default function PlansPage() {
-  const [plans, setPlans] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
-
-  const fetchPlans = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("http://localhost:5000/api/v1/tenant/roles");
-      // Wait, we seeded plans via POST /tenant/seed-plans, but how do we list plans?
-      // Let's create an endpoint in tenant controller or write a direct fetch from local default plans.
-      // Since plans are stored in PlanModel, let's fallback to default mock array if the database plans fetch is empty.
-      const dbRes = await fetch("http://localhost:5000/api/v1/schools"); // just to check connection
-      const defaultPlans = [
-        { planName: "Basic", price: 4999, maxStudents: 200, maxBuses: 2, features: ["ERP Essentials", "SMS Gateway", "Basic Attendance"] },
-        { planName: "Standard", price: 9999, maxStudents: 500, maxBuses: 5, features: ["ERP Essentials", "GPS Bus Tracking", "Parent Mobile App", "Online Fees Collection"] },
-        { planName: "Premium", price: 19999, maxStudents: 1500, maxBuses: 15, features: ["ERP Essentials", "GPS Bus Tracking", "Parent Mobile App", "Advanced Analytics", "AI Notifications", "Custom Subdomains"] }
-      ];
-      setPlans(defaultPlans);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPlans();
-  }, []);
-
-  const triggerSeed = async () => {
-    setSeeding(true);
-    try {
-      const res = await fetch("http://localhost:5000/api/v1/tenant/seed-plans", {
-        method: "POST"
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert("Plans database seeded successfully!");
-        fetchPlans();
-      }
-    } catch (err) {
-      alert("Failed to seed database plans.");
-    } finally {
-      setSeeding(false);
-    }
-  };
+export default function SaaSPlansPage() {
+  const [plans] = useState([
+    { name: "Starter Basic", price: "₹ 25,000 / yr", maxStudents: "500 Students", features: ["Core Student ERP", "Attendance & Marksheet", "Parent PWA App", "Email Support"], activeCount: 42, color: "var(--primary)" },
+    { name: "Growth Plan", price: "₹ 45,000 / yr", maxStudents: "1,500 Students", features: ["Everything in Starter", "GPS Bus Telemetry", "Driver Cockpit App", "Fee Collection & GST", "Priority Phone Support"], activeCount: 58, color: "var(--secondary)" },
+    { name: "Enterprise Pro", price: "₹ 75,000 / yr", maxStudents: "Unlimited Students", features: ["Everything in Growth", "RFID Gate Integration", "WhatsApp Notification Gateway", "Custom Domain & Branding", "24/7 Dedicated Account Manager"], activeCount: 48, color: "var(--success)" }
+  ]);
 
   return (
-    <div style={{ color: "#e2e8f0" }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
+      
+      <div className="hero-banner">
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: "#fff" }}>SaaS Subscription Plans</h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Configure active pricing levels, student limits, and modules mapping.</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.75rem", borderRadius: "99px", background: "rgba(255, 255, 255, 0.18)", border: "1px solid rgba(255, 255, 255, 0.3)", color: "#ffffff", fontSize: "0.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>
+            <Sparkles size={14} /> Subscription Tier Architecture
+          </div>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.02em" }}>
+            SaaS Monetization & Feature Plans
+          </h1>
+          <p style={{ marginTop: "0.35rem", fontSize: "0.9rem", opacity: 0.9 }}>
+            Configure subscription tiers, student capacity caps, and feature entitlements.
+          </p>
         </div>
-        <button 
-          onClick={triggerSeed}
-          disabled={seeding}
-          style={{ 
-            padding: '0.6rem 1.2rem', 
-            background: 'linear-gradient(135deg, #4338ca, #3b82f6)', 
-            color: '#fff', 
-            border: 'none', 
-            borderRadius: '8px', 
-            fontWeight: 700, 
-            cursor: seeding ? "not-allowed" : "pointer",
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem',
-            opacity: seeding ? 0.7 : 1,
-            boxShadow: "0 4px 12px rgba(67, 56, 202, 0.25)"
-          }}
-        >
-          <Sparkles size={16} /> {seeding ? "Seeding..." : "Seed Default Plans"}
-        </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
         {plans.map((p, idx) => (
-          <div key={idx} className="glass-card" style={{
-            padding: "2rem", background: "#111827", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20,
-            display: "flex", flexDirection: "column", justifyContent: "space-between"
-          }}>
+          <div key={idx} className="glass-card" style={{ padding: "1.75rem", display: "flex", flexDirection: "column", gap: "1.25rem", position: "relative" }}>
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                <span style={{
-                  padding: "0.3rem 0.75rem", borderRadius: 999, fontSize: "0.75rem", fontWeight: 800,
-                  background: p.planName === "Premium" ? "rgba(16, 185, 129, 0.15)" : "rgba(139, 92, 246, 0.15)",
-                  color: p.planName === "Premium" ? "#34d399" : "#a78bfa"
-                }}>
-                  {p.planName}
-                </span>
-                <span style={{ fontSize: "1.45rem", fontWeight: 800, color: "#fff" }}>
-                  ₹ {p.price.toLocaleString("en-IN")}<span style={{ fontSize: "0.8rem", fontWeight: 500, color: "#94a3b8" }}>/mo</span>
-                </span>
-              </div>
-
-              <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", margin: "1rem 0" }} />
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1.5rem" }}>
-                <div style={{ fontSize: "0.82rem", display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "#94a3b8" }}>Student capacity:</span>
-                  <strong style={{ color: "#fff" }}>{p.maxStudents} Students</strong>
-                </div>
-                <div style={{ fontSize: "0.82rem", display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "#94a3b8" }}>Max Fleet Buses:</span>
-                  <strong style={{ color: "#fff" }}>{p.maxBuses} Fleet Vehicles</strong>
-                </div>
-              </div>
-
-              <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: "0.75rem" }}>INCLUDED MODULES:</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem", marginBottom: "1.5rem" }}>
-                {p.features.map((f: string, i: number) => (
-                  <span key={i} style={{
-                    padding: "0.2rem 0.5rem", borderRadius: 6, fontSize: "0.7rem", fontWeight: 600,
-                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0"
-                  }}>{f}</span>
-                ))}
-              </div>
+              <span style={{ fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", color: p.color }}>{p.maxStudents}</span>
+              <h3 style={{ fontSize: "1.35rem", fontWeight: 900, marginTop: 2, color: "var(--text-heading)" }}>{p.name}</h3>
+              <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--text-heading)", marginTop: 6 }}>{p.price}</div>
             </div>
 
-            <button style={{
-              width: "100%", padding: "0.65rem", borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.15)", background: "transparent",
-              color: "#fff", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer",
-              transition: "background 0.2s"
-            }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-            >
-              Modify Plan Pricing
-            </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              {p.features.map((feat, fidx) => (
+                <div key={fidx} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "var(--text-main)" }}>
+                  <Check size={16} color={p.color} />
+                  <span>{feat}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: "auto", paddingTop: "1rem", borderTop: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{p.activeCount} Active Schools</span>
+              <button className="btn btn-secondary" style={{ padding: "0.4rem 0.75rem", fontSize: "0.78rem" }}>
+                <Edit3 size={14} /> Edit Tier
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
     </div>
   );
 }
