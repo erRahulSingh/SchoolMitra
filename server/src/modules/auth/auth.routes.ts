@@ -8,6 +8,7 @@ import {
   getRolesConfig,
   registerSchool,
   refreshAccessToken,
+  logoutUser,
   verifyEmail,
   forgotPassword,
   resetPassword,
@@ -35,6 +36,7 @@ router.use(authLimiter);
 router.post("/register", validate(registerSchema), registerSchool);
 router.post("/login", validate(loginSchema), loginUserRole);
 router.post("/refresh", refreshAccessToken);
+router.post("/logout", logoutUser);
 router.post("/verify-email", validate(verifyEmailSchema), verifyEmail);
 router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);
 router.post("/reset-password", validate(resetPasswordSchema), resetPassword);

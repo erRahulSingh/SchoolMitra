@@ -14,7 +14,7 @@
   --bg-input: rgba(255, 255, 255, 0.04);
   --bg-modal: #111827;
 
-  --border-color: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.16);
   --border-glow: rgba(99, 102, 241, 0.3);
 
   --primary: #6366f1;
@@ -71,7 +71,7 @@
   --bg-input: #f1f5f9;
   --bg-modal: #ffffff;
 
-  --border-color: #e2e8f0;
+  --border-color: #cbd5e1;
   --border-glow: rgba(79, 70, 229, 0.25);
 
   --primary: #4f46e5;
@@ -191,7 +191,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .glass-card:hover {
   border-color: var(--border-glow);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), var(--shadow-glow);
+  transform: translateY(-3px);
 }
 
 /* App Layout Grid */
@@ -338,21 +339,30 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 3px solid transparent;
 }
 
 .nav-item:hover {
   color: var(--text-main);
   background: var(--btn-secondary-bg);
+  border-left-color: rgba(99, 102, 241, 0.3);
+  padding-left: 0.95rem;
 }
 
 .nav-item.active {
   color: var(--text-heading);
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05));
-  border-left: 3px solid var(--primary);
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0.02) 100%);
+  border-left-color: var(--primary);
   font-weight: 600;
+  padding-left: 0.95rem;
+}
+
+.nav-item.active svg {
+  color: var(--primary);
+  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.6));
 }
 
 /* Stat Cards Grid */
@@ -537,3 +547,48 @@ input[type="text"]:focus, input[type="email"]:focus, input[type="number"]:focus,
 .modal-content h1, .modal-content h2, .modal-content h3 {
   color: var(--text-heading) !important;
 }
+
+/* ════════════ LIGHT MODE CONTRAST & ACCESSIBILITY OVERRIDES ════════════ */
+[data-theme="light"] td,
+[data-theme="light"] th,
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+  color: var(--text-heading) !important;
+}
+
+[data-theme="light"] .glass-card td,
+[data-theme="light"] .glass-card th,
+[data-theme="light"] .glass-card h4,
+[data-theme="light"] .glass-card h3,
+[data-theme="light"] .glass-card h2,
+[data-theme="light"] .glass-card p,
+[data-theme="light"] .glass-card strong,
+[data-theme="light"] .glass-card div:not(.badge):not(.btn) {
+  color: var(--text-main) !important;
+}
+
+/* Overriding white text in custom cards */
+[data-theme="light"] [style*="color: #fff"],
+[data-theme="light"] [style*="color: rgb(255, 255, 255)"],
+[data-theme="light"] [style*="color:white"] {
+  color: var(--text-main) !important;
+}
+
+/* Clean, crisp inputs & select boxes in light mode */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  color: var(--text-main) !important;
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+

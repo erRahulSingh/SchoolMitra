@@ -21,41 +21,55 @@ import {
   MessageSquare, 
   BarChart3, 
   Settings,
-  Building2
+  Building2,
+  Radio
 } from "lucide-react";
 
 const NAV_SECTIONS = [
   {
-    section: "CORE ADMISSIONS & PEOPLE",
+    section: "PHASES 1 - 4: CORE ERP & STAFF",
     items: [
       { label: "Dashboard", href: "/", icon: LayoutDashboard },
-      { label: "Admission Portal", href: "/admission", icon: UserPlus },
       { label: "Students Directory", href: "/students", icon: GraduationCap },
-      { label: "Parents Directory", href: "/parents", icon: Users },
+      { label: "Admission Portal", href: "/admission", icon: UserPlus },
       { label: "Teachers & Staff", href: "/teachers", icon: UserCheck },
     ]
   },
   {
-    section: "ACADEMICS & EXAMINATIONS",
+    section: "PHASES 5 - 7: ACADEMICS & EXAMS",
     items: [
       { label: "Academics & Timetable", href: "/academics", icon: BookOpen },
       { label: "Daily Attendance", href: "/attendance", icon: CalendarCheck },
-      { label: "Homework", href: "/homework", icon: FileText },
-      { label: "Assignments", href: "/assignments", icon: ClipboardList },
+      { label: "Homework Hub", href: "/homework", icon: FileText },
+      { label: "Assignments Desk", href: "/assignments", icon: ClipboardList },
       { label: "Exams & Report Cards", href: "/exams", icon: Award },
     ]
   },
   {
-    section: "OPERATIONS, HR & FINANCE",
+    section: "PHASES 8 - 11: OPERATIONS & COMM",
     items: [
       { label: "Fee Collection", href: "/fees", icon: CreditCard },
       { label: "Live Bus Transport", href: "/transport", icon: Bus },
       { label: "Support Requests", href: "/support", icon: MessageSquare },
+      { label: "Communication Broadcast", href: "/communication", icon: Radio },
       { label: "Notifications Hub", href: "/notifications", icon: MessageSquare },
-      { label: "Activity Audit Logs", href: "/activity-logs", icon: ClipboardList },
       { label: "Reports & Analytics", href: "/reports", icon: BarChart3 },
-      { label: "School Profile", href: "/profile", icon: Building2 },
+    ]
+  },
+  {
+    section: "PHASE 12: SYSTEM GOVERNANCE",
+    items: [
       { label: "School Settings", href: "/settings", icon: Settings },
+      { label: "School Profile", href: "/profile", icon: Building2 },
+      { label: "Activity Audit Logs", href: "/activity-logs", icon: ClipboardList },
+    ]
+  },
+  {
+    section: "ADDITIONAL ERP MODULES",
+    items: [
+      { label: "HR & Staff Payroll", href: "/hr", icon: Briefcase },
+      { label: "Library Catalog", href: "/library", icon: Library },
+      { label: "Inventory & Assets", href: "/inventory", icon: Package },
     ]
   }
 ];
@@ -65,22 +79,18 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
-        <div className="brand-logo">
-          <Building2 size={20} />
-        </div>
-        <div>
-          <div className="brand-title">SchoolMitra</div>
-          <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            ERP Admin Portal
-          </div>
-        </div>
+      <div className="sidebar-brand" style={{ justifyContent: 'center' }}>
+        <img 
+          src="/logo.png" 
+          alt="SchoolMitra Logo" 
+          style={{ height: '50px', maxWidth: '100%', objectFit: 'contain' }} 
+        />
       </div>
 
       <nav className="sidebar-nav">
         {NAV_SECTIONS.map((sec, idx) => (
           <div key={idx} style={{ marginBottom: '0.75rem' }}>
-            <div className="nav-section-title">{sec.section}</div>
+            {sec.section && <div className="nav-section-title">{sec.section}</div>}
             {sec.items.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));

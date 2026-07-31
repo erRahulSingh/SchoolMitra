@@ -2,236 +2,346 @@
 
 import React, { useState } from "react";
 import { 
-  Bell, CheckCircle2, AlertCircle, Bus, CreditCard, 
-  BookOpen, Calendar, ArrowRight, ShieldAlert, Info, ChevronRight, ArrowLeft,
-  CheckCheck, Filter, Clock, Sparkles, MessageSquare
+  ArrowLeft, 
+  MoreVertical, 
+  Bus, 
+  CreditCard, 
+  Calendar, 
+  Users, 
+  BookOpen 
 } from "lucide-react";
 
-export default function NotificationsPage() {
-  const [activeTab, setActiveTab] = useState<"feed" | "details">("feed");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [selectedNotif, setSelectedNotif] = useState<any>(null);
+interface NotificationItem {
+  id: number;
+  title: string;
+  body: string;
+  category: "Transport" | "Alerts" | "Academics";
+  time: string;
+  unread: boolean;
+  icon: React.ComponentType<any>;
+  iconColor: string;
+  iconBg: string;
+}
 
-  const [notificationsList, setNotificationsList] = useState([
+export default function NotificationsPage({ 
+  language = "en", 
+  onNavigate 
+}: { 
+  language?: string; 
+  onNavigate?: (tab: string) => void; 
+}) {
+  const [filter, setFilter] = useState<"All" | "Alerts" | "Transport" | "Academics">("All");
+  const [showOptions, setShowOptions] = useState(false);
+
+  const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: 1,
-      title: "Child Picked Up - Bus #01",
+      title: "Bus Delay Alert",
+      body: "Bus No. UP32 AB 1234 is delayed by 10 minutes today.",
       category: "Transport",
-      time: "07:35 AM",
-      date: "Today",
+      time: "10:15 AM",
       unread: true,
       icon: Bus,
-      color: "#06b6d4",
-      bg: "rgba(6, 182, 212, 0.12)",
-      details: "Aarav Sharma has safely boarded Bus #01 at Sector 12 stop. Driver Ram Singh is en-route to School Main Gate.",
-      actionUrl: "/transport",
-      actionLabel: "Track Live GPS"
+      iconColor: "#dc2626",
+      iconBg: "#fee2e2"
     },
     {
       id: 2,
-      title: "Morning Attendance Marked PRESENT",
-      category: "Attendance",
-      time: "07:42 AM",
-      date: "Today",
+      title: "Fee Reminder",
+      body: "Your May month fee is due. Please pay to avoid late fee.",
+      category: "Alerts",
+      time: "Yesterday",
       unread: true,
-      icon: CheckCircle2,
-      color: "#10b981",
-      bg: "rgba(16, 185, 129, 0.12)",
-      details: "Aarav Sharma was logged as PRESENT at Class 10-A via RFID Gate Entry at 07:42 AM by Class Teacher Sunita Mehta.",
-      actionUrl: "/attendance",
-      actionLabel: "View Attendance Log"
+      icon: CreditCard,
+      iconColor: "#ea580c",
+      iconBg: "#ffedd5"
     },
     {
       id: 3,
-      title: "Support Request REQ-2026-901 Replied",
-      category: "Support",
-      time: "09:30 AM",
-      date: "Today",
+      title: "Holiday Notice",
+      body: "School will remain closed on 15th May 2025.",
+      category: "Alerts",
+      time: "2 May",
       unread: true,
-      icon: MessageSquare,
-      color: "#6366f1",
-      bg: "rgba(99, 102, 241, 0.12)",
-      details: "Accounts Office replied to your ticket 'Fee payment receipt verification'. Official receipt attached.",
-      actionUrl: "/support",
-      actionLabel: "Open Ticket Thread"
+      icon: Calendar,
+      iconColor: "#16a34a",
+      iconBg: "#dcfce7"
     },
     {
       id: 4,
-      title: "Quarter 2 Fee Invoice Generated",
-      category: "Fees",
-      time: "Yesterday",
-      date: "27 Aug",
-      unread: false,
-      icon: CreditCard,
-      color: "#f59e0b",
-      bg: "rgba(245, 158, 11, 0.12)",
-      details: "Quarter 2 Tuition & Transport Fee invoice of ₹ 18,500 is due on 10 August 2026.",
-      actionUrl: "/fees",
-      actionLabel: "Pay Fee Online"
+      title: "PTM Schedule",
+      body: "PTM is scheduled on 20th May 2025.",
+      category: "Academics",
+      time: "28 Apr",
+      unread: true,
+      icon: Users,
+      iconColor: "#9333ea",
+      iconBg: "#f3e8ff"
+    },
+    {
+      id: 5,
+      title: "New Assignment",
+      body: "New Mathematics assignment has been posted.",
+      category: "Academics",
+      time: "25 Apr",
+      unread: true,
+      icon: BookOpen,
+      iconColor: "#2563eb",
+      iconBg: "#e0f2fe"
     }
   ]);
 
-  const unreadCount = notificationsList.filter(n => n.unread).length;
-
-  const handleOpenDetails = (notif: any) => {
-    setSelectedNotif(notif);
-    // Mark as read
-    setNotificationsList(prev => prev.map(n => n.id === notif.id ? { ...n, unread: false } : n));
-    setActiveTab("details");
-  };
-
   const handleMarkAllRead = () => {
-    setNotificationsList(prev => prev.map(n => ({ ...n, unread: false })));
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    setShowOptions(false);
   };
 
-  const filteredList = notificationsList.filter(n => {
-    if (categoryFilter !== "All" && n.category !== categoryFilter) return false;
-    return true;
+  const handleItemClick = (id: number) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+  };
+
+  const filteredNotifs = notifications.filter(n => {
+    if (filter === "All") return true;
+    return n.category === filter;
   });
 
   return (
     <div style={{
-      padding: "1.25rem 1rem",
+      padding: "2.2rem 1rem 2.2rem 1rem",
       display: "flex",
       flexDirection: "column",
       gap: "1.1rem",
-      color: "var(--text-main)",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+      color: "#0f172a",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      background: "#f8fafc",
+      minHeight: "100%",
+      width: "100%"
     }}>
 
-      {/* ════════════ HEADER BANNER ════════════ */}
-      <div className="banner-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <h2 className="banner-title" style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0 }}>Push Notifications</h2>
-            {unreadCount > 0 && (
-              <span style={{ background: "rgba(99,102,241,0.25)", color: "#6366f1", padding: "0.15rem 0.55rem", borderRadius: 99, fontSize: "0.7rem", fontWeight: 800 }}>
-                {unreadCount} New Unread
-              </span>
-            )}
-          </div>
-          <p className="banner-sub" style={{ fontSize: "0.75rem", marginTop: 2 }}>
-            Real-Time Push Alerts &amp; School Broadcast Stream
-          </p>
+      {/* ════════════ TOP HEADER BAR ════════════ */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0.2rem 0.1rem 0.4rem 0.1rem",
+        borderBottom: "1px solid #f1f5f9",
+        position: "relative"
+      }}>
+        {/* Left Side: Back Arrow + Title */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate("home") : window.history.back()}
+            aria-label="Go Back"
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              padding: "0",
+              color: "#0f172a"
+            }}
+          >
+            <ArrowLeft size={22} color="#0f172a" strokeWidth={2.2} />
+          </button>
+
+          <h1 style={{
+            fontSize: "1.25rem",
+            fontWeight: 800,
+            color: "#0f172a",
+            fontFamily: "'Outfit', sans-serif",
+            letterSpacing: "-0.015em"
+          }}>
+            Notifications
+          </h1>
         </div>
 
-        {unreadCount > 0 && (
-          <button
-            onClick={handleMarkAllRead}
-            style={{ background: "rgba(99,102,241,0.15)", border: "none", color: "#6366f1", padding: "0.4rem 0.65rem", borderRadius: 10, fontSize: "0.72rem", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
-          >
-            <CheckCheck size={14} />
-            <span>Mark Read</span>
-          </button>
+        {/* Right Side: Options Icon */}
+        <button
+          type="button"
+          onClick={() => setShowOptions(!showOptions)}
+          aria-label="More options"
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            padding: "0.2rem"
+          }}
+        >
+          <MoreVertical size={22} color="#0f172a" strokeWidth={2} />
+        </button>
+
+        {/* Options Popover */}
+        {showOptions && (
+          <div style={{
+            position: "absolute",
+            top: "100%",
+            right: 0,
+            background: "#ffffff",
+            borderRadius: "10px",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 4px 12px rgba(15,23,42,0.06)",
+            zIndex: 30,
+            minWidth: "140px"
+          }}>
+            <button
+              onClick={handleMarkAllRead}
+              style={{
+                width: "100%",
+                background: "transparent",
+                border: "none",
+                textAlign: "left",
+                padding: "0.65rem 0.85rem",
+                fontSize: "0.82rem",
+                fontWeight: 700,
+                color: "#1d4ed8",
+                cursor: "pointer"
+              }}
+            >
+              Mark all as read
+            </button>
+          </div>
         )}
       </div>
 
-      {/* ════════════ CATEGORY FILTER CHIPS ════════════ */}
-      {activeTab === "feed" && (
-        <div style={{ display: "flex", gap: "0.4rem", overflowX: "auto", paddingBottom: "0.2rem", scrollbarWidth: "none" }}>
-          {["All", "Transport", "Attendance", "Support", "Fees"].map((cat) => (
+      {/* ════════════ CATEGORY FILTER TABS ════════════ */}
+      <div style={{
+        display: "flex",
+        background: "#e2e8f0",
+        borderRadius: "14px",
+        padding: "0.25rem",
+        gap: "0.25rem",
+        marginTop: "-0.25rem"
+      }}>
+        {["All", "Alerts", "Transport", "Academics"].map((cat) => {
+          const isActive = filter === cat;
+          return (
             <button
               key={cat}
-              onClick={() => setCategoryFilter(cat)}
+              onClick={() => setFilter(cat as any)}
               style={{
-                padding: "0.45rem 0.85rem", borderRadius: 12, fontSize: "0.75rem", fontWeight: 800,
-                background: categoryFilter === cat ? "linear-gradient(135deg, #4f46e5, #06b6d4)" : "var(--btn-secondary-bg)",
-                color: categoryFilter === cat ? "#ffffff" : "var(--card-subtext)",
-                border: categoryFilter === cat ? "none" : "1px solid var(--border-color)",
-                cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0
+                flex: 1,
+                padding: "0.6rem 0.4rem",
+                borderRadius: "10px",
+                border: "none",
+                background: isActive ? "#3b82f6" : "transparent",
+                color: isActive ? "#ffffff" : "#475569",
+                fontWeight: 800,
+                fontSize: "0.78rem",
+                cursor: "pointer",
+                boxShadow: isActive ? "0 2px 8px rgba(59, 130, 246, 0.15)" : "none",
+                transition: "all 0.2s ease"
               }}
             >
               {cat}
             </button>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
 
-      {/* ════════════ SCREEN 1: NOTIFICATIONS FEED ════════════ */}
-      {activeTab === "feed" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {filteredList.map((n) => (
-            <div
-              key={n.id}
-              onClick={() => handleOpenDetails(n)}
-              className="card-ui"
-              style={{
-                padding: "1rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                cursor: "pointer",
-                position: "relative",
-                borderLeft: n.unread ? `4px solid ${n.color}` : "1px solid var(--card-border)"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div style={{
-                  width: 42, height: 42, borderRadius: 12, background: n.bg,
-                  display: "flex", alignItems: "center", justifyContent: "center", color: n.color, flexShrink: 0
-                }}>
-                  <n.icon size={20} />
-                </div>
+      {/* ════════════ NOTIFICATIONS LIST ════════════ */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+        {filteredNotifs.length === 0 ? (
+          <div style={{
+            padding: "3rem 1rem",
+            textAlign: "center",
+            background: "#ffffff",
+            borderRadius: "20px",
+            color: "#64748b",
+            fontSize: "0.88rem",
+            border: "1px solid #e2e8f0"
+          }}>
+            No notifications in this category.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+            {filteredNotifs.map((n) => {
+              const IconComp = n.icon;
+              return (
+                <div
+                  key={n.id}
+                  onClick={() => handleItemClick(n.id)}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "20px",
+                    padding: "1rem 1.1rem",
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 4px 16px rgba(15, 23, 42, 0.02)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                    {/* Circle Icon Container */}
+                    <div style={{
+                      width: "44px",
+                      height: "44px",
+                      borderRadius: "50%",
+                      background: n.iconBg,
+                      color: n.iconColor,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0
+                    }}>
+                      <IconComp size={22} strokeWidth={2.2} />
+                    </div>
 
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <div className="text-title" style={{ fontSize: "0.88rem", fontWeight: 800 }}>{n.title}</div>
-                    {n.unread && <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#6366f1" }} />}
+                    {/* Text Details */}
+                    <div>
+                      <h3 style={{
+                        fontSize: "0.92rem",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        margin: 0
+                      }}>
+                        {n.title}
+                      </h3>
+                      <p style={{
+                        fontSize: "0.82rem",
+                        color: "#475569",
+                        fontWeight: 500,
+                        margin: "4px 0 0 0",
+                        lineHeight: 1.45
+                      }}>
+                        {n.body}
+                      </p>
+                      <span style={{
+                        fontSize: "0.72rem",
+                        color: "#94a3b8",
+                        fontWeight: 600,
+                        display: "block",
+                        marginTop: "5px"
+                      }}>
+                        {n.time}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-muted-custom" style={{ fontSize: "0.72rem", marginTop: 3 }}>
-                    {n.date} at {n.time} &bull; <strong style={{ color: n.color }}>{n.category}</strong>
-                  </div>
+
+                  {/* Unread Red Dot */}
+                  {n.unread && (
+                    <div style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      background: "#ef4444",
+                      flexShrink: 0,
+                      marginLeft: "10px"
+                    }} />
+                  )}
                 </div>
-              </div>
-
-              <ChevronRight size={18} color="var(--card-subtext)" />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ════════════ SCREEN 2: NOTIFICATION DETAILS MODAL ════════════ */}
-      {activeTab === "details" && selectedNotif && (
-        <div className="card-ui" style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--card-border)", paddingBottom: "0.85rem" }}>
-            <button
-              onClick={() => setActiveTab("feed")}
-              style={{ background: "var(--btn-secondary-bg)", border: "none", color: "var(--text-main)", padding: "0.4rem 0.75rem", borderRadius: 10, fontSize: "0.78rem", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
-            >
-              <ArrowLeft size={16} /> Back to Feed
-            </button>
-            <span style={{ fontSize: "0.72rem", color: "var(--card-subtext)", fontWeight: 700 }}>{selectedNotif.date} at {selectedNotif.time}</span>
+              );
+            })}
           </div>
-
-          <div style={{ display: "flex", gap: "0.85rem", alignItems: "center" }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: selectedNotif.bg, color: selectedNotif.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <selectedNotif.icon size={22} />
-            </div>
-            <div>
-              <span style={{ fontSize: "0.7rem", fontWeight: 800, color: selectedNotif.color, textTransform: "uppercase" }}>{selectedNotif.category} Alert</span>
-              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--card-text)", margin: 0, marginTop: 2 }}>{selectedNotif.title}</h3>
-            </div>
-          </div>
-
-          <div className="subbox-ui" style={{ padding: "1rem", lineHeight: 1.5, fontSize: "0.85rem" }}>
-            {selectedNotif.details}
-          </div>
-
-          {selectedNotif.actionLabel && (
-            <a
-              href={selectedNotif.actionUrl}
-              style={{
-                padding: "0.7rem 1.1rem", borderRadius: 12, background: "linear-gradient(135deg, #4f46e5, #06b6d4)",
-                color: "#ffffff", fontWeight: 800, fontSize: "0.82rem", textDecoration: "none",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem"
-              }}
-            >
-              <span>{selectedNotif.actionLabel}</span>
-              <ArrowRight size={16} />
-            </a>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
     </div>
   );

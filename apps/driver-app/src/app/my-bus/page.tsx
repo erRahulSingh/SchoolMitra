@@ -2,143 +2,147 @@
 
 import React from "react";
 import { 
-  Bus, ShieldCheck, Fuel, Calendar, Wrench, PhoneCall, 
-  Award, AlertTriangle, FileText, CheckCircle2, Phone 
+  ArrowLeft,
+  FileText,
+  ChevronRight,
+  Edit2
 } from "lucide-react";
 
-export default function MyBusPage() {
-  const busDetails = {
-    busNumber: "Bus #01",
-    vehicleNumber: "DL 01 AB 4321",
-    busModel: "Tata Starbus Ultra (2024 BS6 Diesel)",
-    capacity: "42 Passengers + 2 Staff",
-    insurancePolicy: "HDFC ERGO #POL-99401221",
-    insuranceExpiry: "15 Nov 2027 (Active ✅)",
-    fitnessExpiry: "28 March 2028 (RTO Certified ✅)",
-    fuelLevel: 78,
-    fuelLiters: "93.6 L / 120 L Tank",
-    emergencyContact: "+91 11 2345 6789",
-    safetyOfficer: "+91 98111 00099"
-  };
+interface InfoItemProps {
+  label: string;
+  value: string;
+}
 
+function InfoItem({ label, value }: InfoItemProps) {
   return (
     <div style={{
-      padding: "1.25rem 1rem",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "0.95rem 1rem",
+      borderBottom: "1px solid #f1f5f9"
+    }}>
+      <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: "0.85rem", color: "#1e293b", fontWeight: 800 }}>{value}</span>
+    </div>
+  );
+}
+
+export default function MyBusPage({ onNavigate }: { onNavigate?: (tab: string) => void }) {
+  return (
+    <div style={{
+      padding: "1rem 1rem 2.2rem 1rem",
       display: "flex",
       flexDirection: "column",
       gap: "1.1rem",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+      color: "#0f172a",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      background: "#f8fafc",
+      minHeight: "100%"
     }}>
 
-      {/* HEADER BANNER */}
-      <div className="banner-card" style={{
-        padding: "1.1rem 1.25rem",
+
+
+      {/* ════════════ TOP VEHICLE BANNER CARD ════════════ */}
+      <div style={{
+        background: "#ffffff",
+        borderRadius: "20px",
+        padding: "1.25rem 1.15rem",
+        border: "1px solid #cbd5e1",
+        boxShadow: "0 6px 16px rgba(15, 23, 42, 0.02)",
         display: "flex",
-        justify: "space-between",
-        alignItems: "center"
+        alignItems: "center",
+        gap: "1.15rem"
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 16,
-            background: "linear-gradient(135deg, #10b981, #059669)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)"
-          }}>
-            <Bus size={26} />
-          </div>
-          <div>
-            <div style={{ fontSize: "1.15rem", fontWeight: 900 }} className="text-title">{busDetails.busNumber}</div>
-            <div style={{ fontSize: "0.75rem", color: "#059669", fontWeight: 800, marginTop: 1 }}>{busDetails.vehicleNumber}</div>
-          </div>
-        </div>
-
-        <span style={{
-          background: "rgba(16, 185, 129, 0.2)", border: "1px solid rgba(16, 185, 129, 0.4)",
-          color: "#059669", padding: "0.3rem 0.65rem", borderRadius: 99,
-          fontSize: "0.72rem", fontWeight: 800
+        {/* Cartoon Bus Avatar Frame */}
+        <div style={{
+          width: "72px",
+          height: "72px",
+          borderRadius: "50%",
+          background: "#e0f2fe",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0
         }}>
-          RTO PASSED
-        </span>
-      </div>
-
-      {/* SECTION 1: SPECIFICATIONS GRID */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-        <div style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }} className="text-muted-custom">
-          Vehicle Specifications
+          {/* Yellow Bus Icon */}
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "42px", height: "42px" }}>
+            <rect x="4" y="8" width="24" height="16" rx="4" fill="#f59e0b" />
+            <rect x="6" y="10" width="20" height="6" fill="#1e293b" rx="1" />
+            <circle cx="10" cy="11" r="1.5" fill="#38bdf8" />
+            <circle cx="22" cy="11" r="1.5" fill="#38bdf8" />
+            <rect x="7" y="24" width="4" height="3" fill="#64748b" />
+            <rect x="21" y="24" width="4" height="3" fill="#64748b" />
+            <circle cx="9" cy="20" r="2" fill="#1e293b" />
+            <circle cx="23" cy="20" r="2" fill="#1e293b" />
+          </svg>
         </div>
 
-        <div className="card-ui" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.78rem" }} className="text-muted-custom">Bus Model</span>
-          <strong style={{ fontSize: "0.85rem" }} className="text-title">{busDetails.busModel}</strong>
-        </div>
-
-        <div className="card-ui" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.78rem" }} className="text-muted-custom">Seating Capacity</span>
-          <strong style={{ fontSize: "0.85rem", color: "#0284c7" }}>{busDetails.capacity}</strong>
-        </div>
-      </div>
-
-      {/* SECTION 2: FUEL STATUS METER */}
-      <div className="card-ui" style={{ padding: "1.1rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.65rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Fuel size={18} color="#d97706" />
-            <span style={{ fontSize: "0.85rem", fontWeight: 800 }} className="text-title">Fuel Level Status</span>
-          </div>
-          <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "#d97706" }}>{busDetails.fuelLevel}%</span>
-        </div>
-
-        {/* Meter Progress Bar */}
-        <div style={{ width: "100%", height: 10, background: "rgba(100, 116, 139, 0.12)", borderRadius: 99, overflow: "hidden", marginBottom: "0.45rem" }}>
-          <div style={{ width: `${busDetails.fuelLevel}%`, height: "100%", background: "linear-gradient(90deg, #f59e0b, #10b981)", borderRadius: 99 }} />
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", fontWeight: 700 }} className="text-muted-custom">
-          <span>Tank Capacity: 120 L</span>
-          <span style={{ color: "#059669" }}>Available: {busDetails.fuelLiters}</span>
+        {/* Labels details */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+          <span style={{ fontSize: "1.2rem", fontWeight: 850, color: "#1e293b", letterSpacing: "-0.01em", fontFamily: "'Outfit', sans-serif" }}>
+            UP32 AB 1234
+          </span>
+          <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>
+            Green Valley School Bus
+          </span>
+          <span style={{
+            background: "#dcfce7",
+            color: "#16a34a",
+            padding: "0.25rem 0.6rem",
+            borderRadius: "8px",
+            fontSize: "0.68rem",
+            fontWeight: 800,
+            width: "fit-content",
+            marginTop: "2px"
+          }}>
+            Active
+          </span>
         </div>
       </div>
 
-      {/* SECTION 3: LEGAL COMPLIANCE & EXPIRIES */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-        <div style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }} className="text-muted-custom">
-          Insurance & RTO Fitness
-        </div>
-
-        <div className="card-ui" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: "0.72rem" }} className="text-muted-custom">Commercial Insurance</div>
-            <div style={{ fontSize: "0.85rem", fontWeight: 800, marginTop: 2 }} className="text-title">{busDetails.insurancePolicy}</div>
-          </div>
-          <span style={{ fontSize: "0.75rem", color: "#059669", fontWeight: 800 }}>{busDetails.insuranceExpiry}</span>
-        </div>
-
-        <div className="card-ui" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: "0.72rem" }} className="text-muted-custom">RTO Fitness Certificate</div>
-            <div style={{ fontSize: "0.85rem", fontWeight: 800, marginTop: 2 }} className="text-title">Delhi RTO Approved</div>
-          </div>
-          <span style={{ fontSize: "0.75rem", color: "#059669", fontWeight: 800 }}>{busDetails.fitnessExpiry}</span>
-        </div>
+      {/* ════════════ INFORMATION LIST STACK ════════════ */}
+      <div style={{
+        background: "#ffffff",
+        borderRadius: "20px",
+        border: "1px solid #cbd5e1",
+        overflow: "hidden",
+        boxShadow: "0 6px 16px rgba(15, 23, 42, 0.02)"
+      }}>
+        <InfoItem label="Bus Type" value="School Bus (52 Seater)" />
+        <InfoItem label="Fuel Type" value="Diesel" />
+        <InfoItem label="Registration No." value="UP32 AB 1234" />
+        <InfoItem label="Fitness Valid Upto" value="15 Aug 2025" />
+        <InfoItem label="Insurance Valid Upto" value="10 Dec 2025" />
+        <InfoItem label="Pollution Valid Upto" value="05 Oct 2025" />
+        <InfoItem label="Owner" value="Green Valley School" />
+        <InfoItem label="Garage" value="Green Valley Transport" />
       </div>
 
-      {/* SECTION 4: EMERGENCY CONTACTS */}
-      <div style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: 18, padding: "1.1rem" }}>
-        <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "#dc2626", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.45rem" }}>
-          <PhoneCall size={18} /> Emergency Control Hotlines
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem" }}>
-            <span className="text-muted-custom">Transport Control Room:</span>
-            <strong style={{ color: "#0284c7" }}>{busDetails.emergencyContact}</strong>
+      {/* ════════════ VIEW DOCUMENTS FOOTER BUTTON ════════════ */}
+      <button
+        onClick={() => onNavigate && onNavigate("driverdocuments")}
+        style={{
+          background: "#ffffff",
+          border: "1px solid #cbd5e1",
+          borderRadius: "16px",
+          padding: "1.05rem 1.25rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.01)",
+          cursor: "pointer",
+          textAlign: "left"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }}>
+            <FileText size={16} strokeWidth={2.5} />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem" }}>
-            <span className="text-muted-custom">School Safety Officer:</span>
-            <strong style={{ color: "#0284c7" }}>{busDetails.safetyOfficer}</strong>
-          </div>
+          <span style={{ fontSize: "0.88rem", fontWeight: 800, color: "#1e293b" }}>View Documents</span>
         </div>
-      </div>
+        <ChevronRight size={18} color="#94a3b8" />
+      </button>
 
     </div>
   );

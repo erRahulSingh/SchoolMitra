@@ -1,6 +1,13 @@
+// ═══════════════════════════════════════════════════════════
+// SchoolMitra Backend — GPS Live Telemetry Routes (Phase 10)
+// ═══════════════════════════════════════════════════════════
+
 import { Router } from "express";
-import { getLiveGpsTelemetry } from "./gps.controller";
+import { updateGpsLocation, getLiveMapFleet } from "./gps.controller";
 
 const router = Router();
-router.get("/telemetry", getLiveGpsTelemetry);
+
+router.post("/location-update", updateGpsLocation);
+router.get("/live-map", getLiveMapFleet);
+
 export default router;

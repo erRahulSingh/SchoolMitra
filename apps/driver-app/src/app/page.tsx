@@ -9,6 +9,20 @@ import LiveNavigationPage from "./live-navigation/page";
 import StudentPickupPage from "./pickup/page";
 import StudentDropPage from "./drop/page";
 import ReturnTripPage from "./return-trip/page";
+import TripTimelinePage from "./trip-timeline/page";
+import TripSummaryPage from "./trip-summary/page";
+import MessagesPage from "./messages/page";
+import VehicleChecklistPage from "./vehicle-checklist/page";
+import DriverDocumentsPage from "./driver-documents/page";
+import DutySchedulePage from "./duty-schedule/page";
+import StudentAttendancePage from "./student-attendance/page";
+import AbsentStudentsPage from "./absent-students/page";
+import DriverReportsPage from "./reports/page";
+import ProfileSettingsPage from "./profile-settings/page";
+import NotificationSettingsPage from "./notification-settings/page";
+import HelpSupportPage from "./help/page";
+import AboutAppPage from "./about/page";
+import DeviceStatusPage from "./device-status/page";
 import SosPage from "./sos/page";
 import TripHistoryPage from "./history/page";
 import DriverProfilePage from "./driver-profile/page";
@@ -16,7 +30,7 @@ import { driverDict, DriverLanguage } from "./i18n";
 import { 
   Bus, Navigation, CheckSquare, AlertTriangle, FileText, 
   User, ShieldCheck, Radio, MapPin, Building, Home, Clock, 
-  Menu, X, Compass, History, Settings, Sun, Moon, Globe, LogOut, ChevronRight 
+  Menu, X, Compass, History, Settings, Sun, Moon, Globe, LogOut, ChevronRight, Bell, MessageSquare, Clipboard, FileCheck, Headphones, Info, Users, Calendar
 } from "lucide-react";
 import { driverApi } from "@/lib/api";
 
@@ -27,7 +41,7 @@ export default function DriverCockpitShell() {
   const [language, setLanguage] = useState<DriverLanguage>("en");
   const [showSidebar, setShowSidebar] = useState(false);
 
-  type TabType = "dashboard" | "mybus" | "route" | "livenav" | "pickup" | "drop" | "returntrip" | "sos" | "history" | "profile";
+  type TabType = "dashboard" | "mybus" | "route" | "livenav" | "pickup" | "drop" | "returntrip" | "sos" | "history" | "profile" | "triptimeline" | "tripsummary" | "messages" | "checklist" | "driverdocuments" | "dutyschedule" | "studentattendance" | "absentstudents" | "reports" | "profilesettings" | "notificationsettings" | "help" | "about" | "devicestatus";
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [user, setUser] = useState<any>(null);
 
@@ -134,64 +148,71 @@ export default function DriverCockpitShell() {
 
       {/* DRIVER TOP HEADER BAR WITH THEME & LANGUAGE SWITCHER */}
       <div style={{
-        background: "var(--header-bg)",
+        background: "#ffffff",
         padding: "2.8rem 1rem 0.85rem 1rem",
-        borderBottom: "1px solid var(--border-card)",
-        display: "flex", justifyContent: "space-between", alignItems: "center"
+        borderBottom: "1px solid #e2e8f0",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        zIndex: 10,
+        position: "relative"
       }}>
-        {/* Left: Sidebar Toggle & Driver Info */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+        {/* Left Side: Hamburger Menu + Brand Logo Group */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          {/* Hamburger Menu Toggle */}
           <button
             type="button"
             onClick={() => setShowSidebar(true)}
             style={{
-              background: "none", border: "none", color: "var(--text-primary)",
-              cursor: "pointer", display: "flex", alignItems: "center"
+              background: "none", border: "none", color: "#1e293b",
+              cursor: "pointer", display: "flex", alignItems: "center", padding: "0.2rem"
             }}
           >
-            <Menu size={22} />
+            <Menu size={22} strokeWidth={2.2} />
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
-            <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #059669)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "#fff", fontSize: "0.85rem" }}>
-              RS
+          {/* SchoolMitra Brand Logo with Driver Subtitle */}
+          <div 
+            onClick={() => setActiveTab("dashboard")}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <svg width="24" height="24" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="22" cy="22" r="20" stroke="#1d4ed8" strokeWidth="2.5" fill="#eff6ff"/>
+                <circle cx="22" cy="18" r="4.5" fill="#1d4ed8"/>
+                <path d="M14 30C14 25.5 17.5 24 22 24C26.5 24 30 25.5 30 30" stroke="#1d4ed8" strokeWidth="2.8" strokeLinecap="round"/>
+              </svg>
+              <div style={{ display: 'flex', alignItems: 'center', fontSize: '1.05rem', fontWeight: 800, fontFamily: "'Outfit', sans-serif" }}>
+                <span style={{ color: '#1e3a8a' }}>School</span>
+                <span style={{ color: '#1e3a8a' }}>Mitra</span>
+              </div>
             </div>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 900 }} className="text-title">{user.name}</div>
-              <div style={{ fontSize: "0.68rem", fontWeight: 700 }} className="text-muted-custom">Bus #DL01AB4321</div>
-            </div>
+            <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#64748b', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: '1px', paddingLeft: '28px' }}>
+              Driver
+            </span>
           </div>
         </div>
 
-        {/* Right: Theme Switcher & Language Converter */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
-          {/* Language Switcher Button */}
-          <button
-            type="button"
-            onClick={toggleLanguage}
-            style={{
-              background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.3)",
-              color: "var(--text-accent)", padding: "0.3rem 0.55rem", borderRadius: 8,
-              fontSize: "0.72rem", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem"
-            }}
-          >
-            <Globe size={13} />
-            <span>{language === "en" ? "EN" : "हिन्दी"}</span>
-          </button>
-
-          {/* Theme Toggle Switcher Button */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            style={{
-              background: "rgba(255, 255, 255, 0.08)", border: "1px solid var(--border-card)",
-              color: "var(--text-primary)", padding: "0.35rem", borderRadius: 8,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
-            }}
-          >
-            {theme === "dark" ? <Sun size={15} color="#fbbf24" /> : <Moon size={15} color="#6366f1" />}
-          </button>
-        </div>
+        {/* Right: Notification Bell Icon */}
+        <button
+          type="button"
+          onClick={() => setActiveTab("messages")}
+          style={{
+            background: 'transparent', border: 'none', padding: '0.2rem',
+            color: '#1e293b', position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center'
+          }}
+        >
+          <Bell size={22} strokeWidth={2.2} color="#1e293b" />
+          {/* Notification Red Badge */}
+          <span style={{
+            position: 'absolute', top: '1px', right: '1px',
+            width: '14px', height: '14px', borderRadius: '50%',
+            background: '#ef4444', color: '#ffffff',
+            fontSize: '0.55rem', fontWeight: 800,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '2.2px solid #ffffff', boxShadow: '0 2px 6px rgba(239, 68, 68, 0.35)'
+          }}>
+            1
+          </span>
+        </button>
       </div>
 
       {/* ════════════ SLIDE-OUT SIDEBAR NAVIGATION DRAWER ════════════ */}
@@ -204,10 +225,10 @@ export default function DriverCockpitShell() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                 <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #059669)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "#fff", fontSize: "1rem" }}>
-                  RS
+                  {user.name ? user.name.split(" ").map((n: string) => n[0]).join("") : "RK"}
                 </div>
                 <div>
-                  <div style={{ fontSize: "1rem", fontWeight: 900 }} className="text-title">Ram Singh</div>
+                  <div style={{ fontSize: "1rem", fontWeight: 900 }} className="text-title">{user.name}</div>
                   <div style={{ fontSize: "0.72rem" }} className="text-muted-custom">Senior Bus Pilot • Route 1</div>
                 </div>
               </div>
@@ -258,6 +279,17 @@ export default function DriverCockpitShell() {
                 { id: "drop", label: t.drop, icon: Building },
                 { id: "returntrip", label: t.returnTrip, icon: Home },
                 { id: "sos", label: t.sos, icon: AlertTriangle },
+                { id: "messages", label: "Messages", icon: MessageSquare },
+                { id: "checklist", label: "Vehicle Checklist", icon: Clipboard },
+                { id: "dutyschedule", label: "Duty Schedule", icon: Calendar },
+                { id: "studentattendance", label: "Student Attendance", icon: CheckSquare },
+                { id: "absentstudents", label: "Absent Students", icon: Users },
+                { id: "reports", label: "Incident Report", icon: AlertTriangle },
+                { id: "profilesettings", label: "Profile Settings", icon: Settings },
+                { id: "notificationsettings", label: "Notification Settings", icon: Bell },
+                { id: "help", label: "Help & Support", icon: Headphones },
+                { id: "about", label: "About App", icon: Info },
+                { id: "devicestatus", label: "Device Status", icon: ShieldCheck },
                 { id: "history", label: t.history, icon: History },
                 { id: "profile", label: t.profile, icon: User }
               ].map((item) => (
@@ -302,39 +334,89 @@ export default function DriverCockpitShell() {
 
       {/* MAIN CONTENT CONTAINER */}
       <div style={{ flex: 1, overflowY: "auto", paddingBottom: "70px" }}>
-        {activeTab === "dashboard" && <DriverDashboardPage language={language} />}
-        {activeTab === "mybus" && <MyBusPage language={language} />}
-        {activeTab === "route" && <RoutePage language={language} />}
-        {activeTab === "livenav" && <LiveNavigationPage language={language} />}
-        {activeTab === "pickup" && <StudentPickupPage language={language} />}
-        {activeTab === "drop" && <StudentDropPage language={language} />}
-        {activeTab === "returntrip" && <ReturnTripPage language={language} />}
-        {activeTab === "sos" && <SosPage language={language} />}
-        {activeTab === "history" && <TripHistoryPage language={language} />}
-        {activeTab === "profile" && <DriverProfilePage language={language} onLogout={handleLogout} />}
+        {activeTab === "dashboard" && <DriverDashboardPage language={language} onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "mybus" && <MyBusPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "route" && <RoutePage />}
+        {activeTab === "livenav" && <LiveNavigationPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "pickup" && <StudentPickupPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "drop" && <StudentDropPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "returntrip" && <ReturnTripPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "sos" && <SosPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "triptimeline" && <TripTimelinePage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "tripsummary" && <TripSummaryPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "messages" && <MessagesPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "checklist" && <VehicleChecklistPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "driverdocuments" && <DriverDocumentsPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "dutyschedule" && <DutySchedulePage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "studentattendance" && <StudentAttendancePage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "absentstudents" && <AbsentStudentsPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "reports" && <DriverReportsPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "history" && <TripHistoryPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "profile" && <DriverProfilePage onNavigate={(tab: any) => setActiveTab(tab)} onLogout={handleLogout} />}
+        {activeTab === "profilesettings" && <ProfileSettingsPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "notificationsettings" && <NotificationSettingsPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "help" && <HelpSupportPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "about" && <AboutAppPage onNavigate={(tab: any) => setActiveTab(tab)} />}
+        {activeTab === "devicestatus" && <DeviceStatusPage onNavigate={(tab: any) => setActiveTab(tab)} />}
       </div>
 
-      {/* FLOATING GLASSMORTIC DRIVER TAB BAR */}
+      {/* ELEVATED PREMIUM DRIVER TAB BAR (MATCHING SCREENSHOT) */}
       <div className="bottom-nav">
-        <button onClick={() => setActiveTab("dashboard")} className={`driver-tab ${activeTab === "dashboard" ? "active" : ""}`}>
-          <Home size={18} />
-          <span>Home</span>
+        {/* Tab 1: Home */}
+        <button 
+          type="button"
+          onClick={() => setActiveTab("dashboard")} 
+          className={`driver-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
+        >
+          <Home size={22} fill={activeTab === 'dashboard' ? 'currentColor' : 'none'} strokeWidth={activeTab === 'dashboard' ? 2.5 : 2} />
+          <span>{language === "hi" ? "होम" : "Home"}</span>
         </button>
-        <button onClick={() => setActiveTab("route")} className={`driver-tab ${activeTab === "route" ? "active" : ""}`}>
-          <Navigation size={18} />
-          <span>Route</span>
+
+        {/* Tab 2: Route */}
+        <button 
+          type="button"
+          onClick={() => setActiveTab("route")} 
+          className={`driver-tab ${activeTab === 'route' ? 'active' : ''}`}
+        >
+          <Navigation size={22} fill={activeTab === 'route' ? 'currentColor' : 'none'} strokeWidth={activeTab === 'route' ? 2.5 : 2} />
+          <span>{language === "hi" ? "मार्ग" : "Route"}</span>
         </button>
-        <button onClick={() => setActiveTab("pickup")} className={`driver-tab ${activeTab === "pickup" ? "active" : ""}`}>
-          <CheckSquare size={18} />
-          <span>Pickup</span>
+
+        {/* Tab 3: Center Elevated Floating Circular Button (Trip) */}
+        <div 
+          className="nav-center-btn-container"
+          onClick={() => setActiveTab("pickup")}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="nav-center-btn" style={{
+            background: activeTab === 'pickup' ? 'linear-gradient(135deg, #1d4ed8, #1e3a8a)' : undefined,
+            boxShadow: activeTab === 'pickup' ? '0 6px 16px rgba(29, 78, 216, 0.45)' : undefined
+          }}>
+            <Bus size={24} color="#ffffff" strokeWidth={2.5} />
+          </div>
+          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: activeTab === 'pickup' ? '#1d4ed8' : '#64748b', marginTop: '2px' }}>
+            {language === "hi" ? "यात्रा" : "Trip"}
+          </span>
+        </div>
+
+        {/* Tab 4: Messages */}
+        <button 
+          type="button"
+          onClick={() => setActiveTab("messages")} 
+          className={`driver-tab ${activeTab === 'messages' ? 'active' : ''}`}
+        >
+          <MessageSquare size={22} fill={activeTab === 'messages' ? 'currentColor' : 'none'} strokeWidth={activeTab === 'messages' ? 2.5 : 2} />
+          <span>{language === "hi" ? "संदेश" : "Messages"}</span>
         </button>
-        <button onClick={() => setActiveTab("history")} className={`driver-tab ${activeTab === "history" ? "active" : ""}`}>
-          <History size={18} />
-          <span>History</span>
-        </button>
-        <button onClick={() => setActiveTab("profile")} className={`driver-tab ${activeTab === "profile" ? "active" : ""}`}>
-          <User size={18} />
-          <span>Profile</span>
+
+        {/* Tab 5: Profile */}
+        <button 
+          type="button"
+          onClick={() => setActiveTab("profile")} 
+          className={`driver-tab ${activeTab === 'profile' ? 'active' : ''}`}
+        >
+          <User size={22} fill={activeTab === 'profile' ? 'currentColor' : 'none'} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
+          <span>{language === "hi" ? "प्रोफ़ाइल" : "Profile"}</span>
         </button>
       </div>
 

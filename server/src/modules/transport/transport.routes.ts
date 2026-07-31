@@ -1,40 +1,43 @@
+// ═══════════════════════════════════════════════════════════
+// SchoolMitra Backend — Transport Fleet Routes (Phase 10)
+// ═══════════════════════════════════════════════════════════
+
 import { Router } from "express";
-import { 
-  getBuses, createBus,
-  getDrivers, createDriver,
-  getRoutes, createRoute,
-  getStops, createStop,
-  getTrips, createTrip,
-  getPickupLogs, createPickupLog,
-  getDropLogs, createDropLog
+import {
+  getBuses,
+  createBus,
+  getRoutes,
+  createRoute,
+  getStops,
+  createStop,
+  getDrivers,
+  createDriver,
+  startTrip,
+  endTrip,
+  assignStudentTransport,
+  triggerSOSAlert,
+  getSOSAlerts
 } from "./transport.controller";
 
 const router = Router();
 
-// Buses routes
+// Fleet Entities
 router.get("/buses", getBuses);
 router.post("/buses", createBus);
-
-// Drivers routes
+router.get("/routes", getRoutes);
+router.post("/routes", createRoute);
+router.get("/stops", getStops);
+router.post("/stops", createStop);
 router.get("/drivers", getDrivers);
 router.post("/drivers", createDriver);
 
-// Routes mapping
-router.get("/routes", getRoutes);
-router.post("/routes", createRoute);
+// Trips & Assignments
+router.post("/trip/start", startTrip);
+router.post("/trip/end", endTrip);
+router.post("/assign-student", assignStudentTransport);
 
-// Stops mapping
-router.get("/stops", getStops);
-router.post("/stops", createStop);
-
-// Trips tracking
-router.get("/trips", getTrips);
-router.post("/trips", createTrip);
-
-// Logs
-router.get("/pickup-logs", getPickupLogs);
-router.post("/pickup-logs", createPickupLog);
-router.get("/drop-logs", getDropLogs);
-router.post("/drop-logs", createDropLog);
+// Emergency SOS Safety Alerts
+router.post("/sos/trigger", triggerSOSAlert);
+router.get("/sos/alerts", getSOSAlerts);
 
 export default router;

@@ -16,7 +16,7 @@ try {
 export const connectDB = async (): Promise<void> => {
   const connStr =
     process.env.MONGODB_URI ||
-    "mongodb+srv://rahulengineer492_db_user:mrx3zFPgAttlcFrk@schoolmitra.qztpv50.mongodb.net/schoolmitra?retryWrites=true&w=majority";
+    "mongodb+srv://rahulengineer492_db_user:Schoolmitra_db@schoolmitra.qztpv50.mongodb.net/schoolmitra?retryWrites=true&w=majority";
 
   // ──── Connection Event Listeners ────
   mongoose.connection.on("connected", () => {

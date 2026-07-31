@@ -19,6 +19,8 @@ const busSchema = new Schema({
   },
   registrationNo: { type: String, trim: true, uppercase: true },
   capacity: { type: Number, required: true, default: 30 },
+  driverName: { type: String, trim: true },
+  routeName: { type: String, trim: true },
   model: { type: String, trim: true },
   chassisNo: { type: String, trim: true },
   engineNo: { type: String, trim: true },
@@ -447,35 +449,5 @@ const maintenanceLogSchema = new Schema({
 maintenanceLogSchema.index({ schoolId: 1, busId: 1 });
 export const MaintenanceLogModel = model("maintenanceLogs", maintenanceLogSchema);
 
-// ──────────── 44. GPS TELEMETRY LOCATIONS ────────────
-const gpsLocationSchema = new Schema({
-  schoolId: {
-    type: Schema.Types.ObjectId,
-    ref: "schools",
-    index: true,
-  },
-  busId: {
-    type: Schema.Types.ObjectId,
-    ref: "buses",
-    required: true,
-    index: true,
-  },
-  routeId: {
-    type: Schema.Types.ObjectId,
-    ref: "routes",
-    index: true,
-  },
-  latitude: { type: Number, required: true },
-  longitude: { type: Number, required: true },
-  speed: { type: Number, default: 0 },
-  heading: { type: Number, default: 0 },
-  currentStop: { type: String, trim: true },
-  nextStop: { type: String, trim: true },
-  distanceToNextStopMeters: { type: Number },
-  etaMinutes: { type: Number },
-  timestamp: { type: Date, default: Date.now }
-}, { timestamps: true });
 
-gpsLocationSchema.index({ busId: 1, timestamp: -1 });
-export const GPSLocationModel = model("gpsLocations", gpsLocationSchema);
 

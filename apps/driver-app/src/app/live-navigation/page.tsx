@@ -2,178 +2,251 @@
 
 import React, { useState, useEffect } from "react";
 import { 
-  Navigation, MapPin, Volume2, VolumeX, Clock, Activity, 
-  Bus, ShieldAlert, ArrowUpRight, CheckCircle2, RotateCw 
+  ArrowLeft, 
+  MapPin, 
+  Clock, 
+  Compass, 
+  Navigation,
+  Activity,
+  Milestone,
+  CheckCircle2,
+  Bus
 } from "lucide-react";
 
-import { createSocketConnection } from "@/lib/socketClient";
+export default function LiveNavigationPage({ onNavigate }: { onNavigate?: (tab: string) => void }) {
+  const [speed, setSpeed] = useState(35);
 
-export default function LiveNavigationPage() {
-  const [speed, setSpeed] = useState(38);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [nextStop, setNextStop] = useState("Dwarka Sector 12 Market Gate");
-  const [etaMins, setEtaMins] = useState(8);
-  const [distanceKm, setDistanceKm] = useState(1.4);
-
-  // Speed & Socket.IO GPS Broadcast Simulation
+  // Simulate speed shifts slightly
   useEffect(() => {
-    let socket: any = null;
-    try {
-      socket = createSocketConnection("http://localhost:5000");
-    } catch (e) {
-      console.warn("Socket connection warning:", e);
-    }
-
-    const timer = setInterval(() => {
-      setSpeed((prev) => {
-        const delta = Math.random() > 0.5 ? 2 : -2;
+    const interval = setInterval(() => {
+      setSpeed(prev => {
+        const delta = Math.random() > 0.5 ? 1 : -1;
         const next = prev + delta;
-        const currentSpeed = next > 48 ? 42 : next < 24 ? 30 : next;
-
-        // Emit live GPS location update to backend Socket.IO server
-        if (socket && socket.connected) {
-          socket.emit("driver:location_update", {
-            busId: "Bus #01",
-            routeId: "Route 1",
-            latitude: 28.5921 + (Math.random() - 0.5) * 0.005,
-            longitude: 77.0460 + (Math.random() - 0.5) * 0.005,
-            speed: currentSpeed,
-            currentStop: "Sector 10 Stop",
-            nextStop: "Dwarka Sector 12 Market Gate",
-            distanceToNextStopMeters: 1400,
-            etaMinutes: Math.max(1, Math.round(1.4 / (currentSpeed / 60)))
-          });
-        }
-
-        return currentSpeed;
+        return next > 40 ? 38 : next < 30 ? 32 : next;
       });
     }, 3000);
-
-    return () => {
-      clearInterval(timer);
-      if (socket) socket.disconnect();
-    };
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div style={{
-      padding: "1.25rem 1rem",
+      padding: "1rem 1rem 2.2rem 1rem",
       display: "flex",
       flexDirection: "column",
       gap: "1.1rem",
-      color: "#f8fafc",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+      color: "#0f172a",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      background: "#f8fafc",
+      minHeight: "100%"
     }}>
 
-      {/* HEADER WITH VOICE NAVIGATION TOGGLE */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900 }}>Live GPS Turn Navigation</h2>
-          <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: 2 }}>Google Maps Turn-by-Turn Guidance</p>
+
+
+      {/* ════════════ TOP WORKFLOW STEPPER CARD ════════════ */}
+      <div style={{
+        background: "linear-gradient(135deg, #0b2265 0%, #0d3880 55%, #081a4b 100%)",
+        borderRadius: "20px",
+        padding: "1.25rem 1.15rem",
+        color: "#ffffff",
+        boxShadow: "0 8px 24px rgba(11, 34, 101, 0.2)"
+      }}>
+        {/* Route labels */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+          <div>
+            <h2 style={{ fontSize: "1rem", fontWeight: 800, margin: 0, fontFamily: "'Outfit', sans-serif" }}>Route 01 - Morning</h2>
+            <p style={{ fontSize: "0.78rem", color: "#93c5fd", fontWeight: 500, margin: "2px 0 0 0" }}>Green Valley Route</p>
+          </div>
+          <span style={{
+            background: "#22c55e",
+            color: "#ffffff",
+            padding: "0.35rem 0.75rem",
+            borderRadius: "99px",
+            fontSize: "0.7rem",
+            fontWeight: 800
+          }}>
+            In Progress
+          </span>
         </div>
 
-        {/* VOICE NAVIGATION TOGGLE BUTTON */}
-        <button
-          type="button"
-          onClick={() => setVoiceEnabled(!voiceEnabled)}
-          style={{
-            background: voiceEnabled ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)",
-            border: voiceEnabled ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(239, 68, 68, 0.4)",
-            color: voiceEnabled ? "#34d399" : "#f87171",
-            padding: "0.45rem 0.75rem", borderRadius: 12,
-            fontSize: "0.75rem", fontWeight: 800, cursor: "pointer",
-            display: "flex", alignItems: "center", gap: "0.4rem"
-          }}
-        >
-          {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-          <span>{voiceEnabled ? "Voice ON" : "Voice MUTED"}</span>
+        {/* Stepper Timeline Progress Bar */}
+        <div style={{ position: "relative", padding: "0.5rem 0.2rem" }}>
+          {/* Connecting Line */}
+          <div style={{
+            position: "absolute", top: "18px", left: "5%", right: "5%", height: "3px",
+            background: "linear-gradient(90deg, #22c55e 30%, rgba(255,255,255,0.2) 30%)", zIndex: 1
+          }} />
+
+          {/* Stepper Nodes */}
+          <div style={{ display: "flex", justifyContent: "space-between", position: "relative", zIndex: 2 }}>
+            {/* Node 1 */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.35rem" }}>
+              <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#22c55e", border: "3px solid #0d3880" }} />
+              <span style={{ fontSize: "0.62rem", color: "#ffffff", fontWeight: 700 }}>Started</span>
+              <span style={{ fontSize: "0.52rem", color: "#93c5fd", fontWeight: 500 }}>07:00 AM</span>
+            </div>
+
+            {/* Node 2 */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.35rem" }}>
+              <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#22c55e", border: "3px solid #0d3880" }} />
+              <span style={{ fontSize: "0.62rem", color: "#ffffff", fontWeight: 700 }}>In Progress</span>
+            </div>
+
+            {/* Node 3 */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.35rem" }}>
+              <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "rgba(255,255,255,0.3)", border: "3px solid #0d3880" }} />
+              <span style={{ fontSize: "0.62rem", color: "#bfdbfe", fontWeight: 700 }}>12 Stops Left</span>
+            </div>
+
+            {/* Node 4 */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.35rem" }}>
+              <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "rgba(255,255,255,0.3)", border: "3px solid #0d3880" }} />
+              <span style={{ fontSize: "0.62rem", color: "#bfdbfe", fontWeight: 700 }}>End</span>
+              <span style={{ fontSize: "0.52rem", color: "#93c5fd", fontWeight: 500 }}>07:45 AM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ════════════ MAP SECTION (REALISTIC VECTOR GRAPHIC) ════════════ */}
+      <div style={{
+        height: "220px",
+        background: "#e0f2fe",
+        borderRadius: "20px",
+        border: "1px solid #cbd5e1",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 6px 16px rgba(15, 23, 42, 0.02)"
+      }}>
+        {/* Draw a realistic vector navigation pathway grid */}
+        <svg viewBox="0 0 100 50" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+          {/* Roads */}
+          <path d="M-10 25 C30 20, 60 45, 110 30" fill="none" stroke="#ffffff" strokeWidth="8" strokeLinecap="round" />
+          <path d="M-10 25 C30 20, 60 45, 110 30" fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="1.5 1" strokeLinecap="round" />
+          
+          <path d="M30 -10 L45 60" fill="none" stroke="#ffffff" strokeWidth="6" />
+          <path d="M75 -10 L60 60" fill="none" stroke="#ffffff" strokeWidth="6" />
+          
+          {/* Markers */}
+          <circle cx="15" cy="27" r="2.5" fill="#ef4444" />
+          <circle cx="92" cy="32" r="2.5" fill="#10b981" />
+
+          {/* Current Bus Pin on the path */}
+          <g transform="translate(52, 33)">
+            <circle cx="0" cy="0" r="7" fill="#2563eb" stroke="#ffffff" strokeWidth="1.5" />
+            <path d="M-3 -3 L3 -3 L3 3 L-3 3 Z" fill="#ffffff" />
+          </g>
+        </svg>
+
+        {/* Floating Center-Location Compass Button */}
+        <button style={{
+          position: "absolute", bottom: "12px", right: "12px",
+          width: "36px", height: "36px", borderRadius: "50%",
+          background: "#ffffff", border: "1px solid #cbd5e1",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.1)", cursor: "pointer"
+        }}>
+          <Compass size={18} color="#2563eb" strokeWidth={2.5} />
         </button>
       </div>
 
-      {/* FLOATING NEXT STOP BANNER */}
-      <div style={{
-        background: "linear-gradient(135deg, #10b981, #059669)",
-        borderRadius: 18,
-        padding: "1rem 1.15rem",
-        color: "#fff",
-        boxShadow: "0 8px 24px rgba(16, 185, 129, 0.35)",
-        display: "flex",
-        justify: "space-between",
-        alignItems: "center"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-          <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Navigation size={24} />
-          </div>
-          <div>
-            <div style={{ fontSize: "0.7rem", fontWeight: 800, opacity: 0.9, textTransform: "uppercase" }}>NEXT STOP (IN {distanceKm} KM)</div>
-            <div style={{ fontSize: "1rem", fontWeight: 900, marginTop: 1 }}>{nextStop}</div>
-          </div>
-        </div>
-
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: "0.68rem", fontWeight: 800, opacity: 0.9 }}>ETA</div>
-          <div style={{ fontSize: "1.3rem", fontWeight: 900 }}>{etaMins} Mins</div>
-        </div>
-      </div>
-
-      {/* FULL-SCREEN STYLE VECTOR NAVIGATION MAP */}
-      <div style={{
-        height: 250,
-        background: "#090d16",
-        backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px)",
-        backgroundSize: "22px 22px",
-        borderRadius: 22,
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        position: "relative",
-        overflow: "hidden",
-        boxShadow: "0 12px 30px rgba(0,0,0,0.5)"
-      }}>
-        {/* Route Line Polyline */}
-        <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 10, background: "linear-gradient(90deg, #38bdf8, #10b981)", borderTop: "2px dashed #0284c7", borderBottom: "2px dashed #0284c7" }} />
-        <div style={{ position: "absolute", left: "45%", top: 0, bottom: 0, width: 10, background: "linear-gradient(180deg, #38bdf8, #10b981)", borderLeft: "2px dashed #0284c7", borderRight: "2px dashed #0284c7" }} />
-
-        {/* Current Location GPS Pulse Beacon */}
-        <div style={{ position: "absolute", top: "44%", left: "42%", textAlign: "center" }}>
-          <div className="driver-emblem" style={{ width: 44, height: 44, borderRadius: "50%", background: "#0284c7", border: "3px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", margin: "0 auto" }}>
-            <Bus size={22} />
-          </div>
-          <div style={{ fontSize: "0.62rem", background: "rgba(15,23,42,0.9)", color: "#fff", padding: "2px 8px", borderRadius: 6, fontWeight: 800, marginTop: 4, whiteSpace: "nowrap" }}>
-            Current Location • Bus #DL01AB4321
-          </div>
-        </div>
-
-        {/* Next Stop Waypoint Pin */}
-        <div style={{ position: "absolute", top: "15%", right: "15%", textAlign: "center" }}>
-          <MapPin size={26} color="#10b981" />
-          <div style={{ fontSize: "0.6rem", background: "#10b981", color: "#fff", padding: "2px 6px", borderRadius: 4, fontWeight: 800 }}>
-            Next Stop Pin
-          </div>
-        </div>
-      </div>
-
-      {/* SPEED DISPLAY & TELEMETRY GRID */}
+      {/* ════════════ 4 METRICS TELEMETRY GRID ════════════ */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-        
-        {/* Speedometer Display */}
-        <div style={{ background: "rgba(15, 23, 42, 0.85)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: 18, padding: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: "0.68rem", color: "#94a3b8", fontWeight: 700 }}>SPEED DISPLAY</div>
-            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#34d399", marginTop: 2 }}>
-              {speed} <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>KM/H</span>
-            </div>
-            <div style={{ fontSize: "0.65rem", color: "#38bdf8", fontWeight: 800, marginTop: 2 }}>Limit: 50 km/h</div>
+        {/* Speed */}
+        <div style={{
+          background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "16px",
+          padding: "0.95rem 1.15rem", display: "flex", alignItems: "center", gap: "0.75rem",
+          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.01)"
+        }}>
+          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb", flexShrink: 0 }}>
+            <Activity size={16} strokeWidth={2.5} />
           </div>
-          <Activity size={32} color="#34d399" />
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: 700 }}>Current Speed</span>
+            <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "#1e293b", marginTop: "1px" }}>{speed} km/h</span>
+          </div>
         </div>
 
-        {/* Current Location Telemetry */}
-        <div style={{ background: "rgba(15, 23, 42, 0.85)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: 18, padding: "1rem", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div style={{ fontSize: "0.68rem", color: "#94a3b8", fontWeight: 700 }}>CURRENT LOCATION</div>
-          <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "#fff", marginTop: 2 }}>Dwarka Sector 12 Flyover</div>
-          <div style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: 700, marginTop: 2 }}>GPS: 28.5821° N, 77.0500° E</div>
+        {/* Distance Covered */}
+        <div style={{
+          background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "16px",
+          padding: "0.95rem 1.15rem", display: "flex", alignItems: "center", gap: "0.75rem",
+          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.01)"
+        }}>
+          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981", flexShrink: 0 }}>
+            <Milestone size={16} strokeWidth={2.5} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: 700 }}>Distance Covered</span>
+            <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "#1e293b", marginTop: "1px" }}>6.8 km</span>
+          </div>
         </div>
 
+        {/* ETA */}
+        <div style={{
+          background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "16px",
+          padding: "0.95rem 1.15rem", display: "flex", alignItems: "center", gap: "0.75rem",
+          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.01)"
+        }}>
+          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center", color: "#d97706", flexShrink: 0 }}>
+            <Clock size={16} strokeWidth={2.5} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: 700 }}>ETA Next Stop</span>
+            <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "#1e293b", marginTop: "1px" }}>5 min</span>
+          </div>
+        </div>
+
+        {/* Total Distance */}
+        <div style={{
+          background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "16px",
+          padding: "0.95rem 1.15rem", display: "flex", alignItems: "center", gap: "0.75rem",
+          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.01)"
+        }}>
+          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#faf5ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#9333ea", flexShrink: 0 }}>
+            <MapPin size={16} strokeWidth={2.5} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: 700 }}>Total Distance</span>
+            <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "#1e293b", marginTop: "1px" }}>18.6 km</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ════════════ 5. NEXT STOP ROW BAR ════════════ */}
+      <div style={{
+        background: "#ffffff",
+        border: "1px solid #cbd5e1",
+        borderRadius: "20px",
+        padding: "1.1rem 1.25rem",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        boxShadow: "0 6px 20px rgba(15, 23, 42, 0.03)",
+        marginTop: "0.2rem"
+      }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+          <span style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em" }}>Next Stop</span>
+          <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "#1e293b" }}>Maple Park</span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.2rem" }}>
+            <span style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em" }}>ETA</span>
+            <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "#2563eb" }}>07:12 AM</span>
+          </div>
+
+          {/* Action icon button */}
+          <button 
+            onClick={() => onNavigate && onNavigate("pickup")}
+            style={{
+              width: "36px", height: "36px", borderRadius: "50%", background: "#2563eb", border: "none",
+              display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff",
+              boxShadow: "0 4px 10px rgba(37, 99, 235, 0.25)", cursor: "pointer"
+            }}
+          >
+            <Navigation size={16} fill="#ffffff" />
+          </button>
+        </div>
       </div>
 
     </div>

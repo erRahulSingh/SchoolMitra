@@ -1,24 +1,31 @@
 // ═══════════════════════════════════════════════════════════
-// SchoolMitra Backend — Exam & Gradebook Routes
+// SchoolMitra Backend — Exam Management Routes (Phase 8)
 // ═══════════════════════════════════════════════════════════
 
 import { Router } from "express";
 import {
-  getExamSchedules,
-  createExamSchedule,
-  submitMarks,
-  getStudentMarks,
+  getExamsList,
+  createExam,
+  getExamScheduleDetails,
+  enterMarks,
+  getStudentResult,
   getReportCard,
-  getTopRankers
+  publishExamResults
 } from "./exams.controller";
 
 const router = Router();
 
-router.get("/schedules", getExamSchedules);
-router.post("/schedules", createExamSchedule);
-router.post("/marks/entry", submitMarks);
-router.get("/marks/student/:studentId", getStudentMarks);
+// Exam Types & Schedules
+router.get("/", getExamsList);
+router.post("/create", createExam);
+router.get("/schedule", getExamScheduleDetails);
+
+// Marks & Results
+router.post("/marks/entry", enterMarks);
+router.get("/result/:studentId", getStudentResult);
+
+// Report Cards & Publishing
 router.get("/report-card/:studentId", getReportCard);
-router.get("/rankers", getTopRankers);
+router.post("/publish", publishExamResults);
 
 export default router;

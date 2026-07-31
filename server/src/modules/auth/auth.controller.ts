@@ -299,3 +299,13 @@ export const getRolesConfig = asyncHandler(async (_req: Request, res: Response) 
     roles: SYSTEM_ROLES_CONFIG,
   });
 });
+
+// ════════════ 10. LOGOUT USER ════════════
+export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+  if (refreshToken) {
+    await RefreshTokenModel.deleteOne({ refreshToken }).catch(() => null);
+  }
+  return ApiResponse.success(res, 200, "User logged out successfully and refresh tokens revoked.");
+});
+

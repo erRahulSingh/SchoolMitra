@@ -2,196 +2,335 @@
 
 import React, { useState } from "react";
 import { 
-  Navigation, Home, Building, Bell, CheckCircle2, Clock, 
-  MapPin, Send, AlertTriangle, ShieldCheck 
+  Bus, 
+  Check, 
+  Info, 
+  Play,
+  ArrowLeft
 } from "lucide-react";
 
-export default function ReturnTripPage() {
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+export default function ReturnTripPage({ language = "en" }: { language?: string }) {
+  // Selection states
+  const [selectedRoute, setSelectedRoute] = useState<"r1" | "r2">("r1");
+  const [selectedShift, setSelectedShift] = useState<"s1" | "s2">("s1");
 
-  const [students, setStudents] = useState([
-    { id: "r1", name: "Rahul Sharma", class: "Class 5-A", stopName: "Sector 12 Market Gate", status: "Onboard" as "Left School" | "Near Home" | "Reached Home" | "Onboard" },
-    { id: "r2", name: "Ananya Patel", class: "Class 4-B", stopName: "Sector 10 Metro Gate", status: "Reached Home" as "Left School" | "Near Home" | "Reached Home" | "Onboard" },
-    { id: "r3", name: "Aarav Gupta", class: "Class 6-C", stopName: "Sector 6 Market", status: "Near Home" as "Left School" | "Near Home" | "Reached Home" | "Onboard" },
-    { id: "r4", name: "Kavya Singh", class: "Class 5-B", stopName: "Vasant Kunj Crossing", status: "Onboard" as "Left School" | "Near Home" | "Reached Home" | "Onboard" }
-  ]);
-
-  const triggerNotification = (type: "left" | "near" | "reached", studentName?: string) => {
-    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    let msg = "";
-    
-    if (type === "left") {
-      msg = `📢 Broadcast Sent: "Bus #DL01AB4321 left school campus at ${nowTime}."`;
-    } else if (type === "near") {
-      msg = `🔔 Notification Sent: "Bus is 5 mins away from home stops."`;
-    } else if (type === "reached") {
-      msg = `✅ Notification Sent: "${studentName?.split(" ")[0] || "Student"} safely reached home at ${nowTime}."`;
-    }
-
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3800);
-  };
-
-  const handleStudentStatus = (id: string, status: "Left School" | "Near Home" | "Reached Home") => {
-    setStudents(prev => prev.map(st => st.id === id ? { ...st, status } : st));
-    const student = students.find(st => st.id === id);
-    if (status === "Reached Home") {
-      triggerNotification("reached", student?.name);
-    } else if (status === "Near Home") {
-      triggerNotification("near");
-    }
+  const handleStartTrip = () => {
+    alert(`Starting trip! \nRoute: ${selectedRoute === "r1" ? "Route 01" : "Route 02"} \nShift: ${selectedShift === "s1" ? "Morning" : "Afternoon"}`);
   };
 
   return (
     <div style={{
-      padding: "1.25rem 1rem",
+      padding: "1rem 1rem 2.2rem 1rem",
       display: "flex",
       flexDirection: "column",
-      gap: "1.1rem",
-      color: "#f8fafc",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+      gap: "1.2rem",
+      color: "#0f172a",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      background: "#f8fafc",
+      minHeight: "100%"
     }}>
 
-      {/* HEADER BANNER */}
+
+
+      {/* ════════════ 1. TOP BUS BANNER (EXACT GRAPHIC) ════════════ */}
       <div style={{
-        background: "linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(6, 182, 212, 0.12) 100%)",
-        border: "1px solid rgba(139, 92, 246, 0.3)",
-        borderRadius: 20,
-        padding: "1.1rem 1.25rem",
-        display: "flex",
-        justify: "space-between",
-        alignItems: "center"
+        background: "linear-gradient(135deg, #0b2265 0%, #0d3880 55%, #081a4b 100%)",
+        borderRadius: "20px",
+        padding: "1.25rem 1.15rem 1.15rem 1.15rem",
+        color: "#ffffff",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 8px 24px rgba(11, 34, 101, 0.25)"
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-          <div style={{
-            width: 46, height: 46, borderRadius: 14,
-            background: "linear-gradient(135deg, #8b5cf6, #6d28d9)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", boxShadow: "0 4px 14px rgba(139, 92, 246, 0.35)"
+        {/* Info label details */}
+        <div style={{ maxWidth: "60%", zIndex: 2, position: "relative" }}>
+          <h1 style={{
+            fontSize: "1.35rem",
+            fontWeight: 800,
+            color: "#ffffff",
+            fontFamily: "'Outfit', sans-serif",
+            margin: 0,
+            letterSpacing: "-0.015em"
           }}>
-            <Home size={24} />
+            UP32 AB 1234
+          </h1>
+          <p style={{
+            fontSize: "0.85rem",
+            color: "#93c5fd",
+            fontWeight: 500,
+            marginTop: "3px",
+            margin: 0
+          }}>
+            Green Valley School Bus
+          </p>
+        </div>
+
+        {/* Bus Illustration Overlay */}
+        <div style={{
+          position: "absolute",
+          right: "10px",
+          top: "15%",
+          width: "110px",
+          height: "60px",
+          pointerEvents: "none",
+          zIndex: 1
+        }}>
+          <svg viewBox="0 0 32 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
+            <rect x="1" y="2" width="28" height="13" rx="3" fill="#f59e0b" />
+            <rect x="2" y="3" width="26" height="5" fill="#fde047" />
+            <rect x="21" y="4" width="7" height="4" rx="0.5" fill="#1e293b" />
+            <rect x="4" y="4" width="5" height="4" rx="0.5" fill="#1e293b" />
+            <rect x="10" y="4" width="5" height="4" rx="0.5" fill="#1e293b" />
+            <rect x="16" y="4" width="4" height="4" rx="0.5" fill="#1e293b" />
+            <circle cx="7" cy="15" r="2.5" fill="#0f172a" stroke="#ffffff" strokeWidth="1" />
+            <circle cx="23" cy="15" r="2.5" fill="#0f172a" stroke="#ffffff" strokeWidth="1" />
+            <rect x="0.5" y="9.5" width="1" height="2" fill="#cbd5e1" />
+            <rect x="29" y="9.5" width="0.8" height="2" fill="#cbd5e1" />
+          </svg>
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: "1px", background: "rgba(255, 255, 255, 0.12)", margin: "1rem 0 0.85rem 0" }} />
+
+        {/* Bottom stats stack */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.25rem", textAlign: "center" }}>
+          <div>
+            <div style={{ fontSize: "0.68rem", color: "#93c5fd", fontWeight: 600 }}>Capacity</div>
+            <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "#ffffff", marginTop: "2px" }}>52 Seats</div>
+          </div>
+          <div style={{ borderLeft: "1px solid rgba(255, 255, 255, 0.12)", borderRight: "1px solid rgba(255, 255, 255, 0.12)" }}>
+            <div style={{ fontSize: "0.68rem", color: "#93c5fd", fontWeight: 600 }}>Driver</div>
+            <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "#ffffff", marginTop: "2px", whiteSpace: "nowrap" }}>Rajesh Kumar</div>
           </div>
           <div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#fff" }}>Afternoon Return Trip 🚍</div>
-            <div style={{ fontSize: "0.72rem", color: "#c4b5fd", fontWeight: 800, marginTop: 1 }}>
-              School to Home Drop Workflow
+            <div style={{ fontSize: "0.68rem", color: "#93c5fd", fontWeight: 600 }}>Status</div>
+            <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "#ffffff", marginTop: "2px", display: "flex", alignItems: "center", justifyContent: "center", gap: "3px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80" }} />
+              <span>Active</span>
             </div>
           </div>
         </div>
-
-        <span style={{
-          background: "rgba(139, 92, 246, 0.2)", border: "1px solid rgba(139, 92, 246, 0.4)",
-          color: "#c4b5fd", padding: "0.3rem 0.65rem", borderRadius: 99,
-          fontSize: "0.72rem", fontWeight: 800
-        }}>
-          ACTIVE RETURN
-        </span>
       </div>
 
-      {/* QUICK BROADCAST ACTION BUTTONS */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.65rem" }}>
-        <button
-          type="button"
-          onClick={() => triggerNotification("left")}
-          style={{
-            padding: "0.75rem", borderRadius: 14, border: "none",
-            background: "linear-gradient(135deg, #6366f1, #4f46e5)", color: "#fff",
-            fontWeight: 800, fontSize: "0.78rem", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.45rem",
-            boxShadow: "0 4px 14px rgba(99, 102, 241, 0.3)"
-          }}
-        >
-          <Building size={16} /> Broadcast &lsquo;Left School&rsquo;
-        </button>
+      {/* ════════════ 2. SELECT ROUTE ════════════ */}
+      <div>
+        <h2 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#1e3a8a", marginBottom: "0.75rem", fontFamily: "'Outfit', sans-serif" }}>
+          Select Route
+        </h2>
 
-        <button
-          type="button"
-          onClick={() => triggerNotification("near")}
-          style={{
-            padding: "0.75rem", borderRadius: 14, border: "none",
-            background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff",
-            fontWeight: 800, fontSize: "0.78rem", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.45rem",
-            boxShadow: "0 4px 14px rgba(245, 158, 11, 0.3)"
-          }}
-        >
-          <Navigation size={16} /> Broadcast &lsquo;Near Home&rsquo;
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {/* Route 01 */}
+          <div
+            onClick={() => setSelectedRoute("r1")}
+            style={{
+              background: selectedRoute === "r1" ? "#f0f9ff" : "#ffffff",
+              border: selectedRoute === "r1" ? "2px solid #2563eb" : "1px solid #cbd5e1",
+              borderRadius: "16px",
+              padding: "1.1rem 1.15rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              transition: "all 0.2s"
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+              <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#1e293b" }}>Route 01 - Morning</span>
+              <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>Green Valley Route</span>
+              <span style={{ fontSize: "0.74rem", color: "#94a3b8", fontWeight: 500, marginTop: "1px" }}>12 Stops &bull; 18.6 km</span>
+            </div>
+
+            {/* Checkmark indicator */}
+            <div style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              border: selectedRoute === "r1" ? "none" : "2px solid #cbd5e1",
+              background: selectedRoute === "r1" ? "#2563eb" : "transparent",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff"
+            }}>
+              {selectedRoute === "r1" && <Check size={14} strokeWidth={3} />}
+            </div>
+          </div>
+
+          {/* Route 02 */}
+          <div
+            onClick={() => setSelectedRoute("r2")}
+            style={{
+              background: selectedRoute === "r2" ? "#f0f9ff" : "#ffffff",
+              border: selectedRoute === "r2" ? "2px solid #2563eb" : "1px solid #cbd5e1",
+              borderRadius: "16px",
+              padding: "1.1rem 1.15rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              transition: "all 0.2s"
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+              <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#1e293b" }}>Route 02 - Evening</span>
+              <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>City Center Route</span>
+              <span style={{ fontSize: "0.74rem", color: "#94a3b8", fontWeight: 500, marginTop: "1px" }}>10 Stops &bull; 16.2 km</span>
+            </div>
+
+            {/* Checkmark indicator */}
+            <div style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              border: selectedRoute === "r2" ? "none" : "2px solid #cbd5e1",
+              background: selectedRoute === "r2" ? "#2563eb" : "transparent",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff"
+            }}>
+              {selectedRoute === "r2" && <Check size={14} strokeWidth={3} />}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* LIVE NOTIFICATION TOAST BANNER */}
-      {toastMessage && (
+      {/* ════════════ 3. SELECT SHIFT ════════════ */}
+      <div>
+        <h2 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#1e3a8a", marginBottom: "0.75rem", fontFamily: "'Outfit', sans-serif" }}>
+          Select Shift
+        </h2>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {/* Shift 01 */}
+          <div
+            onClick={() => setSelectedShift("s1")}
+            style={{
+              background: selectedShift === "s1" ? "#f0f9ff" : "#ffffff",
+              border: selectedShift === "s1" ? "2px solid #2563eb" : "1px solid #cbd5e1",
+              borderRadius: "16px",
+              padding: "1.1rem 1.15rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              transition: "all 0.2s"
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+              <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#1e293b" }}>Morning Shift</span>
+              <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>06:30 AM - 11:30 AM</span>
+            </div>
+
+            {/* Checkmark indicator */}
+            <div style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              border: selectedShift === "s1" ? "none" : "2px solid #cbd5e1",
+              background: selectedShift === "s1" ? "#2563eb" : "transparent",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff"
+            }}>
+              {selectedShift === "s1" && <Check size={14} strokeWidth={3} />}
+            </div>
+          </div>
+
+          {/* Shift 02 */}
+          <div
+            onClick={() => setSelectedShift("s2")}
+            style={{
+              background: selectedShift === "s2" ? "#f0f9ff" : "#ffffff",
+              border: selectedShift === "s2" ? "2px solid #2563eb" : "1px solid #cbd5e1",
+              borderRadius: "16px",
+              padding: "1.1rem 1.15rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              transition: "all 0.2s"
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+              <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#1e293b" }}>Afternoon Shift</span>
+              <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 600 }}>12:00 PM - 04:30 PM</span>
+            </div>
+
+            {/* Checkmark indicator */}
+            <div style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              border: selectedShift === "s2" ? "none" : "2px solid #cbd5e1",
+              background: selectedShift === "s2" ? "#2563eb" : "transparent",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff"
+            }}>
+              {selectedShift === "s2" && <Check size={14} strokeWidth={3} />}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ════════════ 4. NOTE CALLOUT CARD ════════════ */}
+      <div style={{
+        background: "#eff6ff",
+        borderRadius: "16px",
+        padding: "1.15rem 1.15rem",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "0.85rem",
+        marginTop: "0.2rem"
+      }}>
         <div style={{
-          background: "linear-gradient(135deg, #8b5cf6, #6d28d9)",
-          border: "1px solid #c4b5fd",
-          borderRadius: 14,
-          padding: "0.85rem 1rem",
-          color: "#fff",
-          fontSize: "0.78rem",
-          fontWeight: 800,
-          boxShadow: "0 6px 20px rgba(139, 92, 246, 0.4)",
-          animation: "fadeIn 0.3s ease"
+          width: "32px",
+          height: "32px",
+          borderRadius: "50%",
+          background: "#dbeafe",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#2563eb",
+          flexShrink: 0
         }}>
-          {toastMessage}
+          <Info size={18} strokeWidth={2.5} />
         </div>
-      )}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+          <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#1e3a8a" }}>Note</span>
+          <span style={{ fontSize: "0.76rem", color: "#2563eb", lineHeight: 1.45, fontWeight: 600 }}>
+            Please ensure all safety checklist items are checked before starting the trip.
+          </span>
+        </div>
+      </div>
 
-      {/* STUDENT RETURN DROP CARDS */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-        {students.map((st) => (
-          <div key={st.id} style={{
-            background: "rgba(15, 23, 42, 0.85)",
-            border: st.status === "Reached Home" ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(255, 255, 255, 0.08)",
-            borderRadius: 18,
-            padding: "1rem",
+      {/* ════════════ 5. START TRIP BUTTON ════════════ */}
+      <div style={{ marginTop: "0.4rem" }}>
+        <button
+          onClick={handleStartTrip}
+          style={{
+            width: "100%",
+            padding: "1.05rem",
+            background: "#16a34a",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: "14px",
+            fontSize: "0.95rem",
+            fontWeight: 800,
+            cursor: "pointer",
             display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem"
-          }}>
-            
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "0.95rem", fontWeight: 900, color: "#fff" }}>{st.name}</div>
-                <div style={{ fontSize: "0.72rem", color: "#c4b5fd", fontWeight: 800, marginTop: 1 }}>{st.class}</div>
-                <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginTop: 2 }}>Stop: {st.stopName}</div>
-              </div>
-
-              <span style={{
-                background: st.status === "Reached Home" ? "rgba(16, 185, 129, 0.2)" : st.status === "Near Home" ? "rgba(251, 191, 36, 0.2)" : "rgba(139, 92, 246, 0.2)",
-                color: st.status === "Reached Home" ? "#34d399" : st.status === "Near Home" ? "#fbbf24" : "#c4b5fd",
-                padding: "0.25rem 0.6rem", borderRadius: 8, fontSize: "0.72rem", fontWeight: 800
-              }}>
-                {st.status}
-              </span>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.45rem" }}>
-              <button
-                type="button"
-                onClick={() => handleStudentStatus(st.id, "Left School")}
-                style={{ padding: "0.5rem 0.2rem", borderRadius: 8, border: "none", background: "rgba(99, 102, 241, 0.15)", color: "#818cf8", fontSize: "0.68rem", fontWeight: 800, cursor: "pointer" }}
-              >
-                Left School
-              </button>
-              <button
-                type="button"
-                onClick={() => handleStudentStatus(st.id, "Near Home")}
-                style={{ padding: "0.5rem 0.2rem", borderRadius: 8, border: "none", background: "rgba(251, 191, 36, 0.15)", color: "#fbbf24", fontSize: "0.68rem", fontWeight: 800, cursor: "pointer" }}
-              >
-                Near Home
-              </button>
-              <button
-                type="button"
-                onClick={() => handleStudentStatus(st.id, "Reached Home")}
-                style={{ padding: "0.5rem 0.2rem", borderRadius: 8, border: "none", background: st.status === "Reached Home" ? "#10b981" : "rgba(16, 185, 129, 0.15)", color: st.status === "Reached Home" ? "#fff" : "#34d399", fontSize: "0.68rem", fontWeight: 800, cursor: "pointer" }}
-              >
-                Reached Home
-              </button>
-            </div>
-
-          </div>
-        ))}
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.55rem",
+            boxShadow: "0 4px 14px rgba(22, 163, 74, 0.25)"
+          }}
+        >
+          <Play size={18} fill="#ffffff" color="#ffffff" />
+          <span>Start Trip</span>
+        </button>
       </div>
 
     </div>

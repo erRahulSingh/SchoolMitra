@@ -2,199 +2,322 @@
 
 import React, { useState } from "react";
 import { 
-  Building, CheckCircle2, XCircle, Clock, Bell, MapPin, 
-  User, ShieldCheck, Sparkles, Navigation, AlertTriangle 
+  ArrowLeft, 
+  Filter, 
+  Search, 
+  Check, 
+  ArrowRight,
+  UserCheck
 } from "lucide-react";
 
-export default function StudentDropPage() {
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+interface Student {
+  id: string;
+  name: string;
+  class: string;
+  rollNo: string;
+  status: "Dropped" | "Pending";
+  avatarUrl: string;
+}
 
-  const [students, setStudents] = useState([
-    { id: "d1", name: "Rahul Sharma", class: "Class 5-A", parentName: "Vikram Sharma", dropStatus: "Not Dropped" as "Arrived" | "Absent" | "Not Dropped", avatarColor: "#6366f1" },
-    { id: "d2", name: "Ananya Patel", class: "Class 4-B", parentName: "Rajesh Patel", dropStatus: "Arrived" as "Arrived" | "Absent" | "Not Dropped", avatarColor: "#10b981" },
-    { id: "d3", name: "Aarav Gupta", class: "Class 6-C", parentName: "Sunil Gupta", dropStatus: "Arrived" as "Arrived" | "Absent" | "Not Dropped", avatarColor: "#f59e0b" },
-    { id: "d4", name: "Riya Verma", class: "Class 3-A", parentName: "Amit Verma", dropStatus: "Absent" as "Arrived" | "Absent" | "Not Dropped", avatarColor: "#ef4444" },
-    { id: "d5", name: "Kavya Singh", class: "Class 5-B", parentName: "Mahesh Singh", dropStatus: "Not Dropped" as "Arrived" | "Absent" | "Not Dropped", avatarColor: "#8b5cf6" }
+interface StudentDropPageProps {
+  language?: string;
+  onNavigate?: (tab: string) => void;
+}
+
+export default function StudentDropPage({ onNavigate }: StudentDropPageProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTab, setFilterTab] = useState<"All" | "Dropped" | "Pending">("All");
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("s3");
+
+  const [students, setStudents] = useState<Student[]>([
+    {
+      id: "s1",
+      name: "Aarav Sharma",
+      class: "Class 5 - A",
+      rollNo: "Roll No. 12",
+      status: "Pending",
+      avatarUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"
+    },
+    {
+      id: "s2",
+      name: "Siya Patel",
+      class: "Class 5 - A",
+      rollNo: "Roll No. 15",
+      status: "Pending",
+      avatarUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"
+    },
+    {
+      id: "s3",
+      name: "Vivaan Singh",
+      class: "Class 5 - A",
+      rollNo: "Roll No. 18",
+      status: "Pending",
+      avatarUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"
+    },
+    {
+      id: "s4",
+      name: "Ananya Verma",
+      class: "Class 5 - B",
+      rollNo: "Roll No. 21",
+      status: "Pending",
+      avatarUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"
+    },
+    {
+      id: "s5",
+      name: "Rohan Mehta",
+      class: "Class 5 - B",
+      rollNo: "Roll No. 24",
+      status: "Pending",
+      avatarUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"
+    }
   ]);
 
-  const handleDropStatusChange = (id: string, newStatus: "Arrived" | "Absent" | "Not Dropped") => {
-    setStudents(prev => prev.map(st => st.id === id ? { ...st, dropStatus: newStatus } : st));
-
-    const targetStudent = students.find(st => st.id === id);
-    if (targetStudent && newStatus === "Arrived") {
-      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const msg = `🔔 Notification Sent: "${targetStudent.name.split(" ")[0]} reached school at ${nowTime}."`;
-      setToastMessage(msg);
-      setTimeout(() => setToastMessage(null), 3500);
-    }
+  const handleMarkDropped = (id: string) => {
+    setStudents(prev => prev.map(s => s.id === id ? { ...s, status: "Dropped" } : s));
   };
 
-  const arrivedCount = students.filter(st => st.dropStatus === "Arrived").length;
-  const absentCount = students.filter(st => st.dropStatus === "Absent").length;
-  const notDroppedCount = students.filter(st => st.dropStatus === "Not Dropped").length;
+  const handleDropAll = () => {
+    setStudents(prev => prev.map(s => ({ ...s, status: "Dropped" })));
+    setTimeout(() => {
+      if (onNavigate) {
+        onNavigate("triptimeline");
+      }
+    }, 800);
+  };
+
+  const droppedCount = students.filter(s => s.status === "Dropped").length;
+  const pendingCount = students.filter(s => s.status === "Pending").length;
+
+  const filteredStudents = students.filter(s => {
+    if (filterTab === "Dropped" && s.status !== "Dropped") return false;
+    if (filterTab === "Pending" && s.status !== "Pending") return false;
+    if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <div style={{
-      padding: "1.25rem 1rem",
+      padding: "1rem 1rem 2.2rem 1rem",
       display: "flex",
       flexDirection: "column",
       gap: "1.1rem",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+      color: "#0f172a",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      background: "#f8fafc",
+      minHeight: "100%"
     }}>
 
-      {/* HEADER BANNER */}
-      <div className="banner-card" style={{
-        padding: "1.1rem 1.25rem",
+
+
+      {/* ════════════ TOP CURRENT STOP INFORMATION CARD ════════════ */}
+      <div style={{
+        background: "linear-gradient(135deg, #0b2265 0%, #0d3880 55%, #081a4b 100%)",
+        borderRadius: "20px",
+        padding: "1.25rem 1.15rem",
+        color: "#ffffff",
+        boxShadow: "0 8px 24px rgba(11, 34, 101, 0.2)",
         display: "flex",
-        justify: "space-between",
-        alignItems: "center"
+        alignItems: "center",
+        justifyContent: "space-between"
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-          <div style={{
-            width: 46, height: 46, borderRadius: 14,
-            background: "linear-gradient(135deg, #0284c7, #0369a1)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", boxShadow: "0 4px 14px rgba(2, 132, 199, 0.35)"
-          }}>
-            <Building size={24} />
-          </div>
-          <div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 900 }} className="text-title">Drop Screen ⭐</div>
-            <div style={{ fontSize: "0.72rem", color: "#0284c7", fontWeight: 800, marginTop: 1 }}>
-              DPS Campus Gate #1 • Morning Arrival
-            </div>
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+          <span style={{ fontSize: "0.72rem", color: "#93c5fd", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Stop 12 of 12
+          </span>
+          <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#ffffff", fontFamily: "'Outfit', sans-serif" }}>
+            Green Valley School
+          </span>
+          <span style={{ fontSize: "0.74rem", color: "#bfdbfe", marginTop: "1px", fontWeight: 500 }}>
+            ETA: 07:45 AM &bull; 22 Students
+          </span>
         </div>
 
+        {/* Status indicator badge */}
         <span style={{
-          background: "rgba(56, 189, 248, 0.2)", border: "1px solid rgba(56, 189, 248, 0.4)",
-          color: "#0284c7", padding: "0.3rem 0.65rem", borderRadius: 99,
-          fontSize: "0.72rem", fontWeight: 800
+          background: "#22c55e",
+          color: "#ffffff",
+          padding: "0.38rem 0.8rem",
+          borderRadius: "99px",
+          fontSize: "0.72rem",
+          fontWeight: 800
         }}>
-          {arrivedCount}/{students.length} Arrived
+          Last Stop
         </span>
       </div>
 
-      {/* 3 STAT METRICS BADGES */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.55rem" }}>
-        <div style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: 14, padding: "0.55rem", textAlign: "center" }}>
-          <span style={{ fontSize: "0.65rem", color: "#059669", fontWeight: 800 }}>ARRIVED AT SCHOOL</span>
-          <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "#059669", marginTop: 2 }}>{arrivedCount}</div>
-        </div>
-        <div style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: 14, padding: "0.55rem", textAlign: "center" }}>
-          <span style={{ fontSize: "0.65rem", color: "#dc2626", fontWeight: 800 }}>ABSENT</span>
-          <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "#dc2626", marginTop: 2 }}>{absentCount}</div>
-        </div>
-        <div style={{ background: "rgba(251, 191, 36, 0.12)", border: "1px solid rgba(251, 191, 36, 0.25)", borderRadius: 14, padding: "0.55rem", textAlign: "center" }}>
-          <span style={{ fontSize: "0.65rem", color: "#d97706", fontWeight: 800 }}>NOT DROPPED</span>
-          <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "#d97706", marginTop: 2 }}>{notDroppedCount}</div>
-        </div>
+      {/* ════════════ SEARCH STUDENT INPUT ════════════ */}
+      <div style={{ position: "relative" }}>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search Student"
+          style={{
+            width: "100%",
+            padding: "0.75rem 2.5rem 0.75rem 1rem",
+            background: "#ffffff",
+            border: "1px solid #cbd5e1",
+            borderRadius: "14px",
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            outline: "none",
+            color: "#0f172a"
+          }}
+        />
+        <Search size={18} color="#94a3b8" style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)" }} />
       </div>
 
-      {/* LIVE PARENT NOTIFICATION TOAST */}
-      {toastMessage && (
-        <div style={{
-          background: "linear-gradient(135deg, #0284c7, #0369a1)",
-          border: "1px solid #38bdf8",
-          borderRadius: 14,
-          padding: "0.85rem 1rem",
-          color: "#fff",
-          fontSize: "0.78rem",
-          fontWeight: 800,
-          boxShadow: "0 6px 20px rgba(56, 189, 248, 0.4)",
-          animation: "fadeIn 0.3s ease"
-        }}>
-          {toastMessage}
-        </div>
-      )}
+      {/* ════════════ FILTER PILLS ROW ════════════ */}
+      <div style={{ display: "flex", gap: "0.45rem", overflowX: "auto" }}>
+        {/* All Pill */}
+        <button
+          onClick={() => setFilterTab("All")}
+          style={{
+            padding: "0.45rem 1rem",
+            borderRadius: "99px",
+            border: filterTab === "All" ? "none" : "1px solid #cbd5e1",
+            background: filterTab === "All" ? "#2563eb" : "#ffffff",
+            color: filterTab === "All" ? "#ffffff" : "#64748b",
+            fontSize: "0.74rem",
+            fontWeight: 800,
+            cursor: "pointer"
+          }}
+        >
+          All ({students.length})
+        </button>
 
-      {/* STUDENT DROP CARDS LIST */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-        {students.map((st) => (
-          <div key={st.id} className="card-ui" style={{
-            padding: "1rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem"
-          }}>
-            
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%",
-                  background: `radial-gradient(circle, ${st.avatarColor} 0%, rgba(15, 23, 42, 0.7) 100%)`,
-                  border: `2px solid ${st.avatarColor}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#fff", fontWeight: 900, fontSize: "1rem",
-                  boxShadow: `0 4px 12px ${st.avatarColor}40`
-                }}>
-                  {st.name.charAt(0)}
-                </div>
+        {/* Dropped Pill */}
+        <button
+          onClick={() => setFilterTab("Dropped")}
+          style={{
+            padding: "0.45rem 1rem",
+            borderRadius: "99px",
+            border: filterTab === "Dropped" ? "none" : "1px solid #cbd5e1",
+            background: filterTab === "Dropped" ? "#2563eb" : "#ffffff",
+            color: filterTab === "Dropped" ? "#ffffff" : "#64748b",
+            fontSize: "0.74rem",
+            fontWeight: 800,
+            cursor: "pointer"
+          }}
+        >
+          Dropped ({droppedCount})
+        </button>
 
-                <div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 900 }} className="text-title">{st.name}</div>
-                  <div style={{ fontSize: "0.72rem", color: "#8b5cf6", fontWeight: 800, marginTop: 1 }}>{st.class}</div>
-                  <div style={{ fontSize: "0.7rem", marginTop: 2 }} className="text-muted-custom">Parent: {st.parentName}</div>
+        {/* Pending Pill */}
+        <button
+          onClick={() => setFilterTab("Pending")}
+          style={{
+            padding: "0.45rem 1rem",
+            borderRadius: "99px",
+            border: filterTab === "Pending" ? "none" : "1px solid #cbd5e1",
+            background: filterTab === "Pending" ? "#2563eb" : "#ffffff",
+            color: filterTab === "Pending" ? "#ffffff" : "#64748b",
+            fontSize: "0.74rem",
+            fontWeight: 800,
+            cursor: "pointer"
+          }}
+        >
+          Pending ({pendingCount})
+        </button>
+      </div>
+
+      {/* ════════════ STUDENT CARDS LIST ════════════ */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        {filteredStudents.map((st) => {
+          const isSelected = selectedStudentId === st.id;
+
+          return (
+            <div
+              key={st.id}
+              onClick={() => setSelectedStudentId(st.id)}
+              style={{
+                background: "#ffffff",
+                border: isSelected ? "2px solid #2563eb" : "1px solid #cbd5e1",
+                borderRadius: "16px",
+                padding: "1rem 1.15rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+                <img
+                  src={st.avatarUrl}
+                  alt={st.name}
+                  onError={(e) => { (e.target as any).src = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"; }}
+                  style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover" }}
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                  <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#1e293b" }}>{st.name}</span>
+                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>{st.class} &bull; {st.rollNo}</span>
                 </div>
               </div>
 
-              {/* Status Pill */}
-              <span style={{
-                background: st.dropStatus === "Arrived" ? "rgba(16, 185, 129, 0.2)" : st.dropStatus === "Absent" ? "rgba(239, 68, 68, 0.2)" : "rgba(251, 191, 36, 0.2)",
-                color: st.dropStatus === "Arrived" ? "#059669" : st.dropStatus === "Absent" ? "#dc2626" : "#d97706",
-                padding: "0.25rem 0.6rem", borderRadius: 8, fontSize: "0.72rem", fontWeight: 800
-              }}>
-                {st.dropStatus === "Arrived" ? "🏫 Arrived at School" : st.dropStatus === "Absent" ? "❌ Absent" : "⏳ Not Dropped"}
-              </span>
+              {/* Status Action / Label */}
+              <div>
+                {st.status === "Dropped" ? (
+                  <span style={{
+                    background: "#dcfce7",
+                    color: "#16a34a",
+                    padding: "0.35rem 0.75rem",
+                    borderRadius: "10px",
+                    fontSize: "0.75rem",
+                    fontWeight: 800
+                  }}>
+                    Dropped
+                  </span>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMarkDropped(st.id);
+                    }}
+                    style={{
+                      background: "#eff6ff",
+                      color: "#2563eb",
+                      border: "1px solid #bfdbfe",
+                      borderRadius: "10px",
+                      padding: "0.35rem 0.85rem",
+                      fontSize: "0.75rem",
+                      fontWeight: 800,
+                      cursor: "pointer"
+                    }}
+                  >
+                    Drop
+                  </button>
+                )}
+              </div>
             </div>
+          );
+        })}
+      </div>
 
-            {/* Bottom Row: 3 Interactive Drop Buttons */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.45rem", marginTop: "0.2rem" }}>
-              <button
-                type="button"
-                onClick={() => handleDropStatusChange(st.id, "Arrived")}
-                style={{
-                  padding: "0.55rem 0.25rem", borderRadius: 10, border: "none",
-                  background: st.dropStatus === "Arrived" ? "#10b981" : "rgba(16, 185, 129, 0.15)",
-                  color: st.dropStatus === "Arrived" ? "#fff" : "#059669",
-                  fontWeight: 800, fontSize: "0.68rem", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "0.2rem"
-                }}
-              >
-                <CheckCircle2 size={13} /> Arrived at School
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDropStatusChange(st.id, "Absent")}
-                style={{
-                  padding: "0.55rem 0.25rem", borderRadius: 10, border: "none",
-                  background: st.dropStatus === "Absent" ? "#ef4444" : "rgba(239, 68, 68, 0.15)",
-                  color: st.dropStatus === "Absent" ? "#fff" : "#dc2626",
-                  fontWeight: 800, fontSize: "0.68rem", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "0.2rem"
-                }}
-              >
-                <XCircle size={13} /> Absent
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDropStatusChange(st.id, "Not Dropped")}
-                style={{
-                  padding: "0.55rem 0.25rem", borderRadius: 10, border: "none",
-                  background: st.dropStatus === "Not Dropped" ? "#f59e0b" : "rgba(251, 191, 36, 0.15)",
-                  color: st.dropStatus === "Not Dropped" ? "#fff" : "#d97706",
-                  fontWeight: 800, fontSize: "0.68rem", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "0.2rem"
-                }}
-              >
-                <Clock size={13} /> Not Dropped
-              </button>
-            </div>
-
-          </div>
-        ))}
+      {/* ════════════ BOTTOM GLOBAL DROP ACTION ════════════ */}
+      <div style={{ marginTop: "auto", paddingTop: "0.5rem" }}>
+        <button
+          onClick={handleDropAll}
+          style={{
+            width: "100%",
+            padding: "1.05rem",
+            background: "#16a34a",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: "14px",
+            fontSize: "0.95rem",
+            fontWeight: 800,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.55rem",
+            boxShadow: "0 4px 14px rgba(22, 163, 74, 0.2)"
+          }}
+        >
+          <UserCheck size={18} fill="#ffffff" color="#ffffff" />
+          <span>Drop All Students</span>
+        </button>
       </div>
 
     </div>

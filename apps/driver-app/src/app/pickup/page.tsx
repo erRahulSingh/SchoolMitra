@@ -2,230 +2,377 @@
 
 import React, { useState } from "react";
 import { 
-  UserCheck, UserX, Clock, Bell, CheckCircle2, XCircle, 
-  User, MapPin, Search, Filter, PhoneCall, Sparkles 
+  ArrowLeft, 
+  Filter, 
+  Search, 
+  Check, 
+  UserMinus, 
+  CornerUpRight,
+  UserCheck
 } from "lucide-react";
 
-import { createSocketConnection } from "@/lib/socketClient";
+interface Student {
+  id: string;
+  name: string;
+  class: string;
+  rollNo: string;
+  status: "Picked" | "Absent" | "Pending";
+  time?: string;
+  avatarUrl: string;
+}
 
-export default function StudentPickupPage() {
-  const [selectedStopFilter, setSelectedStopFilter] = useState<string>("all");
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+interface StudentPickupPageProps {
+  language?: string;
+  onNavigate?: (tab: string) => void;
+}
 
-  const [students, setStudents] = useState([
-    { id: "s1", name: "Rahul Sharma", class: "Class 5-A", parentName: "Vikram Sharma", stopName: "Sector 12 Market Gate", status: "Waiting" as "Picked" | "Absent" | "Waiting", avatarColor: "#6366f1" },
-    { id: "s2", name: "Ananya Patel", class: "Class 4-B", parentName: "Rajesh Patel", stopName: "Sector 10 Metro Gate", status: "Picked" as "Picked" | "Absent" | "Waiting", avatarColor: "#10b981" },
-    { id: "s3", name: "Aarav Gupta", class: "Class 6-C", parentName: "Sunil Gupta", stopName: "Sector 6 Market", status: "Waiting" as "Picked" | "Absent" | "Waiting", avatarColor: "#f59e0b" },
-    { id: "s4", name: "Riya Verma", class: "Class 3-A", parentName: "Amit Verma", stopName: "Sector 12 Market Gate", status: "Absent" as "Picked" | "Absent" | "Waiting", avatarColor: "#ef4444" },
-    { id: "s5", name: "Kavya Singh", class: "Class 5-B", parentName: "Mahesh Singh", stopName: "Vasant Kunj Crossing", status: "Waiting" as "Picked" | "Absent" | "Waiting", avatarColor: "#8b5cf6" }
+export default function StudentPickupPage({ onNavigate }: StudentPickupPageProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTab, setFilterTab] = useState<"All" | "Picked" | "Pending" | "Absent">("All");
+  
+  // Selected student state for bottom marking actions sheet ( Vivaan Singh selected by default)
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("s3");
+
+  const [students, setStudents] = useState<Student[]>([
+    {
+      id: "s1",
+      name: "Aarav Sharma",
+      class: "Class 5 - A",
+      rollNo: "Roll No. 12",
+      status: "Picked",
+      time: "07:10 AM",
+      avatarUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"
+    },
+    {
+      id: "s2",
+      name: "Siya Patel",
+      class: "Class 5 - A",
+      rollNo: "Roll No. 15",
+      status: "Picked",
+      time: "07:11 AM",
+      avatarUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"
+    },
+    {
+      id: "s3",
+      name: "Vivaan Singh",
+      class: "Class 5 - A",
+      rollNo: "Roll No. 18",
+      status: "Pending",
+      avatarUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"
+    }
   ]);
 
-  const handleStatusChange = (id: string, newStatus: "Picked" | "Absent" | "Waiting") => {
-    setStudents(prev => prev.map(st => st.id === id ? { ...st, status: newStatus } : st));
-
-    const targetStudent = students.find(st => st.id === id);
-    if (targetStudent) {
-      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      if (newStatus === "Picked") {
-        const msg = `🔔 Notification Sent: "${targetStudent.name.split(" ")[0]} boarded the bus at ${nowTime}."`;
-        setToastMessage(msg);
-        setTimeout(() => setToastMessage(null), 3500);
-      }
-
-      // Socket.IO Real-Time Broadcast to Parent App
-      try {
-        const socket = createSocketConnection("http://localhost:5000");
-        socket.emit("driver:student_status_changed", {
-          studentId: id,
-          studentName: targetStudent.name,
+  const handleMarkStatus = (id: string, newStatus: "Picked" | "Absent" | "Pending") => {
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setStudents(prev => prev.map(s => {
+      if (s.id === id) {
+        return {
+          ...s,
           status: newStatus,
-          timestamp: nowTime
-        });
-        setTimeout(() => socket.disconnect(), 1000);
-      } catch (err) {
-        console.warn("Socket emission error:", err);
+          time: newStatus === "Pending" ? undefined : nowTime
+        };
       }
-    }
+      return s;
+    }));
   };
 
-  const filteredStudents = selectedStopFilter === "all" 
-    ? students 
-    : students.filter(st => st.stopName === selectedStopFilter);
+  // Filter count labels
+  const pickedCount = students.filter(s => s.status === "Picked").length;
+  const pendingCount = students.filter(s => s.status === "Pending").length;
+  const absentCount = students.filter(s => s.status === "Absent").length;
 
-  const pickedCount = students.filter(st => st.status === "Picked").length;
-  const absentCount = students.filter(st => st.status === "Absent").length;
-  const waitingCount = students.filter(st => st.status === "Waiting").length;
+  const filteredStudents = students.filter(s => {
+    // Tab filter
+    if (filterTab === "Picked" && s.status !== "Picked") return false;
+    if (filterTab === "Pending" && s.status !== "Pending") return false;
+    if (filterTab === "Absent" && s.status !== "Absent") return false;
+
+    // Search query filter
+    if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+
+    return true;
+  });
 
   return (
     <div style={{
-      padding: "1.25rem 1rem",
+      padding: "1rem 1rem 2.2rem 1rem",
       display: "flex",
       flexDirection: "column",
       gap: "1.1rem",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+      color: "#0f172a",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      background: "#f8fafc",
+      minHeight: "100%"
     }}>
 
-      {/* HEADER & SUMMARY BAR */}
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h2 style={{ fontSize: "1.15rem", fontWeight: 900 }} className="text-title">Morning Pickup Roster ⭐</h2>
-            <p style={{ fontSize: "0.75rem", marginTop: 2 }} className="text-muted-custom">Mark Boarding Status per Stop</p>
-          </div>
 
-          <div style={{ background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)", color: "#059669", padding: "0.3rem 0.65rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 800 }}>
-            {pickedCount}/{students.length} Boarded
-          </div>
+
+      {/* ════════════ TOP CURRENT STOP INFORMATION CARD ════════════ */}
+      <div style={{
+        background: "linear-gradient(135deg, #0b2265 0%, #0d3880 55%, #081a4b 100%)",
+        borderRadius: "20px",
+        padding: "1.25rem 1.15rem",
+        color: "#ffffff",
+        boxShadow: "0 8px 24px rgba(11, 34, 101, 0.2)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+          <span style={{ fontSize: "0.72rem", color: "#93c5fd", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Stop 3 of 12
+          </span>
+          <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#ffffff", fontFamily: "'Outfit', sans-serif" }}>
+            Maple Park
+          </span>
+          <span style={{ fontSize: "0.74rem", color: "#bfdbfe", marginTop: "1px", fontWeight: 500 }}>
+            ETA: 07:12 AM &bull; 3 Students
+          </span>
         </div>
 
-        {/* 3 STAT METRICS BADGES */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.55rem", marginTop: "0.85rem" }}>
-          <div style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: 12, padding: "0.5rem", textAlign: "center" }}>
-            <span style={{ fontSize: "0.65rem", color: "#059669", fontWeight: 800 }}>✅ PICKED</span>
-            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#059669" }}>{pickedCount}</div>
-          </div>
-          <div style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: 12, padding: "0.5rem", textAlign: "center" }}>
-            <span style={{ fontSize: "0.65rem", color: "#dc2626", fontWeight: 800 }}>❌ ABSENT</span>
-            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#dc2626" }}>{absentCount}</div>
-          </div>
-          <div style={{ background: "rgba(251, 191, 36, 0.12)", border: "1px solid rgba(251, 191, 36, 0.25)", borderRadius: 12, padding: "0.5rem", textAlign: "center" }}>
-            <span style={{ fontSize: "0.65rem", color: "#d97706", fontWeight: 800 }}>⏳ WAITING</span>
-            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#d97706" }}>{waitingCount}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* LIVE PARENT NOTIFICATION TOAST */}
-      {toastMessage && (
-        <div style={{
-          background: "linear-gradient(135deg, #059669, #10b981)",
-          border: "1px solid #34d399",
-          borderRadius: 14,
-          padding: "0.85rem 1rem",
-          color: "#fff",
-          fontSize: "0.78rem",
-          fontWeight: 800,
-          boxShadow: "0 6px 20px rgba(16, 185, 129, 0.4)",
-          animation: "fadeIn 0.3s ease"
+        {/* Status indicator badge */}
+        <span style={{
+          background: "#22c55e",
+          color: "#ffffff",
+          padding: "0.38rem 0.8rem",
+          borderRadius: "99px",
+          fontSize: "0.72rem",
+          fontWeight: 800
         }}>
-          {toastMessage}
-        </div>
-      )}
-
-      {/* STOP FILTER SELECTOR */}
-      <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.2rem" }}>
-        {["all", "Sector 12 Market Gate", "Sector 10 Metro Gate", "Sector 6 Market", "Vasant Kunj Crossing"].map((stop) => (
-          <button
-            key={stop}
-            type="button"
-            onClick={() => setSelectedStopFilter(stop)}
-            style={{
-              padding: "0.4rem 0.75rem", borderRadius: 99, border: "none",
-              background: selectedStopFilter === stop ? "linear-gradient(135deg, #10b981, #059669)" : "var(--bg-card)",
-              color: selectedStopFilter === stop ? "#fff" : "var(--text-secondary)",
-              border: selectedStopFilter === stop ? "none" : "1px solid var(--border-card)",
-              fontSize: "0.72rem", fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap"
-            }}
-          >
-            {stop === "all" ? "All Bus Stops" : stop}
-          </button>
-        ))}
+          On Time
+        </span>
       </div>
 
-      {/* STUDENT CARDS LIST */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-        {filteredStudents.map((st) => (
-          <div key={st.id} className="card-ui" style={{
-            padding: "1rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem"
-          }}>
-            
-            {/* Top Row: Photo Avatar, Name, Class & Status Pill */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%",
-                  background: `radial-gradient(circle, ${st.avatarColor} 0%, rgba(15, 23, 42, 0.7) 100%)`,
-                  border: `2px solid ${st.avatarColor}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#fff", fontWeight: 900, fontSize: "1rem",
-                  boxShadow: `0 4px 12px ${st.avatarColor}40`
-                }}>
-                  {st.name.charAt(0)}
-                </div>
+      {/* ════════════ SEARCH STUDENT INPUT ════════════ */}
+      <div style={{ position: "relative" }}>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search Student"
+          style={{
+            width: "100%",
+            padding: "0.75rem 2.5rem 0.75rem 1rem",
+            background: "#ffffff",
+            border: "1px solid #cbd5e1",
+            borderRadius: "14px",
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            outline: "none",
+            color: "#0f172a"
+          }}
+        />
+        <Search size={18} color="#94a3b8" style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)" }} />
+      </div>
 
-                <div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 900 }} className="text-title">{st.name}</div>
-                  <div style={{ fontSize: "0.72rem", color: "#8b5cf6", fontWeight: 800, marginTop: 1 }}>{st.class}</div>
-                  <div style={{ fontSize: "0.7rem", marginTop: 2 }} className="text-muted-custom">Parent: {st.parentName}</div>
+      {/* ════════════ FILTER PILLS ROW ════════════ */}
+      <div style={{ display: "flex", gap: "0.45rem", overflowX: "auto" }}>
+        {/* All Pill */}
+        <button
+          onClick={() => setFilterTab("All")}
+          style={{
+            padding: "0.45rem 1rem",
+            borderRadius: "99px",
+            border: filterTab === "All" ? "none" : "1px solid #cbd5e1",
+            background: filterTab === "All" ? "#2563eb" : "#ffffff",
+            color: filterTab === "All" ? "#ffffff" : "#64748b",
+            fontSize: "0.74rem",
+            fontWeight: 800,
+            cursor: "pointer"
+          }}
+        >
+          All ({students.length})
+        </button>
+
+        {/* Picked Pill */}
+        <button
+          onClick={() => setFilterTab("Picked")}
+          style={{
+            padding: "0.45rem 1rem",
+            borderRadius: "99px",
+            border: filterTab === "Picked" ? "none" : "1px solid #cbd5e1",
+            background: filterTab === "Picked" ? "#2563eb" : "#ffffff",
+            color: filterTab === "Picked" ? "#ffffff" : "#64748b",
+            fontSize: "0.74rem",
+            fontWeight: 800,
+            cursor: "pointer"
+          }}
+        >
+          Picked ({pickedCount})
+        </button>
+
+        {/* Pending Pill */}
+        <button
+          onClick={() => setFilterTab("Pending")}
+          style={{
+            padding: "0.45rem 1rem",
+            borderRadius: "99px",
+            border: filterTab === "Pending" ? "none" : "1px solid #cbd5e1",
+            background: filterTab === "Pending" ? "#2563eb" : "#ffffff",
+            color: filterTab === "Pending" ? "#ffffff" : "#64748b",
+            fontSize: "0.74rem",
+            fontWeight: 800,
+            cursor: "pointer"
+          }}
+        >
+          Pending ({pendingCount})
+        </button>
+
+        {/* Absent Pill */}
+        <button
+          onClick={() => setFilterTab("Absent")}
+          style={{
+            padding: "0.45rem 1rem",
+            borderRadius: "99px",
+            border: filterTab === "Absent" ? "none" : "1px solid #cbd5e1",
+            background: filterTab === "Absent" ? "#2563eb" : "#ffffff",
+            color: filterTab === "Absent" ? "#ffffff" : "#64748b",
+            fontSize: "0.74rem",
+            fontWeight: 800,
+            cursor: "pointer"
+          }}
+        >
+          Absent ({absentCount})
+        </button>
+      </div>
+
+      {/* ════════════ STUDENT CARDS LIST ════════════ */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        {filteredStudents.map((st) => {
+          const isSelected = selectedStudentId === st.id;
+
+          return (
+            <div
+              key={st.id}
+              onClick={() => setSelectedStudentId(st.id)}
+              style={{
+                background: "#ffffff",
+                border: isSelected ? "2px solid #2563eb" : "1px solid #cbd5e1",
+                borderRadius: "16px",
+                padding: "1rem 1.15rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+                <img
+                  src={st.avatarUrl}
+                  alt={st.name}
+                  onError={(e) => { (e.target as any).src = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=100"; }}
+                  style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover" }}
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                  <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#1e293b" }}>{st.name}</span>
+                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>{st.class} &bull; {st.rollNo}</span>
                 </div>
               </div>
 
-              {/* Status Pill */}
-              <span style={{
-                background: st.status === "Picked" ? "rgba(16, 185, 129, 0.2)" : st.status === "Absent" ? "rgba(239, 68, 68, 0.2)" : "rgba(251, 191, 36, 0.2)",
-                color: st.status === "Picked" ? "#059669" : st.status === "Absent" ? "#dc2626" : "#d97706",
-                padding: "0.25rem 0.6rem", borderRadius: 8, fontSize: "0.72rem", fontWeight: 800
-              }}>
-                {st.status === "Picked" ? "✅ Boarded" : st.status === "Absent" ? "❌ Absent" : "⏳ Waiting"}
-              </span>
+              {/* Status Badge */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.15rem" }}>
+                <span style={{
+                  background: st.status === "Picked" ? "#dcfce7" : st.status === "Absent" ? "#fcd5d5" : "#fff9db",
+                  color: st.status === "Picked" ? "#16a34a" : st.status === "Absent" ? "#ef4444" : "#d97706",
+                  padding: "0.25rem 0.55rem",
+                  borderRadius: "8px",
+                  fontSize: "0.7rem",
+                  fontWeight: 800
+                }}>
+                  {st.status}
+                </span>
+                {st.time && (
+                  <span style={{ fontSize: "0.65rem", color: "#94a3b8", fontWeight: 600 }}>{st.time}</span>
+                )}
+              </div>
             </div>
-
-            {/* Middle Row: Stop Name */}
-            <div style={{ fontSize: "0.72rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.35rem" }} className="text-muted-custom">
-              <MapPin size={14} color="#0284c7" /> Stop: <strong className="text-title">{st.stopName}</strong>
-            </div>
-
-            {/* Bottom Row: 3 Interactive Action Buttons */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.45rem", marginTop: "0.2rem" }}>
-              <button
-                type="button"
-                onClick={() => handleStatusChange(st.id, "Picked")}
-                style={{
-                  padding: "0.55rem 0.35rem", borderRadius: 10, border: "none",
-                  background: st.status === "Picked" ? "#10b981" : "rgba(16, 185, 129, 0.15)",
-                  color: st.status === "Picked" ? "#fff" : "#059669",
-                  fontWeight: 800, fontSize: "0.72rem", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem"
-                }}
-              >
-                <CheckCircle2 size={14} /> Picked
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleStatusChange(st.id, "Absent")}
-                style={{
-                  padding: "0.55rem 0.35rem", borderRadius: 10, border: "none",
-                  background: st.status === "Absent" ? "#ef4444" : "rgba(239, 68, 68, 0.15)",
-                  color: st.status === "Absent" ? "#fff" : "#dc2626",
-                  fontWeight: 800, fontSize: "0.72rem", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem"
-                }}
-              >
-                <XCircle size={14} /> Absent
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleStatusChange(st.id, "Waiting")}
-                style={{
-                  padding: "0.55rem 0.35rem", borderRadius: 10, border: "none",
-                  background: st.status === "Waiting" ? "#f59e0b" : "rgba(251, 191, 36, 0.15)",
-                  color: st.status === "Waiting" ? "#fff" : "#d97706",
-                  fontWeight: 800, fontSize: "0.72rem", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem"
-                }}
-              >
-                <Clock size={14} /> Waiting
-              </button>
-            </div>
-
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* ════════════ SELECT STUDENT BOTTOM MARKING ACTIONS (MATCHING SCREENSHOT) ════════════ */}
+      {selectedStudentId && (
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.65rem",
+          marginTop: "auto",
+          paddingTop: "0.5rem"
+        }}>
+          {/* Mark as Picked Button */}
+          <button
+            onClick={() => handleMarkStatus(selectedStudentId, "Picked")}
+            style={{
+              width: "100%",
+              padding: "0.95rem",
+              background: "#16a34a",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "14px",
+              fontSize: "0.9rem",
+              fontWeight: 800,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.45rem",
+              boxShadow: "0 4px 14px rgba(22, 163, 74, 0.2)"
+            }}
+          >
+            <Check size={16} strokeWidth={3} />
+            <span>Mark as Picked</span>
+          </button>
+
+          {/* Mark as Absent Button */}
+          <button
+            onClick={() => handleMarkStatus(selectedStudentId, "Absent")}
+            style={{
+              width: "100%",
+              padding: "0.95rem",
+              background: "#fee2e2",
+              color: "#ef4444",
+              border: "1px solid #fca5a5",
+              borderRadius: "14px",
+              fontSize: "0.9rem",
+              fontWeight: 800,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.45rem"
+            }}
+          >
+            <UserMinus size={16} strokeWidth={2.5} />
+            <span>Mark as Absent</span>
+          </button>
+
+          <button
+            onClick={() => {
+              handleMarkStatus(selectedStudentId, "Pending");
+              if (onNavigate) onNavigate("drop");
+            }}
+            style={{
+              width: "100%",
+              padding: "0.95rem",
+              background: "#ffffff",
+              color: "#64748b",
+              border: "1px solid #cbd5e1",
+              borderRadius: "14px",
+              fontSize: "0.9rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.45rem"
+            }}
+          >
+            <CornerUpRight size={16} />
+            <span>Not Picked (Skip)</span>
+          </button>
+        </div>
+      )}
 
     </div>
   );

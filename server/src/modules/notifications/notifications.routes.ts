@@ -1,22 +1,22 @@
 // ═══════════════════════════════════════════════════════════
-// SchoolMitra Backend — Notification & Broadcast Routes
+// SchoolMitra Backend — Notifications & Announcements Routes (Phase 11)
 // ═══════════════════════════════════════════════════════════
 
 import { Router } from "express";
 import {
-  triggerParentNotification,
-  getUserNotificationInbox,
-  markNotificationAsRead,
-  createBroadcastAnnouncement,
-  getBroadcastAnnouncements
+  getAnnouncements,
+  createAnnouncement,
+  publishCircular,
+  sendPushNotificationApi,
+  getUserInbox
 } from "./notifications.controller";
 
 const router = Router();
 
-router.post("/dispatch", triggerParentNotification);
-router.get("/inbox", getUserNotificationInbox);
-router.patch("/:id/read", markNotificationAsRead);
-router.post("/broadcast", createBroadcastAnnouncement);
-router.get("/broadcasts", getBroadcastAnnouncements);
+router.get("/inbox", getUserInbox);
+router.get("/announcements", getAnnouncements);
+router.post("/announcements", createAnnouncement);
+router.post("/circulars", publishCircular);
+router.post("/push/send", sendPushNotificationApi);
 
 export default router;

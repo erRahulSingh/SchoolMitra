@@ -2,183 +2,458 @@
 
 import React, { useState } from "react";
 import { 
-  Route, MapPin, Users, Clock, Navigation, Map, List, 
-  Bus, CheckCircle2, ChevronRight, ArrowRight, ShieldCheck 
+  ArrowLeft,
+  MapPin,
+  Clock,
+  Compass,
+  Navigation,
+  Activity,
+  Layers,
+  Volume2,
+  VolumeX,
+  Plus,
+  Minus,
+  CheckCircle2
 } from "lucide-react";
 
+interface RouteStop {
+  id: number;
+  name: string;
+  time: string;
+  students: string;
+}
+
 export default function RoutePage() {
-  const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [view, setView] = useState<"details" | "navigation">("details");
+  const [voiceGuidance, setVoiceGuidance] = useState(true);
 
-  const routeSummary = {
-    routeName: "Route 1 - Dwarka Sector 12 Express",
-    totalStops: 12,
-    totalStudents: 42,
-    estimatedTime: "45 Mins Total Trip",
-    distance: "14.2 km Total Distance",
-    busNo: "DL 01 AB 4321"
-  };
-
-  const routeStops = [
-    { no: 1, name: "Dwarka Sector 6 Metro Gate", time: "07:15 AM", students: 8, status: "Passed", done: true },
-    { no: 2, name: "Dwarka Sector 10 Crossing", time: "07:25 AM", students: 10, status: "Passed", done: true },
-    { no: 3, name: "Home Stop - Sector 12 Market", time: "07:35 AM", students: 16, status: "Current Stop 📍", done: false },
-    { no: 4, name: "Vasant Kunj Flyover Junction", time: "07:45 AM", students: 5, status: "Next Stop (8 mins)", done: false },
-    { no: 5, name: "DPS Main Campus Gate #1", time: "07:55 AM", students: 3, status: "Final Destination", done: false }
+  const stops: RouteStop[] = [
+    { id: 1, name: "Maple Park", time: "07:00 AM", students: "3 Students" },
+    { id: 2, name: "City Center", time: "07:08 AM", students: "4 Students" },
+    { id: 3, name: "Green Valley School", time: "07:15 AM", students: "All Students" }
   ];
 
-  return (
-    <div style={{
-      padding: "1.25rem 1rem",
-      display: "flex",
-      flexDirection: "column",
-      gap: "1.1rem",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
-    }}>
-
-      {/* HEADER WITH VIEW MODE TOGGLE */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900 }} className="text-title">Today&apos;s Route & Map</h2>
-          <p style={{ fontSize: "0.75rem", marginTop: 2 }} className="text-muted-custom">GPS Waypoints & Scheduled Bus Stops</p>
-        </div>
-
-        {/* MAP / LIST TOGGLE */}
-        <div style={{ display: "flex", background: "var(--bg-subbox)", border: "1px solid var(--border-card)", padding: "0.2rem", borderRadius: 12 }}>
-          <button
-            type="button"
-            onClick={() => setViewMode("map")}
-            style={{
-              padding: "0.4rem 0.65rem", borderRadius: 9, border: "none",
-              background: viewMode === "map" ? "linear-gradient(135deg, #10b981, #059669)" : "transparent",
-              color: viewMode === "map" ? "#fff" : "var(--text-secondary)",
-              fontSize: "0.72rem", fontWeight: 800, cursor: "pointer",
-              display: "flex", alignItems: "center", gap: "0.3rem"
-            }}
-          >
-            <Map size={14} /> Map
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setViewMode("list")}
-            style={{
-              padding: "0.4rem 0.65rem", borderRadius: 9, border: "none",
-              background: viewMode === "list" ? "linear-gradient(135deg, #10b981, #059669)" : "transparent",
-              color: viewMode === "list" ? "#fff" : "var(--text-secondary)",
-              fontSize: "0.72rem", fontWeight: 800, cursor: "pointer",
-              display: "flex", alignItems: "center", gap: "0.3rem"
-            }}
-          >
-            <List size={14} /> List
-          </button>
-        </div>
-      </div>
-
-      {/* 5 ROUTE INFORMATION GRID CARDS */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.65rem" }}>
-        
-        {/* Route Name Card */}
-        <div className="banner-card" style={{ gridColumn: "span 2", padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: "0.68rem", color: "#059669", fontWeight: 800 }}>ROUTE NAME</div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 900, marginTop: 1 }} className="text-title">{routeSummary.routeName}</div>
-          </div>
-          <span style={{ fontSize: "0.75rem", background: "rgba(16, 185, 129, 0.2)", color: "#059669", padding: "0.25rem 0.55rem", borderRadius: 8, fontWeight: 800 }}>{routeSummary.busNo}</span>
-        </div>
-
-        {/* Total Stops */}
-        <div className="card-ui" style={{ padding: "0.75rem 0.85rem" }}>
-          <div style={{ fontSize: "0.68rem", fontWeight: 700 }} className="text-muted-custom">TOTAL STOPS</div>
-          <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "#0284c7", marginTop: 2 }}>{routeSummary.totalStops} Stops</div>
-        </div>
-
-        {/* Total Students */}
-        <div className="card-ui" style={{ padding: "0.75rem 0.85rem" }}>
-          <div style={{ fontSize: "0.68rem", fontWeight: 700 }} className="text-muted-custom">TOTAL STUDENTS</div>
-          <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "#8b5cf6", marginTop: 2 }}>{routeSummary.totalStudents} Students</div>
-        </div>
-
-        {/* Estimated Time */}
-        <div className="card-ui" style={{ padding: "0.75rem 0.85rem" }}>
-          <div style={{ fontSize: "0.68rem", fontWeight: 700 }} className="text-muted-custom">ESTIMATED TIME</div>
-          <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#d97706", marginTop: 2 }}>45 Mins</div>
-        </div>
-
-        {/* Distance */}
-        <div className="card-ui" style={{ padding: "0.75rem 0.85rem" }}>
-          <div style={{ fontSize: "0.68rem", fontWeight: 700 }} className="text-muted-custom">DISTANCE</div>
-          <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#059669", marginTop: 2 }}>14.2 km</div>
-        </div>
-
-      </div>
-
-      {/* MAP VIEW DISPLAY */}
-      {viewMode === "map" && (
+  if (view === "navigation") {
+    // ════════════ SCREEN 3: NAVIGATION MAP VIEW ════════════
+    return (
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        color: "#0f172a",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        background: "#f8fafc",
+        position: "relative"
+      }}>
+        {/* MAP BACKGROUND CONTAINER (FULL VIEWPORT) */}
         <div style={{
-          height: 220,
-          background: "var(--bg-subbox)",
-          backgroundImage: "radial-gradient(rgba(100, 116, 139, 0.25) 1px, transparent 1px)",
-          backgroundSize: "20px 20px",
-          borderRadius: 20,
-          border: "1px solid var(--border-card)",
+          flex: 1,
+          background: "#e0f2fe",
           position: "relative",
           overflow: "hidden"
         }}>
-          <div style={{ position: "absolute", top: "45%", left: 0, right: 0, height: 8, background: "rgba(100, 116, 139, 0.15)", borderTop: "1px dashed rgba(100, 116, 139, 0.3)", borderBottom: "1px dashed rgba(100, 116, 139, 0.3)" }} />
-          <div style={{ position: "absolute", left: "48%", top: 0, bottom: 0, width: 8, background: "rgba(100, 116, 139, 0.15)", borderLeft: "1px dashed rgba(100, 116, 139, 0.3)", borderRight: "1px dashed rgba(100, 116, 139, 0.3)" }} />
+          {/* Mockup Roads polyline */}
+          <svg viewBox="0 0 100 80" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+            {/* White broad roads */}
+            <path d="M10 0 L10 80 M50 0 L50 80 M90 0 L90 80" stroke="#ffffff" strokeWidth="8" strokeLinecap="round" />
+            <path d="M0 20 L100 20 M0 60 L100 60" stroke="#ffffff" strokeWidth="8" strokeLinecap="round" />
+            
+            {/* Active Navigation Polyline Route (Blue) */}
+            <path d="M50 80 L50 40 L90 40 L90 10" fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" strokeDasharray="0.5 0.5" />
+            
+            {/* Destination Pin */}
+            <circle cx="90" cy="10" r="3.5" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
+            
+            {/* Bus position avatar */}
+            <g transform="translate(50, 52)">
+              <circle cx="0" cy="0" r="8" fill="#f59e0b" stroke="#ffffff" strokeWidth="1.5" />
+              {/* Little windshield detail */}
+              <rect x="-3" y="-3" width="6" height="6" fill="#1e293b" rx="0.5" />
+            </g>
+          </svg>
 
-          <div style={{ position: "absolute", top: "25%", left: "15%", textAlign: "center" }}>
-            <MapPin size={20} color="#10b981" />
-            <span style={{ fontSize: "0.6rem", background: "var(--bg-card)", color: "var(--text-primary)", padding: "1px 5px", borderRadius: 4 }} className="card-ui">Sec 6</span>
-          </div>
-
-          <div style={{ position: "absolute", top: "42%", left: "45%", textAlign: "center" }}>
-            <Bus size={28} color="#0284c7" />
-            <div style={{ fontSize: "0.65rem", background: "#0284c7", color: "#fff", padding: "2px 6px", borderRadius: 6, fontWeight: 800, marginTop: 2 }}>
-              Bus #DL01AB4321
+          {/* ════════════ TOP NAVIGATION GUIDANCE CARD ════════════ */}
+          <div style={{
+            position: "absolute",
+            top: "12px",
+            left: "12px",
+            right: "12px",
+            background: "#15803d",
+            borderRadius: "16px",
+            padding: "1rem 1.15rem",
+            color: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.85rem",
+            boxShadow: "0 8px 24px rgba(21, 128, 61, 0.25)",
+            zIndex: 10
+          }}>
+            <div style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              background: "rgba(255, 255, 255, 0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              <Navigation size={20} fill="#ffffff" transform="rotate(-90)" />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "1.25rem", fontWeight: 800 }}>350 m</span>
+              <span style={{ fontSize: "0.78rem", color: "#dcfce7", fontWeight: 600 }}>Turn left onto Green Street</span>
             </div>
           </div>
 
-          <div style={{ position: "absolute", bottom: "20%", right: "15%", textAlign: "center" }}>
-            <MapPin size={20} color="#8b5cf6" />
-            <span style={{ fontSize: "0.6rem", background: "var(--bg-card)", color: "var(--text-primary)", padding: "1px 5px", borderRadius: 4 }} className="card-ui">DPS Gate</span>
+          {/* ════════════ RIGHT OVERLAY ACTION BUTTONS ════════════ */}
+          <div style={{
+            position: "absolute",
+            right: "12px",
+            top: "100px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.65rem",
+            zIndex: 10
+          }}>
+            {/* Audio Toggle */}
+            <button
+              onClick={() => setVoiceGuidance(!voiceGuidance)}
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.06)",
+                cursor: "pointer",
+                color: "#475569"
+              }}
+            >
+              {voiceGuidance ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </button>
+
+            {/* Layers */}
+            <button
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.06)",
+                cursor: "pointer",
+                color: "#475569"
+              }}
+            >
+              <Layers size={16} />
+            </button>
+
+            {/* Plus zoom */}
+            <button
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.06)",
+                cursor: "pointer",
+                color: "#475569"
+              }}
+            >
+              <Plus size={16} />
+            </button>
+
+            {/* Minus zoom */}
+            <button
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.06)",
+                cursor: "pointer",
+                color: "#475569"
+              }}
+            >
+              <Minus size={16} />
+            </button>
           </div>
-        </div>
-      )}
 
-      {/* SEQUENTIAL LIST VIEW DISPLAY */}
-      {viewMode === "list" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-          {routeStops.map((st) => (
-            <div key={st.no} className="card-ui" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div style={{
-                  width: 28, height: 28, borderRadius: "50%",
-                  background: st.done ? "rgba(16, 185, 129, 0.2)" : "var(--bg-subbox)",
-                  color: st.done ? "#059669" : "var(--text-secondary)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.78rem", fontWeight: 800
-                }}>
-                  {st.no}
-                </div>
-
-                <div>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 800 }} className="text-title">{st.name}</div>
-                  <div style={{ fontSize: "0.7rem", marginTop: 2 }} className="text-muted-custom">Sched: {st.time} • {st.students} Students</div>
-                </div>
+          {/* ════════════ BOTTOM GUIDANCE INFORMATION PANEL ════════════ */}
+          <div style={{
+            position: "absolute",
+            bottom: "76px",
+            left: "12px",
+            right: "12px",
+            background: "#ffffff",
+            borderRadius: "20px",
+            padding: "1.1rem 1.25rem",
+            border: "1px solid #cbd5e1",
+            boxShadow: "0 8px 30px rgba(15, 23, 42, 0.08)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.85rem",
+            zIndex: 10
+          }}>
+            {/* Destination Name row */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                <span style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>Next Stop</span>
+                <span style={{ fontSize: "1rem", fontWeight: 800, color: "#1e293b" }}>City Center</span>
+                <span style={{ fontSize: "0.74rem", color: "#94a3b8", fontWeight: 500 }}>450 m away</span>
               </div>
 
-              <span style={{
-                background: st.status.includes("Current") ? "rgba(251, 191, 36, 0.2)" : st.done ? "rgba(16, 185, 129, 0.15)" : "var(--bg-subbox)",
-                color: st.status.includes("Current") ? "#d97706" : st.done ? "#059669" : "var(--text-secondary)",
-                padding: "0.2rem 0.55rem", borderRadius: 8, fontSize: "0.68rem", fontWeight: 800
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.15rem" }}>
+                <span style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>ETA</span>
+                <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "#2563eb" }}>07:08 AM</span>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: "1px", background: "#f1f5f9" }} />
+
+            {/* Speed & telemetry specs */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <span style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: 700 }}>Speed</span>
+                <div style={{ fontSize: "1rem", fontWeight: 800, color: "#1e293b" }}>32 km/h</div>
+              </div>
+
+              {/* Speed limit badge circle */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <div style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  border: "3px solid #16a34a",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.82rem",
+                  fontWeight: 900,
+                  color: "#1e293b"
+                }}>
+                  40
+                </div>
+                <span style={{ fontSize: "0.55rem", color: "#64748b", fontWeight: 700, marginTop: "2px" }}>Speed Limit</span>
+              </div>
+
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: 700 }}>Distance Left</span>
+                <div style={{ fontSize: "1rem", fontWeight: 800, color: "#1e293b" }}>6.2 km</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ════════════ BOTTOM END NAVIGATION BUTTON ════════════ */}
+        <div style={{ padding: "0.85rem 1rem", background: "#ffffff", borderTop: "1px solid #cbd5e1" }}>
+          <button
+            onClick={() => setView("details")}
+            style={{
+              width: "100%",
+              padding: "0.95rem",
+              background: "#ffffff",
+              color: "#dc2626",
+              border: "1.5px solid #fca5a5",
+              borderRadius: "14px",
+              fontSize: "0.95rem",
+              fontWeight: 800,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            End Navigation
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ════════════ SCREEN 2: ROUTE DETAILS TIMELINE VIEW ════════════
+  return (
+    <div style={{
+      padding: "1rem 1rem 2.2rem 1rem",
+      display: "flex",
+      flexDirection: "column",
+      gap: "1.2rem",
+      color: "#0f172a",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      background: "#f8fafc",
+      minHeight: "100%"
+    }}>
+
+
+
+      {/* ════════════ TOP ROUTE OVERVIEW CARD ════════════ */}
+      <div style={{
+        background: "linear-gradient(135deg, #0b2265 0%, #0d3880 55%, #081a4b 100%)",
+        borderRadius: "20px",
+        padding: "1.25rem 1.15rem",
+        color: "#ffffff",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 8px 24px rgba(11, 34, 101, 0.2)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justify: "space-between" }}>
+          <div>
+            <h2 style={{ fontSize: "1rem", fontWeight: 800, margin: 0, fontFamily: "'Outfit', sans-serif" }}>Route 01 - Morning</h2>
+            <p style={{ fontSize: "0.78rem", color: "#93c5fd", fontWeight: 500, margin: "2px 0 0 0" }}>Green Valley Route</p>
+          </div>
+          <span style={{
+            background: "rgba(255, 255, 255, 0.15)",
+            color: "#ffffff",
+            padding: "0.35rem 0.75rem",
+            borderRadius: "99px",
+            fontSize: "0.72rem",
+            fontWeight: 800
+          }}>
+            12 Stops
+          </span>
+        </div>
+      </div>
+
+      {/* ════════════ MIDDLE ROAD POLYLINE MINI MAP ════════════ */}
+      <div style={{
+        height: "150px",
+        background: "#e2e8f0",
+        borderRadius: "20px",
+        border: "1px solid #cbd5e1",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        <svg viewBox="0 0 100 40" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+          <path d="M5 20 C25 5, 45 35, 75 10 C85 5, 95 30, 95 30" fill="none" stroke="#cbd5e1" strokeWidth="5" strokeLinecap="round" />
+          <path d="M5 20 C25 5, 45 35, 75 10 C85 5, 95 30, 95 30" fill="none" stroke="#2563eb" strokeWidth="2" strokeDasharray="1.5 1" strokeLinecap="round" />
+          
+          {/* Pins */}
+          <circle cx="5" cy="20" r="2" fill="#16a34a" />
+          <circle cx="45" cy="23" r="2.5" fill="#2563eb" />
+          <circle cx="75" cy="10" r="2" fill="#ef4444" />
+        </svg>
+      </div>
+
+      {/* ════════════ ROUTE INFORMATION CARD ════════════ */}
+      <div style={{
+        background: "#ffffff",
+        borderRadius: "20px",
+        padding: "1.15rem",
+        border: "1px solid #cbd5e1",
+        boxShadow: "0 6px 16px rgba(15, 23, 42, 0.02)"
+      }}>
+        <h2 style={{ fontSize: "0.85rem", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "0.85rem" }}>
+          Route Information
+        </h2>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+            <span style={{ color: "#64748b", fontWeight: 600 }}>Total Distance</span>
+            <span style={{ fontWeight: 800, color: "#1e293b" }}>18.6 km</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+            <span style={{ color: "#64748b", fontWeight: 600 }}>Estimated Duration</span>
+            <span style={{ fontWeight: 800, color: "#1e293b" }}>45 min</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+            <span style={{ color: "#64748b", fontWeight: 600 }}>Total Students</span>
+            <span style={{ fontWeight: 800, color: "#1e293b" }}>42</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+            <span style={{ color: "#64748b", fontWeight: 600 }}>Stops</span>
+            <span style={{ fontWeight: 800, color: "#1e293b" }}>12</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ════════════ ROUTE STOPS timeline ════════════ */}
+      <div style={{
+        background: "#ffffff",
+        borderRadius: "20px",
+        padding: "1.15rem",
+        border: "1px solid #cbd5e1",
+        boxShadow: "0 6px 16px rgba(15, 23, 42, 0.02)",
+        position: "relative"
+      }}>
+        <h2 style={{ fontSize: "0.85rem", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "1rem" }}>
+          Route Stops
+        </h2>
+
+        {/* Vertical line connector */}
+        <div style={{
+          position: "absolute",
+          top: "3.2rem",
+          bottom: "1.8rem",
+          left: "2.1rem",
+          width: "2px",
+          background: "#e2e8f0"
+        }} />
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", position: "relative" }}>
+          {stops.map((stop) => (
+            <div key={stop.id} style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+              <div style={{
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                background: "#16a34a",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.7rem",
+                fontWeight: 900,
+                zIndex: 2
               }}>
-                {st.status}
-              </span>
+                {stop.id}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                <span style={{ fontSize: "0.88rem", fontWeight: 800, color: "#1e293b" }}>{stop.name}</span>
+                <span style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: 600 }}>{stop.time} &bull; {stop.students}</span>
+              </div>
             </div>
           ))}
         </div>
-      )}
+      </div>
+
+      {/* ════════════ START NAVIGATION ACTION ════════════ */}
+      <div style={{ marginTop: "0.4rem" }}>
+        <button
+          onClick={() => setView("navigation")}
+          style={{
+            width: "100%",
+            padding: "1.05rem",
+            background: "#2563eb",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: "14px",
+            fontSize: "0.95rem",
+            fontWeight: 800,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 14px rgba(37, 99, 235, 0.25)"
+          }}
+        >
+          <span>Start Navigation</span>
+        </button>
+      </div>
 
     </div>
   );

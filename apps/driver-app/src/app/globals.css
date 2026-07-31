@@ -137,31 +137,30 @@ p, span, label, input, button, select, textarea {
   font-size: 0.76rem;
 }
 
-/* FLOATING GLASSMORTIC TAB BAR */
+/* ELEVATED MODERN BOTTOM NAVIGATION TAB BAR */
 .bottom-nav {
-  height: 62px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.6);
-  border-radius: 24px;
+  height: 76px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.05);
+  border-top-left-radius: 32px;
+  border-top-right-radius: 32px;
   display: flex;
   justify-content: space-around;
   align-items: center;
   position: absolute;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 99;
-  padding: 0 4px;
+  padding: 0 8px 10px 8px; /* Safe area spacing */
   transition: all 0.3s ease;
 }
 
-.light .bottom-nav {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  box-shadow: 0 12px 32px -4px rgba(16, 185, 129, 0.15);
+[data-theme="dark"] .bottom-nav {
+  background: #ffffff;
+  border-top: 1px solid #cbd5e1;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.05);
 }
 
 .driver-tab {
@@ -170,26 +169,68 @@ p, span, label, input, button, select, textarea {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  color: #94a3b8;
-  font-size: 0.68rem;
+  gap: 4px;
+  color: #64748b;
+  font-size: 0.72rem;
   font-weight: 600;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 16px;
-  padding: 5px 2px;
+  border: none;
+  padding: 4px;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.driver-tab:hover {
+  color: #1d4ed8;
 }
 
 .driver-tab.active {
-  color: #34d399;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.15));
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #1d4ed8;
   font-weight: 800;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="dark"] .driver-tab {
+  color: #64748b;
+}
+
+[data-theme="dark"] .driver-tab.active {
+  color: #1d4ed8;
+}
+
+.nav-center-btn-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: -28px;
+  z-index: 105;
+  cursor: pointer;
+}
+
+.nav-center-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+  border: 4px solid #ffffff;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(29, 78, 216, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+[data-theme="dark"] .nav-center-btn {
+  border: 4px solid #ffffff;
+}
+
+.nav-center-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 10px 24px rgba(29, 78, 216, 0.5);
 }
 
 /* Animations */
@@ -219,13 +260,65 @@ p, span, label, input, button, select, textarea {
   bottom: 0;
   left: 0;
   width: 290px;
-  background: var(--bg-card);
-  border-right: 1px solid var(--border-card);
+  background: #ffffff !important; /* Always white background */
+  border-right: 1px solid #cbd5e1 !important;
   z-index: 300;
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   animation: slideRight 0.25s ease;
+}
+
+/* Force dark text and light borders inside driver sidebar drawer */
+.sidebar-drawer,
+.sidebar-drawer div,
+.sidebar-drawer span,
+.sidebar-drawer button {
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+.sidebar-drawer .text-muted-custom {
+  color: #64748b !important;
+}
+
+/* Close button and quick settings */
+.sidebar-drawer button {
+  background: #f1f5f9 !important; /* Soft gray buttons */
+}
+
+/* Active menu item with green gradient background */
+.sidebar-drawer button[style*="linear-gradient"] {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+.sidebar-drawer button[style*="linear-gradient"] * {
+  color: #ffffff !important; /* Active item text stays white */
+}
+
+/* Inactive menu items */
+.sidebar-drawer button[style*="var(--bg-subbox)"] {
+  background: #f8fafc !important;
+}
+.sidebar-drawer button[style*="var(--bg-subbox)"]:hover {
+  background: #f1f5f9 !important;
+}
+
+/* Icons */
+.sidebar-drawer svg {
+  color: #475569 !important;
+}
+.sidebar-drawer button[style*="linear-gradient"] svg {
+  color: #ffffff !important;
+}
+
+/* Logout button remains red */
+.sidebar-drawer button[style*="f87171"] {
+  color: #dc2626 !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+}
+.sidebar-drawer button[style*="f87171"] * {
+  color: #dc2626 !important;
 }
 
 @keyframes slideRight {

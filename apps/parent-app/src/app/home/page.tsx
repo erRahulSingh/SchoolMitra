@@ -1,168 +1,531 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { 
   CalendarCheck, Bus, CreditCard, Award, Bell, BookOpen, 
-  FileText, MessageSquare, Clock, Sparkles, TrendingUp, 
-  CheckCircle2, AlertCircle, Calendar, ChevronRight, UserCheck, 
-  MapPin, Activity, PhoneCall, ArrowUpRight, Megaphone, HelpCircle,
-  FileCheck, ShieldAlert
+  FileText, Calendar, ChevronRight, User, Megaphone, 
+  CheckCircle2, Building, Wallet, MapPin, Clock, Trophy, Sparkles
 } from "lucide-react";
 import { Language, translations } from "../i18n";
 
-export default function ParentHomePage({ language = "en" }: { language?: Language }) {
-  const t = translations[language];
+interface ParentHomePageProps {
+  language?: Language;
+  onNavigate?: (tab: string) => void;
+}
 
-  const [homeworkList, setHomeworkList] = useState([
-    { id: 1, subject: "Physics", title: "Lab Experiment #4 - Reflection & Refraction", dueDate: "Tomorrow, 09:00 AM", teacher: "Sunita Mehta", done: false },
-    { id: 2, subject: "Mathematics", title: "Quadratic Equations Exercise 4.2 (Q1 to Q15)", dueDate: "10 Aug 2026", teacher: "Rakesh Verma", done: true },
-    { id: 3, subject: "English", title: "Essay Writing on Modern Renewable Energy", dueDate: "12 Aug 2026", teacher: "Anjali Gupta", done: false }
-  ]);
-
-  const toggleHomework = (id: number) => {
-    setHomeworkList(prev => prev.map(hw => hw.id === id ? { ...hw, done: !hw.done } : hw));
-  };
+export default function ParentHomePage({ language = "en", onNavigate }: ParentHomePageProps) {
+  const t = translations[language] || {};
+  const isHi = language === "hi";
 
   return (
     <div style={{
-      padding: "1.25rem 1rem",
+      padding: "0.9rem 0.9rem 2.2rem 0.9rem",
       display: "flex",
       flexDirection: "column",
-      gap: "1.25rem",
-      color: "var(--text-main)",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+      gap: "1.1rem",
+      color: "#0f172a",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      background: "#f8fafc",
+      minHeight: "100%"
     }}>
 
-      {/* ════════════ 1. GREETING & CHILD PROFILE HEADER BANNER ════════════ */}
-      <div className="banner-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-          <div style={{
-            width: 46, height: 46, borderRadius: 14,
-            background: "linear-gradient(135deg, #6366f1, #3b82f6)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontWeight: 800, fontSize: "1.2rem",
-            boxShadow: "0 4px 14px rgba(99, 102, 241, 0.35)"
-          }}>
-            AS
-          </div>
-          <div>
-            <div className="banner-title" style={{ fontSize: "1.05rem", fontWeight: 800, letterSpacing: "-0.01em" }}>
-              Aarav Sharma
-            </div>
-            <div className="banner-sub" style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.35rem", marginTop: 2 }}>
-              <span style={{ fontWeight: 700 }}>{t.classStr}</span> • <span>{t.rollNoStr}</span> • <span>{t.dpsDelhi}</span>
-            </div>
-          </div>
-        </div>
-
+      {/* ════════════ 1. GREETING BANNER WITH VIBRANT INDIGO GRADIENT ════════════ */}
+      <div style={{
+        background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 40%, #a855f7 100%)",
+        borderRadius: "20px",
+        padding: "1.25rem 1.15rem 1.15rem 1.15rem",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 8px 24px rgba(99, 102, 241, 0.25)"
+      }}>
+        {/* Decorative background vectors */}
         <div style={{
-          background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)",
-          color: "#059669", padding: "0.3rem 0.65rem", borderRadius: 99,
-          fontSize: "0.72rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.3rem"
+          position: "absolute", top: "10%", left: "45%", width: "8px", height: "8px",
+          background: "rgba(255,255,255,0.25)", transform: "rotate(45deg)", borderRadius: "2px"
+        }} />
+        <div style={{
+          position: "absolute", bottom: "15%", left: "55%", width: "10px", height: "10px",
+          background: "rgba(255,255,255,0.15)", borderRadius: "50%"
+        }} />
+
+        {/* Left Greeting Text */}
+        <div style={{ maxWidth: "60%", zIndex: 2, position: "relative" }}>
+          <div style={{ fontSize: "0.78rem", color: "#e0e7ff", fontWeight: 600, opacity: 0.9 }}>
+            Good Morning,
+          </div>
+          <div style={{
+            fontSize: "1.35rem",
+            fontWeight: 800,
+            color: "#ffffff",
+            fontFamily: "'Outfit', sans-serif",
+            marginTop: "3px",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.35rem",
+            letterSpacing: "-0.015em"
+          }}>
+            Anjali Sharma <span style={{ fontSize: "1.15rem" }}>👋</span>
+          </div>
+          <div style={{
+            fontSize: "0.74rem",
+            color: "#e0e7ff",
+            marginTop: "6px",
+            lineHeight: 1.4,
+            fontWeight: 500,
+            opacity: 0.95
+          }}>
+            Stay updated with your child's activities and school updates
+          </div>
+        </div>
+
+        {/* Right High-Quality Vector SVG Illustration (Mother and Child reading together) */}
+        <div style={{
+          position: "absolute",
+          right: "-5px",
+          bottom: "-5px",
+          width: "140px",
+          height: "120px",
+          pointerEvents: "none",
+          zIndex: 1
         }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
-          {t.activeStudent}
+          <svg width="140" height="120" viewBox="0 0 142 122" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 58C8 72 3 98 23 112C43 126 122 122 136 102C150 82 136 42 112 42C88 42 52 48 18 58Z" fill="#ffffff" fillOpacity="0.15"/>
+            <circle cx="104" cy="34" r="15" fill="#e11d48"/>
+            <circle cx="104" cy="34" r="12" fill="#fde047"/>
+            <path d="M98 34C98 34 101 40 110 36" stroke="#78350f" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M88 52C88 44 120 44 120 52L124 93H84L88 52Z" fill="#f43f5e"/>
+            <path d="M82 62C82 62 68 68 62 80" stroke="#fcd34d" strokeWidth="6" strokeLinecap="round"/>
+            <circle cx="68" cy="56" r="11" fill="#1e3a8a"/>
+            <circle cx="68" cy="58" r="9.5" fill="#fde047"/>
+            <path d="M58 70C58 66 78 66 78 70L80 100H56L58 70Z" fill="#1d4ed8"/>
+            <path d="M68 70L68 84" stroke="#ffffff" strokeWidth="2.5"/>
+            <path d="M46 82L62 88L78 82L78 98L62 104L46 98Z" fill="#fef08a" stroke="#ca8a04" strokeWidth="1.5"/>
+            <path d="M62 88L62 104" stroke="#ca8a04" strokeWidth="1.5"/>
+            <path d="M126 100L128 114H138L140 100H126Z" fill="#d97706"/>
+            <path d="M133 100C133 92 126 88 126 88C126 88 136 90 138 100" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"/>
+          </svg>
         </div>
       </div>
 
-      {/* ════════════ 2. QUICK ACTIONS GRID ════════════ */}
-      <div>
-        <div style={{ fontSize: "0.82rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--primary)", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <Sparkles size={14} /> {t.quickShortcuts}
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.65rem" }}>
-          {[
-            { icon: Bus, label: t.bus, color: "#0284c7", bg: "rgba(56, 189, 248, 0.15)" },
-            { icon: CreditCard, label: t.payFees, color: "#059669", bg: "rgba(52, 211, 153, 0.15)" },
-            { icon: CalendarCheck, label: t.attendance, color: "#7c3aed", bg: "rgba(167, 139, 250, 0.15)" },
-            { icon: BookOpen, label: t.homework, color: "#d97706", bg: "rgba(251, 191, 36, 0.15)" },
-            { icon: FileText, label: t.exams, color: "#dc2626", bg: "rgba(248, 113, 113, 0.15)" },
-            { icon: MessageSquare, label: t.teacherChat, color: "#4f46e5", bg: "rgba(129, 140, 248, 0.15)" },
-            { icon: Award, label: t.reportCard, color: "#db2777", bg: "rgba(244, 114, 182, 0.15)" },
-            { icon: FileCheck, label: t.applyLeave, color: "#0284c7", bg: "rgba(56, 189, 248, 0.15)" }
-          ].map((act, i) => (
-            <button key={i} type="button" className="shortcut-btn">
-              <div style={{
-                width: 38, height: 38, borderRadius: 12, background: act.bg,
-                display: "flex", alignItems: "center", justifyContent: "center", color: act.color
-              }}>
-                <act.icon size={20} />
+      {/* ════════════ 2. STUDENT PROFILE CARD (WHITE BACKGROUND MATCHING SCREENSHOT) ════════════ */}
+      <div style={{
+        background: "#ffffff",
+        borderRadius: "20px",
+        padding: "1.2rem 1.15rem",
+        border: "1px solid #cbd5e1",
+        boxShadow: "0 6px 20px rgba(15, 23, 42, 0.03)",
+        color: "#0f172a",
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem"
+      }}>
+        {/* Top Info Layout */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
+            {/* Student Avatar */}
+            <img
+              src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=300"
+              alt="Rohan Sharma"
+              onError={(e) => { (e.target as any).src = "https://images.unsplash.com/photo-1544717305-2782549b5136?w=150"; }}
+              style={{
+                width: "54px",
+                height: "54px",
+                borderRadius: "50%",
+                objectFit: "cover"
+              }}
+            />
+            <div>
+              <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#1e3a8a", letterSpacing: "-0.015em", fontFamily: "'Outfit', sans-serif" }}>
+                Rohan Sharma
               </div>
-              <span className="shortcut-text">{act.label}</span>
-            </button>
-          ))}
+              <div style={{ fontSize: "0.85rem", color: "#2563eb", fontWeight: 700, marginTop: "1px" }}>
+                Class 5th – A
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px", fontWeight: 600 }}>
+                Green Valley Public School
+              </div>
+            </div>
+          </div>
+
+          {/* View Profile Capsule Button */}
+          <button
+            type="button"
+            onClick={() => onNavigate && onNavigate("child")}
+            style={{
+              background: "#1e3a8a",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "99px",
+              padding: "0.45rem 0.95rem",
+              fontSize: "0.75rem",
+              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              cursor: "pointer",
+              boxShadow: "0 3px 10px rgba(30, 58, 138, 0.15)",
+              whiteSpace: "nowrap"
+            }}
+          >
+            <span>View Profile</span>
+            <ChevronRight size={14} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* Divider Line */}
+        <div style={{ height: "1px", background: "#f1f5f9", width: "100%" }} />
+
+        {/* Bottom 4 Mini Stats Row */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "0.3rem",
+          alignItems: "center"
+        }}>
+          {/* Stat 1: Roll No */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <div style={{
+              width: "24px", height: "24px", borderRadius: "6px", flexShrink: 0,
+              background: "#ffe4e6", display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <Calendar size={13} color="#e11d48" strokeWidth={2.2} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "0.55rem", color: "#64748b", fontWeight: 700, letterSpacing: "0.02em" }}>ROLL NO.</span>
+              <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#0f172a" }}>12</span>
+            </div>
+          </div>
+
+          {/* Stat 2: Academic Year */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <div style={{
+              width: "24px", height: "24px", borderRadius: "6px", flexShrink: 0,
+              background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <Building size={13} color="#16a34a" strokeWidth={2.2} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "0.55rem", color: "#64748b", fontWeight: 700, letterSpacing: "0.02em" }}>SESSION</span>
+              <span style={{ fontSize: "0.74rem", fontWeight: 800, color: "#0f172a", whiteSpace: "nowrap" }}>2024–25</span>
+            </div>
+          </div>
+
+          {/* Stat 3: Class Teacher */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <div style={{
+              width: "24px", height: "24px", borderRadius: "6px", flexShrink: 0,
+              background: "#f3e8ff", display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <User size={13} color="#9333ea" strokeWidth={2.2} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "0.55rem", color: "#64748b", fontWeight: 700, letterSpacing: "0.02em" }}>TEACHER</span>
+              <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#0f172a", whiteSpace: "nowrap" }}>Mrs. Priya</span>
+            </div>
+          </div>
+
+          {/* Stat 4: Bus No */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <div style={{
+              width: "24px", height: "24px", borderRadius: "6px", flexShrink: 0,
+              background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <Bus size={13} color="#d97706" strokeWidth={2.2} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "0.55rem", color: "#64748b", fontWeight: 700, letterSpacing: "0.02em" }}>BUS NO.</span>
+              <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#0f172a", whiteSpace: "nowrap" }}>UP32-1234</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ════════════ 3. TODAY'S ATTENDANCE WIDGET ════════════ */}
-      <div className="card-ui" style={{ padding: "1.25rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(16, 185, 129, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#059669" }}>
-              <UserCheck size={18} />
-            </div>
-            <div>
-              <div className="text-title" style={{ fontSize: "0.9rem", fontWeight: 800 }}>{t.todayGateAttendance}</div>
-              <div className="text-muted-custom" style={{ fontSize: "0.72rem" }}>{t.rfidEntryLog}</div>
-            </div>
+      {/* ════════════ 3. QUICK ACTIONS GRID ════════════ */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.65rem" }}>
+          <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#1e3a8a", fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.015em" }}>
+            Quick Actions
           </div>
-
-          <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "#059669", padding: "0.2rem 0.65rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 800 }}>
-            {t.present}
-          </span>
+          <button 
+            type="button" 
+            onClick={() => onNavigate && onNavigate("more")}
+            style={{ background: "none", border: "none", color: "#1d4ed8", fontSize: "0.74rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "2px", cursor: "pointer" }}
+          >
+            <span>View All</span>
+            <ChevronRight size={13} strokeWidth={2.5} />
+          </button>
         </div>
 
-        <div className="subbox-ui" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div className="text-muted-custom" style={{ fontSize: "0.68rem", fontWeight: 700 }}>{t.inTime}</div>
-            <div className="text-title" style={{ fontSize: "1.1rem", fontWeight: 800, marginTop: 2 }}>07:42 AM</div>
+        {/* 5 Squircle Action Items Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.45rem" }}>
+          {/* Action 1: Attendance */}
+          <button
+            type="button"
+            onClick={() => onNavigate && onNavigate("attendance")}
+            style={{
+              background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "18px", padding: "0.65rem 0.2rem",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "0.45rem", cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.02)"
+            }}
+          >
+            <div style={{
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: "#faf5ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b21a8"
+            }}>
+              <CalendarCheck size={18} strokeWidth={2.2} />
+            </div>
+            <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#334155" }}>Attendance</span>
+          </button>
+
+          {/* Action 2: Report Card */}
+          <button
+            type="button"
+            onClick={() => onNavigate && onNavigate("reportCard")}
+            style={{
+              background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "18px", padding: "0.65rem 0.2rem",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "0.45rem", cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.02)"
+            }}
+          >
+            <div style={{
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", color: "#16a34a"
+            }}>
+              <FileText size={18} strokeWidth={2.2} />
+            </div>
+            <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#334155" }}>Report Card</span>
+          </button>
+
+          {/* Action 3: Fee Payments */}
+          <button
+            type="button"
+            onClick={() => onNavigate && onNavigate("fees")}
+            style={{
+              background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "18px", padding: "0.65rem 0.2rem",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "0.45rem", cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.02)"
+            }}
+          >
+            <div style={{
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center", color: "#d97706"
+            }}>
+              <Wallet size={18} strokeWidth={2.2} />
+            </div>
+            <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#334155" }}>Fee Payments</span>
+          </button>
+
+          {/* Action 4: Bus Tracking */}
+          <button
+            type="button"
+            onClick={() => onNavigate && onNavigate("bus")}
+            style={{
+              background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "18px", padding: "0.65rem 0.2rem",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "0.45rem", cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.02)"
+            }}
+          >
+            <div style={{
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb"
+            }}>
+              <Bus size={18} strokeWidth={2.2} />
+            </div>
+            <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#334155" }}>Bus Tracking</span>
+          </button>
+
+          {/* Action 5: Time Table */}
+          <button
+            type="button"
+            onClick={() => onNavigate && onNavigate("timeTable")}
+            style={{
+              background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "18px", padding: "0.65rem 0.2rem",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "0.45rem", cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(15, 23, 42, 0.02)"
+            }}
+          >
+            <div style={{
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: "#faf5ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#9333ea"
+            }}>
+              <Calendar size={18} strokeWidth={2.2} />
+            </div>
+            <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#334155" }}>Time Table</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ════════════ 4. TODAY'S OVERVIEW (MATCHING SCREENSHOT) ════════════ */}
+      <div>
+        <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#1e3a8a", marginBottom: "0.65rem", fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.015em" }}>
+          Today's Overview
+        </div>
+
+        {/* 4 Cards Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.45rem" }}>
+          {/* Card 1: Attendance */}
+          <div 
+            onClick={() => onNavigate && onNavigate("attendance")}
+            style={{
+              background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "16px",
+              padding: "0.85rem 0.35rem", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", cursor: "pointer"
+            }}
+          >
+            <div style={{
+              width: "34px", height: "34px", borderRadius: "50%", background: "#dcfce7",
+              display: "flex", alignItems: "center", justifyContent: "center", color: "#16a34a", marginBottom: "0.4rem"
+            }}>
+              <CheckCircle2 size={19} strokeWidth={2.5} />
+            </div>
+            <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "#16a34a" }}>Present</div>
+            <div style={{ fontSize: "0.62rem", color: "#475569", fontWeight: 700, marginTop: "3px" }}>Attendance Today</div>
           </div>
-          <div style={{ height: 28, width: 1, background: "var(--border-card)" }} />
-          <div>
-            <div className="text-muted-custom" style={{ fontSize: "0.68rem", fontWeight: 700 }}>{t.gateRoom}</div>
-            <div className="text-title" style={{ fontSize: "0.82rem", fontWeight: 700, marginTop: 2 }}>{t.mainGate}</div>
+
+          {/* Card 2: Assignments Pending */}
+          <div 
+            onClick={() => onNavigate && onNavigate("homework")}
+            style={{
+              background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "16px",
+              padding: "0.85rem 0.35rem", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", cursor: "pointer"
+            }}
+          >
+            <div style={{
+              width: "34px", height: "34px", borderRadius: "50%", background: "#e0f2fe",
+              display: "flex", alignItems: "center", justifyContent: "center", color: "#0284c7", marginBottom: "0.4rem"
+            }}>
+              <Calendar size={19} strokeWidth={2.5} />
+            </div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0369a1" }}>2</div>
+            <div style={{ fontSize: "0.62rem", color: "#475569", fontWeight: 700, marginTop: "3px" }}>Pending Tasks</div>
           </div>
-          <div style={{ height: 28, width: 1, background: "var(--border-card)" }} />
-          <div>
-            <div className="text-muted-custom" style={{ fontSize: "0.68rem", fontWeight: 700 }}>{t.thisMonth}</div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#059669", marginTop: 2 }}>96.2%</div>
+
+          {/* Card 3: New Notification */}
+          <div 
+            onClick={() => onNavigate && onNavigate("notifications")}
+            style={{
+              background: "#fefbeb", border: "1px solid #fef08a", borderRadius: "16px",
+              padding: "0.85rem 0.35rem", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", cursor: "pointer"
+            }}
+          >
+            <div style={{
+              width: "34px", height: "34px", borderRadius: "50%", background: "#fef3c7",
+              display: "flex", alignItems: "center", justifyContent: "center", color: "#d97706", marginBottom: "0.4rem"
+            }}>
+              <Bell size={19} strokeWidth={2.5} />
+            </div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#b45309" }}>1</div>
+            <div style={{ fontSize: "0.62rem", color: "#475569", fontWeight: 700, marginTop: "3px" }}>Notifications</div>
+          </div>
+
+          {/* Card 4: Due Fee */}
+          <div 
+            onClick={() => onNavigate && onNavigate("fees")}
+            style={{
+              background: "#faf5ff", border: "1px solid #e9d5ff", borderRadius: "16px",
+              padding: "0.85rem 0.35rem", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", cursor: "pointer"
+            }}
+          >
+            <div style={{
+              width: "34px", height: "34px", borderRadius: "50%", background: "#f3e8ff",
+              display: "flex", alignItems: "center", justifyContent: "center", color: "#9333ea", marginBottom: "0.4rem"
+            }}>
+              <Wallet size={19} strokeWidth={2.5} />
+            </div>
+            <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "#6b21a8" }}>₹1,250</div>
+            <div style={{ fontSize: "0.62rem", color: "#475569", fontWeight: 700, marginTop: "3px" }}>Due This Month</div>
           </div>
         </div>
       </div>
 
-      {/* ════════════ 4. LIVE BUS TELEMETRY WIDGET ════════════ */}
-      <div className="card-ui" style={{ padding: "1.25rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(56, 189, 248, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#0284c7" }}>
-              <Bus size={18} />
-            </div>
-            <div>
-              <div className="text-title" style={{ fontSize: "0.9rem", fontWeight: 800 }}>{t.liveBusTelemetry}</div>
-              <div className="text-muted-custom" style={{ fontSize: "0.72rem" }}>Bus #DL01AB4321 • Route 1 (Dwarka)</div>
-            </div>
+      {/* ════════════ 5. RECENT UPDATES ════════════ */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.65rem" }}>
+          <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#1e3a8a", fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.015em" }}>
+            Recent Updates
           </div>
-
-          <div style={{ background: "rgba(56, 189, 248, 0.15)", color: "#0284c7", padding: "0.2rem 0.65rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0284c7" }} />
-            {t.onRoute}
-          </div>
+          <button 
+            type="button" 
+            onClick={() => onNavigate && onNavigate("notifications")}
+            style={{ background: "none", border: "none", color: "#1d4ed8", fontSize: "0.74rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "2px", cursor: "pointer" }}
+          >
+            <span>View All</span>
+            <ChevronRight size={13} strokeWidth={2.5} />
+          </button>
         </div>
 
-        <div className="subbox-ui" style={{ padding: "0.85rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div className="text-muted-custom" style={{ fontSize: "0.68rem", fontWeight: 700 }}>{t.estimatedArrival}</div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0284c7", marginTop: 2 }}>{t.minsAway}</div>
+        {/* Updates Card Container */}
+        <div style={{
+          background: "#ffffff",
+          borderRadius: "20px",
+          border: "1px solid #cbd5e1",
+          boxShadow: "0 6px 20px rgba(15, 23, 42, 0.03)",
+          overflow: "hidden"
+        }}>
+          {/* Update Item 1 */}
+          <div style={{ padding: "0.95rem 1.15rem", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+              <div style={{
+                width: "36px", height: "36px", borderRadius: "50%", background: "#dcfce7", flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center", color: "#16a34a"
+              }}>
+                <Megaphone size={18} strokeWidth={2.2} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                <span style={{ fontSize: "0.88rem", fontWeight: 800, color: "#0f172a" }}>Holiday Notice</span>
+                <span style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: 500 }}>School will remain closed on 15th May 2025</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", flexShrink: 0 }}>
+              <span style={{ fontSize: "0.74rem", color: "#94a3b8", fontWeight: 600 }}>2h ago</span>
+              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#ef4444" }} />
+              <ChevronRight size={16} color="#94a3b8" />
+            </div>
           </div>
-          <div style={{ height: 28, width: 1, background: "var(--border-card)" }} />
-          <div>
-            <div className="text-muted-custom" style={{ fontSize: "0.68rem", fontWeight: 700 }}>{t.nextStop}</div>
-            <div className="text-title" style={{ fontSize: "0.82rem", fontWeight: 700, marginTop: 2 }}>{t.dwarkaSec12}</div>
+
+          {/* Update Item 2 */}
+          <div style={{ padding: "0.95rem 1.15rem", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+              <div style={{
+                width: "36px", height: "36px", borderRadius: "50%", background: "#e0f2fe", flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center", color: "#0284c7"
+              }}>
+                <Trophy size={18} strokeWidth={2.2} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                <span style={{ fontSize: "0.88rem", fontWeight: 800, color: "#0f172a" }}>Annual Sports Day</span>
+                <span style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: 500 }}>Annual Sports Day will be held on 25th May 2025</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", flexShrink: 0 }}>
+              <span style={{ fontSize: "0.74rem", color: "#94a3b8", fontWeight: 600 }}>1d ago</span>
+              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#ef4444" }} />
+              <ChevronRight size={16} color="#94a3b8" />
+            </div>
           </div>
+
+          {/* Update Item 3 */}
+          <div style={{ padding: "0.95rem 1.15rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+              <div style={{
+                width: "36px", height: "36px", borderRadius: "50%", background: "#f3e8ff", flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center", color: "#9333ea"
+              }}>
+                <FileText size={18} strokeWidth={2.2} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                <span style={{ fontSize: "0.88rem", fontWeight: 800, color: "#0f172a" }}>PTM Schedule</span>
+                <span style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: 500 }}>Parent Teacher Meeting on 20th May 2025</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", flexShrink: 0 }}>
+              <span style={{ fontSize: "0.74rem", color: "#94a3b8", fontWeight: 600 }}>2d ago</span>
+              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#ef4444" }} />
+              <ChevronRight size={16} color="#94a3b8" />
+            </div>
         </div>
       </div>
-
     </div>
+
+  </div>
   );
 }

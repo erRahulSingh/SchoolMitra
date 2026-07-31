@@ -24,11 +24,15 @@ import supportRoutes from "../modules/support/support.routes";
 import tenantRoutes from "../modules/tenant/tenant.routes";
 import adminRoutes from "../modules/admin/admin.routes";
 import driverRoutes from "../modules/driver/driver.routes";
+import academicsRoutes from "../modules/academics/academics.routes";
+import settingsRoutes from "../modules/settings/settings.routes";
 
 const router = Router();
 
 // Mount all Backend Microservice Modules
 router.use("/auth", authRoutes);
+router.use("/settings", settingsRoutes);
+router.use("/academics", academicsRoutes);
 router.use("/driver", driverRoutes);
 router.use("/tenant", tenantRoutes);
 router.use("/admin", adminRoutes);

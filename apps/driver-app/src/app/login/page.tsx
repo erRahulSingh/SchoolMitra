@@ -30,11 +30,11 @@ export default function DriverLoginPage({ onLoginSuccess }: { onLoginSuccess?: (
     setTimeout(() => {
       setLoading(false);
       const demoUser = {
-        name: "Ram Singh",
+        name: "Rajesh Kumar",
         email: "driver@schoolmitra.com",
         phone: "+91 98111 22334",
         empId: "EMP-DRV-104",
-        busNo: "DL 01 AB 4321",
+        busNo: "UP32 AB 1234",
         routeName: "Route 1 Express"
       };
 

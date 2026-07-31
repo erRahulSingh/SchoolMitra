@@ -45,14 +45,13 @@ export default function Navbar() {
         </Link>
         <div className="nav-dropdown">
           <span
-            className={`nav-link ${
-              pathname?.startsWith("/solutions") ||
+            className={`nav-link ${pathname?.startsWith("/solutions") ||
               pathname === "/school-erp" ||
               pathname === "/transport" ||
               pathname === "/parent-app"
-                ? "active"
-                : ""
-            }`}
+              ? "active"
+              : ""
+              }`}
             style={{ cursor: "pointer" }}
           >
             Solutions <ChevronDown size={14} />

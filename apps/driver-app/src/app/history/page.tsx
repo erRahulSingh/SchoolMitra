@@ -1,123 +1,152 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { 
-  Clock, Navigation, Users, Calendar, MapPin, 
-  CheckCircle2, ArrowRight, ShieldCheck, FileText 
+  ArrowLeft,
+  Filter,
+  CheckCircle2,
+  Calendar,
+  ChevronRight
 } from "lucide-react";
 
-export default function TripHistoryPage() {
-  const pastTrips = [
-    {
-      id: "t1",
-      date: "28 July 2026",
-      type: "Morning Pickup",
-      route: "Route 1 - Dwarka Sector 12 Express",
-      distance: "14.2 km",
-      students: 42,
-      startTime: "07:10 AM",
-      endTime: "07:55 AM",
-      status: "Completed ✅"
-    },
-    {
-      id: "t2",
-      date: "28 July 2026",
-      type: "Afternoon Return",
-      route: "Route 1 - Dwarka Sector 12 Express",
-      distance: "14.8 km",
-      students: 40,
-      startTime: "02:15 PM",
-      endTime: "03:02 PM",
-      status: "Completed ✅"
-    },
-    {
-      id: "t3",
-      date: "27 July 2026",
-      type: "Morning Pickup",
-      route: "Route 1 - Dwarka Sector 12 Express",
-      distance: "14.2 km",
-      students: 41,
-      startTime: "07:12 AM",
-      endTime: "07:52 AM",
-      status: "Completed ✅"
-    },
-    {
-      id: "t4",
-      date: "27 July 2026",
-      type: "Afternoon Return",
-      route: "Route 1 - Dwarka Sector 12 Express",
-      distance: "14.5 km",
-      students: 42,
-      startTime: "02:10 PM",
-      endTime: "02:58 PM",
-      status: "Completed ✅"
-    }
+interface HistoryTrip {
+  id: number;
+  date: string;
+  duration: string;
+  route: string;
+  distance: string;
+  students: number;
+}
+
+export default function TripHistoryPage({ onNavigate }: { onNavigate?: (tab: string) => void }) {
+  const [toggleTab, setToggleTab] = useState<"Completed" | "Cancelled">("Completed");
+
+  const trips: HistoryTrip[] = [
+    { id: 1, date: "15 May 2025", duration: "07:00 AM - 08:15 AM", route: "Route 01 - Morning", distance: "18.6 km", students: 42 },
+    { id: 2, date: "14 May 2025", duration: "07:00 AM - 08:10 AM", route: "Route 01 - Morning", distance: "18.4 km", students: 41 },
+    { id: 3, date: "13 May 2025", duration: "07:00 AM - 08:12 AM", route: "Route 01 - Morning", distance: "18.5 km", students: 43 },
+    { id: 4, date: "12 May 2025", duration: "07:00 AM - 08:20 AM", route: "Route 02 - Evening", distance: "19.1 km", students: 38 },
+    { id: 5, date: "11 May 2025", duration: "06:45 PM - 08:00 PM", route: "Route 02 - Evening", distance: "18.9 km", students: 37 }
   ];
 
   return (
     <div style={{
-      padding: "1.25rem 1rem",
+      padding: "1rem 1rem 2.2rem 1rem",
       display: "flex",
       flexDirection: "column",
       gap: "1.1rem",
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+      color: "#0f172a",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      background: "#f8fafc",
+      minHeight: "100%"
     }}>
 
-      {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h2 style={{ fontSize: "1.15rem", fontWeight: 900 }} className="text-title">Trip History Log</h2>
-          <p style={{ fontSize: "0.75rem", marginTop: 2 }} className="text-muted-custom">Past Completed Routes & Kilometers Logged</p>
-        </div>
 
-        <span style={{ background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)", color: "#059669", padding: "0.3rem 0.65rem", borderRadius: 99, fontSize: "0.72rem", fontWeight: 800 }}>
-          4 Trips Logged
-        </span>
+
+      {/* ════════════ TOGGLE COMPLETED VS CANCELLED ════════════ */}
+      <div style={{
+        background: "#e2e8f0",
+        borderRadius: "99px",
+        padding: "0.22rem",
+        display: "flex",
+        alignItems: "center"
+      }}>
+        <button
+          onClick={() => setToggleTab("Completed")}
+          style={{
+            flex: 1,
+            padding: "0.55rem",
+            borderRadius: "99px",
+            border: "none",
+            background: toggleTab === "Completed" ? "#0f52ba" : "transparent",
+            color: toggleTab === "Completed" ? "#ffffff" : "#475569",
+            fontSize: "0.78rem",
+            fontWeight: 800,
+            cursor: "pointer",
+            transition: "all 0.15s"
+          }}
+        >
+          Completed
+        </button>
+        <button
+          onClick={() => setToggleTab("Cancelled")}
+          style={{
+            flex: 1,
+            padding: "0.55rem",
+            borderRadius: "99px",
+            border: "none",
+            background: toggleTab === "Cancelled" ? "#0f52ba" : "transparent",
+            color: toggleTab === "Cancelled" ? "#ffffff" : "#475569",
+            fontSize: "0.78rem",
+            fontWeight: 800,
+            cursor: "pointer",
+            transition: "all 0.15s"
+          }}
+        >
+          Cancelled
+        </button>
       </div>
 
-      {/* PAST TRIPS LIST CARDS */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-        {pastTrips.map((trip) => (
-          <div key={trip.id} className="card-ui" style={{
-            padding: "1rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem"
+      {/* ════════════ HISTORY CARDS LIST ════════════ */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        {toggleTab === "Completed" ? (
+          trips.map((trip) => (
+            <div
+              key={trip.id}
+              style={{
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                borderRadius: "16px",
+                padding: "1rem 1.15rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                boxShadow: "0 4px 12px rgba(15, 23, 42, 0.01)"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.85rem", maxWidth: "80%" }}>
+                {/* Checked Status Node */}
+                <div style={{
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "50%",
+                  background: "#dcfce7",
+                  color: "#16a34a",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  marginTop: "2px"
+                }}>
+                  <CheckCircle2 size={16} strokeWidth={3} />
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#1e293b" }}>{trip.date}</span>
+                    <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>&bull; {trip.duration}</span>
+                  </div>
+                  <span style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0d3880" }}>{trip.route}</span>
+                  <span style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: 600 }}>
+                    {trip.distance} &bull; {trip.students} Students
+                  </span>
+                </div>
+              </div>
+
+              <ChevronRight size={18} color="#cbd5e1" />
+            </div>
+          ))
+        ) : (
+          <div style={{
+            padding: "2rem",
+            textAlign: "center",
+            color: "#64748b",
+            fontSize: "0.88rem",
+            fontWeight: 650
           }}>
-            
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", fontSize: "0.78rem", color: "#059669", fontWeight: 800 }}>
-                <Calendar size={14} /> {trip.date} • {trip.type}
-              </div>
-
-              <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "#059669", padding: "0.2rem 0.55rem", borderRadius: 8, fontSize: "0.68rem", fontWeight: 800 }}>
-                {trip.status}
-              </span>
-            </div>
-
-            <div style={{ fontSize: "0.92rem", fontWeight: 900 }} className="text-title">
-              {trip.route}
-            </div>
-
-            <div className="subbox-ui" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem", padding: "0.65rem" }}>
-              <div>
-                <div style={{ fontSize: "0.65rem" }} className="text-muted-custom">DISTANCE</div>
-                <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "#0284c7", marginTop: 1 }}>{trip.distance}</div>
-              </div>
-
-              <div>
-                <div style={{ fontSize: "0.65rem" }} className="text-muted-custom">STUDENTS</div>
-                <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "#8b5cf6", marginTop: 1 }}>{trip.students} Boarded</div>
-              </div>
-
-              <div>
-                <div style={{ fontSize: "0.65rem" }} className="text-muted-custom">DURATION</div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "#d97706", marginTop: 1 }}>{trip.startTime} - {trip.endTime}</div>
-              </div>
-            </div>
-
+            No cancelled trips logged.
           </div>
-        ))}
+        )}
       </div>
 
     </div>
