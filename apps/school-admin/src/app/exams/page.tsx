@@ -1,67 +1,85 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Award, Plus, X, Download, Calendar, FileText, BarChart3,
   CheckCircle2, AlertCircle, Eye, Printer, Settings, Send,
   ChevronDown, Edit3, Save, Lock, Unlock, Users, PlayCircle, BarChart2, Star, CheckSquare, Trash2, QrCode
 } from "lucide-react";
 
+interface ExamType {
+  id: string;
+  name: string;
+  weightage: string;
+  description: string;
+}
+
+interface ExamSchedule {
+  id: string;
+  class: string;
+  section: string;
+  subject: string;
+  date: string;
+  time: string;
+  room: string;
+  invigilator: string;
+}
+
+interface StudentMarks {
+  id: string;
+  rollNo: string;
+  name: string;
+  theory: number;
+  practical: number;
+  internal: number;
+  remarks: string;
+}
+
+interface GradePolicy {
+  grade: string;
+  minPercent: number;
+  maxPercent: number;
+  gpa: string;
+  remark: string;
+}
+
 export default function ExamsPage() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "types" | "schedule" | "marks" | "grades" | "results" | "report_cards" | "publish" | "analytics" | "hall_tickets">("dashboard");
+  const [activeTab, setActiveTab] = useState<
+    "dashboard" | "types" | "schedule" | "marks" | "grades" | "results" | "report_cards" | "publish" | "analytics" | "hall_tickets"
+  >("dashboard");
 
-  // ── Exam Dashboard (Module 1) ──
-  const [stats] = useState({
-    totalExams: 12,
-    upcomingExams: 2,
-    ongoingExams: 1,
-    completedExams: 9,
-    overallPassRate: "94.6%"
-  });
-
-  // ── Exam Types (Module 2) ──
-  const [examTypes, setExamTypes] = useState([
+  // ════════════ 1. EXAM TYPES STATE ════════════
+  const [examTypes, setExamTypes] = useState<ExamType[]>([
     { id: "TYP-01", name: "Unit Test", weightage: "10%", description: "Formative evaluation cycles" },
     { id: "TYP-02", name: "Half Yearly", weightage: "40%", description: "Mid-session comprehensive evaluations" },
     { id: "TYP-03", name: "Annual Final", weightage: "50%", description: "End-of-term promotion examinations" }
   ]);
-  const [newType, setNewType] = useState({ name: "", weightage: "", description: "" });
-  const [isAddTypeOpen, setIsAddTypeOpen] = useState(false);
+  const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
+  const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
+  const [typeForm, setTypeForm] = useState({ name: "", weightage: "10%", description: "" });
 
-  // ── Exam Schedule (Module 3) ──
-  const [schedules, setSchedules] = useState([
-    { id: "SCH-01", class: "Class 10", section: "A", subject: "Mathematics", date: "04 Aug 2026", time: "09:00 AM – 12:00 PM", room: "Room 301", invigilator: "Mr. Ravi Kumar" },
-    { id: "SCH-02", class: "Class 10", section: "A", subject: "Physics", date: "06 Aug 2026", time: "09:00 AM – 12:00 PM", room: "Room 302", invigilator: "Mrs. Ananya Deshmukh" },
-    { id: "SCH-03", class: "Class 9", section: "B", subject: "English Lit", date: "04 Aug 2026", time: "01:00 PM – 04:00 PM", room: "Room 201", invigilator: "Sunita Rao" }
+  // ════════════ 2. EXAM TIMETABLES STATE ════════════
+  const [schedules, setSchedules] = useState<ExamSchedule[]>([
+    { id: "SCH-01", class: "Class 10", section: "A", subject: "Mathematics", date: "2026-08-15", time: "09:00 AM – 12:00 PM", room: "Room 301", invigilator: "Mr. Ravi Kumar" },
+    { id: "SCH-02", class: "Class 10", section: "A", subject: "Physics", date: "2026-08-17", time: "09:00 AM – 12:00 PM", room: "Room 302", invigilator: "Mrs. Ananya Deshmukh" },
+    { id: "SCH-03", class: "Class 9", section: "B", subject: "English Lit", date: "2026-08-15", time: "01:00 PM – 04:00 PM", room: "Room 201", invigilator: "Sunita Rao" }
   ]);
-  const [isAddScheduleOpen, setIsAddScheduleOpen] = useState(false);
-  const [newSch, setNewSch] = useState({ class: "10", section: "A", subject: "Mathematics", date: "", time: "", room: "Room 301", invigilator: "Mr. Ravi Kumar" });
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
+  const [scheduleForm, setScheduleForm] = useState({ class: "Class 10", section: "A", subject: "Mathematics", date: "2026-08-15", time: "09:00 AM – 12:00 PM", room: "Room 301", invigilator: "Mr. Ravi Kumar" });
 
-  // ── Marks Entry (Module 4) ──
+  // ════════════ 3. SCHOLASTIC MARKS STATE ════════════
   const [selectedMarkStudentId, setSelectedMarkStudentId] = useState("10-A-01");
   const [marksEditable, setMarksEditable] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState("Saved to Cloud ✅");
-  const [marksData, setMarksData] = useState([
+  const [marksData, setMarksData] = useState<StudentMarks[]>([
     { id: "10-A-01", rollNo: "10-A-01", name: "Aarav Sharma", theory: 64, practical: 28, internal: 8, remarks: "Excellent Analytical Skills" },
     { id: "10-A-02", rollNo: "10-A-02", name: "Ananya Patel", theory: 62, practical: 26, internal: 9, remarks: "Outstanding Concept Clarity" },
     { id: "10-A-03", rollNo: "10-A-03", name: "Rohan Verma", theory: 55, practical: 22, internal: 7, remarks: "Good, needs revision in trigonometry" }
   ]);
 
-  const handleMarksChange = (id: string, field: 'theory' | 'practical' | 'internal', value: number) => {
-    setAutoSaveStatus("Saving changes...");
-    setMarksData(prev => prev.map(m => {
-      if (m.id === id) {
-        return { ...m, [field]: value };
-      }
-      return m;
-    }));
-    setTimeout(() => {
-      setAutoSaveStatus("Saved to Cloud ✅");
-    }, 800);
-  };
-
-  // ── Grade System (Module 5) ──
-  const [gradeSetup] = useState([
+  // ════════════ 4. GRADING SYSTEM STATE ════════════
+  const [gradeSetup, setGradeSetup] = useState<GradePolicy[]>([
     { grade: "A+", minPercent: 90, maxPercent: 100, gpa: "10.0", remark: "Outstanding Performance" },
     { grade: "A", minPercent: 80, maxPercent: 89, gpa: "9.0", remark: "Excellent Performance" },
     { grade: "B+", minPercent: 70, maxPercent: 79, gpa: "8.0", remark: "Very Good Performance" },
@@ -71,10 +89,124 @@ export default function ExamsPage() {
     { grade: "E (Fail)", minPercent: 0, maxPercent: 32, gpa: "0.0", remark: "Needs Improvement" }
   ]);
 
-  // ── Result Generation (Module 6) ──
+  // ════════════ 5. PUBLISHED STATE ════════════
+  const [publishedExams, setPublishedExams] = useState<Record<string, boolean>>({ "SCH-01": true });
+
+  // Persistent Cache Load
+  useEffect(() => {
+    try {
+      const cachedTypes = localStorage.getItem("sm_exam_types");
+      if (cachedTypes) setExamTypes(JSON.parse(cachedTypes));
+
+      const cachedSchedules = localStorage.getItem("sm_exam_schedules");
+      if (cachedSchedules) setSchedules(JSON.parse(cachedSchedules));
+
+      const cachedMarks = localStorage.getItem("sm_exam_marks");
+      if (cachedMarks) setMarksData(JSON.parse(cachedMarks));
+    } catch (e) {}
+  }, []);
+
+  const saveTypes = (list: ExamType[]) => {
+    setExamTypes(list);
+    try { localStorage.setItem("sm_exam_types", JSON.stringify(list)); } catch (e) {}
+  };
+
+  const saveSchedules = (list: ExamSchedule[]) => {
+    setSchedules(list);
+    try { localStorage.setItem("sm_exam_schedules", JSON.stringify(list)); } catch (e) {}
+  };
+
+  const saveMarks = (list: StudentMarks[]) => {
+    setMarksData(list);
+    try { localStorage.setItem("sm_exam_marks", JSON.stringify(list)); } catch (e) {}
+  };
+
+  // Exam Types Handlers
+  const handleOpenAddType = () => {
+    setEditingTypeId(null);
+    setTypeForm({ name: "", weightage: "10%", description: "" });
+    setIsTypeModalOpen(true);
+  };
+
+  const handleOpenEditType = (t: ExamType) => {
+    setEditingTypeId(t.id);
+    setTypeForm({ name: t.name, weightage: t.weightage, description: t.description });
+    setIsTypeModalOpen(true);
+  };
+
+  const handleSaveType = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!typeForm.name) return;
+
+    if (editingTypeId) {
+      const updated = examTypes.map(t => t.id === editingTypeId ? { ...t, ...typeForm } : t);
+      saveTypes(updated);
+    } else {
+      const created: ExamType = {
+        id: `TYP-${Date.now()}`,
+        ...typeForm
+      };
+      const updated = [...examTypes, created];
+      saveTypes(updated);
+    }
+    setIsTypeModalOpen(false);
+  };
+
+  const handleDeleteType = (id: string) => {
+    if (confirm("Delete this evaluation format?")) {
+      const updated = examTypes.filter(t => t.id !== id);
+      saveTypes(updated);
+    }
+  };
+
+  // Timetables Handlers
+  const handleOpenAddSchedule = () => {
+    setEditingScheduleId(null);
+    setScheduleForm({ class: "Class 10", section: "A", subject: "Mathematics", date: "2026-08-15", time: "09:00 AM – 12:00 PM", room: "Room 301", invigilator: "Mr. Ravi Kumar" });
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleOpenEditSchedule = (s: ExamSchedule) => {
+    setEditingScheduleId(s.id);
+    setScheduleForm({ class: s.class, section: s.section, subject: s.subject, date: s.date, time: s.time, room: s.room, invigilator: s.invigilator });
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleSaveSchedule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingScheduleId) {
+      const updated = schedules.map(s => s.id === editingScheduleId ? { ...s, ...scheduleForm } : s);
+      saveSchedules(updated);
+    } else {
+      const created: ExamSchedule = {
+        id: `SCH-${Date.now()}`,
+        ...scheduleForm
+      };
+      const updated = [...schedules, created];
+      saveSchedules(updated);
+    }
+    setIsScheduleModalOpen(false);
+  };
+
+  const handleDeleteSchedule = (id: string) => {
+    if (confirm("Delete scheduled paper?")) {
+      const updated = schedules.filter(s => s.id !== id);
+      saveSchedules(updated);
+    }
+  };
+
+  // Marks Handlers
+  const handleMarksChange = (id: string, field: 'theory' | 'practical' | 'internal', value: number) => {
+    setAutoSaveStatus("Saving changes...");
+    const updated = marksData.map(m => m.id === id ? { ...m, [field]: value } : m);
+    saveMarks(updated);
+    setTimeout(() => setAutoSaveStatus("Saved to Cloud ✅"), 500);
+  };
+
+  // Compiler Ranks
   const generatedResults = marksData.map((m, idx) => {
     const total = m.theory + m.practical + m.internal;
-    const pct = total; // Assumed max 100
+    const pct = total;
     let grade = "D";
     if (pct >= 90) grade = "A+";
     else if (pct >= 80) grade = "A";
@@ -92,87 +224,36 @@ export default function ExamsPage() {
     };
   });
 
-  // ── Result Publish Control (Module 8) ──
-  const [publishedExams, setPublishedExams] = useState<Record<string, boolean>>({ "SCH-01": true });
-
-  const togglePublishResult = (id: string) => {
-    setPublishedExams(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-    alert(`Results published state toggled. Parent notification push dispatches completed.`);
-  };
-
-  const handleAddType = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newType.name) return;
-    setExamTypes([...examTypes, {
-      id: `TYP-${String(examTypes.length + 1).padStart(2, "0")}`,
-      name: newType.name,
-      weightage: newType.weightage || "10%",
-      description: newType.description || "School internal assessment cycle"
-    }]);
-    setIsAddTypeOpen(false);
-    setNewType({ name: "", weightage: "", description: "" });
-  };
-
-  const handleAddSchedule = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSch.subject || !newSch.date) return;
-    setSchedules([...schedules, {
-      id: `SCH-${String(schedules.length + 1).padStart(2, "0")}`,
-      class: `Class ${newSch.class}`,
-      section: newSch.section,
-      subject: newSch.subject,
-      date: newSch.date,
-      time: newSch.time || "09:00 AM – 12:00 PM",
-      room: newSch.room,
-      invigilator: newSch.invigilator
-    }]);
-    setIsAddScheduleOpen(false);
-    setNewSch({ class: "10", section: "A", subject: "Mathematics", date: "", time: "", room: "Room 301", invigilator: "Mr. Ravi Kumar" });
-  };
-
   const selectedDossierStudent = marksData.find(m => m.id === selectedMarkStudentId) || marksData[0];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       
       {/* PAGE HEADER */}
-      <div className="page-header">
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0, color: "var(--text-heading)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             Examination &amp; Grade Engine <Award size={24} color="var(--primary)" />
           </h1>
-          <p style={{ color: "var(--text-muted)", marginTop: 2, fontSize: "0.85rem" }}>
-            Schedule school board/term exams, input scholastic performance marks, define grading indices, build report cards, publish results.
+          <p style={{ color: "var(--text-muted)", marginTop: 2, margin: 0, fontSize: "0.85rem" }}>
+            Schedule school board/term exams, define grading indices, compilation report cards, and publish results live.
           </p>
         </div>
 
         <button 
           onClick={() => {
-            if (activeTab === "types") setIsAddTypeOpen(true);
-            else setIsAddScheduleOpen(true);
+            if (activeTab === "types") handleOpenAddType();
+            else handleOpenAddSchedule();
           }}
           className="btn btn-primary" 
-          style={{ padding: "0.75rem 1.25rem" }}
+          style={{ padding: "0.6rem 1.15rem", fontSize: "0.85rem", gap: "0.45rem" }}
         >
-          <Plus size={18} />
-          <span>Quick Create Item</span>
+          <Plus size={16} /> Quick Create Item
         </button>
       </div>
 
-      {/* ════════════ 10 TABS SWITCHER CONSOLE ════════════ */}
-      <div className="glass-card" style={{ 
-        padding: "0.6rem", 
-        display: "flex", 
-        gap: "0.5rem", 
-        overflowX: "auto", 
-        whiteSpace: "nowrap",
-        border: "1px solid var(--border-color)",
-        background: "var(--bg-card)",
-        borderRadius: "var(--radius-md)"
-      }}>
+      {/* 10 TABS CONSOLE SWITCHER */}
+      <div className="glass-card" style={{ padding: "0.6rem", display: "flex", gap: "0.5rem", overflowX: "auto", whiteSpace: "nowrap" }}>
         {[
           { id: "dashboard", label: "Exam Dashboard", icon: Award },
           { id: "types", label: "Assessment Formats", icon: Users },
@@ -192,56 +273,50 @@ export default function ExamsPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`btn ${isActive ? "btn-primary" : "btn-secondary"}`}
-              style={{ 
-                padding: "0.6rem 1rem", 
-                fontSize: "0.82rem", 
-                gap: "0.45rem",
-                borderRadius: "var(--radius-sm)",
-                fontWeight: isActive ? 700 : 500
-              }}
+              style={{ padding: "0.55rem 0.95rem", fontSize: "0.82rem", gap: "0.4rem", borderRadius: 8, fontWeight: isActive ? 700 : 500 }}
             >
-              <Icon size={16} />
-              <span>{tab.label}</span>
+              <Icon size={16} /> {tab.label}
             </button>
           );
         })}
       </div>
 
-      {/* ════════════ TAB VIEWS ════════════ */}
-
-      {/* MODULE 1: EXAM DASHBOARD */}
+      {/* ════════════ 1. EXAM DASHBOARD ════════════ */}
       {activeTab === "dashboard" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1rem" }}>
-            <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>TOTAL SCHEDULINGS</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 850, color: "var(--primary)", marginTop: 4 }}>{stats.totalExams}</div>
-            </div>
-            <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>UPCOMING EXAMS</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 850, color: "#f59e0b", marginTop: 4 }}>{stats.upcomingExams}</div>
-            </div>
-            <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>ONGOING PAPERS</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 850, color: "var(--success)", marginTop: 4 }}>{stats.ongoingExams}</div>
-            </div>
-            <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>COMPLETED EXAMS</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 850, color: "var(--text-muted)", marginTop: 4 }}>{stats.completedExams}</div>
-            </div>
-            <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>STUDENT PASS RATE</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 850, color: "var(--success)", marginTop: 4 }}>{stats.overallPassRate}</div>
-            </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1rem" }}>
+          <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 800 }}>TOTAL SCHEDULINGS</span>
+            <strong style={{ fontSize: "1.6rem", color: "var(--primary)", display: "block", marginTop: 4 }}>12</strong>
+          </div>
+          <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 800 }}>UPCOMING EXAMS</span>
+            <strong style={{ fontSize: "1.6rem", color: "#f59e0b", display: "block", marginTop: 4 }}>2</strong>
+          </div>
+          <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 800 }}>ONGOING PAPERS</span>
+            <strong style={{ fontSize: "1.6rem", color: "var(--success)", display: "block", marginTop: 4 }}>1</strong>
+          </div>
+          <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 800 }}>COMPLETED EXAMS</span>
+            <strong style={{ fontSize: "1.6rem", color: "var(--text-muted)", display: "block", marginTop: 4 }}>9</strong>
+          </div>
+          <div className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 800 }}>STUDENT PASS RATE</span>
+            <strong style={{ fontSize: "1.6rem", color: "var(--success)", display: "block", marginTop: 4 }}>94.6%</strong>
           </div>
         </div>
       )}
 
-      {/* MODULE 2: ASSESSMENT FORMATS (EXAM TYPES) */}
+      {/* ════════════ 2. ASSESSMENT FORMATS ════════════ */}
       {activeTab === "types" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Define Evaluation Formats</h3>
-          
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Define Evaluation Formats</h3>
+            <button onClick={handleOpenAddType} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem", gap: "0.35rem" }}>
+              <Plus size={15} /> Add Format
+            </button>
+          </div>
+
           <table className="custom-table">
             <thead>
               <tr>
@@ -254,16 +329,14 @@ export default function ExamsPage() {
             <tbody>
               {examTypes.map((typ) => (
                 <tr key={typ.id}>
-                  <td style={{ fontWeight: 700, color: "#fff" }}>{typ.name}</td>
-                  <td style={{ fontWeight: 650, color: "var(--primary)" }}>{typ.weightage}</td>
+                  <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{typ.name}</td>
+                  <td style={{ fontWeight: 700, color: "var(--primary)" }}>{typ.weightage}</td>
                   <td>{typ.description}</td>
                   <td style={{ textAlign: "right" }}>
-                    <button 
-                      onClick={() => setExamTypes(examTypes.filter(t => t.id !== typ.id))}
-                      style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#ef4444", padding: "0.35rem 0.5rem", borderRadius: "var(--radius-sm)", cursor: "pointer" }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <div style={{ display: "inline-flex", gap: "0.35rem" }}>
+                      <button onClick={() => handleOpenEditType(typ)} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem" }}><Edit3 size={13} /></button>
+                      <button onClick={() => handleDeleteType(typ.id)} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem", color: "#ef4444" }}><Trash2 size={13} /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -272,11 +345,16 @@ export default function ExamsPage() {
         </div>
       )}
 
-      {/* MODULE 3: EXAM TIMETABLES */}
+      {/* ════════════ 3. EXAM TIMETABLES ════════════ */}
       {activeTab === "schedule" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Scheduled Papers & Invigilators</h3>
-          
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Scheduled Papers &amp; Invigilators</h3>
+            <button onClick={handleOpenAddSchedule} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem", gap: "0.35rem" }}>
+              <Plus size={15} /> Schedule Paper
+            </button>
+          </div>
+
           <table className="custom-table">
             <thead>
               <tr>
@@ -292,19 +370,17 @@ export default function ExamsPage() {
             <tbody>
               {schedules.map((sch) => (
                 <tr key={sch.id}>
-                  <td style={{ fontWeight: 700 }}>{sch.class}-{sch.section}</td>
+                  <td style={{ fontWeight: 800 }}>{sch.class}-{sch.section}</td>
                   <td style={{ color: "var(--primary)", fontWeight: 700 }}>{sch.subject}</td>
-                  <td style={{ fontWeight: 600 }}>{sch.date}</td>
-                  <td>{sch.time}</td>
+                  <td style={{ fontWeight: 700 }}>{sch.date}</td>
+                  <td style={{ fontSize: "0.82rem" }}>{sch.time}</td>
                   <td><span className="badge badge-info">{sch.room}</span></td>
-                  <td>{sch.invigilator}</td>
+                  <td style={{ fontWeight: 600 }}>{sch.invigilator}</td>
                   <td style={{ textAlign: "right" }}>
-                    <button 
-                      onClick={() => setSchedules(schedules.filter(s => s.id !== sch.id))}
-                      style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#ef4444", padding: "0.35rem 0.5rem", borderRadius: "var(--radius-sm)", cursor: "pointer" }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <div style={{ display: "inline-flex", gap: "0.35rem" }}>
+                      <button onClick={() => handleOpenEditSchedule(sch)} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem" }}><Edit3 size={13} /></button>
+                      <button onClick={() => handleDeleteSchedule(sch.id)} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem", color: "#ef4444" }}><Trash2 size={13} /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -313,21 +389,21 @@ export default function ExamsPage() {
         </div>
       )}
 
-      {/* MODULE 4: SCHOLASTIC MARKS ENTRY */}
+      {/* ════════════ 4. SCHOLASTIC MARKS ENTRY ════════════ */}
       {activeTab === "marks" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <div style={{ display: "flex", justify: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
             <div>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Class Term Scholastic Marks sheet</h3>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 2 }}>Edit student scores. Changes auto-save to cloud instantly.</p>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Class Term Scholastic Marks Sheet</h3>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 2 }}>Edit student scores. Changes auto-save instantly.</p>
             </div>
             
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <span style={{ fontSize: "0.825rem", color: "var(--success)", fontWeight: 700 }}>{autoSaveStatus}</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--success)", fontWeight: 700 }}>{autoSaveStatus}</span>
               <button 
                 onClick={() => setMarksEditable(!marksEditable)} 
                 className={`btn ${marksEditable ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "0.5rem 1rem", fontSize: "0.8rem" }}
+                style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem" }}
               >
                 {marksEditable ? "Lock Sheet" : "Edit Marks"}
               </button>
@@ -348,15 +424,15 @@ export default function ExamsPage() {
             <tbody>
               {marksData.map((m) => (
                 <tr key={m.id}>
-                  <td style={{ fontWeight: 700, color: "#fff" }}>{m.name}</td>
-                  <td>{m.rollNo}</td>
+                  <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{m.name}</td>
+                  <td style={{ fontFamily: "monospace", fontWeight: 700 }}>{m.rollNo}</td>
                   <td>
                     {marksEditable ? (
                       <input 
                         type="number"
                         value={m.theory}
                         onChange={(e) => handleMarksChange(m.id, 'theory', Number(e.target.value))}
-                        style={{ width: 70, padding: "0.3rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 4, color: "#fff" }}
+                        style={{ width: 70, padding: "0.35rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 6, color: "var(--text-main)" }}
                       />
                     ) : (
                       <strong>{m.theory}</strong>
@@ -368,7 +444,7 @@ export default function ExamsPage() {
                         type="number"
                         value={m.practical}
                         onChange={(e) => handleMarksChange(m.id, 'practical', Number(e.target.value))}
-                        style={{ width: 70, padding: "0.3rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 4, color: "#fff" }}
+                        style={{ width: 70, padding: "0.35rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 6, color: "var(--text-main)" }}
                       />
                     ) : (
                       <strong>{m.practical}</strong>
@@ -380,7 +456,7 @@ export default function ExamsPage() {
                         type="number"
                         value={m.internal}
                         onChange={(e) => handleMarksChange(m.id, 'internal', Number(e.target.value))}
-                        style={{ width: 70, padding: "0.3rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 4, color: "#fff" }}
+                        style={{ width: 70, padding: "0.35rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 6, color: "var(--text-main)" }}
                       />
                     ) : (
                       <strong>{m.internal}</strong>
@@ -394,27 +470,27 @@ export default function ExamsPage() {
         </div>
       )}
 
-      {/* MODULE 5: GRADING INDICES */}
+      {/* ════════════ 5. GRADING SYSTEM ════════════ */}
       {activeTab === "grades" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Define Class grading Index Policy</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>Define Class Grading Index Policy</h3>
           
           <table className="custom-table">
             <thead>
               <tr>
                 <th>Grade Code</th>
-                <th>Percentage bracket</th>
+                <th>Percentage Bracket</th>
                 <th>GPA Score</th>
-                <th>Evaluation remarks</th>
+                <th>Evaluation Remarks</th>
               </tr>
             </thead>
             <tbody>
               {gradeSetup.map((g, idx) => (
                 <tr key={idx}>
-                  <td style={{ fontWeight: 700, color: "#fff" }}>{g.grade}</td>
-                  <td style={{ fontWeight: 650, color: "var(--primary)" }}>{g.minPercent}% – {g.maxPercent}%</td>
+                  <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{g.grade}</td>
+                  <td style={{ fontWeight: 700, color: "var(--primary)" }}>{g.minPercent}% – {g.maxPercent}%</td>
                   <td><strong>{g.gpa}</strong></td>
-                  <td>{g.remark}</td>
+                  <td style={{ fontSize: "0.85rem" }}>{g.remark}</td>
                 </tr>
               ))}
             </tbody>
@@ -422,10 +498,10 @@ export default function ExamsPage() {
         </div>
       )}
 
-      {/* MODULE 6: RESULT GENERATION */}
+      {/* ════════════ 6. RESULT GENERATION ════════════ */}
       {activeTab === "results" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Auto-compiled Student Rankings</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>Auto-Compiled Student Rankings</h3>
           
           <table className="custom-table">
             <thead>
@@ -433,7 +509,7 @@ export default function ExamsPage() {
                 <th>Class Rank</th>
                 <th>Student Name</th>
                 <th>Roll Number</th>
-                <th>Total score (100)</th>
+                <th>Total Score (100)</th>
                 <th>Percentage Ratio</th>
                 <th>Awarded Grade</th>
               </tr>
@@ -441,11 +517,11 @@ export default function ExamsPage() {
             <tbody>
               {generatedResults.map((r, idx) => (
                 <tr key={idx}>
-                  <td><span className="badge badge-success" style={{ padding: "0.3rem 0.5rem" }}>Rank {r.rank}</span></td>
-                  <td style={{ fontWeight: 700, color: "#fff" }}>{r.name}</td>
-                  <td>{r.rollNo}</td>
+                  <td><span className="badge badge-success">Rank {r.rank}</span></td>
+                  <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{r.name}</td>
+                  <td style={{ fontFamily: "monospace" }}>{r.rollNo}</td>
                   <td style={{ color: "var(--primary)", fontWeight: 700 }}>{r.total} / 100</td>
-                  <td style={{ fontWeight: 600 }}>{r.percentage}</td>
+                  <td style={{ fontWeight: 700 }}>{r.percentage}</td>
                   <td><span className="badge badge-info">{r.grade}</span></td>
                 </tr>
               ))}
@@ -454,13 +530,11 @@ export default function ExamsPage() {
         </div>
       )}
 
-      {/* MODULE 7: REPORT CARD BUILDER */}
+      {/* ════════════ 7. REPORT CARD BUILDER ════════════ */}
       {activeTab === "report_cards" && (
         <div style={{ display: "grid", gridTemplateColumns: "250px 1fr", gap: "1.5rem", alignItems: "flex-start" }}>
-          
-          {/* Select student */}
           <div className="glass-card" style={{ padding: "0.5rem", display: "flex", flexDirection: "column", gap: "0.45rem" }}>
-            <div style={{ padding: "0.5rem 0.75rem", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>SELECT STUDENT FOR CARD</div>
+            <span style={{ padding: "0.5rem 0.75rem", fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)" }}>SELECT TARGET STUDENT</span>
             {marksData.map(m => (
               <button
                 key={m.id}
@@ -473,39 +547,19 @@ export default function ExamsPage() {
             ))}
           </div>
 
-          {/* Printable Report Card Template */}
-          <div style={{ display: "flex", justify: "center" }}>
-            <div style={{
-              width: "100%",
-              maxWidth: 580,
-              background: "var(--bg-card)",
-              border: "2.5px solid var(--primary)",
-              borderRadius: "var(--radius-lg)",
-              padding: "2rem",
-              boxShadow: "var(--shadow-glow)",
-              color: "#fff"
-            }}>
-              
-              {/* Header */}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <div className="glass-card" style={{ width: "100%", maxWidth: 580, padding: "2rem", border: "2px solid var(--primary)", borderRadius: 16 }}>
               <div style={{ textAlign: "center", borderBottom: "1.5px solid var(--border-color)", paddingBottom: "1rem" }}>
-                <div style={{ fontSize: "1.35rem", fontWeight: 850 }}>DELHI PUBLIC SCHOOL MAIN CAMPUS</div>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}>Official Student Progress Index Report</div>
-                <div style={{ fontSize: "0.78rem", color: "var(--primary)", fontWeight: 700, marginTop: 4 }}>Academic Term Session: 2026 - 2027</div>
+                <strong style={{ fontSize: "1.35rem", color: "var(--text-heading)" }}>DELHI PUBLIC SCHOOL</strong>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 2 }}>OFFICIAL PROGRESS INDEX REPORT</div>
+                <div style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 700, marginTop: 4 }}>Academic Term Session: 2026 - 2027</div>
               </div>
 
-              {/* Student info */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", margin: "1rem 0", fontSize: "0.85rem", background: "rgba(255,255,255,0.01)", padding: "0.75rem", borderRadius: 8, border: "1px solid var(--border-color)" }}>
-                <div>
-                  <div>Student: <strong>{selectedDossierStudent.name}</strong></div>
-                  <div style={{ marginTop: 2 }}>Admission Roll Code: {selectedDossierStudent.rollNo}</div>
-                </div>
-                <div>
-                  <div>Mapped Class: <strong>Class 10-A</strong></div>
-                  <div style={{ marginTop: 2 }}>CBSE Status: Enrolled</div>
-                </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", margin: "1rem 0", fontSize: "0.85rem", background: "var(--bg-input)", padding: "0.75rem", borderRadius: 8, border: "1px solid var(--border-color)" }}>
+                <div>Student: <strong>{selectedDossierStudent.name}</strong></div>
+                <div>Roll Code: <strong>{selectedDossierStudent.rollNo}</strong></div>
               </div>
 
-              {/* Marks table */}
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.825rem", margin: "1.25rem 0" }}>
                 <thead>
                   <tr style={{ borderBottom: "1.5px solid var(--border-color)", textTransform: "uppercase" }}>
@@ -527,31 +581,25 @@ export default function ExamsPage() {
                 </tbody>
               </table>
 
-              {/* Remarks and sign */}
               <div style={{ borderTop: "1.5px solid var(--border-color)", paddingTop: "1rem", display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1rem", alignItems: "flex-end" }}>
                 <div>
                   <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>REGISTRAR RECOLLECTION REMARKS</div>
                   <div style={{ fontSize: "0.825rem", color: "var(--text-main)", marginTop: 4 }}>&quot;{selectedDossierStudent.remarks}&quot;</div>
                 </div>
                 
-                <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-                  <div style={{ background: "#fff", padding: "0.25rem", borderRadius: 4 }}>
-                    <QrCode size={46} color="#000" />
-                  </div>
-                  <span style={{ fontSize: "0.6rem", color: "var(--text-dim)" }}>Verify QR Code</span>
-                </div>
+                <button onClick={() => window.print()} className="btn btn-primary" style={{ padding: "0.5rem", gap: "0.3rem" }}>
+                  <Printer size={14} /> Print Card
+                </button>
               </div>
-
             </div>
           </div>
-
         </div>
       )}
 
-      {/* MODULE 8: PUBLISH RESULTS */}
+      {/* ════════════ 8. PUBLISH RESULTS ════════════ */}
       {activeTab === "publish" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Result Publication Board</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>Result Publication Board</h3>
           
           <table className="custom-table">
             <thead>
@@ -568,7 +616,7 @@ export default function ExamsPage() {
                 const isPub = publishedExams[sch.id];
                 return (
                   <tr key={sch.id}>
-                    <td style={{ fontWeight: 700 }}>{sch.id}</td>
+                    <td style={{ fontWeight: 800 }}>{sch.id}</td>
                     <td>{sch.class}-{sch.section}</td>
                     <td style={{ color: "var(--primary)", fontWeight: 700 }}>{sch.subject}</td>
                     <td>
@@ -578,7 +626,10 @@ export default function ExamsPage() {
                     </td>
                     <td style={{ textAlign: "right" }}>
                       <button 
-                        onClick={() => togglePublishResult(sch.id)}
+                        onClick={() => {
+                          setPublishedExams({ ...publishedExams, [sch.id]: !isPub });
+                          alert(`Publish status toggled for ${sch.subject}!`);
+                        }}
                         className={`btn ${isPub ? "btn-secondary" : "btn-primary"}`}
                         style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem" }}
                       >
@@ -593,179 +644,96 @@ export default function ExamsPage() {
         </div>
       )}
 
-      {/* MODULE 9: RESULT ANALYTICS */}
-      {activeTab === "analytics" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: "1.5rem" }}>
-          
-          {/* Averages chart */}
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem" }}>Class Scholastic performance Trend</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-              {[
-                { label: "Physics Paper Average Index", pct: 86 },
-                { label: "Chemistry Paper Average Index", pct: 82 },
-                { label: "Mathematics Paper Average Index", pct: 91 },
-                { label: "English Lit Average Index", pct: 88 }
-              ].map((item, idx) => (
-                <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <div style={{ display: "flex", justify: "space-between", fontSize: "0.85rem", fontWeight: 700 }}>
-                    <span style={{ color: "#fff" }}>{item.label}</span>
-                    <span style={{ color: "var(--primary)" }}>{item.pct}/100</span>
-                  </div>
-                  <div style={{ width: "100%", height: 8, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
-                    <div style={{ width: `${item.pct}%`, height: "100%", background: "linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%)", borderRadius: 99 }} />
-                  </div>
-                </div>
-              ))}
+      {/* ════════════ EDIT TYPES MODAL ════════════ */}
+      {isTypeModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "480px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>
+                {editingTypeId ? "Edit Assessment Format" : "Add Assessment Format"}
+              </h3>
+              <button onClick={() => setIsTypeModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
             </div>
-          </div>
 
-          {/* Top Performers */}
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "1rem" }}>Top Scholastic Performers</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-              {generatedResults.map((std, idx) => (
-                <div key={idx} style={{ padding: "0.85rem", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: 8, display: "flex", justify: "space-between", alignItems: "center" }}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>{std.name}</div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--primary)", marginTop: 2 }}>Rank: {std.rank} &bull; Score: {std.total}/100</div>
-                  </div>
-                  <span className="badge badge-success" style={{ fontSize: "0.68rem" }}>Grade {std.grade}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* MODULE 10: ADMISSION HALL TICKETS */}
-      {activeTab === "hall_tickets" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: "1.5rem" }}>
-          
-          {/* Card selection config */}
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Hall Admission Ticket Generator</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginBottom: "1.5rem" }}>
+            <form onSubmit={handleSaveType} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>SELECT TARGET STUDENT</label>
-                <select 
-                  value={selectedMarkStudentId} 
-                  onChange={(e) => setSelectedMarkStudentId(e.target.value)}
-                  style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                >
-                  {marksData.map(st => <option key={st.id} value={st.id} style={{ background: "#0b0f19" }}>{st.name} ({st.rollNo})</option>)}
-                </select>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FORMAT NAME</label>
+                <input type="text" value={typeForm.name} onChange={(e) => setTypeForm({ ...typeForm, name: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
               </div>
-            </div>
 
-            <button onClick={() => window.print()} className="btn btn-primary" style={{ padding: "0.75rem 1.5rem", gap: "0.45rem" }}>
-              <Printer size={16} /> Print Hall Ticket
-            </button>
-          </div>
-
-          {/* Ticket preview card */}
-          <div style={{ display: "flex", justify: "center" }}>
-            <div style={{
-              width: "100%",
-              height: 380,
-              background: "var(--bg-card)",
-              border: "2px solid var(--primary)",
-              borderRadius: "var(--radius-lg)",
-              padding: "1.5rem",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "space-between",
-              boxShadow: "var(--shadow-glow)",
-              textAlign: "center"
-            }}>
-              
               <div>
-                <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff" }}>DELHI PUBLIC SCHOOL</div>
-                <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}>EXAMINATION ADMISSION CARD</div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FINAL CGPA WEIGHTAGE</label>
+                <input type="text" value={typeForm.weightage} onChange={(e) => setTypeForm({ ...typeForm, weightage: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
               </div>
 
-              <div style={{ borderTop: "1px solid var(--border-color)", borderBottom: "1px solid var(--border-color)", width: "100%", padding: "1rem 0" }}>
-                <div style={{ fontSize: "1.15rem", fontWeight: 850, color: "#fff" }}>{selectedDossierStudent.name}</div>
-                <div style={{ fontSize: "0.78rem", color: "var(--primary)", fontWeight: 700, marginTop: 4 }}>Roll No: {selectedDossierStudent.rollNo}</div>
-                
-                <div style={{ fontSize: "0.8rem", color: "var(--text-main)", marginTop: "0.5rem" }}>
-                  Exam Room Center: <strong>Hall #3 (First Floor)</strong>
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 2 }}>Seating Row: Row 4 &bull; Seat 12</div>
-              </div>
-
-              <div style={{ padding: "0.25rem", background: "#fff", borderRadius: 4 }}>
-                <QrCode size={40} color="#000" />
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* ════════════ QUICK ADD TYPE MODAL ════════════ */}
-      {isAddTypeOpen && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", zIndex: 500, display: "flex", alignItems: "center", justify: "center" }}>
-          <div className="glass-card" style={{ padding: "1.5rem", width: 400 }}>
-            <div style={{ display: "flex", justify: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Add Assessment Format</h3>
-              <button onClick={() => setIsAddTypeOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
-            </div>
-            <form onSubmit={handleAddType} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
-                <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>FORMAT NAME</label>
-                <input type="text" value={newType.name} onChange={(e) => setNewType({ ...newType, name: e.target.value })} placeholder="e.g. Unit Test 3" required style={{ width: "100%", padding: "0.6rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff" }} />
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FORMAT DESCRIPTION</label>
+                <input type="text" value={typeForm.description} onChange={(e) => setTypeForm({ ...typeForm, description: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
               </div>
-              <div>
-                <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>WEIGHTAGE (%)</label>
-                <input type="text" value={newType.weightage} onChange={(e) => setNewType({ ...newType, weightage: e.target.value })} placeholder="e.g. 15%" style={{ width: "100%", padding: "0.6rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff" }} />
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setIsTypeModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Save Format</button>
               </div>
-              <button type="submit" className="btn btn-primary" style={{ padding: "0.65rem", justifyContent: "center" }}>Create Format</button>
             </form>
           </div>
         </div>
       )}
 
-      {/* ════════════ QUICK ADD SCHEDULE MODAL ════════════ */}
-      {isAddScheduleOpen && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", zIndex: 500, display: "flex", alignItems: "center", justify: "center" }}>
-          <div className="glass-card" style={{ padding: "1.5rem", width: 450 }}>
-            <div style={{ display: "flex", justify: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Schedule Exam Paper</h3>
-              <button onClick={() => setIsAddScheduleOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
+      {/* ════════════ EDIT SCHEDULE MODAL ════════════ */}
+      {isScheduleModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "520px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>
+                {editingScheduleId ? "Edit Scheduled Exam Paper" : "Schedule Exam Paper"}
+              </h3>
+              <button onClick={() => setIsScheduleModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
             </div>
-            <form onSubmit={handleAddSchedule} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+
+            <form onSubmit={handleSaveSchedule} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
-                  <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>CLASS</label>
-                  <select value={newSch.class} onChange={(e) => setNewSch({ ...newSch, class: e.target.value })} style={{ width: "100%", padding: "0.6rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff" }}>
-                    <option value="10">Class 10</option>
-                    <option value="9">Class 9</option>
-                  </select>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>CLASS NAME</label>
+                  <input type="text" value={scheduleForm.class} onChange={(e) => setScheduleForm({ ...scheduleForm, class: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>SECTION</label>
-                  <select value={newSch.section} onChange={(e) => setNewSch({ ...newSch, section: e.target.value })} style={{ width: "100%", padding: "0.6rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff" }}>
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                  </select>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SECTION</label>
+                  <input type="text" value={scheduleForm.section} onChange={(e) => setScheduleForm({ ...scheduleForm, section: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
                 </div>
               </div>
+
               <div>
-                <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>SUBJECT PAPER</label>
-                <input type="text" value={newSch.subject} onChange={(e) => setNewSch({ ...newSch, subject: e.target.value })} placeholder="e.g. Mathematics" required style={{ width: "100%", padding: "0.6rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff" }} />
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SUBJECT PAPER</label>
+                <input type="text" value={scheduleForm.subject} onChange={(e) => setScheduleForm({ ...scheduleForm, subject: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
               </div>
-              <div>
-                <label style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>DATE</label>
-                <input type="date" value={newSch.date} onChange={(e) => setNewSch({ ...newSch, date: e.target.value })} required style={{ width: "100%", padding: "0.6rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 6, color: "#fff" }} />
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DATE SCHEDULED</label>
+                  <input type="date" value={scheduleForm.date} onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>TIME HOURS</label>
+                  <input type="text" value={scheduleForm.time} onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                </div>
               </div>
-              <button type="submit" className="btn btn-primary" style={{ padding: "0.65rem", justifyContent: "center" }}>Schedule Paper</button>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>EXAM CENTER ROOM</label>
+                  <input type="text" value={scheduleForm.room} onChange={(e) => setScheduleForm({ ...scheduleForm, room: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>INVIGILATOR</label>
+                  <input type="text" value={scheduleForm.invigilator} onChange={(e) => setScheduleForm({ ...scheduleForm, invigilator: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setIsScheduleModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Schedule Exam</button>
+              </div>
             </form>
           </div>
         </div>

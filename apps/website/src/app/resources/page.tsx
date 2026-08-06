@@ -9,7 +9,9 @@ import {
   CheckCircle2, Download, Clock, GraduationCap,
   ChevronDown, Sun, Moon, Bus, Smartphone
 } from "lucide-react";
+import SchoolRegistrationModal from "@/components/SchoolRegistrationModal";
 import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 import { usePathname } from "next/navigation";
 
 /* ── Category filter data ── */
@@ -153,59 +155,8 @@ export default function ResourcesPage() {
   return (
     <div style={{ background: "var(--bg-page)", minHeight: "100vh", color: "var(--text-main)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-      {/* ═══════════ NAVBAR (inline – matching landing page exactly) ═══════════ */}
-      <nav className="site-nav">
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.65rem" }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: "linear-gradient(135deg,#4338ca 0%,#3b82f6 100%)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", boxShadow: "0 4px 14px rgba(67,56,202,.35)", transform: "rotate(-4deg)"
-          }}><GraduationCap size={20} /></div>
-          <span style={{ fontSize: "1.45rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
-            <span style={{ color: "var(--text-main)" }}>School</span>
-            <span style={{ color: "#3b82f6" }}>Mitra</span>
-          </span>
-        </Link>
-
-        <div className="nav-links">
-          <Link href="/" className="nav-link">Home</Link>
-          <Link href="/features" className="nav-link">Features</Link>
-          <div className="nav-dropdown">
-            <span className="nav-link" style={{ cursor: "pointer" }}>Solutions <ChevronDown size={14} /></span>
-            <div className="nav-dropdown-menu">
-              <Link href="/school-erp" className="dropdown-item"><FileText size={16} color="#4338ca" /> School ERP</Link>
-              <Link href="/transport" className="dropdown-item"><Bus size={16} color="#3b82f6" /> GPS Bus Tracking</Link>
-              <Link href="/parent-app" className="dropdown-item"><Smartphone size={16} color="#8b5cf6" /> Parent Mobile App</Link>
-            </div>
-          </div>
-          <Link href="/pricing" className="nav-link">Pricing</Link>
-          <Link href="/resources" className="nav-link active">Resources</Link>
-          <Link href="/about" className="nav-link">About Us</Link>
-        </div>
-
-        <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <button onClick={toggleTheme} className="theme-toggle-btn" title="Toggle theme" style={{
-            background: "var(--bg-subtle)", border: "1px solid var(--border-color)",
-            padding: "0.45rem", borderRadius: "8px", cursor: "pointer",
-            color: "var(--text-main)", display: "flex", alignItems: "center", justifyContent: "center"
-          }}>{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button>
-
-          <Link href="/login" className="btn-ghost-nav" style={{
-            padding: "0.55rem 1.25rem", borderRadius: "10px",
-            border: "1px solid var(--border-color)", color: "var(--text-main)",
-            textDecoration: "none", fontWeight: 600, fontSize: "0.9rem", background: "var(--bg-card)"
-          }}>Login</Link>
-
-          <Link href="/contact" className="btn-primary-nav" style={{
-            padding: "0.55rem 1.35rem", borderRadius: "10px",
-            background: "linear-gradient(135deg,#4338ca 0%,#3b82f6 100%)",
-            color: "#fff", border: "none", fontWeight: 700, fontSize: "0.9rem",
-            cursor: "pointer", boxShadow: "0 4px 14px rgba(67,56,202,.25)", textDecoration: "none",
-            display: "inline-flex", alignItems: "center", gap: "0.35rem"
-          }}>Get Started</Link>
-        </div>
-      </nav>
+      {/* ═══════════ NAVBAR ═══════════ */}
+      <Navbar />
 
       {/* ═══════════ HERO SECTION ═══════════ */}
       <section className="resources-hero-section" style={{
@@ -217,30 +168,8 @@ export default function ResourcesPage() {
         <div style={{ position: "absolute", top: "10%", right: "20%", width: 300, height: 300, borderRadius: "50%", background: "rgba(99,102,241,0.08)", filter: "blur(60px)" }} />
         <div style={{ position: "absolute", bottom: "5%", left: "10%", width: 200, height: 200, borderRadius: "50%", background: "rgba(59,130,246,0.06)", filter: "blur(40px)" }} />
 
-        {/* ── Floating stats badge (top-right) ── */}
-        <div className="resources-stats-badge" style={{
-          position: "absolute", top: 100, right: "5%", zIndex: 10,
-          display: "flex", alignItems: "center", gap: "1.25rem",
-          borderRadius: 14, padding: "0.6rem 1.2rem",
-          backdropFilter: "blur(8px)"
-        }}>
-          {[
-            { v: "500+", l: "Resources" },
-            { v: "50K+", l: "Schools Learn" },
-            { v: "24/7", l: "Help Center" },
-          ].map((s, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && <div style={{ width: 1, height: 32, background: "var(--border-color)" }} />}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--primary)", fontFamily: "'Outfit',sans-serif" }}>{s.v}</span>
-                <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--text-muted)" }}>{s.l}</span>
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
-
         {/* Hero grid: text + illustration */}
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "center" }}>
+        <div className="resources-hero-grid" style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "center" }}>
 
           {/* Left copy */}
           <div>
@@ -301,11 +230,48 @@ export default function ResourcesPage() {
             />
           </div>
         </div>
+
+        {/* ── Stats Ribbon Section (Placed at Bottom of Hero Section) ── */}
+        <div className="resources-stats-ribbon" style={{
+          maxWidth: 1280,
+          margin: "2.5rem auto 0 auto",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+        }}>
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "2.5rem",
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-color)",
+            borderRadius: 20,
+            padding: "0.9rem 2.5rem",
+            boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)"
+          }}>
+            {[
+              { v: "500+", l: "Resources", icon: "📚" },
+              { v: "50K+", l: "Schools Learn", icon: "🏫" },
+              { v: "24/7", l: "Help Center", icon: "💬" },
+            ].map((s, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <div style={{ width: 1, height: 36, background: "var(--border-color)" }} />}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+                  <div style={{ fontSize: "1.4rem" }}>{s.icon}</div>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--primary)", fontFamily: "'Outfit',sans-serif", lineHeight: 1.1 }}>{s.v}</span>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginTop: "0.15rem" }}>{s.l}</span>
+                  </div>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ═══════════ CATEGORY FILTER BAR ═══════════ */}
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "2.5rem 5% 0" }}>
-        <div style={{
+        <div className="resources-cat-filter-grid" style={{
           display: "grid", gridTemplateColumns: "repeat(9,1fr)", gap: "0.85rem"
         }}>
           {CATEGORIES.map(cat => {
@@ -344,7 +310,7 @@ export default function ResourcesPage() {
       {/* ═══════════ FEATURED RESOURCES ═══════════ */}
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "3.5rem 5% 4.5rem" }}>
         {/* Heading row */}
-        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+        <div className="resources-section-header" style={{ textAlign: "center", marginBottom: "2.5rem" }}>
           <h2 style={{ fontSize: "1.7rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
             Featured Resources
           </h2>
@@ -365,7 +331,7 @@ export default function ResourcesPage() {
         </div>
 
         {/* 3-column card grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1.75rem" }}>
+        <div className="resources-featured-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1.75rem" }}>
           {featured.map(card => (
             <div key={card.id} style={{
               background: "var(--bg-card)", border: "1px solid var(--border-color)",
@@ -432,7 +398,7 @@ export default function ResourcesPage() {
           <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "1.5rem" }}>
             More Resources ({filtered.length - 3})
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(310px,1fr))", gap: "1.5rem" }}>
+          <div className="resources-more-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(310px,1fr))", gap: "1.5rem" }}>
             {filtered.slice(3).map(r => (
               <div key={r.id} style={{
                 background: "var(--bg-card)", border: "1px solid var(--border-color)",
@@ -470,7 +436,7 @@ export default function ResourcesPage() {
       {/* ═══════════ LATEST ARTICLES ═══════════ */}
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "0 5% 4rem" }}>
         {/* Header row */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
+        <div className="resources-articles-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
           <div>
             <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Latest Articles</h2>
             <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Insights, tips and trends from the world of school management</p>
@@ -489,7 +455,7 @@ export default function ResourcesPage() {
         </div>
 
         {/* 4-column article grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "1.5rem" }}>
+        <div className="resources-articles-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "1.5rem" }}>
           {[
             { img: "/images/resources/article-bus.png", tag: "Transport", tagBg: "#e0e7ff", tagColor: "#4338ca", time: "5 min read", title: "How GPS Bus Tracking Improves Student Safety", desc: "Real-time tracking is changing school transport for the better." },
             { img: "/images/resources/article-parent.png", tag: "Parent Engagement", tagBg: "#ede9fe", tagColor: "#7c3aed", time: "5 min read", title: "10 Ways to Build Stronger Parent-School Communication", desc: "Modern tools to keep parents involved in their child's learning." },
@@ -530,7 +496,7 @@ export default function ResourcesPage() {
 
       {/* ═══════════ HELPFUL GUIDES & DOWNLOADS ═══════════ */}
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "0 5% 4rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem" }}>
+        <div className="resources-guides-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem" }}>
           <div>
             <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Helpful Guides & Downloads</h2>
             <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Free resources to get you started</p>
@@ -543,7 +509,7 @@ export default function ResourcesPage() {
           }}>View All <ArrowRight size={14} /></button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: "1.25rem" }}>
+        <div className="resources-guides-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: "1.25rem" }}>
           {[
             { icon: "📋", iconBg: "#fee2e2", iconColor: "#dc2626", title: "School ERP\nSetup Checklist", size: "2.4 MB" },
             { icon: "📱", iconBg: "#fef3c7", iconColor: "#b45309", title: "Parent App\nUser Manual", size: "3.2 MB" },
@@ -581,7 +547,7 @@ export default function ResourcesPage() {
 
       {/* ═══════════ UPCOMING WEBINARS & EVENTS ═══════════ */}
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "0 5% 4rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem" }}>
+        <div className="resources-events-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem" }}>
           <div>
             <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Upcoming Webinars & Events</h2>
             <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Learn from our education experts and industry leaders</p>
@@ -595,7 +561,7 @@ export default function ResourcesPage() {
         </div>
 
         {/* Webinar banner card */}
-        <div style={{
+        <div className="resources-webinar-banner" style={{
           background: "linear-gradient(135deg, #4338ca 0%, #3b82f6 60%, #6366f1 100%)",
           borderRadius: 22, padding: "2rem 2.5rem", color: "#fff",
           display: "grid", gridTemplateColumns: "1fr 0.6fr 0.4fr", gap: "1.5rem",
@@ -665,13 +631,14 @@ export default function ResourcesPage() {
 
       {/* ═══════════ BOTTOM SUPPORT CARDS ═══════════ */}
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "0 5% 4rem" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1.5rem" }}>
+        <div className="resources-support-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "1.5rem" }}>
           {[
             { icon: "🎯", iconBg: "#e0e7ff", title: "Help Center", desc: "Find instant answers to common questions.", link: "Visit Help Center" },
             { icon: "▶️", iconBg: "#fee2e2", title: "Video Tutorials", desc: "Step-by-step videos to learn all features.", link: "Watch Now" },
-            { icon: "💬", iconBg: "#dcfce7", title: "Contact Support", desc: "Need help? We're here for you.", link: "Contact Us" },
+            { icon: "💬", iconBg: "#dcfce7", title: "Contact Support", desc: "Need help? We're here for you 24/7.", link: "Contact Us" },
+            { icon: "⚡", iconBg: "#fef3c7", title: "Developer API", desc: "Connect RFID hardware & custom tools.", link: "Explore Docs" },
           ].map((s, i) => (
-            <div key={i} style={{
+            <div key={i} className="resources-support-card" style={{
               background: "var(--bg-card)", border: "1px solid var(--border-color)",
               borderRadius: 18, padding: "1.5rem",
               display: "flex", alignItems: "center", gap: "1rem",
@@ -698,7 +665,7 @@ export default function ResourcesPage() {
 
       {/* ═══════════ NEWSLETTER CTA ═══════════ */}
       <section style={{ maxWidth: 1280, margin: "0 auto 4rem", padding: "0 5%" }}>
-        <div style={{
+        <div className="resources-newsletter-banner" style={{
           background: "linear-gradient(135deg,#4338ca 0%,#3b82f6 100%)",
           borderRadius: 24, padding: "3rem 2.5rem", color: "#fff",
           display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "2rem",

@@ -8,7 +8,9 @@ import {
   Sun, Moon, Bus, Smartphone, FileText, ArrowRight, Globe,
   Building2, Calendar, GraduationCap
 } from "lucide-react";
+import SchoolRegistrationModal from "@/components/SchoolRegistrationModal";
 import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 export default function ContactPage() {
   const [theme, setTheme] = useState("light");
@@ -42,66 +44,8 @@ export default function ContactPage() {
   return (
     <div style={{ background: "var(--bg-page)", minHeight: "100vh", color: "var(--text-main)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-      {/* ═══════════ NAVBAR (Same to Same Mockup) ═══════════ */}
-      <nav className="site-nav" style={{
-        background: "var(--bg-card)", borderBottom: "1px solid var(--border-color)",
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        height: 72, padding: "0 5%", display: "flex", alignItems: "center", justifyContent: "space-between"
-      }}>
-        {/* Brand Logo */}
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.65rem" }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: "linear-gradient(135deg,#4338ca 0%,#3b82f6 100%)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", boxShadow: "0 4px 14px rgba(67,56,202,.35)", transform: "rotate(-4deg)"
-          }}><GraduationCap size={20} /></div>
-          <span style={{ fontSize: "1.45rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
-            <span style={{ color: "var(--text-main)" }}>School</span>
-            <span style={{ color: "#3b82f6" }}>Mitra</span>
-          </span>
-        </Link>
-
-        {/* Navigation Links */}
-        <div className="nav-links" style={{ display: "flex", gap: "2.2rem", alignItems: "center" }}>
-          <Link href="/" className="nav-link" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "0.92rem", fontWeight: 600 }}>Home</Link>
-          <Link href="/features" className="nav-link" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "0.92rem", fontWeight: 600 }}>Features</Link>
-          <div className="nav-dropdown" style={{ position: "relative" }}>
-            <span className="nav-link" style={{ color: "var(--text-muted)", cursor: "pointer", fontSize: "0.92rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-              Solutions <ChevronDown size={14} />
-            </span>
-          </div>
-          <Link href="/pricing" className="nav-link" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "0.92rem", fontWeight: 600 }}>Pricing</Link>
-          <div className="nav-dropdown" style={{ position: "relative" }}>
-            <span className="nav-link" style={{ color: "var(--text-muted)", cursor: "pointer", fontSize: "0.92rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-              Resources <ChevronDown size={14} />
-            </span>
-          </div>
-          <Link href="/about" className="nav-link active" style={{ color: "var(--primary)", textDecoration: "none", fontSize: "0.92rem", fontWeight: 700 }}>About Us</Link>
-        </div>
-
-        {/* Actions */}
-        <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <button onClick={toggleTheme} className="theme-toggle-btn" title="Toggle theme" style={{
-            background: "var(--bg-subtle)", border: "1px solid var(--border-color)",
-            padding: "0.45rem", borderRadius: "8px", cursor: "pointer",
-            color: "var(--text-main)", display: "flex", alignItems: "center", justifyContent: "center", marginRight: "0.5rem"
-          }}>{theme === "light" ? <Moon size={16} /> : <Sun size={16} />}</button>
-
-          <Link href="/login" className="btn-ghost-nav" style={{
-            padding: "0.55rem 1.25rem", borderRadius: "10px",
-            border: "1px solid var(--border-color)", color: "var(--text-main)",
-            textDecoration: "none", fontWeight: 600, fontSize: "0.9rem", background: "var(--bg-card)"
-          }}>Login</Link>
-
-          <Link href="/contact" className="btn-primary-nav" style={{
-            padding: "0.55rem 1.35rem", borderRadius: "10px",
-            background: "#4f46e5", color: "#fff", border: "none",
-            fontWeight: 700, fontSize: "0.9rem", cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(79, 70, 229, 0.25)", textDecoration: "none"
-          }}>Get Started</Link>
-        </div>
-      </nav>
+      {/* ═══════════ NAVBAR ═══════════ */}
+      <Navbar />
 
       {/* ═══════════ HERO: CONTACT FORM + INFO ═══════════ */}
       <section style={{

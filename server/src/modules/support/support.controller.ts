@@ -6,56 +6,119 @@ import { Request, Response } from "express";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
-
-const supportTicketsStore: any[] = [
-  { id: "TCK-1092", parentName: "Rajesh Sharma", studentName: "Aarav Sharma", category: "Fee Issue", subject: "Duplicate Transaction Deduction", status: "OPEN", priority: "HIGH", createdAt: "2026-07-30", replies: [] },
-  { id: "TCK-1093", parentName: "Suresh Patel", studentName: "Ananya Patel", category: "Transport Complaint", subject: "Bus #02 Delayed by 15 mins", status: "RESOLVED ✅", priority: "MEDIUM", createdAt: "2026-07-28", replies: [{ sender: "Admin Desk", text: "Driver was rerouted due to road construction at Sector 14 flyover.", date: "2026-07-28" }] }
-];
+import { SupportTicketModel } from "../../models/SystemSchemas";
 
 export const getSupportTickets = asyncHandler(async (_req: Request, res: Response) => {
-  return ApiResponse.success(res, 200, "Support tickets list retrieved", { tickets: supportTicketsStore });
+  const tickets = await SupportTicketModel.find().lean().catch(() => []);
+
+  const formatted = tickets.map(t => {
+    // Map category
+    let displayCat = "Attendance Issue";
+    if (t.category === "Billing") displayCat = "Fee Issue";
+    else if (t.category === "FeatureRequest") displayCat = "Leave Application";
+    else if (t.category === "BugReport") displayCat = "Exam & Report Card";
+    else if (t.category === "Other") displayCat = "Bus / Transport";
+
+    // Map priority
+    let displayPriority = "Medium";
+    if (t.priority === "Critical") displayPriority = "Urgent";
+    else if (t.priority === "High") displayPriority = "High";
+    else if (t.priority === "Low") displayPriority = "Low";
+
+    // Map status
+    let displayStatus = "Submitted";
+    if (t.status === "InProgress") displayStatus = "In Progress";
+    else if (t.status === "Resolved") displayStatus = "Resolved";
+    else if (t.status === "Closed") displayStatus = "Closed";
+
+    return {
+      id: t.ticketNo || `REQ-2026-${Math.floor(100 + Math.random() * 900)}`,
+      _id: t._id,
+      category: displayCat,
+      subject: t.subject,
+      studentName: "Rahul Sharma",
+      parentName: "Vijay Sharma",
+      status: displayStatus,
+      priority: displayPriority,
+      createdAt: t.createdAt ? new Date(t.createdAt).toISOString().split("T")[0] : "2026-08-06",
+      replies: t.messages?.map((m: any) => ({
+        sender: m.senderRole || "Admin Desk",
+        text: m.text,
+        date: m.sentAt ? new Date(m.sentAt).toISOString().split("T")[0] : "2026-08-06"
+      })) || []
+    };
+  });
+
+  return ApiResponse.success(res, 200, "Support tickets list retrieved", { tickets: formatted });
 });
 
 export const createSupportTicket = asyncHandler(async (req: Request, res: Response) => {
-  const { parentName, studentName, category, subject, description } = req.body;
+  const { parentName, studentName, category, subject, description, priority = "Medium" } = req.body;
 
   if (!category || !subject) {
     throw ApiError.badRequest("Category and subject are required.");
   }
 
-  const newTicket = {
-    id: `TCK-${Math.floor(1000 + Math.random() * 9000)}`,
-    parentName: parentName || "Parent",
-    studentName: studentName || "Student",
-    category,
-    subject,
-    description: description || "",
-    status: "OPEN",
-    priority: "MEDIUM",
-    createdAt: new Date().toISOString().split("T")[0],
-    replies: []
-  };
+  const schoolId = "650000000000000000000001";
+  const raisedBy = "650000000000000000000002"; // dummy user
+  const ticketNo = `REQ-2026-${Math.floor(100 + Math.random() * 899)}`;
 
-  supportTicketsStore.unshift(newTicket);
-  return ApiResponse.created(res, "Support ticket created successfully.", { ticket: newTicket });
+  // Map category to schema enum: Technical, Billing, FeatureRequest, BugReport, Other
+  let mappedCategory = "Technical";
+  if (category === "Fee Issue" || category === "Billing") mappedCategory = "Billing";
+  else if (category === "Leave Application") mappedCategory = "FeatureRequest";
+  else if (category === "Exam & Report Card" || category === "Bus / Transport") mappedCategory = "Other";
+
+  // Map priority to schema enum: Low, Medium, High, Critical
+  let mappedPriority = "Medium";
+  if (priority === "Urgent") mappedPriority = "Critical";
+  else if (priority === "High") mappedPriority = "High";
+  else if (priority === "Low") mappedPriority = "Low";
+
+  const ticket = await SupportTicketModel.create({
+    schoolId,
+    raisedBy,
+    ticketNo,
+    subject,
+    category: mappedCategory,
+    priority: mappedPriority,
+    status: "Open",
+    messages: [{
+      senderRole: "Parent",
+      text: description || "Raised via parent app."
+    }]
+  });
+
+  return ApiResponse.created(res, "Support ticket created successfully in MongoDB.", { ticket });
 });
 
 export const replySupportTicket = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { replyText, status } = req.body;
 
-  const target = supportTicketsStore.find(t => t.id === id);
+  const target = await SupportTicketModel.findOne({ ticketNo: id });
   if (!target) {
     throw ApiError.notFound("Support ticket not found.");
   }
 
   if (replyText) {
-    target.replies.push({ sender: "School Admin", text: replyText, date: new Date().toISOString() });
+    target.messages.push({
+      senderRole: "Admin Desk",
+      text: replyText,
+      sentAt: new Date()
+    } as any);
   }
 
   if (status) {
-    target.status = status;
+    let mappedStatus = "Open";
+    if (status === "In Progress" || status === "InProgress") mappedStatus = "InProgress";
+    else if (status === "Resolved") mappedStatus = "Resolved";
+    else if (status === "Closed") mappedStatus = "Closed";
+
+    target.status = mappedStatus;
   }
+
+  await target.save();
 
   return ApiResponse.success(res, 200, "Support ticket reply recorded.", { ticket: target });
 });

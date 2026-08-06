@@ -1,264 +1,510 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   UserCheck, BookOpen, DollarSign, CalendarCheck, Search, 
   Plus, X, Award, CheckCircle2, Clock, ShieldCheck, Mail, 
   Phone, Eye, Briefcase, ChevronRight, FileText, Check, AlertCircle,
-  Users, UserPlus, Send, RefreshCw, BarChart2, Star, Calendar, Settings, Lock, Shield, Printer
+  Users, UserPlus, Send, RefreshCw, BarChart2, Star, Calendar, Settings, Lock, Shield, Printer,
+  Edit3, Trash2, Save, Filter, UserX, ToggleLeft, ToggleRight, KeyRound, Download, CheckSquare
 } from "lucide-react";
 
+interface TeacherRecord {
+  id: string;
+  name: string;
+  department: string;
+  subject: string;
+  classTeacher: string;
+  phone: string;
+  email: string;
+  qualification: string;
+  salary: string;
+  baseSalary?: number;
+  allowance?: number;
+  attendance: string;
+  avatar: string;
+  status: string;
+  rating?: number;
+  homeworkRate?: string;
+  joiningTenure?: string;
+}
+
+interface LeaveRequest {
+  id: string;
+  teacherName: string;
+  type: string;
+  dates: string;
+  reason: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  comment: string;
+}
+
+interface TimetableSlot {
+  id: string;
+  teacherName: string;
+  day: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday";
+  timeSlot: string;
+  classSection: string;
+  subject: string;
+}
+
+interface PerformanceMetric {
+  id: string;
+  teacherName: string;
+  attendance: string;
+  homework: string;
+  rating: number;
+  statusIndex: string;
+  avatar: string;
+}
+
 export default function TeachersPage() {
-  // Navigation tabs for 12 Teacher & Staff modules
-  const [activeTeacherTab, setActiveTeacherTab] = useState<"directory" | "add" | "profile" | "assignments" | "attendance" | "leaves" | "payroll" | "timetable" | "performance" | "settings">("directory");
+  // Navigation tabs for 10 Teacher & Staff modules
+  const [activeTeacherTab, setActiveTeacherTab] = useState<
+    "directory" | "add" | "profile" | "assignments" | "attendance" | 
+    "leaves" | "payroll" | "timetable" | "performance" | "settings"
+  >("directory");
 
   // Dossier sub-tabs
   const [dossierTab, setDossierTab] = useState<"overview" | "classes" | "attendance" | "leaves" | "salary" | "documents" | "activity">("overview");
 
-  // Database State with Live DB Wiring
-  const [teachers, setTeachers] = useState<any[]>([]);
+  // Directory Filter States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterDept, setFilterDept] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
 
-  React.useEffect(() => {
-    // Fetch live teacher list from backend API
-    const fetchTeachers = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/v1/teachers");
-        const json = await res.json();
-        if (json.success && (json.teachers || json.data)) {
-          const list = Array.isArray(json.teachers) ? json.teachers : (Array.isArray(json.data) ? json.data : []);
-          const mapped = list.map((t: any) => ({
-            id: t.id || t._id || `EMP-TCH-${Math.floor(100 + Math.random() * 900)}`,
-            name: t.name,
-            department: t.subject || "Academics",
-            subject: t.subject || "General",
-            classTeacher: (t.assignedClasses && t.assignedClasses[0]) || "Class 10-A",
-            phone: t.phone || "+91 98111 22334",
-            email: t.email,
-            qualification: "M.Sc., B.Ed. (10 Yrs Exp)",
-            salary: t.salary || "₹65,000 / month",
-            baseSalary: 60000,
-            allowance: 5000,
-            attendance: "98.5%",
-            avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
-            status: t.status || "Active",
-            rating: 4.8,
-            homeworkRate: "95%"
-          }));
-          setTeachers(mapped);
-        } else {
-          setTeachers([]);
-        }
-      } catch (e) {
-        setTeachers([]);
+  // Initial Default Teachers Data
+  const defaultTeachers: TeacherRecord[] = [
+    {
+      id: "EMP-101",
+      name: "Sunita Rao",
+      department: "Mathematics",
+      subject: "Mathematics",
+      classTeacher: "Class 10-A",
+      phone: "+91 98765 43210",
+      email: "sunita.rao@schoolmitra.edu.in",
+      qualification: "M.Sc. Mathematics, B.Ed.",
+      salary: "₹ 65,000 / month",
+      baseSalary: 60000,
+      allowance: 5000,
+      attendance: "98.5%",
+      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+      status: "Active",
+      rating: 4.9,
+      homeworkRate: "98%",
+      joiningTenure: "Since 12 July 2021"
+    },
+    {
+      id: "EMP-102",
+      name: "Vikram Malhotra",
+      department: "Science",
+      subject: "Physics",
+      classTeacher: "Class 9-B",
+      phone: "+91 98123 45678",
+      email: "vikram.m@schoolmitra.edu.in",
+      qualification: "M.Sc. Physics, M.Ed.",
+      salary: "₹ 70,000 / month",
+      baseSalary: 65000,
+      allowance: 5000,
+      attendance: "96.0%",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      status: "Active",
+      rating: 4.7,
+      homeworkRate: "92%",
+      joiningTenure: "Since 05 Aug 2020"
+    }
+  ];
+
+  // 1. Teachers Database State
+  const [teachers, setTeachers] = useState<TeacherRecord[]>(defaultTeachers);
+  const [selectedTeacherDossier, setSelectedTeacherDossier] = useState<TeacherRecord>(defaultTeachers[0]);
+
+  // Edit Teacher Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTeacherForm, setEditTeacherForm] = useState<TeacherRecord | null>(null);
+
+  // Fetch Teachers from Backend API / LocalStorage
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("sm_teachers_list");
+      if (cached) {
+        setTeachers(JSON.parse(cached));
       }
-    };
-    fetchTeachers();
+
+      fetch("http://localhost:5000/api/v1/teachers")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && (data.teachers || data.data)) {
+            const list = Array.isArray(data.teachers) ? data.teachers : (Array.isArray(data.data) ? data.data : []);
+            if (list.length > 0) {
+              const mapped: TeacherRecord[] = list.map((t: any) => ({
+                id: t.id || t._id || `EMP-TCH-${Math.floor(100 + Math.random() * 900)}`,
+                name: t.name || "Faculty Member",
+                department: t.department || t.subject || "Mathematics",
+                subject: t.subject || "Mathematics",
+                classTeacher: t.classTeacher || (t.assignedClasses && t.assignedClasses[0]) || "Class 10-A",
+                phone: t.phone || "+91 98765 43210",
+                email: t.email || "teacher@schoolmitra.edu.in",
+                qualification: t.qualification || "M.Sc., B.Ed. (10 Yrs Exp)",
+                salary: t.salary || "₹ 65,000 / month",
+                baseSalary: t.baseSalary || 60000,
+                allowance: t.allowance || 5000,
+                attendance: t.attendance || "98.5%",
+                avatar: t.avatar || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+                status: t.status || "Active",
+                rating: t.rating || 4.8,
+                homeworkRate: t.homeworkRate || "95%",
+                joiningTenure: t.joiningTenure || "Since 2021"
+              }));
+              setTeachers(mapped);
+            }
+          }
+        })
+        .catch(() => {});
+    } catch (e) {}
   }, []);
 
-  const [selectedTeacherDossier, setSelectedTeacherDossier] = useState<any>(teachers[0]);
+  const saveTeachersList = (newList: TeacherRecord[]) => {
+    setTeachers(newList);
+    try {
+      localStorage.setItem("sm_teachers_list", JSON.stringify(newList));
+    } catch (e) {}
+  };
 
-  // Stepped Registration Wizard Form State (Module 2)
+  const handleOpenEdit = (t: TeacherRecord) => {
+    setEditTeacherForm({ ...t });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditTeacher = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTeacherForm) return;
+
+    const updated = teachers.map(t => t.id === editTeacherForm.id ? editTeacherForm : t);
+    saveTeachersList(updated);
+
+    if (selectedTeacherDossier?.id === editTeacherForm.id) {
+      setSelectedTeacherDossier(editTeacherForm);
+    }
+
+    try {
+      fetch(`http://localhost:5000/api/v1/teachers/${editTeacherForm.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editTeacherForm)
+      }).catch(() => {});
+    } catch (err) {}
+
+    setIsEditModalOpen(false);
+    alert(`Teacher profile updated for ${editTeacherForm.name}!`);
+  };
+
+  const handleDeleteTeacher = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to remove ${name} from faculty directory?`)) {
+      const updated = teachers.filter(t => t.id !== id);
+      saveTeachersList(updated);
+
+      try {
+        fetch(`http://localhost:5000/api/v1/teachers/${id}`, {
+          method: "DELETE"
+        }).catch(() => {});
+      } catch (err) {}
+
+      if (selectedTeacherDossier?.id === id && updated.length > 0) {
+        setSelectedTeacherDossier(updated[0]);
+      }
+    }
+  };
+
+  // 2. Add Faculty Form State (Module 2)
   const [addStep, setAddStep] = useState(1);
   const [newTeacher, setNewTeacher] = useState({
     name: "",
     department: "Mathematics",
-    subject: "",
+    subject: "Mathematics",
     classTeacher: "Class 10-A",
     phone: "",
     email: "",
-    qualification: "",
-    experience: "",
-    joiningDate: "",
-    salary: "60000",
-    allowance: "5000",
-    aadhaarCert: false,
-    degreeCert: false,
-    joiningLetter: false
-  });
-
-  // Leaves database state (Module 7)
-  const [leaves, setLeaves] = useState([
-    { id: "l1", teacherName: "Sunita Rao", type: "Casual Leave", dates: "02 Aug - 03 Aug (2 Days)", reason: "Family Function", status: "PENDING", comment: "" },
-    { id: "l2", teacherName: "Ananya Deshmukh", type: "Medical Leave", dates: "25 July (1 Day)", reason: "Doctor Appointment", status: "APPROVED", comment: "Approved against medical certificates" }
-  ]);
-
-  const [leaveComments, setLeaveComments] = useState<Record<string, string>>({});
-
-  // Subject and Class Teacher Mappings state (Modules 4 & 5)
-  const [mappings, setMappings] = useState([
-    { id: "m1", teacherName: "Sunita Rao", class: "10", section: "A", subject: "Mathematics" },
-    { id: "m2", teacherName: "Vikram Malhotra", class: "9", section: "B", subject: "Physics" }
-  ]);
-
-  const [newMapping, setNewMapping] = useState({
-    teacherName: "Sunita Rao",
-    class: "10",
-    section: "A",
-    subject: "Mathematics"
-  });
-
-  const [classTeachers, setClassTeachers] = useState<Record<string, string>>({
-    "10-A": "Sunita Rao",
-    "9-B": "Vikram Malhotra",
-    "8-C": "Ananya Deshmukh"
-  });
-
-  const [newClassTeacher, setNewClassTeacher] = useState({
-    class: "10",
-    section: "B",
-    teacherName: "Ananya Deshmukh"
-  });
-
-  // Daily attendance register state (Module 6)
-  const [attendanceLogs, setAttendanceLogs] = useState<Record<string, 'Present' | 'Absent' | 'Late Entry' | 'Half Day'>>({
-    "EMP-TCH-101": "Present",
-    "EMP-TCH-102": "Present",
-    "EMP-TCH-103": "Late Entry"
-  });
-
-  const [search, setSearch] = useState("");
-  const [selectedDept, setSelectedDept] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
-
-  const filteredTeachers = teachers.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase()) || t.id.toLowerCase().includes(search.toLowerCase());
-    const matchesDept = selectedDept === "All" || t.department === selectedDept;
-    const matchesStatus = selectedStatus === "All" || t.status === selectedStatus;
-    return matchesSearch && matchesDept && matchesStatus;
+    qualification: "M.Sc., B.Ed.",
+    experience: "5 Years",
+    joiningDate: "2026-08-01",
+    salary: "65000",
+    allowance: "5000"
   });
 
   const handleAddTeacherSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTeacher.name || !newTeacher.subject) {
-      alert("Please fill in Teacher Name and Subject!");
-      return;
-    }
+    if (!newTeacher.name || !newTeacher.email) return;
 
-    const created = {
-      id: `EMP-TCH-${100 + teachers.length + 1}`,
+    const newId = `EMP-${Math.floor(100 + Math.random() * 900)}`;
+    const createdRecord: TeacherRecord = {
+      id: newId,
       name: newTeacher.name,
       department: newTeacher.department,
-      subject: newTeacher.subject,
-      classTeacher: newTeacher.classTeacher || "None Assigned",
-      phone: newTeacher.phone || "+91 98111 00000",
-      email: newTeacher.email || "teacher@dps.edu.in",
-      qualification: newTeacher.qualification || "M.A. / M.Sc., B.Ed.",
-      salary: `₹${Number(newTeacher.salary).toLocaleString("en-IN")} / month`,
+      subject: newTeacher.subject || newTeacher.department,
+      classTeacher: newTeacher.classTeacher,
+      phone: newTeacher.phone || "+91 98765 43210",
+      email: newTeacher.email,
+      qualification: newTeacher.qualification,
+      salary: `₹ ${Number(newTeacher.salary).toLocaleString("en-IN")} / month`,
       baseSalary: Number(newTeacher.salary),
       allowance: Number(newTeacher.allowance),
       attendance: "100%",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+      avatar: newTeacher.name.toLowerCase().includes("ka") 
+        ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80"
+        : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
       status: "Active",
-      rating: 4.5,
-      homeworkRate: "90%"
+      rating: 5.0,
+      homeworkRate: "100%",
+      joiningTenure: "New Faculty (2026)"
     };
 
-    setTeachers([created, ...teachers]);
-    setSelectedTeacherDossier(created);
-    setActiveTeacherTab("profile");
-    setAddStep(1);
+    const updated = [createdRecord, ...teachers];
+    saveTeachersList(updated);
+    setSelectedTeacherDossier(createdRecord);
 
-    // Reset Form
-    setNewTeacher({
-      name: "",
-      department: "Mathematics",
-      subject: "",
-      classTeacher: "Class 10-A",
-      phone: "",
-      email: "",
-      qualification: "",
-      experience: "",
-      joiningDate: "",
-      salary: "60000",
-      allowance: "5000",
-      aadhaarCert: false,
-      degreeCert: false,
-      joiningLetter: false
-    });
-    alert("New Teacher Profile onboarded successfully!");
+    try {
+      fetch("http://localhost:5000/api/v1/teachers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(createdRecord)
+      }).catch(() => {});
+    } catch (err) {}
+
+    alert(`Faculty member ${createdRecord.name} onboarded successfully with Employee ID ${newId}!`);
+    setActiveTeacherTab("directory");
   };
 
-  const handleLeaveAction = (id: string, action: "APPROVED" | "REJECTED") => {
-    const comment = leaveComments[id] || "";
-    setLeaves(leaves.map(l => l.id === id ? { ...l, status: action, comment } : l));
-    alert(`Leave request has been ${action.toLowerCase()}!`);
-  };
+  // 3. Class Teacher Allocations & Mappings State (Module 4)
+  const [classTeacherMatrix, setClassTeacherMatrix] = useState([
+    { id: "ct-1", classSection: "Class 10-A", teacherName: "Sunita Rao" },
+    { id: "ct-2", classSection: "Class 9-B", teacherName: "Vikram Malhotra" },
+    { id: "ct-3", classSection: "Class 8-C", teacherName: "Ananya Deshmukh" }
+  ]);
 
-  const handleAddMapping = (e: React.FormEvent) => {
+  const [subjectMappings, setSubjectMappings] = useState([
+    { id: "sm-1", teacherName: "Sunita Rao", classSection: "Class 10-A", subject: "Mathematics" },
+    { id: "sm-2", teacherName: "Vikram Malhotra", classSection: "Class 9-B", subject: "Physics" }
+  ]);
+
+  const [newMapping, setNewMapping] = useState({ teacherName: "Sunita Rao", classSection: "Class 10-A", subject: "Mathematics" });
+  const [newClassTeacher, setNewClassTeacher] = useState({ classSection: "Class 10-A", teacherName: "Sunita Rao" });
+
+  const handleAddSubjectMapping = (e: React.FormEvent) => {
     e.preventDefault();
-    setMappings([
-      ...mappings,
-      {
-        id: `m-${Date.now()}`,
-        teacherName: newMapping.teacherName,
-        class: newMapping.class,
-        section: newMapping.section,
-        subject: newMapping.subject
+    const newEntry = { id: `sm-${Date.now()}`, ...newMapping };
+    setSubjectMappings([...subjectMappings, newEntry]);
+  };
+
+  const handleLinkClassTeacher = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updated = classTeacherMatrix.map(c => {
+      if (c.classSection === newClassTeacher.classSection) {
+        return { ...c, teacherName: newClassTeacher.teacherName };
       }
-    ]);
-    alert("Subject Assignment successfully registered!");
-  };
-
-  const handleAssignClassTeacher = (e: React.FormEvent) => {
-    e.preventDefault();
-    const key = `${newClassTeacher.class}-${newClassTeacher.section}`;
-    if (classTeachers[key]) {
-      const confirmOverride = confirm(`Warning: Class ${key} is already assigned to ${classTeachers[key]}. Do you want to override and assign it to ${newClassTeacher.teacherName}?`);
-      if (!confirmOverride) return;
+      return c;
+    });
+    if (!updated.some(c => c.classSection === newClassTeacher.classSection)) {
+      updated.push({ id: `ct-${Date.now()}`, classSection: newClassTeacher.classSection, teacherName: newClassTeacher.teacherName });
     }
-    setClassTeachers(prev => ({
-      ...prev,
-      [key]: newClassTeacher.teacherName
-    }));
-    alert(`Class Teacher mapped successfully!`);
+    setClassTeacherMatrix(updated);
   };
 
-  const toggleTeacherStatus = (id: string) => {
-    setTeachers(teachers.map(t => t.id === id ? { ...t, status: t.status === "Active" ? "Inactive" : "Active" } : t));
+  // 4. Daily Attendance Roster State (Module 5)
+  const [attendanceRoster, setAttendanceRoster] = useState<Record<string, "PRESENT" | "ABSENT" | "LATE" | "HALF_DAY">>({
+    "EMP-101": "PRESENT",
+    "EMP-102": "PRESENT"
+  });
+
+  const handleMarkAttendance = (empId: string, status: "PRESENT" | "ABSENT" | "LATE" | "HALF_DAY") => {
+    setAttendanceRoster(prev => ({ ...prev, [empId]: status }));
   };
+
+  // 5. Leave Approvals State (Module 6 - Screenshot 1)
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([
+    { id: "lv-1", teacherName: "Sunita Rao", type: "Casual Leave", dates: "02 Aug - 03 Aug (2 Days)", reason: "Family Function", status: "PENDING", comment: "" },
+    { id: "lv-2", teacherName: "Ananya Deshmukh", type: "Medical Leave", dates: "25 July (1 Day)", reason: "Doctor Appointment", status: "APPROVED", comment: "Approved against medical certificates" }
+  ]);
+
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [newLeaveForm, setNewLeaveForm] = useState({
+    teacherName: "Sunita Rao",
+    type: "Casual Leave",
+    dates: "10 Aug - 12 Aug (3 Days)",
+    reason: "Personal Work"
+  });
+
+  const handleApplyLeave = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newLeave: LeaveRequest = {
+      id: `lv-${Date.now()}`,
+      teacherName: newLeaveForm.teacherName,
+      type: newLeaveForm.type,
+      dates: newLeaveForm.dates,
+      reason: newLeaveForm.reason,
+      status: "PENDING",
+      comment: ""
+    };
+    setLeaveRequests([newLeave, ...leaveRequests]);
+    setIsLeaveModalOpen(false);
+    alert(`Leave application submitted for ${newLeaveForm.teacherName}!`);
+  };
+
+  const handleProcessLeave = (id: string, status: "APPROVED" | "REJECTED") => {
+    setLeaveRequests(leaveRequests.map(l => l.id === id ? { ...l, status } : l));
+  };
+
+  const handleDeleteLeave = (id: string) => {
+    if (confirm("Delete leave request?")) {
+      setLeaveRequests(leaveRequests.filter(l => l.id !== id));
+    }
+  };
+
+  // 6. Salary & Payroll State (Module 7 - Screenshot 5)
+  const [selectedPayrollStaff, setSelectedPayrollStaff] = useState<string>("EMP-101");
+  const currentPayrollTeacher = teachers.find(t => t.id === selectedPayrollStaff) || teachers[0] || defaultTeachers[0];
+
+  // 7. Weekly Timetables State (Module 8 - Screenshot 4)
+  const [selectedTimetableTeacher, setSelectedTimetableTeacher] = useState<string>("Sunita Rao");
+  const [timetableSlots, setTimetableSlots] = useState<TimetableSlot[]>([
+    { id: "tt-1", teacherName: "Sunita Rao", day: "Monday", timeSlot: "08:30 - 09:15", classSection: "Class 10-A", subject: "Math" },
+    { id: "tt-2", teacherName: "Sunita Rao", day: "Monday", timeSlot: "10:00 - 10:45", classSection: "Class 9-B", subject: "Physics" },
+    { id: "tt-3", teacherName: "Sunita Rao", day: "Tuesday", timeSlot: "08:30 - 09:15", classSection: "Class 10-A", subject: "Math" },
+    { id: "tt-4", teacherName: "Sunita Rao", day: "Tuesday", timeSlot: "10:00 - 10:45", classSection: "Class 9-B", subject: "Physics" },
+    { id: "tt-5", teacherName: "Sunita Rao", day: "Wednesday", timeSlot: "08:30 - 09:15", classSection: "Class 10-A", subject: "Math" },
+    { id: "tt-6", teacherName: "Sunita Rao", day: "Thursday", timeSlot: "08:30 - 09:15", classSection: "Class 10-A", subject: "Math" }
+  ]);
+
+  const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
+  const [isTimetableModalOpen, setIsTimetableModalOpen] = useState(false);
+  const [newSlotForm, setNewSlotForm] = useState<{ day: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday"; timeSlot: string; classSection: string; subject: string }>({
+    day: "Monday",
+    timeSlot: "11:30 - 12:15",
+    classSection: "Class 10-A",
+    subject: "Math"
+  });
+
+  const handleOpenAddSlot = () => {
+    setEditingSlotId(null);
+    setNewSlotForm({
+      day: "Monday",
+      timeSlot: "11:30 - 12:15",
+      classSection: "Class 10-A",
+      subject: "Math"
+    });
+    setIsTimetableModalOpen(true);
+  };
+
+  const handleOpenEditSlot = (slot: TimetableSlot) => {
+    setEditingSlotId(slot.id);
+    setNewSlotForm({
+      day: slot.day,
+      timeSlot: slot.timeSlot,
+      classSection: slot.classSection,
+      subject: slot.subject
+    });
+    setIsTimetableModalOpen(true);
+  };
+
+  const handleSaveTimetableSlot = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingSlotId) {
+      // Edit existing slot
+      setTimetableSlots(timetableSlots.map(s => {
+        if (s.id === editingSlotId) {
+          return {
+            ...s,
+            day: newSlotForm.day,
+            timeSlot: newSlotForm.timeSlot,
+            classSection: newSlotForm.classSection,
+            subject: newSlotForm.subject
+          };
+        }
+        return s;
+      }));
+      alert(`Timetable period slot updated!`);
+    } else {
+      // Add new slot
+      const created: TimetableSlot = {
+        id: `tt-${Date.now()}`,
+        teacherName: selectedTimetableTeacher,
+        day: newSlotForm.day,
+        timeSlot: newSlotForm.timeSlot,
+        classSection: newSlotForm.classSection,
+        subject: newSlotForm.subject
+      };
+      setTimetableSlots([...timetableSlots, created]);
+      alert(`New timetable period slot added for ${selectedTimetableTeacher}!`);
+    }
+    setIsTimetableModalOpen(false);
+  };
+
+  const handleDeleteTimetableSlot = (id: string) => {
+    if (confirm("Are you sure you want to remove this timetable slot?")) {
+      setTimetableSlots(timetableSlots.filter(t => t.id !== id));
+    }
+  };
+
+  // 8. Performance Metrics State (Module 9 - Screenshot 3)
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetric[]>([
+    { id: "pm-1", teacherName: "Sunita Rao", attendance: "98.5% Present", homework: "98% Submissions", rating: 4.9, statusIndex: "EXCELLENT PERFORMANCE", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150" },
+    { id: "pm-2", teacherName: "Vikram Malhotra", attendance: "96.0% Present", homework: "92% Submissions", rating: 4.7, statusIndex: "EXCELLENT PERFORMANCE", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" }
+  ]);
+
+  const handleUpdateRating = (id: string, newRating: number) => {
+    setPerformanceMetrics(performanceMetrics.map(p => p.id === id ? { ...p, rating: newRating } : p));
+  };
+
+  // 9. Access & Settings State (Module 10 - Screenshot 2)
+  const [permissions, setPermissions] = useState({
+    homework: true,
+    grades: true,
+    messaging: true,
+    payrollLogs: false
+  });
+  const [selectedAccessFaculty, setSelectedAccessFaculty] = useState("Sunita Rao");
+  const [erpAccessDisabled, setErpAccessDisabled] = useState(false);
+
+  // Filtered Teachers
+  const filteredTeachers = teachers.filter(t => {
+    const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          t.subject.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDept = filterDept === "all" || t.department.toLowerCase() === filterDept.toLowerCase();
+    const matchesStatus = filterStatus === "all" || t.status.toLowerCase() === filterStatus.toLowerCase();
+    return matchesSearch && matchesDept && matchesStatus;
+  });
+
+  const activeTeacher = selectedTeacherDossier || teachers[0] || defaultTeachers[0];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       
       {/* PAGE HEADER */}
-      <div className="page-header">
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            Teacher &amp; Staff Console <UserCheck size={24} color="var(--primary)" />
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0, color: "var(--text-heading)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            Teacher &amp; Staff Console <Users size={24} color="var(--primary)" />
           </h1>
-          <p style={{ color: "var(--text-muted)", marginTop: 2, fontSize: "0.85rem" }}>
-            Core administrative panel to manage faculty registers, academic assignments, leaves, class allocations, and performance trends.
+          <p style={{ color: "var(--text-muted)", marginTop: 2, margin: 0, fontSize: "0.85rem" }}>
+            Core administrative panel to manage faculty registers, academic assignments, leaves, class allocations, timetables, and payroll.
           </p>
         </div>
 
-        <button 
-          onClick={() => setActiveTeacherTab("add")}
-          className="btn btn-primary" 
-          style={{ padding: "0.75rem 1.25rem" }}
-        >
-          <UserPlus size={18} />
-          <span>Onboard New Teacher</span>
+        <button onClick={() => setActiveTeacherTab("add")} className="btn btn-primary" style={{ padding: "0.6rem 1.15rem", fontSize: "0.85rem", gap: "0.45rem" }}>
+          <UserPlus size={16} /> Onboard New Teacher
         </button>
       </div>
 
-      {/* ════════════ 12 MODULES TAB SWITCHER CONSOLE ════════════ */}
-      <div className="glass-card" style={{ 
-        padding: "0.6rem", 
-        display: "flex", 
-        gap: "0.5rem", 
-        overflowX: "auto", 
-        whiteSpace: "nowrap",
-        border: "1px solid var(--border-color)",
-        background: "var(--bg-card)",
-        borderRadius: "var(--radius-md)"
-      }}>
+      {/* ALL 10 TABS SWITCHER HEADER BAR */}
+      <div className="glass-card" style={{ padding: "0.6rem", display: "flex", gap: "0.5rem", overflowX: "auto", whiteSpace: "nowrap" }}>
         {[
           { id: "directory", label: "Faculty Directory", icon: Users },
           { id: "add", label: "Add Faculty", icon: UserPlus },
           { id: "profile", label: "360° Profile Dossier", icon: Eye },
-          { id: "assignments", label: "Academic Assignments", icon: RefreshCw },
+          { id: "assignments", label: "Academic Assignments", icon: BookOpen },
           { id: "attendance", label: "Daily Attendance", icon: CalendarCheck },
-          { id: "leaves", label: "Leave Approvals", icon: AlertCircle },
+          { id: "leaves", label: "Leave Approvals", icon: Clock },
           { id: "payroll", label: "Salary & Payroll", icon: DollarSign },
           { id: "timetable", label: "Weekly Timetables", icon: Calendar },
           { id: "performance", label: "Performance Metrics", icon: BarChart2 },
@@ -271,130 +517,317 @@ export default function TeachersPage() {
               key={tab.id}
               onClick={() => setActiveTeacherTab(tab.id as any)}
               className={`btn ${isActive ? "btn-primary" : "btn-secondary"}`}
-              style={{ 
-                padding: "0.6rem 1rem", 
-                fontSize: "0.82rem", 
-                gap: "0.45rem",
-                borderRadius: "var(--radius-sm)",
-                fontWeight: isActive ? 700 : 500
-              }}
+              style={{ padding: "0.55rem 0.95rem", fontSize: "0.82rem", gap: "0.4rem", borderRadius: 8, fontWeight: isActive ? 700 : 500 }}
             >
-              <Icon size={16} />
-              <span>{tab.label}</span>
+              <Icon size={16} /> {tab.label}
             </button>
           );
         })}
       </div>
 
-      {/* ════════════ TAB VIEWS ════════════ */}
-
-      {/* MODULE 1: TEACHER DIRECTORY */}
+      {/* ════════════ MODULE 1: FACULTY DIRECTORY ════════════ */}
       {activeTeacherTab === "directory" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          
-          {/* Filters */}
-          <div className="glass-card" style={{ padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
-            <div style={{ display: "flex", gap: "1rem", flex: 1, maxWidth: 650 }}>
-              <div style={{ position: "relative", flex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <div className="glass-card" style={{ padding: "1.25rem", display: "flex", gap: "1rem", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "1rem", flex: 1, maxWidth: 540, flexWrap: "wrap" }}>
+              <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
                 <Search size={16} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
                 <input 
                   type="text" 
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by faculty name or EMP-ID..."
-                  style={{ width: "100%", padding: "0.65rem 0.75rem 0.65rem 2.25rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
+                  style={{ width: "100%", padding: "0.65rem 0.75rem 0.65rem 2.25rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.85rem" }}
                 />
               </div>
 
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <select
-                  value={selectedDept}
-                  onChange={(e) => setSelectedDept(e.target.value)}
-                  style={{ padding: "0.65rem 1rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", cursor: "pointer", outline: "none" }}
-                >
-                  <option value="All" style={{ background: "#0b0f19" }}>All Departments</option>
-                  <option value="Mathematics" style={{ background: "#0b0f19" }}>Mathematics</option>
-                  <option value="Science" style={{ background: "#0b0f19" }}>Science</option>
-                  <option value="Humanities & English" style={{ background: "#0b0f19" }}>Humanities</option>
-                </select>
+              <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)} style={{ padding: "0.65rem 0.9rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.85rem", cursor: "pointer" }}>
+                <option value="all">All Departments</option>
+                <option value="mathematics">Mathematics</option>
+                <option value="science">Science</option>
+              </select>
 
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  style={{ padding: "0.65rem 1rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", cursor: "pointer", outline: "none" }}
-                >
-                  <option value="All" style={{ background: "#0b0f19" }}>All Statuses</option>
-                  <option value="Active" style={{ background: "#0b0f19" }}>Active</option>
-                  <option value="Inactive" style={{ background: "#0b0f19" }}>Inactive</option>
-                </select>
-              </div>
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: "0.65rem 0.9rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.85rem", cursor: "pointer" }}>
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+              </select>
             </div>
-            
-            <span style={{ fontSize: "0.825rem", color: "var(--text-muted)", fontWeight: 600 }}>
-              Faculty Members: <strong>{filteredTeachers.length}</strong> Active
+
+            <span style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 700 }}>
+              Faculty Members: <strong style={{ color: "var(--primary)" }}>{filteredTeachers.length} Active</strong>
             </span>
           </div>
 
-          {/* Directory Table */}
           <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <table className="custom-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <div className="table-container">
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>TEACHER</th>
+                    <th>DEPARTMENT</th>
+                    <th>PRIMARY SUBJECTS</th>
+                    <th>CONTACT INFO</th>
+                    <th>CLASS TEACHER</th>
+                    <th>DAILY PRESENCE</th>
+                    <th>STATUS</th>
+                    <th style={{ textAlign: "right" }}>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTeachers.map((t) => (
+                    <tr key={t.id}>
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                          <img src={t.avatar} alt={t.name} style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--primary)" }} />
+                          <div>
+                            <div style={{ fontWeight: 800, color: "var(--text-heading)" }}>{t.name}</div>
+                            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "monospace" }}>{t.id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span className="badge badge-info">{t.department}</span></td>
+                      <td style={{ fontWeight: 600 }}>{t.subject}</td>
+                      <td style={{ fontSize: "0.8rem" }}>
+                        <div style={{ fontWeight: 700 }}>{t.phone}</div>
+                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>{t.email}</div>
+                      </td>
+                      <td style={{ fontWeight: 800, color: "var(--primary)" }}>{t.classTeacher}</td>
+                      <td style={{ fontWeight: 700, color: "var(--success)" }}>{t.attendance}</td>
+                      <td><span className="badge badge-success">{t.status.toUpperCase()} ✅</span></td>
+                      <td style={{ textAlign: "right" }}>
+                        <div style={{ display: "inline-flex", gap: "0.4rem" }}>
+                          <button onClick={() => { setSelectedTeacherDossier(t); setActiveTeacherTab("profile"); }} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", gap: "0.25rem" }}><Eye size={13} /> Profile</button>
+                          <button onClick={() => handleOpenEdit(t)} className="btn btn-primary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", gap: "0.25rem" }}><Edit3 size={13} /> Edit</button>
+                          <button onClick={() => handleDeleteTeacher(t.id, t.name)} className="btn btn-secondary" style={{ padding: "0.35rem 0.5rem", fontSize: "0.72rem", color: "#ef4444" }}><Trash2 size={13} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ MODULE 2: ADD FACULTY ════════════ */}
+      {activeTeacherTab === "add" && (
+        <div className="glass-card" style={{ padding: "2rem", maxWidth: "800px" }}>
+          <form onSubmit={handleAddTeacherSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Stepped Faculty Onboarding Wizard</h3>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FULL TEACHER NAME</label>
+                <input type="text" value={newTeacher.name} onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })} placeholder="e.g. Sunita Rao" required style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DEPARTMENT</label>
+                  <select value={newTeacher.department} onChange={(e) => setNewTeacher({ ...newTeacher, department: e.target.value })} style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }}>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Science">Science</option>
+                    <option value="English">English</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>EMAIL ADDRESS</label>
+                  <input type="email" value={newTeacher.email} onChange={(e) => setNewTeacher({ ...newTeacher, email: e.target.value })} placeholder="teacher@schoolmitra.edu.in" required style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
+                </div>
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ justifyContent: "center", marginTop: "0.5rem" }}>Complete Faculty Onboarding</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ════════════ MODULE 3: PROFILE DOSSIER ════════════ */}
+      {activeTeacherTab === "profile" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <div className="glass-card" style={{ padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+              <img src={activeTeacher.avatar} alt={activeTeacher.name} style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: "3px solid var(--primary)" }} />
+              <div>
+                <h2 style={{ fontSize: "1.35rem", fontWeight: 800, color: "var(--text-heading)", margin: 0 }}>{activeTeacher.name}</h2>
+                <div style={{ fontSize: "0.85rem", color: "var(--primary)", fontWeight: 700, marginTop: 4, display: "flex", gap: "0.75rem" }}>
+                  <span>EMP ID: <strong>{activeTeacher.id}</strong></span> &bull; <span>Dept: <strong>{activeTeacher.department}</strong></span> &bull; <span>Class Teacher: <strong>{activeTeacher.classTeacher}</strong></span>
+                </div>
+              </div>
+            </div>
+            <button onClick={() => handleOpenEdit(activeTeacher)} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem", gap: "0.35rem" }}><Edit3 size={15} /> Edit Credentials</button>
+          </div>
+
+          <div className="glass-card" style={{ padding: "1.5rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0" }}>Faculty Qualifications &amp; Details</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div style={{ background: "var(--bg-input)", padding: "1rem", borderRadius: 10 }}><strong>QUALIFICATIONS:</strong> {activeTeacher.qualification}</div>
+              <div style={{ background: "var(--bg-input)", padding: "1rem", borderRadius: 10 }}><strong>PRIMARY STREAM:</strong> {activeTeacher.subject}</div>
+              <div style={{ background: "var(--bg-input)", padding: "1rem", borderRadius: 10 }}><strong>CONTACT PHONE:</strong> {activeTeacher.phone}</div>
+              <div style={{ background: "var(--bg-input)", padding: "1rem", borderRadius: 10 }}><strong>CONTACT EMAIL:</strong> {activeTeacher.email}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ MODULE 4: ACADEMIC ASSIGNMENTS ════════════ */}
+      {activeTeacherTab === "assignments" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+          <div className="glass-card" style={{ padding: "1.5rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1rem" }}>Assign Class Subject Teacher</h3>
+            <form onSubmit={handleAddSubjectMapping} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <select value={newMapping.teacherName} onChange={(e) => setNewMapping({ ...newMapping, teacherName: e.target.value })} style={{ padding: "0.65rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                {teachers.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+              </select>
+              <button type="submit" className="btn btn-primary">Add Subject Mapping</button>
+            </form>
+          </div>
+
+          <div className="glass-card" style={{ padding: "1.5rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1rem" }}>Class Teacher Allocations</h3>
+            <form onSubmit={handleLinkClassTeacher} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <select value={newClassTeacher.teacherName} onChange={(e) => setNewClassTeacher({ ...newClassTeacher, teacherName: e.target.value })} style={{ padding: "0.65rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                {teachers.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+              </select>
+              <button type="submit" className="btn btn-primary">Establish Class Teacher Link</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ MODULE 5: DAILY ATTENDANCE ════════════ */}
+      {activeTeacherTab === "attendance" && (
+        <div className="glass-card" style={{ padding: "1.5rem" }}>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1rem" }}>Daily Faculty Attendance Roster</h3>
+          <table className="custom-table">
+            <thead>
+              <tr><th>TEACHER</th><th>RFID STATUS</th><th>MARK PRESENCE</th></tr>
+            </thead>
+            <tbody>
+              {teachers.map(t => (
+                <tr key={t.id}>
+                  <td><strong>{t.name}</strong></td>
+                  <td><span className="badge badge-success">RFID ACTIVE ✅</span></td>
+                  <td>
+                    {(["PRESENT", "ABSENT", "LATE", "HALF_DAY"] as const).map(st => (
+                      <button key={st} onClick={() => handleMarkAttendance(t.id, st)} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem", fontSize: "0.7rem", margin: 2, background: attendanceRoster[t.id] === st ? "#22c55e" : "transparent", color: attendanceRoster[t.id] === st ? "#fff" : "var(--text-muted)" }}>
+                        {st}
+                      </button>
+                    ))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ════════════ MODULE 6: LEAVE APPROVALS (SCREENSHOT 1) ════════════ */}
+      {activeTeacherTab === "leaves" && (
+        <div className="glass-card" style={{ padding: "1.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Faculty Leave Management &amp; Approvals</h3>
+            <button onClick={() => setIsLeaveModalOpen(true)} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.78rem", gap: "0.35rem" }}>
+              <Plus size={15} /> Apply Faculty Leave
+            </button>
+          </div>
+
+          <div className="table-container">
+            <table className="custom-table">
               <thead>
                 <tr>
-                  <th>Teacher</th>
-                  <th>Department</th>
-                  <th>Primary Subjects</th>
-                  <th>Contact Info</th>
-                  <th>Class Teacher</th>
-                  <th>Daily Presence</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: "right" }}>Actions</th>
+                  <th style={{ whiteSpace: "nowrap" }}>TEACHER</th>
+                  <th style={{ whiteSpace: "nowrap" }}>LEAVE TYPE</th>
+                  <th style={{ whiteSpace: "nowrap" }}>REQUESTED DATES</th>
+                  <th>REASON FOR ABSENCE</th>
+                  <th>ACTION COMMENTS</th>
+                  <th style={{ whiteSpace: "nowrap" }}>PROCESS REQUEST</th>
+                  <th style={{ textAlign: "right", whiteSpace: "nowrap" }}>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredTeachers.map((t) => (
-                  <tr key={t.id}>
-                    <td style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-                      <img 
-                        src={t.avatar} 
-                        alt={t.name} 
-                        style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} 
+                {leaveRequests.map(lv => (
+                  <tr key={lv.id}>
+                    <td style={{ fontWeight: 800, color: "var(--text-heading)", whiteSpace: "nowrap" }}>{lv.teacherName}</td>
+                    <td style={{ whiteSpace: "nowrap" }}><span className="badge badge-info">{lv.type}</span></td>
+                    <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{lv.dates}</td>
+                    <td style={{ fontSize: "0.82rem" }}>{lv.reason}</td>
+                    <td>
+                      <input 
+                        type="text" 
+                        placeholder="Add review comment..." 
+                        value={lv.comment}
+                        onChange={(e) => setLeaveRequests(leaveRequests.map(x => x.id === lv.id ? { ...x, comment: e.target.value } : x))}
+                        style={{ width: "100%", padding: "0.4rem 0.65rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 6, fontSize: "0.78rem", color: "var(--text-main)" }}
                       />
-                      <div>
-                        <div style={{ fontWeight: 700, color: "#fff" }}>{t.name}</div>
-                        <div style={{ fontSize: "0.72rem", color: "var(--primary)", fontWeight: 650 }}>{t.id}</div>
-                      </div>
                     </td>
-                    <td><span className="badge badge-info" style={{ color: "#38bdf8" }}>{t.department}</span></td>
-                    <td><div style={{ fontWeight: 600, fontSize: "0.85rem" }}>{t.subject}</div></td>
-                    <td>
-                      <div style={{ fontWeight: 600, fontSize: "0.85rem" }}>{t.phone}</div>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>{t.email}</div>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {lv.status === "PENDING" ? (
+                        <div style={{ display: "inline-flex", gap: "0.35rem" }}>
+                          <button onClick={() => handleProcessLeave(lv.id, "APPROVED")} className="btn btn-primary" style={{ padding: "0.3rem 0.75rem", fontSize: "0.72rem", background: "#22c55e", border: "none" }}>
+                            Approve
+                          </button>
+                          <button onClick={() => handleProcessLeave(lv.id, "REJECTED")} className="btn btn-secondary" style={{ padding: "0.3rem 0.75rem", fontSize: "0.72rem", color: "#ef4444" }}>
+                            Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <span className={`badge ${lv.status === "APPROVED" ? "badge-success" : "badge-danger"}`} style={{ fontSize: "0.75rem" }}>
+                          {lv.status} ✅
+                        </span>
+                      )}
                     </td>
-                    <td style={{ fontWeight: 700, color: "var(--secondary)" }}>{t.classTeacher}</td>
-                    <td style={{ fontWeight: 700, color: "var(--success)" }}>{t.attendance}</td>
-                    <td>
-                      <button 
-                        onClick={() => toggleTeacherStatus(t.id)}
-                        className={`badge ${t.status === "Active" ? "badge-success" : "badge-danger"}`}
-                        style={{ border: "none", cursor: "pointer", fontSize: "0.68rem" }}
-                      >
-                        {t.status === "Active" ? "ACTIVE ✅" : "INACTIVE ❌"}
+                    <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                      <button onClick={() => handleDeleteLeave(lv.id)} className="btn btn-secondary" style={{ padding: "0.35rem 0.5rem", fontSize: "0.72rem", color: "#ef4444" }}>
+                        <Trash2 size={13} />
                       </button>
                     </td>
-                    <td style={{ textAlign: "right" }}>
-                      <div style={{ display: "flex", gap: "0.45rem", justifyContent: "flex-end" }}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedTeacherDossier(t);
-                            setActiveTeacherTab("profile");
-                          }}
-                          className="btn btn-secondary"
-                          style={{ padding: "0.38rem 0.6rem", fontSize: "0.72rem", display: "flex", alignItems: "center", gap: "0.3rem" }}
-                        >
-                          <Eye size={13} /> Profile
-                        </button>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ MODULE 7: SALARY & PAYROLL (SCREENSHOT 5) ════════════ */}
+      {activeTeacherTab === "payroll" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "1.5rem" }}>
+          <div className="glass-card" style={{ padding: "1.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Monthly Payroll &amp; Payslips</h3>
+              <button onClick={() => alert("Downloading bulk payroll ledger...")} className="btn btn-secondary" style={{ padding: "0.4rem 0.85rem", fontSize: "0.78rem" }}>
+                <Download size={14} /> Export Payroll
+              </button>
+            </div>
+
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th>TEACHER</th>
+                  <th>GROSS SALARY</th>
+                  <th>DEDUCTIONS (PF/TDS)</th>
+                  <th>NET PAYABLE</th>
+                  <th style={{ textAlign: "right" }}>PAYSLIP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {teachers.map(t => (
+                  <tr key={t.id}>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                        <img src={t.avatar} alt={t.name} style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />
+                        <strong style={{ color: "var(--text-heading)" }}>{t.name}</strong>
                       </div>
+                    </td>
+                    <td style={{ fontWeight: 700 }}>₹ {(t.baseSalary || 60000).toLocaleString("en-IN")}</td>
+                    <td style={{ color: "#ef4444", fontWeight: 700 }}>- ₹ {(t.allowance || 5000).toLocaleString("en-IN")}</td>
+                    <td style={{ color: "var(--success)", fontWeight: 900 }}>₹ {((t.baseSalary || 60000) - (t.allowance || 5000)).toLocaleString("en-IN")}</td>
+                    <td style={{ textAlign: "right" }}>
+                      <button onClick={() => setSelectedPayrollStaff(t.id)} className="btn btn-primary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", gap: "0.3rem" }}>
+                        <Printer size={12} /> View Payslip
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -402,867 +835,117 @@ export default function TeachersPage() {
             </table>
           </div>
 
-        </div>
-      )}
-
-      {/* MODULE 2: ADD TEACHER (STEPPED ONBOARDING) */}
-      {activeTeacherTab === "add" && (
-        <div className="glass-card" style={{ padding: "1.75rem", maxWidth: 640, margin: "0 auto", width: "100%" }}>
-          <div style={{ display: "flex", justify: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "#fff" }}>Stepped Faculty Onboarding Wizard</h3>
-            <span style={{ fontSize: "0.75rem", background: "var(--primary-glow)", color: "var(--primary)", padding: "0.25rem 0.65rem", borderRadius: 6, fontWeight: 700 }}>
-              Step {addStep} of 3
-            </span>
-          </div>
-
-          {/* Progress Indicators */}
-          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
-            {[1, 2, 3].map(step => (
-              <div 
-                key={step} 
-                style={{ 
-                  flex: 1, 
-                  height: 4, 
-                  background: step <= addStep ? "var(--primary)" : "rgba(255,255,255,0.06)", 
-                  borderRadius: 99,
-                  transition: "all 0.25s ease" 
-                }} 
-              />
-            ))}
-          </div>
-
-          <form onSubmit={handleAddTeacherSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-            
-            {/* Step 1: Personal & Contact */}
-            {addStep === 1 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-                <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>FULL TEACHER NAME</label>
-                  <input 
-                    type="text" 
-                    value={newTeacher.name}
-                    onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })}
-                    placeholder="e.g. Sunita Rao"
-                    required
-                    style={{ width: "100%", padding: "0.7rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                  />
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>DEPARTMENT</label>
-                    <select 
-                      value={newTeacher.department}
-                      onChange={(e) => setNewTeacher({ ...newTeacher, department: e.target.value })}
-                      style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                    >
-                      <option value="Mathematics" style={{ background: "#0b0f19" }}>Mathematics</option>
-                      <option value="Science" style={{ background: "#0b0f19" }}>Science</option>
-                      <option value="Humanities & English" style={{ background: "#0b0f19" }}>Humanities</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>PRIMARY SUBJECT STREAM</label>
-                    <input 
-                      type="text" 
-                      value={newTeacher.subject}
-                      onChange={(e) => setNewTeacher({ ...newTeacher, subject: e.target.value })}
-                      placeholder="e.g. Physics & Chemistry"
-                      required
-                      style={{ width: "100%", padding: "0.7rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>MOBILE NUMBER</label>
-                    <input 
-                      type="text" 
-                      value={newTeacher.phone}
-                      onChange={(e) => setNewTeacher({ ...newTeacher, phone: e.target.value })}
-                      placeholder="e.g. +91 98111 55667"
-                      style={{ width: "100%", padding: "0.7rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>EMAIL ADDRESS</label>
-                    <input 
-                      type="email" 
-                      value={newTeacher.email}
-                      onChange={(e) => setNewTeacher({ ...newTeacher, email: e.target.value })}
-                      placeholder="e.g. teacher@dps.edu.in"
-                      style={{ width: "100%", padding: "0.7rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                    />
-                  </div>
-                </div>
-
-                <button type="button" onClick={() => setAddStep(2)} className="btn btn-primary" style={{ padding: "0.75rem", justifyContent: "center", marginTop: "1rem" }}>
-                  Continue to Qualifications &amp; Onboarding <ChevronRight size={16} />
-                </button>
-              </div>
-            )}
-
-            {/* Step 2: Qualification & Experience */}
-            {addStep === 2 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-                <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>ACADEMIC QUALIFICATIONS</label>
-                  <input 
-                    type="text" 
-                    value={newTeacher.qualification}
-                    onChange={(e) => setNewTeacher({ ...newTeacher, qualification: e.target.value })}
-                    placeholder="e.g. M.Sc. Physics, Ph.D."
-                    style={{ width: "100%", padding: "0.7rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                  />
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>YEARS OF EXPERIENCE</label>
-                    <input 
-                      type="text" 
-                      value={newTeacher.experience}
-                      onChange={(e) => setNewTeacher({ ...newTeacher, experience: e.target.value })}
-                      placeholder="e.g. 10 Years"
-                      style={{ width: "100%", padding: "0.7rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>DATE OF JOINING</label>
-                    <input 
-                      type="date" 
-                      value={newTeacher.joiningDate}
-                      onChange={(e) => setNewTeacher({ ...newTeacher, joiningDate: e.target.value })}
-                      style={{ width: "100%", padding: "0.65rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-                  <button type="button" onClick={() => setAddStep(1)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Back</button>
-                  <button type="button" onClick={() => setAddStep(3)} className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Next</button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Salary & Compliance Checklists */}
-            {addStep === 3 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>BASE MONTHLY SALARY (INR)</label>
-                    <input 
-                      type="number" 
-                      value={newTeacher.salary}
-                      onChange={(e) => setNewTeacher({ ...newTeacher, salary: e.target.value })}
-                      style={{ width: "100%", padding: "0.7rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>MONTHLY TRANSPORT ALLOWANCE</label>
-                    <input 
-                      type="number" 
-                      value={newTeacher.allowance}
-                      onChange={(e) => setNewTeacher({ ...newTeacher, allowance: e.target.value })}
-                      style={{ width: "100%", padding: "0.7rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block" }}>COMPLIANCE DOCUMENT CHECKLIST</label>
-                  {[
-                    { id: "aadhaarCert", name: "Aadhaar Card Copy" },
-                    { id: "degreeCert", name: "Degree / Qualification Cert" },
-                    { id: "joiningLetter", name: "Joining Letter signed copy" }
-                  ].map(doc => (
-                    <label key={doc.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", cursor: "pointer", color: "var(--text-main)", padding: "0.45rem 0.75rem", background: "rgba(255,255,255,0.01)", border: "1px solid var(--border-color)", borderRadius: 6 }}>
-                      <input 
-                        type="checkbox"
-                        checked={(newTeacher as any)[doc.id]}
-                        onChange={(e) => setNewTeacher({ ...newTeacher, [doc.id]: e.target.checked })}
-                      />
-                      <span>Mark <strong>{doc.name}</strong> as Collected &amp; Verified</span>
-                    </label>
-                  ))}
-                </div>
-
-                <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-                  <button type="button" onClick={() => setAddStep(2)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Back</button>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Complete Onboarding</button>
-                </div>
-              </div>
-            )}
-
-          </form>
-        </div>
-      )}
-
-      {/* MODULE 3: TEACHER PROFILE (360° VIEW) */}
-      {activeTeacherTab === "profile" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          
-          {/* Header Card */}
-          <div className="glass-card" style={{ padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
-              <img 
-                src={selectedTeacherDossier.avatar} 
-                alt={selectedTeacherDossier.name} 
-                style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: "3px solid var(--primary)" }} 
-              />
-              <div>
-                <h2 style={{ fontSize: "1.35rem", fontWeight: 800, color: "#fff" }}>{selectedTeacherDossier.name}</h2>
-                <div style={{ fontSize: "0.85rem", color: "var(--primary)", fontWeight: 700, marginTop: 2, display: "flex", gap: "0.75rem" }}>
-                  <span>EMP ID: <strong>{selectedTeacherDossier.id}</strong></span>
-                  <span>&bull;</span>
-                  <span>Dept: <strong>{selectedTeacherDossier.department}</strong></span>
-                  <span>&bull;</span>
-                  <span>Class Teacher: <strong>{selectedTeacherDossier.classTeacher}</strong></span>
-                </div>
-              </div>
-            </div>
-
-            <span className="badge badge-success" style={{ padding: "0.4rem 0.8rem", fontSize: "0.78rem" }}>
-              STATUS: {selectedTeacherDossier.status?.toUpperCase() || "ACTIVE"}
-            </span>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "1.5rem", alignItems: "flex-start" }}>
-            
-            {/* Dossier Tabs */}
-            <div className="glass-card" style={{ padding: "0.5rem", display: "flex", flexDirection: "column", gap: "0.45rem" }}>
-              {[
-                { id: "overview", label: "Overview Info" },
-                { id: "classes", label: "Assigned Classes" },
-                { id: "attendance", label: "Presence logs" },
-                { id: "leaves", label: "Leave requested" },
-                { id: "salary", label: "Salary structure" },
-                { id: "documents", label: "Documents Vault" },
-                { id: "activity", label: "Activity Timelines" }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setDossierTab(tab.id as any)}
-                  className={`btn ${dossierTab === tab.id ? "btn-primary" : "btn-secondary"}`}
-                  style={{
-                    padding: "0.65rem 0.85rem",
-                    justifyContent: "flex-start",
-                    fontSize: "0.78rem",
-                    fontWeight: 700
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Dossier Content */}
-            <div className="glass-card" style={{ padding: "1.5rem", minHeight: 300 }}>
-              
-              {/* Overview */}
-              {dossierTab === "overview" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                  <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Faculty Qualifications &amp; Details</h4>
-                  
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                    {[
-                      { label: "QUALIFICATIONS", value: selectedTeacherDossier.qualification },
-                      { label: "PRIMARY STREAM", value: selectedTeacherDossier.subject },
-                      { label: "CONTACT PHONE", value: selectedTeacherDossier.phone },
-                      { label: "CONTACT EMAIL", value: selectedTeacherDossier.email },
-                      { label: "JOINING TENURE", value: "Since 12 July 2021" },
-                      { label: "RFID ATTENDANCE BADGE", value: "RFID-EMP-" + selectedTeacherDossier.id.split("-")[2] }
-                    ].map((item, idx) => (
-                      <div key={idx} style={{ padding: "0.85rem", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{item.label}</div>
-                        <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#fff", marginTop: 2 }}>{item.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Assigned Classes */}
-              {dossierTab === "classes" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                  <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Assigned Classes &amp; Subject Mappings</h4>
-                  
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>Class &amp; Sec</th>
-                        <th>Subject Assigned</th>
-                        <th>Lecture Hours / Week</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {mappings.filter(m => m.teacherName === selectedTeacherDossier.name).map((m, idx) => (
-                        <tr key={idx}>
-                          <td style={{ fontWeight: 700 }}>Class {m.class}-{m.section}</td>
-                          <td style={{ color: "var(--primary)", fontWeight: 700 }}>{m.subject}</td>
-                          <td>6 Hours / Week</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Presence logs */}
-              {dossierTab === "attendance" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                  <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Faculty Attendance History</h4>
-                  
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                    <div style={{ padding: "0.85rem", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>PRESENCE RATE</div>
-                      <div style={{ fontSize: "1.25rem", fontWeight: 850, color: "var(--success)", marginTop: 4 }}>{selectedTeacherDossier.attendance}</div>
-                    </div>
-
-                    <div style={{ padding: "0.85rem", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>WORKING DAYS LOG</div>
-                      <div style={{ fontSize: "1.25rem", fontWeight: 850, color: "var(--primary)", marginTop: 4 }}>160 Working Days</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Leaves */}
-              {dossierTab === "leaves" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                  <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Leave Requests History</h4>
-                  
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>Leave Type</th>
-                        <th>Dates Mapped</th>
-                        <th>Reason for Absence</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leaves.filter(l => l.teacherName === selectedTeacherDossier.name).map((l, idx) => (
-                        <tr key={idx}>
-                          <td style={{ fontWeight: 700 }}>{l.type}</td>
-                          <td>{l.dates}</td>
-                          <td>{l.reason}</td>
-                          <td>
-                            <span className={`badge ${l.status === "APPROVED" ? "badge-success" : l.status === "PENDING" ? "badge-warning" : "badge-danger"}`}>
-                              {l.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Salary */}
-              {dossierTab === "salary" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                  <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Salary Structure Ledger</h4>
-                  
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
-                    <div style={{ padding: "0.85rem", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>BASE SCALE</div>
-                      <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginTop: 4 }}>₹ {selectedTeacherDossier.baseSalary?.toLocaleString("en-IN")}</div>
-                    </div>
-                    <div style={{ padding: "0.85rem", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>ALLOWANCES MAPPED</div>
-                      <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--primary)", marginTop: 4 }}>₹ {selectedTeacherDossier.allowance?.toLocaleString("en-IN")}</div>
-                    </div>
-                    <div style={{ padding: "0.85rem", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>GROSS SALARY PACKAGE</div>
-                      <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--success)", marginTop: 4 }}>₹ {(selectedTeacherDossier.baseSalary + selectedTeacherDossier.allowance)?.toLocaleString("en-IN")}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Documents */}
-              {dossierTab === "documents" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                  <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Documents Compliance Status</h4>
-                  
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
-                    {["Aadhaar Card Copy", "PAN Card Copy", "Post-Graduation Degree Certificate", "Previous Experience Letter"].map((docName, idx) => (
-                      <div key={idx} style={{ padding: "0.85rem", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <div style={{ fontSize: "0.825rem", fontWeight: 700, color: "#fff" }}>{docName}</div>
-                          <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: 2 }}>Compliance Verified</div>
-                        </div>
-                        <span className="badge badge-success">VERIFIED ✅</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Activity Logs */}
-              {dossierTab === "activity" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                  <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Faculty Activity Logs</h4>
-                  
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-                    {[
-                      { text: "Marked attendance via RFID portal", time: "Today, 08:15 AM" },
-                      { text: "Uploaded Class 10 Homework Assignment", time: "Yesterday, 02:30 PM" },
-                      { text: "Submitted Casual Leave Request", time: "2 days ago" }
-                    ].map((log, idx) => (
-                      <div key={idx} style={{ paddingLeft: "0.75rem", borderLeft: "2.5px solid var(--primary)", display: "flex", flexDirection: "column", gap: "2px" }}>
-                        <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>{log.text}</div>
-                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>{log.time}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODULES 4 & 5: ACADEMIC ASSIGNMENTS */}
-      {activeTeacherTab === "assignments" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.25fr", gap: "1.5rem" }}>
-          
-          {/* Subject assignment */}
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <BookOpen size={18} color="var(--primary)" /> Assign Class Subject Teacher
+          {/* Payslip Preview Ledger Panel */}
+          <div className="glass-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              Payslip Preview Ledger
             </h3>
 
-            <form onSubmit={handleAddMapping} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>SELECT FACULTY</label>
-                <select 
-                  value={newMapping.teacherName}
-                  onChange={(e) => setNewMapping({ ...newMapping, teacherName: e.target.value })}
-                  style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                >
-                  {teachers.map(t => <option key={t.id} value={t.name} style={{ background: "#0b0f19" }}>{t.name}</option>)}
-                </select>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>CLASS</label>
-                  <select 
-                    value={newMapping.class}
-                    onChange={(e) => setNewMapping({ ...newMapping, class: e.target.value })}
-                    style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                  >
-                    {["12", "11", "10", "9", "8"].map(c => <option key={c} value={c} style={{ background: "#0b0f19" }}>Class {c}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>SECTION</label>
-                  <select 
-                    value={newMapping.section}
-                    onChange={(e) => setNewMapping({ ...newMapping, section: e.target.value })}
-                    style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                  >
-                    {["A", "B", "C", "D"].map(s => <option key={s} value={s} style={{ background: "#0b0f19" }}>Section {s}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>SUBJECT</label>
-                <input 
-                  type="text" 
-                  value={newMapping.subject}
-                  onChange={(e) => setNewMapping({ ...newMapping, subject: e.target.value })}
-                  placeholder="e.g. Mathematics"
-                  required
-                  style={{ width: "100%", padding: "0.7rem 0.85rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                />
-              </div>
-
-              <button type="submit" className="btn btn-primary" style={{ padding: "0.75rem", justifyContent: "center" }}>
-                Add Subject Mapping
-              </button>
-            </form>
-          </div>
-
-          {/* Class Teacher Mappings */}
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <UserCheck size={18} color="var(--secondary)" /> Class Teacher Allocations
-            </h3>
-
-            <form onSubmit={handleAssignClassTeacher} style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>CLASS</label>
-                  <select 
-                    value={newClassTeacher.class}
-                    onChange={(e) => setNewClassTeacher({ ...newClassTeacher, class: e.target.value })}
-                    style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                  >
-                    {["12", "11", "10", "9", "8"].map(c => <option key={c} value={c} style={{ background: "#0b0f19" }}>Class {c}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>SECTION</label>
-                  <select 
-                    value={newClassTeacher.section}
-                    onChange={(e) => setNewClassTeacher({ ...newClassTeacher, section: e.target.value })}
-                    style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                  >
-                    {["A", "B", "C", "D"].map(s => <option key={s} value={s} style={{ background: "#0b0f19" }}>Section {s}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>SELECT CLASS TEACHER</label>
-                <select 
-                  value={newClassTeacher.teacherName}
-                  onChange={(e) => setNewClassTeacher({ ...newClassTeacher, teacherName: e.target.value })}
-                  style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                >
-                  {teachers.map(t => <option key={t.id} value={t.name} style={{ background: "#0b0f19" }}>{t.name}</option>)}
-                </select>
-              </div>
-
-              <button type="submit" className="btn btn-primary" style={{ padding: "0.75rem", justifyContent: "center" }}>
-                Establish Class Teacher Link
-              </button>
-            </form>
-
-            {/* Mapped view */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-              <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>ACTIVE CLASS TEACHERS MATRIX</div>
-              {Object.entries(classTeachers).map(([cls, name]) => (
-                <div key={cls} style={{ display: "flex", justify: "space-between", padding: "0.55rem 0.85rem", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: 6, fontSize: "0.825rem" }}>
-                  <span style={{ fontWeight: 700 }}>Class {cls}</span>
-                  <span style={{ color: "var(--primary)", fontWeight: 750 }}>{name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* MODULE 6: DAILY ATTENDANCE MONITOR */}
-      {activeTeacherTab === "attendance" && (
-        <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <div style={{ display: "flex", justify: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <div>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Daily Faculty Attendance Roster</h3>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 2 }}>Mark present, late entry, half day, or sick leave records for teachers today.</p>
-            </div>
-            <button onClick={() => alert("Daily presence reports exported.")} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "0.4rem 0.8rem" }}>Export Daily Roster</button>
-          </div>
-
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th>Teacher</th>
-                <th>RFID Status</th>
-                <th>Mark Presence</th>
-                <th style={{ textAlign: "right" }}>Logs</th>
-              </tr>
-            </thead>
-            <tbody>
-              {teachers.map((t) => {
-                const currentStatus = attendanceLogs[t.id] || "Present";
-                return (
-                  <tr key={t.id}>
-                    <td style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                      <img src={t.avatar} alt="" style={{ width: 32, height: 32, borderRadius: "50%" }} />
-                      <div>
-                        <div style={{ fontWeight: 700 }}>{t.name}</div>
-                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>{t.id}</div>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="badge badge-success">RFID ACTIVE ✅</span>
-                    </td>
-                    <td>
-                      <div style={{ display: "flex", gap: "0.35rem" }}>
-                        {['Present', 'Absent', 'Late Entry', 'Half Day'].map(status => (
-                          <button
-                            key={status}
-                            onClick={() => setAttendanceLogs(prev => ({ ...prev, [t.id]: status as any }))}
-                            className={`btn ${currentStatus === status ? "btn-primary" : "btn-secondary"}`}
-                            style={{ 
-                              padding: "0.3rem 0.6rem", 
-                              fontSize: "0.7rem",
-                              borderRadius: "var(--radius-sm)"
-                            }}
-                          >
-                            {status}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
-                    <td style={{ textAlign: "right", fontSize: "0.75rem", color: "var(--text-dim)" }}>
-                      Updated at 08:30 AM
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* MODULE 7: LEAVE MANAGEMENT */}
-      {activeTeacherTab === "leaves" && (
-        <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Faculty Leave Management &amp; Approvals</h3>
-          
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th>Teacher</th>
-                <th>Leave Type</th>
-                <th>Requested Dates</th>
-                <th>Reason for Absence</th>
-                <th>Action Comments</th>
-                <th style={{ textAlign: "right" }}>Process Request</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaves.map((l) => (
-                <tr key={l.id}>
-                  <td style={{ fontWeight: 700, color: "#fff" }}>{l.teacherName}</td>
-                  <td><span className="badge badge-info">{l.type}</span></td>
-                  <td style={{ fontWeight: 600 }}>{l.dates}</td>
-                  <td style={{ fontSize: "0.85rem", color: "var(--text-main)" }}>{l.reason}</td>
-                  <td>
-                    {l.status === "PENDING" ? (
-                      <input 
-                        type="text" 
-                        placeholder="Add review comment..."
-                        value={leaveComments[l.id] || ""}
-                        onChange={(e) => setLeaveComments({ ...leaveComments, [l.id]: e.target.value })}
-                        style={{ padding: "0.4rem 0.6rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: 4, color: "#fff", fontSize: "0.78rem" }}
-                      />
-                    ) : (
-                      <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{l.comment || "No comments"}</span>
-                    )}
-                  </td>
-                  <td style={{ textAlign: "right" }}>
-                    {l.status === "PENDING" ? (
-                      <div style={{ display: "flex", gap: "0.4rem", justifyContent: "flex-end" }}>
-                        <button 
-                          onClick={() => handleLeaveAction(l.id, "APPROVED")}
-                          className="btn btn-primary" 
-                          style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem" }}
-                        >
-                          Approve
-                        </button>
-                        <button 
-                          onClick={() => handleLeaveAction(l.id, "REJECTED")}
-                          style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.25)", color: "#ef4444", padding: "0.35rem 0.65rem", borderRadius: "var(--radius-sm)", cursor: "pointer", fontSize: "0.72rem" }}
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    ) : (
-                      <span className={`badge ${l.status === "APPROVED" ? "badge-success" : "badge-danger"}`} style={{ fontSize: "0.72rem" }}>
-                        {l.status}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* MODULE 8: SALARY & PAYROLL */}
-      {activeTeacherTab === "payroll" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: "1.5rem" }}>
-          
-          {/* Payroll structure list */}
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Monthly Payroll & Payslips</h3>
-            
-            <table className="custom-table">
-              <thead>
-                <tr>
-                  <th>Teacher</th>
-                  <th>Gross Salary</th>
-                  <th>Deductions (PF/TDS)</th>
-                  <th>Net Payable</th>
-                  <th style={{ textAlign: "right" }}>Payslip</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teachers.map((t) => {
-                  const gross = t.baseSalary + t.allowance;
-                  const deductions = Math.floor(gross * 0.10); // 10% PF/Tax mockup
-                  const net = gross - deductions;
-                  return (
-                    <tr key={t.id}>
-                      <td style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
-                        <img src={t.avatar} alt="" style={{ width: 28, height: 28, borderRadius: "50%" }} />
-                        <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{t.name}</div>
-                      </td>
-                      <td style={{ fontWeight: 650 }}>₹ {gross.toLocaleString("en-IN")}</td>
-                      <td style={{ color: "#ef4444" }}>- ₹ {deductions.toLocaleString("en-IN")}</td>
-                      <td style={{ fontWeight: 700, color: "var(--success)" }}>₹ {net.toLocaleString("en-IN")}</td>
-                      <td style={{ textAlign: "right" }}>
-                        <button 
-                          onClick={() => {
-                            setSelectedTeacherDossier(t);
-                            alert(`Payslip for ${t.name} generated successfully. Ready to download.`);
-                          }}
-                          className="btn btn-secondary" 
-                          style={{ padding: "0.3rem 0.6rem", fontSize: "0.72rem", gap: "0.3rem" }}
-                        >
-                          <Printer size={12} /> View Payslip
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Payslip preview */}
-          <div className="glass-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", justify: "space-between" }}>
-            <div>
-              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Payslip Preview Ledger</h3>
-              
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "0.85rem" }}>
-                <div style={{ display: "flex", justify: "space-between" }}>
-                  <span style={{ color: "var(--text-muted)" }}>FACULTY NAME</span>
-                  <span style={{ fontWeight: 700, color: "#fff" }}>{selectedTeacherDossier.name}</span>
-                </div>
-                <div style={{ display: "flex", justify: "space-between" }}>
-                  <span style={{ color: "var(--text-muted)" }}>DESIGNATION</span>
-                  <span style={{ fontWeight: 700, color: "#fff" }}>{selectedTeacherDossier.department} Teacher</span>
-                </div>
-                <div style={{ display: "flex", justify: "space-between" }}>
-                  <span style={{ color: "var(--text-muted)" }}>SALARY MONTH</span>
-                  <span style={{ fontWeight: 700, color: "var(--primary)" }}>July 2026</span>
-                </div>
-                
-                <div style={{ borderTop: "1px solid var(--border-color)", margin: "0.5rem 0" }} />
-                
-                <div style={{ display: "flex", justify: "space-between" }}>
-                  <span>Base Scale Salary</span>
-                  <span style={{ fontWeight: 700 }}>₹ {selectedTeacherDossier.baseSalary?.toLocaleString("en-IN")}</span>
-                </div>
-                <div style={{ display: "flex", justify: "space-between" }}>
-                  <span>Transport Allowance</span>
-                  <span style={{ fontWeight: 700 }}>₹ {selectedTeacherDossier.allowance?.toLocaleString("en-IN")}</span>
-                </div>
-                <div style={{ display: "flex", justify: "space-between", color: "#ef4444" }}>
-                  <span>Provident Fund (PF) Deductions</span>
-                  <span style={{ fontWeight: 700 }}>- ₹ {(selectedTeacherDossier.baseSalary * 0.08)?.toLocaleString("en-IN")}</span>
-                </div>
-
-                <div style={{ borderTop: "1px solid var(--border-color)", margin: "0.5rem 0" }} />
-
-                <div style={{ display: "flex", justify: "space-between", fontSize: "1.05rem", fontWeight: 800 }}>
-                  <span style={{ color: "var(--success)" }}>NET PAYABLE OUT</span>
-                  <span style={{ color: "var(--success)" }}>₹ {(selectedTeacherDossier.baseSalary + selectedTeacherDossier.allowance - selectedTeacherDossier.baseSalary * 0.08)?.toLocaleString("en-IN")}</span>
-                </div>
-              </div>
+            <div style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div>FACULTY NAME: <strong style={{ color: "var(--text-heading)" }}>{currentPayrollTeacher?.name}</strong></div>
+              <div>DESIGNATION: <strong>{currentPayrollTeacher?.department} Teacher</strong></div>
+              <div>SALARY MONTH: <strong>July 2026</strong></div>
             </div>
 
-            <button onClick={() => alert("Downloading PDF Payslip...")} className="btn btn-primary" style={{ marginTop: "1.5rem", justifyContent: "center", width: "100%" }}>
+            <div style={{ background: "var(--bg-input)", padding: "1rem", borderRadius: 10, border: "1px solid var(--border-color)", fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span>Base Scale Salary</span> <strong>₹ {(currentPayrollTeacher?.baseSalary || 60000).toLocaleString("en-IN")}</strong></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span>Transport Allowance</span> <strong>₹ 5,000</strong></div>
+              <div style={{ display: "flex", justifyContent: "space-between", color: "#ef4444" }}><span>Provident Fund (PF) Deductions</span> <strong>- ₹ 4,800</strong></div>
+            </div>
+
+            <div style={{ background: "rgba(34, 197, 94, 0.12)", padding: "0.85rem", borderRadius: 8, border: "1px solid rgba(34, 197, 94, 0.3)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--success)" }}>NET PAYABLE OUT</span>
+              <strong style={{ fontSize: "1.1rem", color: "var(--success)", fontWeight: 900 }}>₹ {((currentPayrollTeacher?.baseSalary || 60000) + 5000 - 4800).toLocaleString("en-IN")}</strong>
+            </div>
+
+            <button onClick={() => window.print()} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "0.65rem" }}>
               Download PDF Invoice
             </button>
           </div>
-
         </div>
       )}
 
-      {/* MODULE 10: TEACHER TIMETABLE */}
+      {/* ════════════ MODULE 8: WEEKLY TIMETABLES (SCREENSHOT 4) ════════════ */}
       {activeTeacherTab === "timetable" && (
-        <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <div style={{ display: "flex", justify: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Faculty Weekly Timetable Slots</h3>
-            <select 
-              value={selectedTeacherDossier.id}
-              onChange={(e) => {
-                const match = teachers.find(t => t.id === e.target.value);
-                if (match) setSelectedTeacherDossier(match);
-              }}
-              style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-            >
-              {teachers.map(t => <option key={t.id} value={t.id} style={{ background: "#0b0f19" }}>{t.name}</option>)}
-            </select>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <div className="glass-card" style={{ padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--text-heading)" }}>Faculty Weekly Timetable Slots:</span>
+              <select value={selectedTimetableTeacher} onChange={(e) => setSelectedTimetableTeacher(e.target.value)} style={{ padding: "0.5rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontWeight: 700 }}>
+                {teachers.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+            <button onClick={handleOpenAddSlot} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.78rem", gap: "0.35rem" }}>
+              <Plus size={15} /> Add Timetable Slot
+            </button>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1rem" }}>
-            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, idx) => (
-              <div key={idx} style={{ padding: "1rem", background: "rgba(255,255,255,0.01)", border: "1px solid var(--border-color)", borderRadius: 10 }}>
-                <div style={{ fontWeight: 800, fontSize: "0.85rem", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.4rem", marginBottom: "0.75rem", textTransform: "uppercase" }}>{day}</div>
-                
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                  <div style={{ padding: "0.55rem", background: "rgba(255,255,255,0.03)", borderRadius: 6, fontSize: "0.75rem" }}>
-                    <div style={{ fontWeight: 700, color: "#fff" }}>08:30 – 09:15</div>
-                    <div style={{ color: "var(--text-muted)" }}>Class 10-A (Math)</div>
-                  </div>
-                  <div style={{ padding: "0.55rem", background: "rgba(255,255,255,0.03)", borderRadius: 6, fontSize: "0.75rem" }}>
-                    <div style={{ fontWeight: 700, color: "#fff" }}>10:00 – 10:45</div>
-                    <div style={{ color: "var(--text-muted)" }}>Class 9-B (Physics)</div>
-                  </div>
-                  <div style={{ padding: "0.55rem", background: "rgba(255,255,255,0.03)", borderRadius: 6, fontSize: "0.75rem" }}>
-                    <div style={{ fontWeight: 700, color: "#fff" }}>11:30 – 12:15</div>
-                    <div style={{ color: "var(--text-muted)" }}>Class 8-C (Science)</div>
-                  </div>
+            {(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] as const).map(day => {
+              const daySlots = timetableSlots.filter(s => s.teacherName === selectedTimetableTeacher && s.day === day);
+              return (
+                <div key={day} className="glass-card" style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <h4 style={{ fontSize: "0.85rem", fontWeight: 900, color: "var(--primary)", textTransform: "uppercase", margin: 0, borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>{day}</h4>
+                  
+                  {daySlots.map(slot => (
+                    <div key={slot.id} style={{ background: "var(--bg-input)", padding: "0.65rem", borderRadius: 8, border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "0.25rem", position: "relative" }}>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-heading)" }}>{slot.timeSlot}</div>
+                      <div style={{ fontSize: "0.72rem", color: "var(--primary)" }}>{slot.classSection} ({slot.subject})</div>
+                      
+                      <div style={{ position: "absolute", top: 4, right: 4, display: "flex", gap: 4 }}>
+                        <button onClick={() => handleOpenEditSlot(slot)} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer" }} title="Edit Slot">
+                          <Edit3 size={12} />
+                        </button>
+                        <button onClick={() => handleDeleteTimetableSlot(slot.id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer" }} title="Delete Slot">
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* MODULE 11: PERFORMANCE RATINGS */}
+      {/* ════════════ MODULE 9: PERFORMANCE METRICS (SCREENSHOT 3) ════════════ */}
       {activeTeacherTab === "performance" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem" }}>Faculty Annual Performance Ratings</h3>
-          
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1.25rem", color: "var(--text-heading)" }}>Faculty Annual Performance Ratings</h3>
+
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Teacher</th>
-                <th>Annual Attendance</th>
-                <th>Homework Completion</th>
-                <th>Feedback Rating</th>
-                <th>Status Index</th>
+                <th>TEACHER</th>
+                <th>ANNUAL ATTENDANCE</th>
+                <th>HOMEWORK COMPLETION</th>
+                <th>FEEDBACK RATING</th>
+                <th>STATUS INDEX</th>
+                <th style={{ textAlign: "right" }}>UPDATE RATING</th>
               </tr>
             </thead>
             <tbody>
-              {teachers.map((t) => (
-                <tr key={t.id}>
-                  <td style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
-                    <img src={t.avatar} alt="" style={{ width: 28, height: 28, borderRadius: "50%" }} />
-                    <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{t.name}</div>
-                  </td>
-                  <td style={{ fontWeight: 700, color: "var(--success)" }}>{t.attendance} Present</td>
-                  <td style={{ fontWeight: 700, color: "var(--primary)" }}>{t.homeworkRate} Submissions</td>
+              {performanceMetrics.map(pm => (
+                <tr key={pm.id}>
                   <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                      <Star size={14} color="#f59e0b" fill="#f59e0b" />
-                      <span style={{ fontWeight: 800 }}>{t.rating} / 5</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                      <img src={pm.avatar} alt={pm.teacherName} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />
+                      <strong style={{ color: "var(--text-heading)" }}>{pm.teacherName}</strong>
                     </div>
                   </td>
-                  <td>
-                    <span className="badge badge-success">EXCELLENT PERFORMANCE ✅</span>
+                  <td style={{ fontWeight: 700 }}>{pm.attendance}</td>
+                  <td style={{ fontWeight: 700 }}>{pm.homework}</td>
+                  <td style={{ fontWeight: 900, color: "#f59e0b" }}>⭐ {pm.rating} / 5</td>
+                  <td><span className="badge badge-success">{pm.statusIndex} ✅</span></td>
+                  <td style={{ textAlign: "right" }}>
+                    <div style={{ display: "inline-flex", gap: "0.35rem" }}>
+                      {[4.5, 4.8, 5.0].map(r => (
+                        <button key={r} onClick={() => handleUpdateRating(pm.id, r)} className="btn btn-secondary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.7rem" }}>
+                          {r} ⭐
+                        </button>
+                      ))}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -1271,63 +954,197 @@ export default function TeachersPage() {
         </div>
       )}
 
-      {/* MODULE 12: TEACHER SETTINGS */}
+      {/* ════════════ MODULE 10: ACCESS & SETTINGS (SCREENSHOT 2) ════════════ */}
       {activeTeacherTab === "settings" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
           
-          {/* Access Rules */}
+          {/* Left Panel: Permissions */}
           <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem" }}>Faculty ERP Roles &amp; Permissions</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>Faculty ERP Roles &amp; Permissions</h3>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", marginBottom: "1.5rem" }}>
               {[
-                { label: "Allow Homework uploads & assignment creation", checked: true },
-                { label: "Allow student grade sheet edits & results entry", checked: true },
-                { label: "Allow teacher-to-parent direct messaging access", checked: true },
-                { label: "Allow payroll/payslip billing overview logs access", checked: false }
-              ].map((perm, idx) => (
-                <label key={idx} style={{ display: "flex", alignItems: "center", gap: "0.55rem", fontSize: "0.85rem", cursor: "pointer", color: "var(--text-main)" }}>
-                  <input type="checkbox" defaultChecked={perm.checked} />
-                  <span>{perm.label}</span>
+                { label: "Allow Homework uploads & assignment creation", key: "homework" as const },
+                { label: "Allow student grade sheet edits & results entry", key: "grades" as const },
+                { label: "Allow teacher-to-parent direct messaging access", key: "messaging" as const },
+                { label: "Allow payroll/payslip billing overview logs access", key: "payrollLogs" as const }
+              ].map(p => (
+                <label key={p.key} style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.85rem", color: "var(--text-main)", cursor: "pointer" }}>
+                  <input 
+                    type="checkbox" 
+                    checked={permissions[p.key]}
+                    onChange={(e) => setPermissions({ ...permissions, [p.key]: e.target.checked })}
+                    style={{ width: 16, height: 16, accentColor: "var(--primary)", cursor: "pointer" }}
+                  />
+                  <span>{p.label}</span>
                 </label>
               ))}
-
-              <button onClick={() => alert("ERP Permissions updated.")} className="btn btn-primary" style={{ padding: "0.75rem", justifyContent: "center", marginTop: "1rem" }}>
-                Update Permission Matrix
-              </button>
             </div>
+
+            <button onClick={() => alert("Faculty Permission Matrix updated in database!")} className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>
+              Update Permission Matrix
+            </button>
           </div>
 
-          {/* Login Access / Password Reset */}
+          {/* Right Panel: Login Credentials */}
           <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem" }}>Faculty Portal Login &amp; Credentials</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>Faculty Portal Login &amp; Credentials</h3>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
               <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>SELECT FACULTY MEMBER</label>
-                <select 
-                  value={selectedTeacherDossier.id}
-                  onChange={(e) => {
-                    const match = teachers.find(t => t.id === e.target.value);
-                    if (match) setSelectedTeacherDossier(match);
-                  }}
-                  style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem", outline: "none" }}
-                >
-                  {teachers.map(t => <option key={t.id} value={t.id} style={{ background: "#0b0f19" }}>{t.name}</option>)}
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SELECT FACULTY MEMBER</label>
+                <select value={selectedAccessFaculty} onChange={(e) => setSelectedAccessFaculty(e.target.value)} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  {teachers.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
                 </select>
               </div>
 
               <div style={{ display: "flex", gap: "0.75rem" }}>
-                <button onClick={() => alert(`ERP login access disabled for ${selectedTeacherDossier.name}`)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center", fontSize: "0.8rem", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#ef4444" }}>
-                  Disable ERP Access
+                <button onClick={() => { setErpAccessDisabled(!erpAccessDisabled); alert(`ERP Access ${!erpAccessDisabled ? 'disabled' : 'enabled'} for ${selectedAccessFaculty}`); }} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center", color: erpAccessDisabled ? "var(--success)" : "#ef4444" }}>
+                  {erpAccessDisabled ? "Enable ERP Access" : "Disable ERP Access"}
                 </button>
-                <button onClick={() => alert(`Password reset link sent to ${selectedTeacherDossier.email}`)} className="btn btn-primary" style={{ flex: 1, justifyContent: "center", fontSize: "0.8rem" }}>
+                
+                <button onClick={() => alert(`Password reset link dispatched to email of ${selectedAccessFaculty}!`)} className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>
                   Send Password Reset
                 </button>
               </div>
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* ════════════ EDIT TEACHER MODAL ════════════ */}
+      {isEditModalOpen && editTeacherForm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "560px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Edit3 size={20} color="var(--primary)" /> Edit Faculty Member Profile
+              </h3>
+              <button onClick={() => setIsEditModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSaveEditTeacher} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FULL TEACHER NAME</label>
+                <input type="text" value={editTeacherForm.name} onChange={(e) => setEditTeacherForm({ ...editTeacherForm, name: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DEPARTMENT</label>
+                  <select value={editTeacherForm.department} onChange={(e) => setEditTeacherForm({ ...editTeacherForm, department: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Science">Science</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>PRIMARY SUBJECT STREAM</label>
+                  <input type="text" value={editTeacherForm.subject} onChange={(e) => setEditTeacherForm({ ...editTeacherForm, subject: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center", gap: "0.4rem" }}><Save size={16} /> Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ ADD LEAVE MODAL ════════════ */}
+      {isLeaveModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "520px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Apply Faculty Leave Application</h3>
+              <button onClick={() => setIsLeaveModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleApplyLeave} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SELECT FACULTY MEMBER</label>
+                <select value={newLeaveForm.teacherName} onChange={(e) => setNewLeaveForm({ ...newLeaveForm, teacherName: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  {teachers.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>LEAVE TYPE</label>
+                <select value={newLeaveForm.type} onChange={(e) => setNewLeaveForm({ ...newLeaveForm, type: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  <option value="Casual Leave">Casual Leave</option>
+                  <option value="Medical Leave">Medical Leave</option>
+                  <option value="Earned Leave">Earned Leave</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>REQUESTED DATES</label>
+                <input type="text" value={newLeaveForm.dates} onChange={(e) => setNewLeaveForm({ ...newLeaveForm, dates: e.target.value })} placeholder="e.g. 10 Aug - 12 Aug (3 Days)" style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>REASON FOR ABSENCE</label>
+                <textarea rows={2} value={newLeaveForm.reason} onChange={(e) => setNewLeaveForm({ ...newLeaveForm, reason: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Submit Application</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ ADD / EDIT TIMETABLE SLOT MODAL ════════════ */}
+      {isTimetableModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "480px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>
+                {editingSlotId ? "Edit Timetable Slot" : `Add Timetable Slot for ${selectedTimetableTeacher}`}
+              </h3>
+              <button onClick={() => setIsTimetableModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSaveTimetableSlot} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DAY OF WEEK</label>
+                <select value={newSlotForm.day} onChange={(e) => setNewSlotForm({ ...newSlotForm, day: e.target.value as any })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>PERIOD TIME SLOT</label>
+                <input type="text" value={newSlotForm.timeSlot} onChange={(e) => setNewSlotForm({ ...newSlotForm, timeSlot: e.target.value })} placeholder="08:30 - 09:15" style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>CLASS &amp; SECTION</label>
+                  <input type="text" value={newSlotForm.classSection} onChange={(e) => setNewSlotForm({ ...newSlotForm, classSection: e.target.value })} placeholder="Class 10-A" style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SUBJECT</label>
+                  <input type="text" value={newSlotForm.subject} onChange={(e) => setNewSlotForm({ ...newSlotForm, subject: e.target.value })} placeholder="Math" style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setIsTimetableModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>
+                  {editingSlotId ? "Update Slot" : "Save Period Slot"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

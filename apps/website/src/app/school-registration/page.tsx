@@ -40,10 +40,11 @@ export default function SchoolRegistrationPage() {
       });
 
       if (data.success) {
-        setSchoolCode(data.data?.schoolCode || data.schoolCode || `${schoolName.substring(0, 3).toUpperCase()}-${city.substring(0, 3).toUpperCase()}`);
+        setSchoolCode(data.data?.schoolCode || data.schoolCode || `${schoolName.substring(0, 3).toUpperCase()}-${city ? city.substring(0, 3).toUpperCase() : "DEL"}`);
         setStep(3); // Registration success screen
       } else {
-        setErrorMsg(data.message || "Failed to complete registration.");
+        const errorDetails = (data as any).errors && Array.isArray((data as any).errors) ? (data as any).errors.join(". ") : null;
+        setErrorMsg(errorDetails || data.message || "Failed to complete registration.");
       }
     } catch (err) {
       // Fallback code generator for demo testing

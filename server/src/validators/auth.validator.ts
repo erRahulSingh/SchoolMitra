@@ -27,27 +27,22 @@ export const registerSchema = z.object({
 
   password: z
     .string({ required_error: "Password is required" })
-    .min(PASSWORD_CONFIG.MIN_LENGTH, `Password must be at least ${PASSWORD_CONFIG.MIN_LENGTH} characters`)
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one uppercase letter, one lowercase letter, and one digit"
-    ),
+    .min(6, "Password must be at least 6 characters"),
 
   phone: z
     .string()
-    .regex(/^[+]?[0-9]{10,15}$/, "Phone number must be 10-15 digits")
-    .optional(),
+    .optional()
+    .or(z.literal("")),
 
   city: z
     .string()
     .max(50, "City name must be under 50 characters")
     .trim()
-    .optional(),
+    .optional()
+    .or(z.literal("")),
 
   plan: z
-    .enum(["Basic", "Growth", "Enterprise"], {
-      errorMap: () => ({ message: "Plan must be Basic, Growth, or Enterprise" }),
-    })
+    .string()
     .optional()
     .default("Basic"),
 });

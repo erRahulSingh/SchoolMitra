@@ -39,7 +39,7 @@ const schoolSchema = new Schema({
   primaryColor: { type: String, default: "#8b5cf6" },
   plan: {
     type: String,
-    enum: ["Basic", "Growth", "Enterprise"],
+    enum: ["Basic", "Growth", "Enterprise", "Standard", "Pro", "Custom"],
     default: "Basic",
   },
   status: {

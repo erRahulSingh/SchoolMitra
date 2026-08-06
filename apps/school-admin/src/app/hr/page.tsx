@@ -1,23 +1,154 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Briefcase, DollarSign, Calendar, FileText, Download, Printer, 
-  CheckCircle2, AlertCircle, Users, Plus, X, Search, Filter, Shield, Award, Receipt, Building2
+  CheckCircle2, AlertCircle, Users, Plus, X, Search, Filter, Shield, Award, Receipt, Building2, Edit3, Trash2, Save
 } from "lucide-react";
+
+interface PayrollRecord {
+  id: string;
+  name: string;
+  role: string;
+  dept: string;
+  base: number;
+  hra: number;
+  ta: number;
+  pf: number;
+  net: number;
+}
 
 export default function HrPage() {
   const [activeTab, setActiveTab] = useState<"payroll" | "leaves" | "pf_compliance" | "claims">("payroll");
   const [selectedStaffPayslip, setSelectedStaffPayslip] = useState<string | null>(null);
 
-  // ── 1. Payroll Ledger State ──
-  const [staffPayroll] = useState([
+  // ── 1. Dynamic Payroll Ledger State ──
+  const [staffPayroll, setStaffPayroll] = useState<PayrollRecord[]>([
     { id: "EMP-101", name: "Sunita Rao", role: "Senior Mathematics Faculty", dept: "Academics", base: 45000, hra: 12000, ta: 3000, pf: 5400, net: 54600 },
     { id: "EMP-102", name: "Dr. Vikram Malhotra", role: "Head of Science Dept", dept: "Academics", base: 55000, hra: 15000, ta: 4000, pf: 6600, net: 67400 },
     { id: "EMP-103", name: "Ramesh Sharma", role: "Chief Accountant", dept: "Finance", base: 40000, hra: 10000, ta: 2500, pf: 4800, net: 47700 },
     { id: "EMP-104", name: "Ram Singh", role: "Senior Bus Pilot", dept: "Transport", base: 25000, hra: 6000, ta: 2000, pf: 3000, net: 30000 },
     { id: "EMP-105", name: "Kavita Verma", role: "Head Librarian", dept: "Library", base: 35000, hra: 8000, ta: 2000, pf: 4200, net: 40800 }
   ]);
+
+  // Load / Save Payroll LocalStorage Persistence
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("sm_hr_payroll");
+      if (cached) {
+        setStaffPayroll(JSON.parse(cached));
+      }
+    } catch (e) {}
+  }, []);
+
+  const savePayrollState = (updatedList: PayrollRecord[]) => {
+    setStaffPayroll(updatedList);
+    try {
+      localStorage.setItem("sm_hr_payroll", JSON.stringify(updatedList));
+    } catch (e) {}
+  };
+
+  // Add / Edit Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEmpId, setEditingEmpId] = useState<string | null>(null);
+
+  const [formState, setFormState] = useState({
+    name: "",
+    role: "Teacher / Faculty",
+    dept: "Academics",
+    base: 40000,
+    hra: 10000,
+    ta: 3000,
+    pf: 4800
+  });
+
+  // Open Modal for Add New
+  const handleOpenAddModal = () => {
+    setEditingEmpId(null);
+    setFormState({
+      name: "",
+      role: "Senior Faculty",
+      dept: "Academics",
+      base: 45000,
+      hra: 10000,
+      ta: 3000,
+      pf: 5400
+    });
+    setIsModalOpen(true);
+  };
+
+  // Open Modal for Edit
+  const handleOpenEditModal = (emp: PayrollRecord) => {
+    setEditingEmpId(emp.id);
+    setFormState({
+      name: emp.name,
+      role: emp.role,
+      dept: emp.dept,
+      base: emp.base,
+      hra: emp.hra,
+      ta: emp.ta,
+      pf: emp.pf
+    });
+    setIsModalOpen(true);
+  };
+
+  // Auto-calculate Net Salary
+  const calculatedNet = Math.max(0, (Number(formState.base) || 0) + (Number(formState.hra) || 0) + (Number(formState.ta) || 0) - (Number(formState.pf) || 0));
+
+  // Submit Add / Edit Form
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formState.name) return;
+
+    if (editingEmpId) {
+      // Edit existing staff payroll
+      const updated = staffPayroll.map(emp => {
+        if (emp.id === editingEmpId) {
+          return {
+            ...emp,
+            name: formState.name,
+            role: formState.role,
+            dept: formState.dept,
+            base: Number(formState.base),
+            hra: Number(formState.hra),
+            ta: Number(formState.ta),
+            pf: Number(formState.pf),
+            net: calculatedNet
+          };
+        }
+        return emp;
+      });
+      savePayrollState(updated);
+      alert(`Salary record updated successfully for ${formState.name}!`);
+    } else {
+      // Add new staff payroll
+      const newEmpId = `EMP-${Math.floor(100 + Math.random() * 900)}`;
+      const newRecord: PayrollRecord = {
+        id: newEmpId,
+        name: formState.name,
+        role: formState.role,
+        dept: formState.dept,
+        base: Number(formState.base),
+        hra: Number(formState.hra),
+        ta: Number(formState.ta),
+        pf: Number(formState.pf),
+        net: calculatedNet
+      };
+      const updated = [newRecord, ...staffPayroll];
+      savePayrollState(updated);
+      alert(`New staff salary record added for ${formState.name} (${newEmpId})!`);
+    }
+
+    setIsModalOpen(false);
+  };
+
+  // Delete Salary Record
+  const handleDeletePayroll = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to remove salary record for ${name}?`)) {
+      const updated = staffPayroll.filter(s => s.id !== id);
+      savePayrollState(updated);
+    }
+  };
 
   // ── 2. Staff Leave Balance Ledgers State ──
   const [leaveBalances] = useState([
@@ -52,20 +183,24 @@ export default function HrPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       
       {/* PAGE HEADER */}
-      <div className="page-header">
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-heading)", display: "flex", alignItems: "center", gap: "0.5rem", margin: 0 }}>
             HR &amp; Payroll Engine <Briefcase size={24} color="var(--primary)" />
           </h1>
-          <p style={{ color: "var(--text-muted)", marginTop: 2, fontSize: "0.85rem" }}>
-            Staff payroll ledgers, automated Provident Fund (PF 12%) calculations, leave balance tracking, and printable payslip downloads.
+          <p style={{ color: "var(--text-muted)", marginTop: 2, fontSize: "0.85rem", margin: 0 }}>
+            Manage staff salary structure, add/edit payroll records, automated PF (12%) calculations, and printable payslip downloads.
           </p>
         </div>
 
-        <button onClick={() => alert("Executing monthly payroll disbursement run...")} className="btn btn-primary" style={{ padding: "0.75rem 1.25rem" }}>
-          <DollarSign size={18} />
-          <span>Execute Monthly Payroll</span>
-        </button>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <button onClick={handleOpenAddModal} className="btn btn-primary" style={{ padding: "0.6rem 1.1rem", fontSize: "0.85rem", gap: "0.4rem" }}>
+            <Plus size={16} /> <span>Add Staff Payroll</span>
+          </button>
+          <button onClick={() => alert("Executing monthly payroll disbursement run...")} className="btn btn-secondary" style={{ padding: "0.6rem 1.1rem", fontSize: "0.85rem", gap: "0.4rem" }}>
+            <DollarSign size={16} /> <span>Execute Monthly Disbursement</span>
+          </button>
+        </div>
       </div>
 
       {/* ════════════ 4 TABS SWITCHER CONSOLE ════════════ */}
@@ -112,47 +247,81 @@ export default function HrPage() {
       {/* MODULE 1: PAYROLL LEDGER & SALARY SLIPS */}
       {activeTab === "payroll" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <div style={{ display: "flex", justify: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Staff Monthly Salary Ledger — July 2026</h3>
-            <button onClick={() => alert("Downloading bulk salary ledger excel sheet...")} className="btn btn-secondary" style={{ padding: "0.4rem 0.88rem", fontSize: "0.78rem" }}>
-              <Download size={14} /> Export Payroll Ledger
-            </button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Staff Monthly Salary Ledger — Session 2026</h3>
+            
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+              <button onClick={handleOpenAddModal} className="btn btn-primary" style={{ padding: "0.45rem 0.9rem", fontSize: "0.78rem", gap: "0.35rem" }}>
+                <Plus size={14} /> Add New Salary Record
+              </button>
+              <button onClick={() => alert("Exporting salary ledger to CSV Excel...")} className="btn btn-secondary" style={{ padding: "0.45rem 0.9rem", fontSize: "0.78rem", gap: "0.35rem" }}>
+                <Download size={14} /> Export Payroll Ledger
+              </button>
+            </div>
           </div>
 
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th>Employee Name</th>
-                <th>Designation Role</th>
-                <th>Base Salary</th>
-                <th>HRA + Allowances</th>
-                <th>PF Deduction (12%)</th>
-                <th>Net Payable</th>
-                <th style={{ textAlign: "right" }}>Payslip Card</th>
-              </tr>
-            </thead>
-            <tbody>
-              {staffPayroll.map((emp) => (
-                <tr key={emp.id}>
-                  <td style={{ fontWeight: 700, color: "#fff" }}>{emp.name}</td>
-                  <td>{emp.role}</td>
-                  <td>₹ {emp.base.toLocaleString("en-IN")}</td>
-                  <td>₹ {(emp.hra + emp.ta).toLocaleString("en-IN")}</td>
-                  <td style={{ color: "#ef4444", fontWeight: 650 }}>- ₹ {emp.pf.toLocaleString("en-IN")}</td>
-                  <td style={{ color: "var(--success)", fontWeight: 800 }}>₹ {emp.net.toLocaleString("en-IN")}</td>
-                  <td style={{ textAlign: "right" }}>
-                    <button 
-                      onClick={() => setSelectedStaffPayslip(emp.id)}
-                      className="btn btn-primary"
-                      style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem" }}
-                    >
-                      <Printer size={12} /> View Payslip
-                    </button>
-                  </td>
+          <div className="table-container">
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th style={{ whiteSpace: "nowrap" }}>Employee Name</th>
+                  <th style={{ whiteSpace: "nowrap" }}>Role &amp; Department</th>
+                  <th style={{ whiteSpace: "nowrap" }}>Base Salary</th>
+                  <th style={{ whiteSpace: "nowrap" }}>HRA + TA Allowances</th>
+                  <th style={{ whiteSpace: "nowrap" }}>PF Deduction (12%)</th>
+                  <th style={{ whiteSpace: "nowrap" }}>Net Payable</th>
+                  <th style={{ textAlign: "right", whiteSpace: "nowrap" }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {staffPayroll.map((emp) => (
+                  <tr key={emp.id}>
+                    <td style={{ fontWeight: 700, color: "var(--text-heading)", whiteSpace: "nowrap" }}>
+                      {emp.name}
+                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "monospace" }}>{emp.id}</div>
+                    </td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <div style={{ fontWeight: 600 }}>{emp.role}</div>
+                      <span className="badge badge-info" style={{ fontSize: "0.68rem" }}>{emp.dept}</span>
+                    </td>
+                    <td style={{ whiteSpace: "nowrap" }}>₹ {emp.base.toLocaleString("en-IN")}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>₹ {(emp.hra + emp.ta).toLocaleString("en-IN")}</td>
+                    <td style={{ color: "#ef4444", fontWeight: 700, whiteSpace: "nowrap" }}>- ₹ {emp.pf.toLocaleString("en-IN")}</td>
+                    <td style={{ color: "var(--success)", fontWeight: 900, whiteSpace: "nowrap", fontSize: "0.95rem" }}>₹ {emp.net.toLocaleString("en-IN")}</td>
+                    <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                      <div style={{ display: "inline-flex", gap: "0.4rem" }}>
+                        <button 
+                          onClick={() => handleOpenEditModal(emp)}
+                          className="btn btn-secondary"
+                          style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", gap: "0.25rem" }}
+                          title="Edit Salary Structure"
+                        >
+                          <Edit3 size={13} /> Edit
+                        </button>
+
+                        <button 
+                          onClick={() => setSelectedStaffPayslip(emp.id)}
+                          className="btn btn-primary"
+                          style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", gap: "0.25rem" }}
+                        >
+                          <Printer size={12} /> Payslip
+                        </button>
+
+                        <button 
+                          onClick={() => handleDeletePayroll(emp.id, emp.name)}
+                          className="btn btn-secondary"
+                          style={{ padding: "0.35rem 0.5rem", fontSize: "0.72rem", color: "#ef4444" }}
+                          title="Delete Salary Record"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -175,7 +344,7 @@ export default function HrPage() {
             <tbody>
               {leaveBalances.map((l) => (
                 <tr key={l.id}>
-                  <td style={{ fontWeight: 700, color: "#fff" }}>{l.name}</td>
+                  <td style={{ fontWeight: 700, color: "var(--text-heading)" }}>{l.name}</td>
                   <td><span className="badge badge-info">{l.dept}</span></td>
                   <td style={{ fontWeight: 700, color: "var(--success)" }}>{l.casualLeave}</td>
                   <td style={{ fontWeight: 700, color: "var(--primary)" }}>{l.sickLeave}</td>
@@ -201,22 +370,22 @@ export default function HrPage() {
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Employee Name</th>
+                <th>Staff Member</th>
                 <th>UAN Number</th>
                 <th>Employee PF (12%)</th>
                 <th>Employer PF (12%)</th>
                 <th>ESI Contribution</th>
-                <th>Remittance Status</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {pfLedger.map((pf) => (
                 <tr key={pf.id}>
-                  <td style={{ fontWeight: 700, color: "#fff" }}>{pf.name}</td>
-                  <td><code style={{ fontSize: "0.85rem" }}>{pf.uan}</code></td>
-                  <td style={{ fontWeight: 700 }}>₹ {pf.empPf.toLocaleString("en-IN")}</td>
-                  <td style={{ fontWeight: 700 }}>₹ {pf.employerPf.toLocaleString("en-IN")}</td>
-                  <td>{pf.esi > 0 ? `₹ ${pf.esi.toLocaleString("en-IN")}` : "N/A"}</td>
+                  <td style={{ fontWeight: 700, color: "var(--text-heading)" }}>{pf.name}</td>
+                  <td style={{ fontFamily: "monospace" }}>{pf.uan}</td>
+                  <td>₹ {pf.empPf.toLocaleString("en-IN")}</td>
+                  <td>₹ {pf.employerPf.toLocaleString("en-IN")}</td>
+                  <td>{pf.esi ? `₹ ${pf.esi}` : "N/A"}</td>
                   <td><span className="badge badge-success">{pf.status}</span></td>
                 </tr>
               ))}
@@ -225,46 +394,46 @@ export default function HrPage() {
         </div>
       )}
 
-      {/* MODULE 4: EXPENSE CLAIMS & REIMBURSEMENTS */}
+      {/* MODULE 4: CLAIMS & REIMBURSEMENTS */}
       {activeTab === "claims" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Staff Expense Reimbursement Claims</h3>
-          
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem" }}>Expense Claims &amp; Staff Reimbursement Desk</h3>
+
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Claim Code</th>
-                <th>Staff Name</th>
-                <th>Expense Category</th>
+                <th>Claim ID</th>
+                <th>Staff Member</th>
+                <th>Category / Purpose</th>
                 <th>Claim Amount</th>
                 <th>Submission Date</th>
-                <th>Status</th>
+                <th>Approval Status</th>
                 <th style={{ textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {claims.map((c) => (
                 <tr key={c.id}>
-                  <td style={{ fontWeight: 700 }}>{c.id}</td>
-                  <td style={{ color: "#fff", fontWeight: 700 }}>{c.name}</td>
+                  <td style={{ fontFamily: "monospace", fontWeight: 700 }}>{c.id}</td>
+                  <td style={{ fontWeight: 700, color: "var(--text-heading)" }}>{c.name}</td>
                   <td>{c.category}</td>
-                  <td style={{ fontWeight: 700, color: "var(--success)" }}>₹ {c.amount.toLocaleString("en-IN")}</td>
+                  <td style={{ fontWeight: 800, color: "var(--primary)" }}>₹ {c.amount.toLocaleString("en-IN")}</td>
                   <td>{c.date}</td>
                   <td>
                     <span className={`badge ${
-                      c.status === "APPROVED" ? "badge-success" : c.status === "PENDING" ? "badge-warning" : "badge-danger"
+                      c.status === "APPROVED" ? "badge-success" : c.status === "REJECTED" ? "badge-danger" : "badge-warning"
                     }`}>
                       {c.status}
                     </span>
                   </td>
                   <td style={{ textAlign: "right" }}>
                     {c.status === "PENDING" ? (
-                      <div style={{ display: "flex", gap: "0.35rem", justifyContent: "flex-end" }}>
-                        <button onClick={() => handleClaimAction(c.id, "APPROVED")} className="btn btn-primary" style={{ padding: "0.3rem 0.6rem", fontSize: "0.72rem" }}>Approve</button>
-                        <button onClick={() => handleClaimAction(c.id, "REJECTED")} style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#ef4444", padding: "0.3rem 0.6rem", borderRadius: "var(--radius-sm)", cursor: "pointer", fontSize: "0.72rem" }}>Reject</button>
+                      <div style={{ display: "inline-flex", gap: "0.4rem" }}>
+                        <button onClick={() => handleClaimAction(c.id, "APPROVED")} className="btn btn-primary" style={{ padding: "0.3rem 0.6rem", fontSize: "0.7rem" }}>Approve</button>
+                        <button onClick={() => handleClaimAction(c.id, "REJECTED")} className="btn btn-secondary" style={{ padding: "0.3rem 0.6rem", fontSize: "0.7rem" }}>Reject</button>
                       </div>
                     ) : (
-                      <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>Processed</span>
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Processed</span>
                     )}
                   </td>
                 </tr>
@@ -274,72 +443,199 @@ export default function HrPage() {
         </div>
       )}
 
-      {/* ════════════ PAYSLIP MODAL / CARD ════════════ */}
-      {selectedStaffPayslip && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", zIndex: 500, display: "flex", alignItems: "center", justify: "center" }}>
-          <div className="glass-card" style={{ padding: "1.75rem", width: 520, color: "#fff", border: "2px solid var(--primary)", boxShadow: "var(--shadow-glow)" }}>
+      {/* ════════════ ADD / EDIT SALARY PAYROLL MODAL ════════════ */}
+      {isModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "540px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
             
-            {/* Header */}
-            <div style={{ display: "flex", justify: "space-between", alignItems: "flex-start", borderBottom: "1.5px solid var(--border-color)", paddingBottom: "1rem" }}>
-              <div>
-                <div style={{ fontSize: "1.2rem", fontWeight: 850 }}>DELHI PUBLIC SCHOOL MAIN CAMPUS</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 700, marginTop: 2 }}>Official Staff Salary Payslip — July 2026</div>
-              </div>
-              <button onClick={() => setSelectedStaffPayslip(null)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            {/* Modal Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <DollarSign size={20} color="var(--primary)" />
+                {editingEmpId ? "Edit Staff Salary Structure" : "Add New Staff Salary Record"}
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
+                <X size={20} />
+              </button>
             </div>
 
-            {/* Employee Details */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", margin: "1rem 0", fontSize: "0.825rem", background: "rgba(255,255,255,0.01)", padding: "0.75rem", borderRadius: 8, border: "1px solid var(--border-color)" }}>
+            {/* Modal Form Body */}
+            <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              
               <div>
-                <div>Employee: <strong>{selectedPayslipData.name}</strong></div>
-                <div style={{ marginTop: 2 }}>ID: {selectedPayslipData.id}</div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>STAFF MEMBER FULL NAME</label>
+                <input 
+                  type="text" 
+                  value={formState.name}
+                  onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                  placeholder="e.g. Sunita Rao" 
+                  required 
+                  style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.88rem" }}
+                />
               </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DESIGNATION ROLE</label>
+                  <input 
+                    type="text" 
+                    value={formState.role}
+                    onChange={(e) => setFormState({ ...formState, role: e.target.value })}
+                    placeholder="e.g. Senior Faculty" 
+                    required 
+                    style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.88rem" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DEPARTMENT</label>
+                  <select
+                    value={formState.dept}
+                    onChange={(e) => setFormState({ ...formState, dept: e.target.value })}
+                    style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.88rem" }}
+                  >
+                    <option value="Academics">Academics</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Library">Library</option>
+                    <option value="Administration">Administration</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>BASE SALARY (₹)</label>
+                  <input 
+                    type="number" 
+                    value={formState.base}
+                    onChange={(e) => {
+                      const newBase = Number(e.target.value);
+                      setFormState({ 
+                        ...formState, 
+                        base: newBase,
+                        pf: Math.round(newBase * 0.12) // Auto-calculate 12% PF
+                      });
+                    }}
+                    required 
+                    style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.88rem" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>HRA ALLOWANCE (₹)</label>
+                  <input 
+                    type="number" 
+                    value={formState.hra}
+                    onChange={(e) => setFormState({ ...formState, hra: Number(e.target.value) })}
+                    style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.88rem" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>TRAVEL / OTHER ALLOWANCE (₹)</label>
+                  <input 
+                    type="number" 
+                    value={formState.ta}
+                    onChange={(e) => setFormState({ ...formState, ta: Number(e.target.value) })}
+                    style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.88rem" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>PF DEDUCTION (12%) (₹)</label>
+                  <input 
+                    type="number" 
+                    value={formState.pf}
+                    onChange={(e) => setFormState({ ...formState, pf: Number(e.target.value) })}
+                    style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "#ef4444", fontSize: "0.88rem", fontWeight: 700 }}
+                  />
+                </div>
+              </div>
+
+              {/* Calculated Net Salary Highlight */}
+              <div style={{ background: "rgba(34, 197, 94, 0.12)", padding: "0.85rem", borderRadius: 8, border: "1px solid rgba(34, 197, 94, 0.3)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted)" }}>CALCULATED NET SALARY:</span>
+                <strong style={{ fontSize: "1.2rem", color: "var(--success)", fontWeight: 900 }}>₹ {calculatedNet.toLocaleString("en-IN")}</strong>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center", gap: "0.4rem" }}>
+                  <Save size={16} /> {editingEmpId ? "Update Salary" : "Save Salary Record"}
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ PAYSLIP PRINT MODAL ════════════ */}
+      {selectedStaffPayslip && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "600px", padding: "2rem", background: "#fff", color: "#000", borderRadius: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem", borderBottom: "2px solid #000", paddingBottom: "0.75rem" }}>
               <div>
-                <div>Role: <strong>{selectedPayslipData.role}</strong></div>
-                <div style={{ marginTop: 2 }}>Dept: {selectedPayslipData.dept}</div>
+                <h2 style={{ fontSize: "1.2rem", fontWeight: 900, color: "#000", margin: 0 }}>DELHI PUBLIC SCHOOL</h2>
+                <div style={{ fontSize: "0.75rem", color: "#555" }}>CONFIDENTIAL MONTHLY PAYSLIP &bull; SESSION 2026</div>
               </div>
+              <button onClick={() => setSelectedStaffPayslip(null)} style={{ background: "#eee", border: "none", borderRadius: "50%", width: 28, height: 28, cursor: "pointer", fontWeight: 900 }}>✕</button>
             </div>
 
-            {/* Breakdown table */}
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.825rem", margin: "1rem 0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.82rem", marginBottom: "1rem" }}>
+              <div>Employee Name: <strong>{selectedPayslipData.name}</strong></div>
+              <div>Employee ID: <strong>{selectedPayslipData.id}</strong></div>
+              <div>Designation: <strong>{selectedPayslipData.role}</strong></div>
+              <div>Department: <strong>{selectedPayslipData.dept}</strong></div>
+            </div>
+
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", marginBottom: "1rem" }}>
               <thead>
-                <tr style={{ borderBottom: "1.5px solid var(--border-color)", textTransform: "uppercase" }}>
-                  <th style={{ textAlign: "left", padding: "0.4rem" }}>Earnings Component</th>
-                  <th style={{ textAlign: "right", padding: "0.4rem" }}>Amount (INR)</th>
+                <tr style={{ background: "#f0f0f0", textAlign: "left" }}>
+                  <th style={{ padding: "0.4rem", border: "1px solid #ccc" }}>EARNINGS</th>
+                  <th style={{ padding: "0.4rem", border: "1px solid #ccc" }}>AMOUNT</th>
+                  <th style={{ padding: "0.4rem", border: "1px solid #ccc" }}>DEDUCTIONS</th>
+                  <th style={{ padding: "0.4rem", border: "1px solid #ccc" }}>AMOUNT</th>
                 </tr>
               </thead>
               <tbody>
-                <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
-                  <td style={{ padding: "0.4rem" }}>Basic Pay Scale</td>
-                  <td style={{ textAlign: "right", padding: "0.4rem", fontWeight: 700 }}>₹ {selectedPayslipData.base.toLocaleString("en-IN")}</td>
+                <tr>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>Basic Pay</td>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>₹ {selectedPayslipData.base.toLocaleString("en-IN")}</td>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>EPF (12%)</td>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>₹ {selectedPayslipData.pf.toLocaleString("en-IN")}</td>
                 </tr>
-                <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
-                  <td style={{ padding: "0.4rem" }}>House Rent Allowance (HRA)</td>
-                  <td style={{ textAlign: "right", padding: "0.4rem", fontWeight: 700 }}>₹ {selectedPayslipData.hra.toLocaleString("en-IN")}</td>
+                <tr>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>HRA Allowance</td>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>₹ {selectedPayslipData.hra.toLocaleString("en-IN")}</td>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>Income Tax (TDS)</td>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>₹ 0</td>
                 </tr>
-                <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
-                  <td style={{ padding: "0.4rem" }}>Transport Allowance</td>
-                  <td style={{ textAlign: "right", padding: "0.4rem", fontWeight: 700 }}>₹ {selectedPayslipData.ta.toLocaleString("en-IN")}</td>
-                </tr>
-                <tr style={{ borderBottom: "1.5px solid var(--border-color)", color: "#ef4444" }}>
-                  <td style={{ padding: "0.4rem" }}>Provident Fund Deduction (PF 12%)</td>
-                  <td style={{ textAlign: "right", padding: "0.4rem", fontWeight: 700 }}>- ₹ {selectedPayslipData.pf.toLocaleString("en-IN")}</td>
+                <tr>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>Travel Allowance</td>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>₹ {selectedPayslipData.ta.toLocaleString("en-IN")}</td>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>-</td>
+                  <td style={{ padding: "0.4rem", border: "1px solid #ccc" }}>-</td>
                 </tr>
               </tbody>
             </table>
 
-            {/* Total */}
-            <div style={{ display: "flex", justify: "space-between", alignItems: "center", borderTop: "1.5px solid var(--border-color)", paddingTop: "0.85rem" }}>
-              <div style={{ fontSize: "0.9rem", fontWeight: 800 }}>NET SALARY DISBURSED</div>
-              <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "var(--success)" }}>₹ {selectedPayslipData.net.toLocaleString("en-IN")}</div>
+            <div style={{ background: "#e0f2fe", padding: "0.75rem", borderRadius: 6, display: "flex", justifyContent: "space-between", fontWeight: 900, fontSize: "0.95rem" }}>
+              <span>NET PAYABLE AMOUNT:</span>
+              <span style={{ color: "#0284c7" }}>₹ {selectedPayslipData.net.toLocaleString("en-IN")}</span>
             </div>
 
-            <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.25rem" }}>
-              <button onClick={() => window.print()} className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>
-                <Printer size={16} /> Print Payslip
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
+              <button onClick={() => window.print()} className="btn btn-primary" style={{ padding: "0.45rem 1rem", fontSize: "0.8rem" }}>
+                <Printer size={14} /> Print Official Payslip
               </button>
             </div>
-
           </div>
         </div>
       )}

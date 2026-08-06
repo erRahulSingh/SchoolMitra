@@ -11,6 +11,8 @@ import {
   Quote
 } from "lucide-react";
 import SchoolRegistrationModal from "@/components/SchoolRegistrationModal";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
 
 export default function FeaturesPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -164,107 +166,7 @@ export default function FeaturesPage() {
   return (
     <div style={{ background: "var(--bg-page)", minHeight: "100vh", color: "var(--text-main)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* ========== TOP NAVBAR ========== */}
-      <nav className="site-nav">
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.65rem" }}>
-          <div style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            background: "linear-gradient(135deg, #4338ca 0%, #3b82f6 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#ffffff",
-            boxShadow: "0 4px 14px rgba(67, 56, 202, 0.35)",
-            transform: "rotate(-4deg)"
-          }}>
-            <GraduationCap size={20} />
-          </div>
-          <span style={{ fontSize: "1.45rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
-            <span style={{ color: "var(--text-main)" }}>School</span>
-            <span style={{ color: "#3b82f6" }}>Mitra</span>
-          </span>
-        </Link>
-
-        {/* Navigation Links */}
-        <div className="nav-links">
-          <Link href="/" className="nav-link">Home</Link>
-          <Link href="/features" className="nav-link" style={{ color: "var(--primary)", fontWeight: 800 }}>
-            Features
-          </Link>
-          <div className="nav-dropdown">
-            <span className="nav-link" style={{ cursor: "pointer" }}>
-              Solutions <ChevronDown size={14} />
-            </span>
-            <div className="nav-dropdown-menu">
-              <Link href="/features" className="dropdown-item">
-                <Sparkles size={16} color="#4338ca" /> All Features
-              </Link>
-              <Link href="/school-erp" className="dropdown-item">
-                <FileText size={16} color="#4338ca" /> School ERP
-              </Link>
-              <Link href="/transport" className="dropdown-item">
-                <Bus size={16} color="#3b82f6" /> GPS Bus Tracking
-              </Link>
-              <Link href="/parent-app" className="dropdown-item">
-                <Smartphone size={16} color="#8b5cf6" /> Parent Mobile App
-              </Link>
-            </div>
-          </div>
-          <Link href="/pricing" className="nav-link">Pricing</Link>
-          <Link href="/resources" className="nav-link">Resources</Link>
-          <Link href="/about" className="nav-link">About Us</Link>
-        </div>
-
-        {/* Right Nav Actions */}
-        <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <button
-            onClick={toggleTheme}
-            className="theme-toggle-btn"
-            title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-            style={{
-              background: "var(--bg-subtle)",
-              border: "1px solid var(--border-color)",
-              padding: "0.45rem",
-              borderRadius: "8px",
-              cursor: "pointer",
-              color: "var(--text-main)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-          >
-            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
-
-          <Link href="/login" className="btn-ghost-nav" style={{
-            padding: "0.55rem 1.25rem",
-            borderRadius: "10px",
-            border: "1px solid var(--border-color)",
-            color: "var(--text-main)",
-            textDecoration: "none",
-            fontWeight: 600,
-            fontSize: "0.9rem",
-            background: "var(--bg-card)"
-          }}>
-            Login
-          </Link>
-          
-          <button onClick={() => setModalOpen(true)} className="btn-primary-nav" style={{
-            padding: "0.55rem 1.35rem",
-            borderRadius: "10px",
-            background: "linear-gradient(135deg, #4338ca 0%, #3b82f6 100%)",
-            color: "#ffffff",
-            border: "none",
-            fontWeight: 700,
-            fontSize: "0.9rem",
-            cursor: "pointer",
-            boxShadow: "0 4px 14px rgba(67, 56, 202, 0.25)"
-          }}>
-            Get Started
-          </button>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* ========== HERO SECTION (EXACT MATCH REFERENCE MOCKUP) ========== */}
       <section className="hero-wrapper" style={{
@@ -287,7 +189,7 @@ export default function FeaturesPage() {
           zIndex: 0
         }}></div>
 
-        <div style={{
+        <div className="hero-grid-container" style={{
           display: "grid",
           gridTemplateColumns: "1fr 1.15fr",
           gap: "3rem",
@@ -341,7 +243,7 @@ export default function FeaturesPage() {
               SchoolMitra brings all the essential tools together in one powerful platform to simplify school management, improve communication, and ensure student safety.
             </p>
 
-            <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <div className="hero-cta-group" style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
               <button onClick={() => setModalOpen(true)} className="btn-interactive-glow" style={{
                 padding: "0.9rem 2rem",
                 borderRadius: "12px",
@@ -378,185 +280,72 @@ export default function FeaturesPage() {
             </div>
           </div>
 
-          {/* Right Column: Exact Match Laptop & Smartphone Visual Mockup */}
-          <div className="showcase-container" style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-            {/* Laptop Frame (EduTrack Pro Dashboard Mockup) */}
-            <div style={{
-              width: "100%",
-              maxWidth: "560px",
-              background: "#0f172a",
-              borderRadius: "18px",
-              padding: "10px 10px 0 10px",
-              boxShadow: "0 30px 65px -12px rgba(15, 23, 42, 0.25)",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
-              position: "relative"
-            }}>
-              {/* Window Bar */}
-              <div style={{
-                background: "#f1f5f9",
-                borderRadius: "10px 10px 0 0",
-                height: "350px",
-                overflow: "hidden",
-                display: "grid",
-                gridTemplateColumns: "135px 1fr",
-                fontSize: "0.6rem"
-              }}>
-                {/* Left Mini Sidebar Menu */}
-                <div style={{ background: "#ffffff", borderRight: "1px solid #e2e8f0", padding: "0.6rem 0.5rem", display: "flex", flexDirection: "column", gap: "0.45rem" }}>
-                  <div style={{ fontWeight: 800, color: "#0f172a", fontSize: "0.68rem", display: "flex", alignItems: "center", gap: "0.3rem", marginBottom: "0.4rem" }}>
-                    <div style={{ width: 14, height: 14, borderRadius: 4, background: "linear-gradient(135deg, #4338ca, #3b82f6)" }}></div>
-                    EduTrack Pro
-                  </div>
-
-                  <div style={{ background: "#eff6ff", color: "#3b82f6", padding: "0.3rem 0.5rem", borderRadius: "6px", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                    <BarChart3 size={10} /> Dashboard
-                  </div>
-                  <div style={{ color: "#64748b", padding: "0.3rem 0.5rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                    <Users size={10} /> Admissions
-                  </div>
-                  <div style={{ color: "#64748b", padding: "0.3rem 0.5rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                    <FileText size={10} /> Exams &amp; Marks
-                  </div>
-                  <div style={{ color: "#64748b", padding: "0.3rem 0.5rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                    <CreditCard size={10} /> Fee Collection
-                  </div>
-                  <div style={{ color: "#64748b", padding: "0.3rem 0.5rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                    <Bus size={10} /> Live Bus Track
-                  </div>
-                </div>
-
-                {/* Main Dashboard Panel */}
-                <div style={{ padding: "0.6rem 0.8rem", background: "#f8fafc", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: 800, fontSize: "0.75rem", color: "#0f172a" }}>Dashboard</span>
-                    <div style={{ width: 16, height: 16, borderRadius: "50%", background: "linear-gradient(135deg, #4338ca, #3b82f6)", color: "#fff", fontSize: "0.45rem", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>A</div>
-                  </div>
-
-                  {/* 4 Counter Cards */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.35rem" }}>
-                    {[
-                      { lbl: "Total Students", val: "12,645", color: "#4338ca" },
-                      { lbl: "Total Teachers", val: "1,256", color: "#8b5cf6" },
-                      { lbl: "Total Parents", val: "9,845", color: "#3b82f6" },
-                      { lbl: "Attendance Rate", val: "92.6%", color: "#10b981" }
-                    ].map((st, i) => (
-                      <div key={i} style={{ background: "#ffffff", padding: "0.35rem", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                        <div style={{ fontSize: "0.38rem", color: "#64748b", fontWeight: 600 }}>{st.lbl}</div>
-                        <div style={{ fontSize: "0.62rem", fontWeight: 800, color: st.color, marginTop: "0.1rem" }}>{st.val}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Charts Row */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "0.4rem", flex: 1 }}>
-                    {/* Attendance Overview Bar Chart */}
-                    <div style={{ background: "#ffffff", padding: "0.45rem", borderRadius: "7px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column" }}>
-                      <div style={{ fontSize: "0.48rem", fontWeight: 800, color: "#0f172a", marginBottom: "0.2rem" }}>Attendance Overview</div>
-                      <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: "3px", paddingTop: "0.2rem" }}>
-                        {[60, 45, 80, 55, 90, 70, 85].map((h, idx) => (
-                          <div key={idx} style={{ flex: 1, height: `${h}%`, background: "#3b82f6", borderRadius: "2px 2px 0 0" }}></div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Fee Collection Donut Chart */}
-                    <div style={{ background: "#ffffff", padding: "0.45rem", borderRadius: "7px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                      <div style={{ fontSize: "0.48rem", fontWeight: 800, color: "#0f172a", width: "100%", textAlign: "left" }}>Fee Collection</div>
-                      <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "conic-gradient(#10b981 0% 75%, #e2e8f0 75% 100%)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0.2rem 0" }}>
-                        <div style={{ width: "24px", height: "24px", background: "#ffffff", borderRadius: "50%" }}></div>
-                      </div>
-                      <div style={{ fontSize: "0.5rem", fontWeight: 800, color: "#0f172a" }}>₹12,45,000</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div style={{ background: "#0f172a", height: "12px", borderRadius: "0 0 12px 12px" }}></div>
-            </div>
-
-            {/* Smartphone Mockup (Overlapping Left Screen) */}
+          {/* Right Column: Visual Showcase using AI Generated ERP & Live Tracking Image */}
+          <div className="showcase-container" style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            {/* Glowing Backdrop Ambient Effect */}
             <div style={{
               position: "absolute",
-              left: "-35px",
-              bottom: "-25px",
-              width: "155px",
-              background: "#0f172a",
-              borderRadius: "26px",
-              padding: "6px",
-              boxShadow: "0 25px 50px rgba(15, 23, 42, 0.35)",
-              border: "3px solid #334155",
+              inset: "-15px",
+              background: "linear-gradient(135deg, rgba(67, 56, 202, 0.25) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(139, 92, 246, 0.25) 100%)",
+              borderRadius: "32px",
+              filter: "blur(24px)",
+              zIndex: 0
+            }}></div>
+
+            {/* Image Container Card */}
+            <div style={{
+              position: "relative",
+              zIndex: 1,
+              width: "100%",
+              maxWidth: "600px",
+              borderRadius: "24px",
+              overflow: "hidden",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              boxShadow: "0 25px 60px -10px rgba(15, 23, 42, 0.35)",
+              background: "var(--bg-card)"
+            }}>
+              <img
+                src="/images/erp-live-tracking.png"
+                alt="SchoolMitra ERP Dashboard & Live GPS Bus Tracking Showcase"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  objectFit: "cover"
+                }}
+              />
+            </div>
+
+            {/* Floating Live Tracking Badge - Bottom Right */}
+            <div style={{
+              position: "absolute",
+              bottom: "-15px",
+              right: "-15px",
+              background: "rgba(15, 23, 42, 0.85)",
+              backdropFilter: "blur(12px)",
+              borderRadius: "14px",
+              padding: "0.65rem 1rem",
+              boxShadow: "0 15px 35px rgba(0, 0, 0, 0.3)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              color: "#ffffff",
               zIndex: 3
             }}>
-              <div style={{ width: "40px", height: "8px", background: "#1e293b", borderRadius: "99px", margin: "0 auto 4px auto" }}></div>
-              <div style={{
-                background: "#ffffff",
-                borderRadius: "20px",
-                padding: "0.4rem",
-                height: "230px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.35rem",
-                fontSize: "0.45rem",
-                overflow: "hidden"
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 800, color: "#0f172a", fontSize: "0.5rem" }}>
-                  <span>← Live Tracking</span>
-                  <span>⚙</span>
-                </div>
-
-                {/* Simulated Map */}
-                <div style={{ flex: 1, background: "#e8ede6", borderRadius: "8px", position: "relative", overflow: "hidden" }}>
-                  <svg width="100%" height="100%">
-                    <path d="M 10 160 Q 60 100, 110 40" fill="none" stroke="#3b82f6" strokeWidth="4" />
-                    <circle cx="110" cy="40" r="4" fill="#2563eb" />
-                  </svg>
-                  <div style={{ position: "absolute", top: "70px", left: "45px", background: "#f59e0b", color: "#fff", padding: "0.15rem 0.3rem", borderRadius: "4px", fontSize: "0.35rem", fontWeight: 800 }}>
-                    🚌 Bus #12
-                  </div>
-                </div>
-
-                {/* Telemetry Stats */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.2rem", textAlign: "center", background: "#f8fafc", padding: "0.25rem", borderRadius: "6px" }}>
-                  <div><div style={{ color: "#94a3b8", fontSize: "0.35rem" }}>ETA</div><div style={{ fontWeight: 800, color: "#0f172a" }}>06 min</div></div>
-                  <div><div style={{ color: "#94a3b8", fontSize: "0.35rem" }}>Distance</div><div style={{ fontWeight: 800, color: "#0f172a" }}>2.4 km</div></div>
-                  <div><div style={{ color: "#94a3b8", fontSize: "0.35rem" }}>Speed</div><div style={{ fontWeight: 800, color: "#0f172a" }}>40 km/h</div></div>
-                </div>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 10px #10b981" }}></div>
+              <div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 800 }}>Live Tracking - Bus #12</div>
+                <div style={{ fontSize: "0.62rem", color: "#94a3b8", fontWeight: 600 }}>UP 16 CT 2345 • On Route</div>
               </div>
             </div>
-
-            {/* Floating Live Tracking Card (Exact Match Right Widget from Screenshot) */}
-            <div style={{
-              position: "absolute",
-              bottom: "10px",
-              right: "-30px",
-              background: "#ffffff",
-              borderRadius: "16px",
-              padding: "0.85rem 1.1rem",
-              boxShadow: "0 20px 45px rgba(15, 23, 42, 0.16)",
-              border: "1px solid #e2e8f0",
-              width: "210px",
-              zIndex: 4
-            }}>
-              <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#4338ca", display: "flex", alignItems: "center", gap: "0.3rem", marginBottom: "0.3rem" }}>
-                ❖ Live Tracking
-              </div>
-              <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "#0f172a", marginBottom: "0.4rem" }}>
-                Bus No. UP 16 CT 2345
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "0.62rem", color: "#10b981", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }}></span> On Route
-                </span>
-                <span style={{ fontSize: "1.2rem" }}>🚌</span>
-              </div>
-            </div>
-
           </div>
         </div>
       </section>
 
       {/* ========== 5 STATS METRICS BANNER (EXACT MATCH BOTTOM BAR) ========== */}
       <section style={{ padding: "0 5% 70px 5%" }}>
-        <div style={{
+        <div className="features-stats-banner" style={{
           maxWidth: "1280px",
           margin: "0 auto",
           background: "var(--bg-card)",
@@ -702,7 +491,7 @@ export default function FeaturesPage() {
         </div>
 
         {/* 4 Columns Grid Layout (Exact Match Screenshot Cards) */}
-        <div style={{
+        <div className="features-grid-cards" style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
           gap: "1.75rem"
@@ -772,7 +561,7 @@ export default function FeaturesPage() {
 
       {/* ========== SECTION 2: REAL-TIME TRACKING FOR PEACE OF MIND (EXACT MATCH SCREENSHOT 1 ROW 2) ========== */}
       <section style={{ padding: "40px 4% 80px 4%", maxWidth: "1320px", margin: "0 auto" }}>
-        <div style={{
+        <div className="realtime-tracking-section-grid" style={{
           background: "linear-gradient(135deg, rgba(238, 242, 255, 0.95) 0%, rgba(243, 244, 255, 0.85) 100%)",
           borderRadius: "28px",
           padding: "3.5rem 3rem",
@@ -783,115 +572,40 @@ export default function FeaturesPage() {
           gap: "3rem",
           alignItems: "center"
         }}>
-          {/* Left Visual: 3D Yellow Bus Map Illustration + Floating Cards */}
-          <div style={{ position: "relative", minHeight: "340px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {/* Background 3D Road Base Grid */}
-            <div style={{
-              width: "280px",
-              height: "180px",
-              background: "#ffffff",
-              borderRadius: "20px",
-              transform: "rotateX(55deg) rotateZ(-30deg)",
-              boxShadow: "0 25px 50px rgba(67, 56, 202, 0.15)",
-              border: "2px solid #e2e8f0",
-              position: "relative"
-            }}>
-              {/* Route line */}
-              <div style={{ position: "absolute", top: "50%", left: "10%", width: "80%", height: "6px", background: "linear-gradient(90deg, #3b82f6, #6366f1)", borderRadius: "99px" }}></div>
-            </div>
-
-            {/* 3D Yellow Bus Icon Badge Centered */}
+          {/* Left Visual: 3D GPS Bus Tracking Map Image Showcase */}
+          <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            {/* Glowing Backdrop Ambient Effect */}
             <div style={{
               position: "absolute",
-              top: "40%",
-              left: "42%",
-              transform: "translate(-50%, -50%)",
-              fontSize: "3.8rem",
-              filter: "drop-shadow(0 15px 25px rgba(245, 158, 11, 0.4))",
-              zIndex: 3
-            }}>
-              🚌
-            </div>
+              inset: "-15px",
+              background: "linear-gradient(135deg, rgba(67, 56, 202, 0.2) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(139, 92, 246, 0.2) 100%)",
+              borderRadius: "32px",
+              filter: "blur(24px)",
+              zIndex: 0
+            }}></div>
 
-            {/* Overlapping Floating Card 1 (Left Timeline) */}
+            {/* Image Container Card */}
             <div style={{
-              position: "absolute",
-              left: "-10px",
-              top: "10px",
-              background: "#ffffff",
-              borderRadius: "18px",
-              padding: "1rem 1.2rem",
-              boxShadow: "0 15px 35px rgba(15, 23, 42, 0.12)",
-              border: "1px solid #e2e8f0",
-              width: "210px",
-              fontSize: "0.75rem",
-              zIndex: 4,
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.6rem"
+              position: "relative",
+              zIndex: 1,
+              width: "100%",
+              maxWidth: "520px",
+              borderRadius: "24px",
+              overflow: "hidden",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              boxShadow: "0 25px 50px -10px rgba(15, 23, 42, 0.25)",
+              background: "var(--bg-card)"
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <CheckCircle2 size={16} color="#10b981" />
-                <div>
-                  <div style={{ fontWeight: 800, color: "#0f172a" }}>Pickup Completed</div>
-                  <div style={{ color: "#64748b", fontSize: "0.65rem" }}>Emma picked up at <b>07:45 AM</b></div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <CheckCircle2 size={16} color="#3b82f6" />
-                <div>
-                  <div style={{ fontWeight: 800, color: "#0f172a" }}>Reached School</div>
-                  <div style={{ color: "#64748b", fontSize: "0.65rem" }}>Emma reached school at <b>08:05 AM</b></div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#ef4444", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800 }}>✕</div>
-                <div>
-                  <div style={{ fontWeight: 800, color: "#0f172a" }}>Attendance Marked</div>
-                  <div style={{ color: "#64748b", fontSize: "0.65rem" }}>Present at <b>08:15 AM</b></div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#f59e0b", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800 }}>⏰</div>
-                <div>
-                  <div style={{ fontWeight: 800, color: "#0f172a" }}>Live Tracking</div>
-                  <div style={{ color: "#64748b", fontSize: "0.65rem" }}>Bus is on the <b>way</b></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Overlapping Floating Card 2 (Student Card Right) */}
-            <div style={{
-              position: "absolute",
-              right: "0px",
-              bottom: "10px",
-              background: "#ffffff",
-              borderRadius: "18px",
-              padding: "1rem 1.2rem",
-              boxShadow: "0 15px 35px rgba(15, 23, 42, 0.12)",
-              border: "1px solid #e2e8f0",
-              width: "200px",
-              zIndex: 4
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-                <div style={{ width: 42, height: 42, borderRadius: "50%", background: "linear-gradient(135deg, #f472b6, #ec4899)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.9rem" }}>
-                  EJ
-                </div>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: "0.92rem", color: "#0f172a" }}>Emma Johnson</div>
-                  <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Class 5 - A</div>
-                </div>
-              </div>
-              <div style={{ background: "#f8fafc", padding: "0.5rem 0.6rem", borderRadius: "10px", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <CheckCircle2 size={16} color="#10b981" />
-                <div>
-                  <div style={{ fontSize: "0.65rem", color: "#64748b" }}>Live Location</div>
-                  <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "#0f172a" }}><b>2.4 km away</b> from School</div>
-                </div>
-              </div>
+              <img
+                src="/images/gps-map-tracking-3d.png"
+                alt="SchoolMitra Real-time 3D GPS Bus Tracking Map Showcase"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  objectFit: "cover"
+                }}
+              />
             </div>
           </div>
 
@@ -966,7 +680,7 @@ export default function FeaturesPage() {
 
       {/* ========== SECTION 3: WHY SCHOOLS LOVE SCHOOLMITRA + TESTIMONIAL (EXACT MATCH SCREENSHOT 1 ROW 3) ========== */}
       <section style={{ padding: "0 4% 90px 4%", maxWidth: "1320px", margin: "0 auto" }}>
-        <div style={{
+        <div className="why-schools-love-grid" style={{
           background: "var(--bg-card)",
           borderRadius: "28px",
           padding: "3.5rem 3rem",
@@ -1003,7 +717,7 @@ export default function FeaturesPage() {
               ))}
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+            <div className="hero-cta-group" style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
               <button onClick={() => setModalOpen(true)} className="btn-interactive-glow" style={{
                 padding: "0.85rem 2rem",
                 borderRadius: "12px",
@@ -1078,7 +792,7 @@ export default function FeaturesPage() {
 
       {/* ========== SECTION 4: FULL-WIDTH SOLID BLUE CTA BANNER (EXACT MATCH SCREENSHOT 2) ========== */}
       <section style={{ padding: "0 4% 90px 4%", maxWidth: "1320px", margin: "0 auto" }}>
-        <div style={{
+        <div className="features-cta-banner-box" style={{
           background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)",
           borderRadius: "24px",
           padding: "3.5rem 3.5rem",
@@ -1131,80 +845,8 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* ========== FULL WEBSITE FOOTER ========== */}
-      <footer style={{
-        background: "var(--bg-card)",
-        padding: "80px 5% 40px 5%",
-        borderTop: "1px solid var(--border-color)"
-      }}>
-        <div style={{
-          maxWidth: "1250px",
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr",
-          gap: "3.5rem",
-          marginBottom: "4rem"
-        }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "1.2rem" }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #4338ca, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                <GraduationCap size={18} />
-              </div>
-              <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text-main)" }}>SchoolMitra</span>
-            </div>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.92rem", lineHeight: 1.6, maxWidth: "300px" }}>
-              India&apos;s leading School ERP &amp; GPS Bus Tracking platform empowering 500+ schools and 2.5L+ families.
-            </p>
-          </div>
-
-          <div>
-            <h4 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "1.2rem" }}>Solutions</h4>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.7rem", fontSize: "0.9rem" }}>
-              <li><Link href="/school-erp" style={{ textDecoration: "none", color: "var(--text-muted)" }}>School ERP Suite</Link></li>
-              <li><Link href="/transport" style={{ textDecoration: "none", color: "var(--text-muted)" }}>GPS Bus Telemetry</Link></li>
-              <li><Link href="/parent-app" style={{ textDecoration: "none", color: "var(--text-muted)" }}>Parent Mobile App</Link></li>
-              <li><Link href="/features" style={{ textDecoration: "none", color: "var(--text-muted)" }}>All Features</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "1.2rem" }}>Quick Links</h4>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.7rem", fontSize: "0.9rem" }}>
-              <li><Link href="/pricing" style={{ textDecoration: "none", color: "var(--text-muted)" }}>Pricing Plans</Link></li>
-              <li><Link href="/contact" style={{ textDecoration: "none", color: "var(--text-muted)" }}>Contact Support</Link></li>
-              <li><Link href="/login" style={{ textDecoration: "none", color: "var(--text-muted)" }}>Admin Login</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "1.2rem" }}>Headquarters</h4>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", lineHeight: 1.6 }}>
-              SchoolMitra Tech Park, Sector 62, Noida, Uttar Pradesh 201309
-            </p>
-            <div style={{ marginTop: "1rem", fontSize: "0.88rem", color: "#4338ca", fontWeight: 700 }}>
-              ✉ support@schoolmitra.com
-            </div>
-          </div>
-        </div>
-
-        <div style={{
-          maxWidth: "1250px",
-          margin: "0 auto",
-          borderTop: "1px solid var(--border-color)",
-          paddingTop: "2rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          fontSize: "0.88rem",
-          color: "var(--text-muted)"
-        }}>
-          <div>© {new Date().getFullYear()} SchoolMitra Technologies Pvt. Ltd. All rights reserved.</div>
-          <div style={{ display: "flex", gap: "1.8rem", fontWeight: 600 }}>
-            <Link href="/privacy" style={{ textDecoration: "none", color: "inherit" }}>Privacy Policy</Link>
-            <Link href="/terms" style={{ textDecoration: "none", color: "inherit" }}>Terms of Service</Link>
-          </div>
-        </div>
-      </footer>
+      {/* ========== SUPER PREMIUM FOOTER ========== */}
+      <Footer />
 
       {/* Registration / Demo Modal */}
       {modalOpen && <SchoolRegistrationModal onClose={() => setModalOpen(false)} />}

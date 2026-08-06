@@ -59,56 +59,56 @@ export const createBus = asyncHandler(async (req: Request, res: Response) => {
 
 // ════════════ 2. ROUTE MANAGEMENT ════════════
 export const getRoutes = asyncHandler(async (_req: Request, res: Response) => {
-  const data = await RouteModel.find().lean().catch(() => []);
-
-  const fallback = [
-    { _id: "650000000000000000000501", routeName: "Route 1 - Dwarka Express", startPoint: "Sector 21 Metro Station", endPoint: "DPS Dwarka Campus", totalStops: 8 },
-    { _id: "650000000000000000000502", routeName: "Route 2 - Vasant Kunj Line", startPoint: "Fortis Hospital Gate", endPoint: "DPS Dwarka Campus", totalStops: 6 }
-  ];
-
-  const result = data.length > 0 ? data : fallback;
-  return ApiResponse.success(res, 200, "Transport routes retrieved", { routes: result });
+  const routes = await RouteModel.find().lean().catch(() => []);
+  return ApiResponse.success(res, 200, "Transport routes retrieved", { routes });
 });
 
 export const createRoute = asyncHandler(async (req: Request, res: Response) => {
-  const { routeName, startPoint, endPoint } = req.body;
+  const { routeName, startPoint, endPoint, distanceKm } = req.body;
   if (!routeName) {
     throw ApiError.badRequest("Route name is required.");
   }
 
-  const created = await RouteModel.create({ routeName, startPoint, endPoint }).catch(() => ({ routeName, startPoint, endPoint }));
-  return ApiResponse.created(res, "Route registered successfully.", { route: created });
+  const schoolId = "650000000000000000000001";
+  const created = await RouteModel.create({
+    schoolId,
+    routeName,
+    startPoint: startPoint || "Start Terminal",
+    endPoint: endPoint || "School Gate",
+    distanceKm: Number(distanceKm) || 15
+  });
+
+  return ApiResponse.created(res, "Route registered successfully in database.", { route: created });
 });
 
 // ════════════ 3. STOP MANAGEMENT ════════════
 export const getStops = asyncHandler(async (_req: Request, res: Response) => {
-  const data = await StopModel.find().lean().catch(() => []);
-  const fallback = [
-    { id: "STOP-01", stopName: "Sector 12 Market Gate", scheduledTime: "07:35 AM", latitude: 28.5921, longitude: 77.0460 },
-    { id: "STOP-02", stopName: "Sector 10 Community Center", scheduledTime: "07:42 AM", latitude: 28.5880, longitude: 77.0490 }
-  ];
-  return ApiResponse.success(res, 200, "Stops retrieved", { stops: data.length > 0 ? data : fallback });
+  const stops = await StopModel.find().lean().catch(() => []);
+  return ApiResponse.success(res, 200, "Stops retrieved", { stops });
 });
 
 export const createStop = asyncHandler(async (req: Request, res: Response) => {
-  const { stopName, routeId, scheduledTime } = req.body;
+  const { stopName, routeId, scheduledTime, order = 1 } = req.body;
   if (!stopName) throw ApiError.badRequest("Stop name is required.");
 
-  const created = await StopModel.create({ stopName, routeId, scheduledTime }).catch(() => ({ stopName, scheduledTime }));
-  return ApiResponse.created(res, "Stop created successfully.", { stop: created });
+  const schoolId = "650000000000000000000001";
+  const finalRouteId = routeId || "650000000000000000000501";
+
+  const created = await StopModel.create({
+    schoolId,
+    routeId: finalRouteId,
+    stopName,
+    order: Number(order) || 1,
+    scheduledTimeMorning: scheduledTime || "07:30 AM"
+  });
+
+  return ApiResponse.created(res, "Stop created successfully in database.", { stop: created });
 });
 
 // ════════════ 4. DRIVER MANAGEMENT ════════════
 export const getDrivers = asyncHandler(async (_req: Request, res: Response) => {
-  const data = await DriverModel.find().lean().catch(() => []);
-
-  const fallback = [
-    { _id: "650000000000000000000401", name: "Ram Singh", phone: "+91 98111 22334", licenseNo: "DL-142011002345", assignedBus: "Bus #01", status: "Active" },
-    { _id: "650000000000000000000402", name: "Suresh Kumar", phone: "+91 98222 33445", licenseNo: "DL-142011005678", assignedBus: "Bus #02", status: "Active" }
-  ];
-
-  const result = data.length > 0 ? data : fallback;
-  return ApiResponse.success(res, 200, "Bus drivers retrieved", { drivers: result });
+  const drivers = await DriverModel.find().lean().catch(() => []);
+  return ApiResponse.success(res, 200, "Bus drivers retrieved", { drivers });
 });
 
 export const createDriver = asyncHandler(async (req: Request, res: Response) => {
@@ -117,8 +117,16 @@ export const createDriver = asyncHandler(async (req: Request, res: Response) => 
     throw ApiError.badRequest("Driver name and phone are required.");
   }
 
-  const created = await DriverModel.create({ name, phone, licenseNo: licenseNo || "DL-PENDING" }).catch(() => ({ name, phone, licenseNo }));
-  return ApiResponse.created(res, "Driver registered successfully.", { driver: created });
+  const schoolId = "650000000000000000000001";
+  const created = await DriverModel.create({
+    schoolId,
+    name,
+    phone,
+    licenseNo: licenseNo || "DL-PENDING",
+    licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000 * 5)
+  });
+
+  return ApiResponse.created(res, "Driver registered successfully in database.", { driver: created });
 });
 
 // ════════════ 5. TRIP TRACKER (START/END TRIP) ════════════

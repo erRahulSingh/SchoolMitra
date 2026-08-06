@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Building2, ShieldCheck, Mail, Phone, MapPin, 
   Award, Globe, Calendar, CheckCircle2, User, Key, Save 
@@ -22,8 +22,43 @@ export default function SchoolProfilePage() {
     totalCapacity: "3,200 Students"
   });
 
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("sm_school_profile");
+      if (cached) {
+        const p = JSON.parse(cached);
+        setProfile(prev => ({
+          ...prev,
+          schoolName: p.name || prev.schoolName,
+          affiliation: p.affiliation || prev.affiliation,
+          principalName: p.principal || prev.principalName,
+          email: p.email || prev.email,
+          phone: p.phone || prev.phone,
+          address: p.address || prev.address,
+          establishmentYear: p.establishedYear || prev.establishmentYear
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to load profile from localStorage:", err);
+    }
+  }, []);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      const pData = {
+        name: profile.schoolName,
+        affiliation: profile.affiliation,
+        principal: profile.principalName,
+        email: profile.email,
+        phone: profile.phone,
+        address: profile.address,
+        establishedYear: profile.establishmentYear
+      };
+      localStorage.setItem("sm_school_profile", JSON.stringify(pData));
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+    }
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
   };

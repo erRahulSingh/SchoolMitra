@@ -568,10 +568,6 @@ export default function MobileAppShell() {
         {activeTab === "holidays" && <HolidaysPage language={language} onNavigate={(tab: any) => setActiveTab(tab)} />}
         {activeTab === "notificationSettings" && <NotificationSettingsPage language={language} onNavigate={(tab: any) => setActiveTab(tab)} />}
         {activeTab === "privacySecurity" && <PrivacySecurityPage language={language} onNavigate={(tab: any) => setActiveTab(tab)} />}
-        {activeTab === "homework" && <HomeworkPage language={language} onNavigate={(tab: any) => setActiveTab(tab)} />}
-        {activeTab === "assignments" && <AssignmentsPage language={language} onNavigate={(tab: any) => setActiveTab(tab)} />}
-        {activeTab === "exams" && <ExamsPage language={language} onNavigate={(tab: any) => setActiveTab(tab)} />}
-        {activeTab === "teacherProfile" && <TeacherProfilePage language={language} onNavigate={(tab: any) => setActiveTab(tab)} />}
         {activeTab === "offline" && <OfflinePage language={language} onNavigate={(tab: any) => setActiveTab(tab)} />}
       </div>
 

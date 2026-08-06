@@ -1691,3 +1691,1116 @@ h1, h2, h3, h4, h5, h6 {
   background: #1e1248 !important;
   color: #a5b4fc !important;
 }
+
+/* ═════════════════════════════════════════════════════════════════════════ */
+/* ===== MOBILE RESPONSIVE DESIGN SYSTEM (SUPER PREMIUM MOBILE UI) ===== */
+/* ═════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 991px) {
+  /* Prevent Any Horizontal Page Overflow on Mobile */
+  html, body {
+    overflow-x: hidden !important;
+  }
+
+  /* Navbar Adjustments */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-hamburger-btn {
+    display: flex !important;
+  }
+
+  /* Hero & Main Sections Responsiveness (Compact Mobile Gap Fix) */
+  section {
+    padding-left: 4% !important;
+    padding-right: 4% !important;
+    padding-top: 40px !important;
+    padding-bottom: 30px !important;
+  }
+
+  .hero-wrapper {
+    padding-top: 76px !important;
+    padding-bottom: 20px !important;
+  }
+
+  /* Solutions Page Hero Mobile Ordering - Content on top, image below */
+  .solutions-hero-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    padding-top: 90px !important;
+    padding-bottom: 30px !important;
+    gap: 2rem !important;
+  }
+
+  .solutions-hero-content {
+    order: 1 !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .solutions-hero-image {
+    order: 2 !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+  }
+
+  .solutions-hero-badges {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 1rem !important;
+    margin-top: 1.5rem !important;
+  }
+
+  .hero-grid-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.2rem !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  .hero-left {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .showcase-container {
+    width: 100% !important;
+    margin-top: 0.25rem !important;
+  }
+
+  /* Compact Floating Badges on Mobile */
+  .showcase-container div[style*="position: \"absolute\""][style*="top: \"-15px\""] {
+    top: 6px !important;
+    right: 6px !important;
+    padding: 0.35rem 0.65rem !important;
+    border-radius: 10px !important;
+  }
+
+  .showcase-container div[style*="position: \"absolute\""][style*="bottom: \"-15px\""] {
+    bottom: 6px !important;
+    left: 6px !important;
+    padding: 0.35rem 0.65rem !important;
+    border-radius: 10px !important;
+  }
+
+  /* Hero Title & Subtitle Mobile Text Scaling (Compact & Small) */
+  .hero-title, h1 {
+    font-size: clamp(1.45rem, 5vw, 1.8rem) !important;
+    line-height: 1.22 !important;
+    letter-spacing: -0.02em !important;
+    margin-bottom: 0.5rem !important;
+    text-align: center !important;
+  }
+
+  .hero-subtitle, p {
+    font-size: 0.88rem !important;
+    line-height: 1.45 !important;
+    margin-bottom: 1rem !important;
+    text-align: center !important;
+    max-width: 100% !important;
+  }
+
+  /* Hero Action Buttons - Side-by-Side 2-Button Row Layout on Mobile */
+  .hero-cta-group {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+    margin: 0 auto 0.75rem auto !important;
+  }
+
+  .hero-cta-group button,
+  .hero-cta-group a {
+    padding: 0.65rem 0.5rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    justify-content: center !important;
+    text-align: center !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 14px rgba(67, 56, 202, 0.25) !important;
+    white-space: nowrap !important;
+  }
+
+  /* Convert How It Works 4-Step Pipeline into 1x2 Grid (2 Steps per Row) on Mobile */
+  .how-it-works-pipeline-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .how-it-works-pipeline-grid .step-item-box {
+    background: var(--bg-card) !important;
+    padding: 1.1rem 0.75rem !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  .how-it-works-pipeline-grid .step-item-box h3 {
+    font-size: 0.92rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .how-it-works-pipeline-grid .step-item-box p {
+    font-size: 0.75rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .how-it-works-pipeline-grid div[style*="top: \"32px\""] {
+    display: none !important;
+  }
+
+  /* Convert Teacher & Driver App Section into 1x1 Grid (1 Card per Row) on Mobile */
+  .teacher-driver-apps-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .teacher-driver-apps-grid .app-card-item {
+    padding: 1.5rem 1.2rem !important;
+    border-radius: 18px !important;
+  }
+
+  /* FAQ Section - 3D Image on Top, Questions Below on Mobile */
+  .faq-container-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .faq-container-grid > div:first-child {
+    order: 1 !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .faq-container-grid > div:last-child {
+    order: 2 !important;
+    width: 100% !important;
+  }
+
+  /* Convert Main Footer 4-Column Grid into 1x1 Grid (1 Column per Row) on Mobile */
+  .footer-nav-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+    margin-bottom: 2.5rem !important;
+  }
+
+  /* Convert Pricing Tier Cards into 1x1 Grid (1 Card per Row / Full Width Vertical Stack) on Mobile */
+  .pricing-plans-cards-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .pricing-plans-cards-grid .pricing-card-item,
+  .pricing-plans-cards-grid > div {
+    padding: 1.8rem 1.4rem !important;
+    border-radius: 20px !important;
+    width: 100% !important;
+  }
+
+  /* Convert Cards Below into 1x2 Grid (2 Cards per Row on Mobile) */
+  .metrics-counter-grid,
+  .school-cards-grid,
+  .features-role-grid,
+  .features-grid,
+  .features-grid-cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Features Page 5-Stats Banner - Perfectly Symmetric Mobile Layout */
+  .features-stats-banner {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+    padding: 1.1rem 0.85rem !important;
+    border-radius: 18px !important;
+  }
+
+  .features-stats-banner > div {
+    gap: 0.6rem !important;
+    padding: 0.4rem 0.25rem !important;
+  }
+
+  .features-stats-banner > div div[style*="fontSize: \"1.45rem\""] {
+    font-size: 1.15rem !important;
+  }
+
+  .features-stats-banner > div div[style*="fontSize: \"0.82rem\""] {
+    font-size: 0.72rem !important;
+  }
+
+  .features-stats-banner > div:nth-child(5) {
+    grid-column: 1 / -1 !important;
+    justify-content: center !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    padding: 0.65rem 0.85rem !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(245, 158, 11, 0.18) !important;
+  }
+
+  /* Real-time Tracking Section Mobile Ordering - Image Top, Content Below */
+  .realtime-tracking-section-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding: 1.5rem 1.25rem !important;
+    border-radius: 20px !important;
+  }
+
+  .realtime-tracking-section-grid > div:first-child {
+    order: 1 !important;
+    width: 100% !important;
+  }
+
+  .realtime-tracking-section-grid > div:last-child {
+    order: 2 !important;
+    width: 100% !important;
+  }
+
+  /* Why Schools Love SchoolMitra - Mobile Layout */
+  .why-schools-love-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding: 1.5rem 1.25rem !important;
+    border-radius: 20px !important;
+  }
+
+  /* Footer Newsletter Banner - Mobile Layout */
+  .footer-newsletter-banner {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+    padding: 1.5rem 1.25rem !important;
+    border-radius: 20px !important;
+    text-align: center !important;
+  }
+
+  .footer-newsletter-banner form {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0.75rem !important;
+  }
+
+  .footer-newsletter-banner button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Features CTA Blue Banner - Mobile Layout */
+  .features-cta-banner-box {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+    padding: 1.8rem 1.25rem !important;
+    border-radius: 20px !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+
+  .features-cta-banner-box button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Solutions Page Impact Metrics Ribbon - 1x2 Grid on Mobile */
+  .solutions-ribbon-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  /* Solutions Page 8 Architecture Sections - Vertical Flex Stack */
+  .solutions-section-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding: 1.5rem 1.25rem !important;
+    border-radius: 20px !important;
+  }
+
+  /* Solutions Page ROI Calculator Widget - Mobile Vertical Stack */
+  .solutions-roi-calculator-box {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding: 1.8rem 1.25rem !important;
+    border-radius: 20px !important;
+  }
+
+  /* Card Inner Padding & Compact Layout for 2-Column Mobile Grid */
+  .metrics-counter-grid > div,
+  .features-role-grid > div,
+  .feature-card {
+    padding: 0.85rem 0.65rem !important;
+    border-radius: 14px !important;
+    flex-direction: column !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+
+  .metrics-counter-grid > div div[style*="fontSize: \"1.5rem\""] {
+    font-size: 1.15rem !important;
+  }
+
+  .metrics-counter-grid > div div[style*="fontSize: \"0.78rem\""] {
+    font-size: 0.68rem !important;
+  }
+
+  .features-role-grid > div h3 {
+    font-size: 0.95rem !important;
+    text-align: center !important;
+  }
+
+  .features-role-grid > div p {
+    font-size: 0.78rem !important;
+    text-align: center !important;
+  }
+
+  /* Images & Showcase Frames */
+  div[style*="maxWidth: 600px"],
+  div[style*="maxWidth: 580px"],
+  div[style*="maxWidth: 520px"],
+  div[style*="maxWidth: 500px"],
+  div[style*="maxWidth: 480px"],
+  div[style*="maxWidth: 960px"] {
+    max-width: 100% !important;
+  }
+
+  /* Card Padding Reduction on Mobile */
+  div[style*="padding: 3.5rem 3rem"],
+  div[style*="padding: 4rem 3.5rem"],
+  div[style*="padding: 4rem"] {
+    padding: 1.5rem 1rem !important;
+    border-radius: 18px !important;
+  }
+
+  /* Stakeholder Tab Switcher Matrix Mobile Layout */
+  .solutions-tab-buttons {
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    padding-bottom: 0.6rem !important;
+    flex-wrap: nowrap !important;
+    margin-bottom: 1.5rem !important;
+    width: 100% !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .solutions-tab-buttons button {
+    flex-shrink: 0 !important;
+    padding: 0.6rem 1.1rem !important;
+    font-size: 0.82rem !important;
+    border-radius: 12px !important;
+  }
+
+  .solutions-tab-content-box {
+    padding: 1.5rem 1.2rem !important;
+    border-radius: 20px !important;
+  }
+
+  .solutions-tab-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .solutions-tab-grid h3 {
+    font-size: 1.35rem !important;
+    line-height: 1.3 !important;
+    margin: 0.3rem 0 0.75rem 0 !important;
+  }
+
+  .solutions-tab-grid p {
+    font-size: 0.88rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .solutions-tab-features-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .solutions-tab-features-grid > div {
+    font-size: 0.8rem !important;
+    gap: 0.4rem !important;
+  }
+
+  .solutions-tab-side-card {
+    width: 100% !important;
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  /* Pricing Page Super Premium Mobile Responsiveness */
+  .pricing-hero-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .pricing-hero-badges {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 1rem !important;
+  }
+
+  .pricing-plans-cards-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    width: 100% !important;
+  }
+
+  .pricing-card-item {
+    padding: 1.8rem 1.4rem !important;
+    border-radius: 20px !important;
+    width: 100% !important;
+  }
+
+  .pricing-compare-section {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+
+  .pricing-compare-table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 16px !important;
+    margin: 0 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04) !important;
+  }
+
+  .pricing-compare-table-container table {
+    min-width: 580px !important;
+  }
+
+  .pricing-compare-table-container th,
+  .pricing-compare-table-container td {
+    padding: 0.85rem 0.75rem !important;
+    font-size: 0.82rem !important;
+  }
+
+  .pricing-addons-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .pricing-addon-card {
+    padding: 1.1rem 0.9rem !important;
+    border-radius: 16px !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+  }
+
+  .pricing-addon-card h3 {
+    font-size: 0.98rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .pricing-addon-card p {
+    font-size: 0.75rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .pricing-addon-card span[style*="fontSize: \"1.3rem\""] {
+    font-size: 1.1rem !important;
+  }
+
+  .pricing-faq-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .pricing-faq-grid > div:first-child {
+    width: 100% !important;
+    max-width: 280px !important;
+    margin: 0 auto !important;
+  }
+
+  .pricing-testimonials-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .pricing-cta-banner-box {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding: 1.8rem 1.25rem !important;
+    border-radius: 20px !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+
+  .pricing-cta-banner-box > div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .pricing-cta-banner-box button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Resources Page Mobile Responsiveness */
+  .resources-hero-section {
+    padding-top: 85px !important;
+    padding-bottom: 20px !important;
+  }
+
+  .resources-stats-ribbon {
+    margin-top: 1.5rem !important;
+    width: 100% !important;
+  }
+
+  .resources-stats-ribbon > div {
+    gap: 1rem !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    justify-content: space-around !important;
+  }
+
+  .resources-stats-ribbon div[style*="fontSize: \"1.25rem\""] {
+    font-size: 1rem !important;
+  }
+
+  .resources-stats-ribbon div[style*="fontSize: \"0.78rem\""] {
+    font-size: 0.68rem !important;
+  }
+
+  .resources-hero-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+
+  .resources-hero-grid > div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  .resources-hero-grid p {
+    max-width: 100% !important;
+  }
+
+  .resources-cat-filter-grid {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    gap: 0.65rem !important;
+    padding-bottom: 0.6rem !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100% !important;
+  }
+
+  .resources-cat-filter-grid > div {
+    flex-shrink: 0 !important;
+    min-width: 85px !important;
+    padding: 0.75rem 0.5rem !important;
+    border-radius: 14px !important;
+  }
+
+  .resources-section-header,
+  .resources-articles-header,
+  .resources-guides-header,
+  .resources-events-header {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 0.75rem !important;
+    margin-top: 0 !important;
+  }
+
+  .resources-section-header > div[style*="marginTop"] {
+    margin-top: 0.5rem !important;
+  }
+
+  .resources-featured-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+  }
+
+  .resources-more-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  .resources-articles-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .resources-articles-grid > div {
+    border-radius: 14px !important;
+  }
+
+  .resources-articles-grid div[style*="height: 170"] {
+    height: 120px !important;
+  }
+
+  .resources-articles-grid div[style*="padding: \"1.1rem"] {
+    padding: 0.75rem !important;
+  }
+
+  .resources-articles-grid h4 {
+    font-size: 0.82rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .resources-articles-grid p {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .resources-guides-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .resources-guides-grid > div {
+    padding: 0.85rem 0.65rem !important;
+    border-radius: 14px !important;
+  }
+
+  .resources-webinar-banner {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+    padding: 1.8rem 1.25rem !important;
+    text-align: center !important;
+    align-items: center !important;
+    border-radius: 20px !important;
+  }
+
+  .resources-webinar-banner > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .resources-webinar-banner h3 {
+    font-size: 1.2rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 0.6rem !important;
+  }
+
+  .resources-webinar-banner div[style*="display: \"flex\""][style*="flexDirection: \"column\""] {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+    text-align: left !important;
+  }
+
+  .resources-webinar-banner button {
+    width: 100% !important;
+    max-width: 260px !important;
+  }
+
+  /* Support Cards 2-Column Mobile Layout (1x2 / 2 cards per row) */
+  .resources-support-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .resources-support-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 1.1rem 0.85rem !important;
+    gap: 0.65rem !important;
+    border-radius: 16px !important;
+  }
+
+  .resources-support-card div[style*="width: 50"] {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    font-size: 1.2rem !important;
+  }
+
+  .resources-support-card h4 {
+    font-size: 0.92rem !important;
+    margin-bottom: 0.15rem !important;
+  }
+
+  .resources-support-card p {
+    font-size: 0.75rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 0.4rem !important;
+  }
+
+  .resources-support-card span {
+    font-size: 0.75rem !important;
+  }
+
+  .resources-newsletter-banner {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+    padding: 1.8rem 1.25rem !important;
+    text-align: center !important;
+    align-items: center !important;
+    border-radius: 18px !important;
+  }
+
+  .resources-newsletter-banner > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .resources-newsletter-banner form,
+  .resources-newsletter-banner div[style*="display: \"flex\""] {
+    width: 100% !important;
+  }
+
+  /* About Us Page Super Premium Mobile Responsiveness */
+  .about-hero-section {
+    padding-top: 85px !important;
+    padding-bottom: 30px !important;
+  }
+
+  .about-hero-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+
+  .about-hero-grid > div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  .about-hero-grid p {
+    max-width: 100% !important;
+  }
+
+  .about-stats-ribbon {
+    margin-top: 1.8rem !important;
+    width: 100% !important;
+  }
+
+  .about-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+    padding: 1.1rem 0.85rem !important;
+    border-radius: 18px !important;
+  }
+
+  .about-stats-grid > div {
+    gap: 0.6rem !important;
+    padding: 0.35rem 0.2rem !important;
+  }
+
+  .about-stats-grid div[style*="fontSize: \"1.45rem\""] {
+    font-size: 1.15rem !important;
+  }
+
+  .about-stats-grid div[style*="fontSize: \"0.82rem\""] {
+    font-size: 0.72rem !important;
+  }
+
+  .about-mission-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+  }
+
+  .about-mission-grid > div {
+    padding: 1.8rem 1.25rem !important;
+    border-radius: 20px !important;
+  }
+
+  .about-pillars-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .about-pillars-grid > div {
+    padding: 1.1rem 0.85rem !important;
+    border-radius: 16px !important;
+  }
+
+  .about-timeline-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .about-timeline-grid > div {
+    padding: 1.1rem 0.85rem !important;
+    border-radius: 16px !important;
+  }
+
+  .about-timeline-grid div[style*="fontSize: \"2.2rem\""] {
+    font-size: 1.45rem !important;
+  }
+
+  .about-team-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .about-team-grid > div {
+    border-radius: 16px !important;
+  }
+
+  .about-team-grid div[style*="height: 220"] {
+    height: 140px !important;
+  }
+
+  .about-team-grid div[style*="padding: \"1.4rem\""] {
+    padding: 0.85rem !important;
+  }
+
+  .about-team-grid h4 {
+    font-size: 0.98rem !important;
+  }
+
+  .about-offices-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  /* Homepage Premium School Cards Super Crisp Mobile Layout */
+  .school-cards-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .school-cards-grid .trust-card-item {
+    padding: 1.15rem 1rem !important;
+    border-radius: 18px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    text-align: left !important;
+    align-items: stretch !important;
+  }
+
+  .school-cards-grid .trust-card-item > div:first-child {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 0.85rem !important;
+    width: 100% !important;
+  }
+
+  .school-cards-grid .trust-card-icon-box {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .school-cards-grid .trust-card-icon-box svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .school-cards-grid .trust-card-item span[style*="fontSize: \"0.75rem\""] {
+    font-size: 0.68rem !important;
+    padding: 0.22rem 0.6rem !important;
+    border-radius: 99px !important;
+    white-space: nowrap !important;
+  }
+
+  .school-cards-grid .trust-card-item h4 {
+    font-size: 0.98rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 0.35rem !important;
+    text-align: left !important;
+    font-weight: 800 !important;
+  }
+
+  .school-cards-grid .trust-card-item div[style*="fontSize: \"0.82rem\""] {
+    font-size: 0.75rem !important;
+    gap: 0.4rem !important;
+    margin-bottom: 0.85rem !important;
+    flex-wrap: wrap !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
+
+  .school-cards-grid .trust-card-item > div:last-child {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-top: 1px solid var(--border-color) !important;
+    padding-top: 0.7rem !important;
+    margin-top: 0.5rem !important;
+    width: 100% !important;
+  }
+
+  .school-cards-grid .trust-card-item > div:last-child span {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+  }
+
+  /* Live ERP Control Center Dashboard Window Mobile Layout */
+  .dashboard-window-frame {
+    border-radius: 16px !important;
+    box-shadow: 0 15px 40px rgba(15, 23, 42, 0.12) !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dashboard-top-bar {
+    padding: 0.6rem 0.85rem !important;
+  }
+
+  .dashboard-url-pill {
+    min-width: unset !important;
+    font-size: 0.72rem !important;
+    padding: 0.25rem 0.6rem !important;
+  }
+
+  .dashboard-inner-body {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: auto !important;
+  }
+
+  .dashboard-sidebar {
+    display: none !important;
+  }
+
+  .dashboard-main-content {
+    padding: 1rem 0.85rem !important;
+    gap: 1rem !important;
+  }
+
+  .dashboard-main-content h3 {
+    font-size: 1.2rem !important;
+  }
+
+  .dashboard-main-content p {
+    font-size: 0.78rem !important;
+  }
+
+  .dashboard-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.65rem !important;
+  }
+
+  .dashboard-stats-grid .stat-card-item {
+    padding: 0.85rem 0.65rem !important;
+    border-radius: 12px !important;
+  }
+
+  .dashboard-stats-grid .stat-card-item div[style*="fontSize: \"1.6rem\""] {
+    font-size: 1.15rem !important;
+  }
+
+  .dashboard-stats-grid .stat-card-item div[style*="fontSize: \"0.82rem\""] {
+    font-size: 0.68rem !important;
+  }
+
+  .dashboard-charts-row1,
+  .dashboard-charts-row2 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+  }
+
+  .dashboard-charts-row1 > div,
+  .dashboard-charts-row2 > div {
+    padding: 0.95rem 0.75rem !important;
+    border-radius: 12px !important;
+  }
+
+  /* Live GPS Tracking Side-by-Side 3D Image Showcase Mobile Layout */
+  .gps-tracking-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .gps-map-side,
+  .gps-tracking-panel {
+    padding: 1.25rem 1rem !important;
+    border-radius: 20px !important;
+    gap: 1rem !important;
+  }
+
+  .gps-map-side div[style*="height: 320"],
+  .gps-tracking-panel div[style*="height: 320"] {
+    height: 220px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .site-nav {
+    height: 62px !important;
+    padding: 0 4% !important;
+  }
+
+  .school-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  /* Footer Bottom Credit Stack */
+  div[style*="justifyContent: \"space-between\""] {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.85rem !important;
+    text-align: center !important;
+  }
+}
+
+
+
