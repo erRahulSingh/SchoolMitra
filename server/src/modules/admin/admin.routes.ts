@@ -66,8 +66,23 @@ import {
   getAuditLogs,
   getSystemActivityLogs,
   getGlobalSettings,
-  saveGlobalSettings
+  saveGlobalSettings,
+  getAdminTeacherLeaves,
+  updateAdminTeacherLeaveStatus,
+  getPendingAcademicApprovals,
+  approveAcademicSubmission,
+  rejectAcademicSubmission,
+  getAttendanceCorrectionRequests,
+  approveAttendanceCorrectionRequest,
+  getTeacherActivityMonitoringDashboard,
+  getTeachersPerformanceReport,
+  getSingleTeacherPerformanceDossier
 } from "./admin.controller";
+
+
+
+
+
 
 const router = Router();
 
@@ -165,9 +180,35 @@ router.delete("/api-keys/:id", revokeApiKey);
 // System Health Telemetry Endpoint
 router.get("/health", getSystemHealth);
 
+// Teacher Leave Management Endpoints for School Admin
+router.get("/teacher-leaves", getAdminTeacherLeaves);
+router.patch("/teacher-leaves/:id/status", updateAdminTeacherLeaveStatus);
+
+// Critical Academic Document Approvals for School Admin
+router.get("/academic-approvals/pending", getPendingAcademicApprovals);
+router.patch("/academic-approvals/:id/approve", approveAcademicSubmission);
+router.patch("/academic-approvals/:id/reject", rejectAcademicSubmission);
+
+// Attendance Locking & Correction Approval Endpoints for School Admin
+router.get("/attendance-corrections", getAttendanceCorrectionRequests);
+router.patch("/attendance-corrections/:id/approve", approveAttendanceCorrectionRequest);
+
+// Teacher Activity Monitoring Dashboard Endpoints for School Admin
+router.get("/teacher-activity-dashboard", getTeacherActivityMonitoringDashboard);
+router.get("/teacher-monitoring", getTeacherActivityMonitoringDashboard);
+
+// Teacher 360 Performance Report Endpoints for School Admin / Principal Desk
+router.get("/teachers/performance", getTeachersPerformanceReport);
+router.get("/teachers/:teacherId/performance", getSingleTeacherPerformanceDossier);
+
 // Legacy/System Endpoints
 router.get("/stats", getDashboardStats);
 router.get("/payments", getPaymentsList);
 router.get("/support", getSupportTickets);
+
+
+
+
+
 
 export default router;

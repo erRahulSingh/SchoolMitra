@@ -2044,3 +2044,396 @@ export const saveGlobalSettings = async (req: Request, res: Response) => {
   }
 };
 
+// ════════════ 15. SCHOOL ADMIN TEACHER LEAVE APPROVAL APIs ════════════
+export const getAdminTeacherLeaves = async (req: Request, res: Response) => {
+  try {
+    const { status } = req.query;
+
+    return res.json({
+      success: true,
+      message: "Teacher leave applications retrieved for School Admin HR desk",
+      totalApplications: 3,
+      pendingCount: 1,
+      approvedCount: 2,
+      rejectedCount: 0,
+      applications: [
+        {
+          id: "lv_102",
+          teacherId: "tch_65a88203921",
+          teacherName: "Anil Dev Sharma",
+          employeeId: "TCH-2024-884",
+          designation: "Senior Educator & Class Teacher 10-A",
+          leaveType: "Medical",
+          startDate: "2024-06-10",
+          endDate: "2024-06-12",
+          totalDays: 3,
+          reason: "Fever & Doctor Consultation",
+          status: status || "Pending",
+          appliedOn: "2024-06-08T09:00:00.000Z",
+          adminRemarks: null
+        },
+        {
+          id: "lv_101",
+          teacherId: "tch_65a88203921",
+          teacherName: "Anil Dev Sharma",
+          employeeId: "TCH-2024-884",
+          designation: "Senior Educator & Class Teacher 10-A",
+          leaveType: "Casual",
+          startDate: "2024-05-03",
+          endDate: "2024-05-03",
+          totalDays: 1,
+          reason: "Personal Work",
+          status: "Approved",
+          appliedOn: "2024-05-01T10:00:00.000Z",
+          adminRemarks: "Approved by Principal"
+        }
+      ]
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+import { notifyTeacher } from "../../services/pushNotificationService";
+
+export const updateAdminTeacherLeaveStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status, adminRemarks } = req.body; // Status: Approved | Rejected | Pending
+
+    if (!["Approved", "Rejected", "Pending"].includes(status)) {
+      return res.status(400).json({ success: false, message: "Status must be Approved, Rejected, or Pending" });
+    }
+
+    // Dispatch Expo Push Notification to Teacher App
+    notifyTeacher(
+      "ExponentPushToken[SampleTeacherToken]",
+      "LEAVE_STATUS",
+      `Leave Application ${status} ${status === "Approved" ? "✅" : "❌"}`,
+      `Your leave application (Ref: ${id}) has been ${status}. ${adminRemarks || ""}`,
+      { leaveId: id, status }
+    );
+
+    return res.json({
+      success: true,
+      message: `Teacher leave application ${id} status updated to ${status}! Notification sent to Teacher App.`,
+      leaveApplication: {
+        id,
+        status,
+        adminRemarks: adminRemarks || `Leave ${status} by School Admin HR Desk`,
+        updatedAt: new Date().toISOString()
+      }
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+import { notifyParent } from "../../services/pushNotificationService";
+
+// ════════════ 16. SCHOOL ADMIN CRITICAL ACADEMIC APPROVAL APIs ════════════
+export const getPendingAcademicApprovals = async (req: Request, res: Response) => {
+  try {
+    return res.json({
+      success: true,
+      message: "Pending academic approvals retrieved for School Admin Review Desk",
+      totalPending: 3,
+      pendingItems: [
+        {
+          id: "appr_101",
+          type: "Report Card",
+          title: "CBSE Mid-Term Report Cards — Class 8-A",
+          submittedByTeacher: "Rahul Sharma",
+          className: "Class 8 - Section A",
+          totalStudents: 36,
+          status: "PendingAdminApproval",
+          submittedAt: "2024-05-20T11:00:00.000Z"
+        },
+        {
+          id: "appr_102",
+          type: "Exam Result",
+          title: "Mathematics Theory Exam Marks Roster",
+          submittedByTeacher: "Anil Dev Sharma",
+          className: "Class 10 - Section A",
+          totalStudents: 42,
+          status: "PendingAdminApproval",
+          submittedAt: "2024-05-19T14:30:00.000Z"
+        },
+        {
+          id: "appr_103",
+          type: "Academic Report",
+          title: "Term 1 Conduct & Academic Growth Report",
+          submittedByTeacher: "Priya Singh",
+          className: "Class 9 - Section B",
+          totalStudents: 34,
+          status: "PendingAdminApproval",
+          submittedAt: "2024-05-18T16:00:00.000Z"
+        }
+      ]
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const approveAcademicSubmission = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { adminRemarks } = req.body;
+
+    // Dispatch Expo Push Notification + Socket.IO to Parent App upon Admin Approval
+    notifyParent(
+      "ExponentPushToken[SampleParentToken]",
+      "EXAM_RESULT_PUBLISHED",
+      "Official Academic Document Published 📢",
+      `School Admin has verified & published official academic report card/results. Tap to view scorecard.`,
+      { approvalId: id }
+    );
+
+    const io = (global as any).io;
+    if (io) {
+      io.emit("parent:result_update", {
+        title: "Official Exam Result Published 📊",
+        body: "Verified & Approved by School Principal / Admin",
+        approvalId: id
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: `Academic submission ${id} approved & officially published to Parent App!`,
+      approval: {
+        id,
+        status: "ApprovedAndPublished",
+        adminRemarks: adminRemarks || "Verified and approved by School Admin",
+        publishedToParentApp: true,
+        approvedAt: new Date().toISOString()
+      }
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const rejectAcademicSubmission = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { revisionNotes } = req.body;
+
+    notifyTeacher(
+      "ExponentPushToken[SampleTeacherToken]",
+      "ADMIN_MESSAGE",
+      "Academic Submission Revision Requested 📝",
+      `School Admin requested revisions for submission ${id}. Notes: ${revisionNotes || "Please review marks distribution."}`,
+      { approvalId: id }
+    );
+
+    return res.json({
+      success: true,
+      message: `Academic submission ${id} rejected back to Teacher with revision notes.`,
+      approval: {
+        id,
+        status: "RevisionRequested",
+        revisionNotes: revisionNotes || "Please verify marks calculation and resubmit.",
+        rejectedAt: new Date().toISOString()
+      }
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ════════════ 17. SCHOOL ADMIN ATTENDANCE LOCK CORRECTION APIs ════════════
+export const getAttendanceCorrectionRequests = async (req: Request, res: Response) => {
+  try {
+    return res.json({
+      success: true,
+      message: "Attendance correction requests retrieved for School Admin",
+      totalRequests: 2,
+      requests: [
+        {
+          requestId: "corr_101",
+          attendanceId: "att_101",
+          teacherName: "Rahul Sharma",
+          className: "Class 8 - Section A",
+          studentId: "st_101",
+          studentName: "Aarav Sharma",
+          date: "2026-08-01",
+          currentStatus: "Absent",
+          requestedStatus: "Present",
+          reason: "Student arrived late after attendance submission due to medical checkup.",
+          status: "PendingAdminApproval",
+          submittedAt: "2026-08-02T10:00:00.000Z"
+        }
+      ]
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const approveAttendanceCorrectionRequest = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status = "Approved", adminRemarks } = req.body;
+
+    // Dispatch Push Notification & Socket.IO to Parent App
+    notifyParent(
+      "ExponentPushToken[SampleParentToken]",
+      "ATTENDANCE_UPDATE",
+      "Attendance Correction Approved 📅",
+      "Attendance record has been corrected and updated by School Admin.",
+      { correctionId: id }
+    );
+
+    return res.json({
+      success: true,
+      message: `Attendance correction request ${id} approved by School Admin! Attendance record unlocked & updated.`,
+      correction: {
+        requestId: id,
+        status,
+        adminRemarks: adminRemarks || "Approved by School Admin",
+        attendanceUpdated: true,
+        updatedAt: new Date().toISOString()
+      }
+    });
+// ════════════ 18. SCHOOL ADMIN TEACHER ACTIVITY MONITORING DASHBOARD ════════════
+export const getTeacherActivityMonitoringDashboard = async (req: Request, res: Response) => {
+  try {
+    return res.json({
+      success: true,
+      message: "Teacher activity monitoring dashboard metrics retrieved for School Admin",
+      overview: {
+        totalTeachers: 45,
+        activeToday: 42,
+        onLeaveToday: 3,
+        overallComplianceRate: "94.8%"
+      },
+      attendanceToday: {
+        totalClasses: 45,
+        completed: 42,
+        pending: 3,
+        complianceRate: "93.3%",
+        pendingTeachersList: [
+          { teacherId: "tch_881", name: "Suresh Kumar", class: "Class 6-B", subject: "Science" },
+          { teacherId: "tch_882", name: "Meenakshi Devi", class: "Class 7-A", subject: "Hindi" },
+          { teacherId: "tch_883", name: "Vikram Malhotra", class: "Class 9-C", subject: "English" }
+        ]
+      },
+      homeworkStatus: {
+        totalAssigned: 45,
+        published: 38,
+        pending: 7,
+        complianceRate: "84.4%"
+      },
+      marksSubmissionStatus: {
+        totalExams: 30,
+        completed: 18,
+        pending: 12,
+        complianceRate: "60.0%"
+      },
+      reportCardsStatus: {
+        totalClasses: 15,
+        approvedAndPublished: 7,
+        pendingAdminReview: 8,
+        complianceRate: "46.7%"
+      },
+// ════════════ 19. SCHOOL ADMIN TEACHER PERFORMANCE REPORT APIs ════════════
+export const getTeachersPerformanceReport = async (req: Request, res: Response) => {
+  try {
+    return res.json({
+      success: true,
+      message: "Teachers 360° Performance & Compliance Roster retrieved for Principal Desk",
+      totalEvaluated: 3,
+      performanceRoster: [
+        {
+          teacherId: "tch_65a88203921",
+          employeeId: "TCH-2024-884",
+          name: "Rahul Sharma",
+          designation: "Senior Educator",
+          assignedClasses: ["Class 8-A", "Class 10-A"],
+          assignedSubject: "Mathematics",
+          attendanceSubmissionRate: "98.5%",
+          homeworkFrequency: "4.2 homeworks / week",
+          testsConductedCount: 14,
+          marksPendingCount: 0,
+          classesCompletedCount: 182,
+          studentAveragePassPercentage: "95.2%",
+          overallPerformanceScore: "9.6 / 10 ⭐"
+        },
+        {
+          teacherId: "tch_65a88203922",
+          employeeId: "TCH-2024-885",
+          name: "Anil Dev Sharma",
+          designation: "Educator",
+          assignedClasses: ["Class 9-B"],
+          assignedSubject: "Physics",
+          attendanceSubmissionRate: "94.0%",
+          homeworkFrequency: "3.5 homeworks / week",
+          testsConductedCount: 10,
+          marksPendingCount: 1,
+          classesCompletedCount: 145,
+          studentAveragePassPercentage: "91.0%",
+          overallPerformanceScore: "8.9 / 10 ⭐"
+        },
+        {
+          teacherId: "tch_65a88203923",
+          employeeId: "TCH-2024-886",
+          name: "Priya Singh",
+          designation: "Educator",
+          assignedClasses: ["Class 7-C"],
+          assignedSubject: "English",
+          attendanceSubmissionRate: "91.2%",
+          homeworkFrequency: "3.0 homeworks / week",
+          testsConductedCount: 8,
+          marksPendingCount: 2,
+          classesCompletedCount: 120,
+          studentAveragePassPercentage: "88.5%",
+          overallPerformanceScore: "8.5 / 10 ⭐"
+        }
+      ]
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getSingleTeacherPerformanceDossier = async (req: Request, res: Response) => {
+  try {
+    const { teacherId } = req.params;
+
+    return res.json({
+      success: true,
+      message: `360° Detailed Performance Report for Teacher ${teacherId} retrieved`,
+      performanceDossier: {
+        teacherId: teacherId || "tch_65a88203921",
+        employeeId: "TCH-2024-884",
+        name: "Rahul Sharma",
+        designation: "Senior Educator",
+        department: "Mathematics & Physical Sciences",
+        attendanceSubmissionRate: "98.5%",
+        homeworkFrequency: "4.2 homeworks / week",
+        testsConductedCount: 14,
+        marksPendingCount: 0,
+        classesCompletedCount: 182,
+        studentPerformanceMetrics: {
+          averageGPA: "3.85 / 4.0",
+          passRate: "95.2%",
+          topPerformersCount: 12,
+          remedialStudentsCount: 2
+        },
+        parentSatisfactionRating: "4.8 / 5.0 👍",
+        overallPerformanceGrade: "A+ (Outstanding Educator)"
+      }
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+
+
+
+
+

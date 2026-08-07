@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "SchoolMitra Parent",
+    "slug": "schoolmitra-parent",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "entryPoint": "./index.js",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.schoolmitra.parent"
+    },
+    "android": {
+      "package": "com.schoolmitra.parent"
+    }
+  }
+}

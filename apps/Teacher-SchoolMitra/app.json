@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Teacher-SchoolMitra",
+    "slug": "teacher-schoolmitra",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "teacherschoolmitra",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.schoolmitra.teacher"
+    },
+    "android": {
+      "package": "com.schoolmitra.teacher"
+    }
+  }
+}

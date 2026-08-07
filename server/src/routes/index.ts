@@ -30,10 +30,14 @@ import hrRoutes from "../modules/hr/hr.routes";
 import libraryRoutes from "../modules/library/library.routes";
 import inventoryRoutes from "../modules/inventory/inventory.routes";
 
+import uploadRoutes from "../modules/upload/upload.routes";
+
 const router = Router();
 
 // Mount all Backend Microservice Modules
 router.use("/auth", authRoutes);
+router.use("/upload", uploadRoutes);
+
 router.use("/settings", settingsRoutes);
 router.use("/academics", academicsRoutes);
 router.use("/driver", driverRoutes);

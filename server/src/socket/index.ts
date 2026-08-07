@@ -124,6 +124,105 @@ export const initSocketServer = (io: SocketIOServer) => {
       });
     });
 
+    // ──────────── 6. TEACHER REAL-TIME PARENT DATA SYNCHRONIZATION ────────────
+    // Attendance Sync
+    socket.on("teacher:attendance_updated", (data: any) => {
+      logger.info(`[Socket.IO] Teacher updated Attendance for ${data.className || 'Class'}`);
+      const syncPayload = {
+        type: "ATTENDANCE",
+        title: "Attendance Updated",
+        body: `Attendance marked for ${data.className || 'Class'} on ${data.date || 'today'}.`,
+        timestamp: new Date().toISOString(),
+        data
+      };
+      io.emit("parent:attendance_update", syncPayload);
+      io.emit("parent:live_notification", syncPayload);
+    });
+
+    // Homework Sync
+    socket.on("teacher:homework_published", (data: any) => {
+      logger.info(`[Socket.IO] Teacher published Homework: ${data.title || 'New Homework'}`);
+      const syncPayload = {
+        type: "HOMEWORK",
+        title: `📚 New Homework: ${data.title}`,
+        body: `${data.subject || 'Subject'} homework assigned to ${data.className || 'Class'}. Due: ${data.dueDate || 'Soon'}.`,
+        timestamp: new Date().toISOString(),
+        data
+      };
+      io.emit("parent:homework_update", syncPayload);
+      io.emit("parent:live_notification", syncPayload);
+    });
+
+    // Assignments Sync
+    socket.on("teacher:assignment_published", (data: any) => {
+      logger.info(`[Socket.IO] Teacher published Assignment: ${data.title || 'New Assignment'}`);
+      const syncPayload = {
+        type: "ASSIGNMENT",
+        title: `🏆 New Assignment: ${data.title}`,
+        body: `${data.subject || 'Subject'} project assigned (Max Marks: ${data.marks || 50}).`,
+        timestamp: new Date().toISOString(),
+        data
+      };
+      io.emit("parent:homework_update", syncPayload);
+      io.emit("parent:live_notification", syncPayload);
+    });
+
+    // Weekly Test Sync
+    socket.on("teacher:test_published", (data: any) => {
+      logger.info(`[Socket.IO] Teacher published Weekly Test: ${data.title || 'Weekly Test'}`);
+      const syncPayload = {
+        type: "WEEKLY_TEST",
+        title: `📝 Weekly Test Update: ${data.title}`,
+        body: `Weekly Test scheduled for ${data.className || 'Class'}. Total Marks: ${data.totalMarks || 25}.`,
+        timestamp: new Date().toISOString(),
+        data
+      };
+      io.emit("parent:test_update", syncPayload);
+      io.emit("parent:live_notification", syncPayload);
+    });
+
+    // Marks Entry Sync
+    socket.on("teacher:marks_submitted", (data: any) => {
+      logger.info(`[Socket.IO] Teacher submitted Exam Marks for ${data.examTitle || 'Exam'}`);
+      const syncPayload = {
+        type: "MARKS",
+        title: `📊 Exam Marks Published: ${data.examTitle || 'Exam'}`,
+        body: `Official exam scores for ${data.className || 'Class'} are now available on Parent App.`,
+        timestamp: new Date().toISOString(),
+        data
+      };
+      io.emit("parent:result_update", syncPayload);
+      io.emit("parent:live_notification", syncPayload);
+    });
+
+    // Report Card Sync
+    socket.on("teacher:report_card_published", (data: any) => {
+      logger.info(`[Socket.IO] Teacher published Report Cards for ${data.className || 'Class'}`);
+      const syncPayload = {
+        type: "REPORT_CARD",
+        title: `📄 Report Cards Released!`,
+        body: `Official Report Cards for ${data.className || 'Class'} are now downloadable on Parent Portal.`,
+        timestamp: new Date().toISOString(),
+        data
+      };
+      io.emit("parent:report_card_update", syncPayload);
+      io.emit("parent:live_notification", syncPayload);
+    });
+
+    // Class Announcement Sync
+    socket.on("teacher:announcement_created", (data: any) => {
+      logger.info(`[Socket.IO] Teacher broadcasted Announcement: ${data.title}`);
+      const syncPayload = {
+        type: "ANNOUNCEMENT",
+        title: `📢 Class Announcement: ${data.title}`,
+        body: data.body || 'Important notice from class teacher.',
+        timestamp: new Date().toISOString(),
+        data
+      };
+      io.emit("parent:notification_update", syncPayload);
+      io.emit("parent:live_notification", syncPayload);
+    });
+
     socket.on("disconnect", () => {
       logger.info(`[Socket.IO] Client disconnected: ${socket.id}`);
     });
