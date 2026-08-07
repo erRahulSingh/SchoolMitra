@@ -84,7 +84,7 @@ export default function TripTimelinePage({ onNavigate }: TripTimelinePageProps) 
         position: "relative",
         overflow: "hidden"
       }}>
-        <div style={{ display: "flex", alignItems: "center", justify: "space-between", marginBottom: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
           <div>
             <h2 style={{ fontSize: "1rem", fontWeight: 800, margin: 0, fontFamily: "'Outfit', sans-serif" }}>Route 01 - Morning</h2>
             <p style={{ fontSize: "0.78rem", color: "#93c5fd", fontWeight: 500, margin: "2px 0 0 0" }}>Green Valley Route</p>

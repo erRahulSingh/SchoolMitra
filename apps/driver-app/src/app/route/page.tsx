@@ -311,7 +311,7 @@ export default function RoutePage() {
         overflow: "hidden",
         boxShadow: "0 8px 24px rgba(11, 34, 101, 0.2)"
       }}>
-        <div style={{ display: "flex", alignItems: "center", justify: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <h2 style={{ fontSize: "1rem", fontWeight: 800, margin: 0, fontFamily: "'Outfit', sans-serif" }}>Route 01 - Morning</h2>
             <p style={{ fontSize: "0.78rem", color: "#93c5fd", fontWeight: 500, margin: "2px 0 0 0" }}>Green Valley Route</p>

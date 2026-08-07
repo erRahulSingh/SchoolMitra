@@ -4,38 +4,41 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-  Home, School, MessageSquare, User, Plus 
+  Home, School, LayoutGrid, MessageSquare, User 
 } from "lucide-react";
 
 export default function TeacherBottomNav() {
   const pathname = usePathname();
 
   const isHome = pathname === "/dashboard";
-  const isClasses = pathname.startsWith("/attendance") || pathname.startsWith("/students");
-  const isActionActive = pathname.startsWith("/homework/create") || pathname.startsWith("/weekly-test/create") || pathname.startsWith("/assignments/create");
-  const isMessages = pathname.startsWith("/communication");
+  const isClasses = pathname.startsWith("/classes") || pathname.startsWith("/students");
+  const isAcademics = pathname.startsWith("/academics") || pathname.startsWith("/homework") || pathname.startsWith("/weekly-test") || pathname.startsWith("/attendance") || pathname.startsWith("/exams") || pathname.startsWith("/report-card");
+  const isMessages = pathname.startsWith("/communication") || pathname.startsWith("/messages");
   const isProfile = pathname.startsWith("/profile");
 
-  const activeBlue = "var(--nav-active)";
-  const inactiveGray = "var(--nav-text)";
+  const activePurple = "#7c3aed";
+  const inactiveGray = "#94a3b8";
 
   return (
-    <div style={{
-      height: 70,
+    <div className="teacher-bottom-nav" style={{
+      height: 68,
       background: "var(--nav-bg)",
       borderTop: "1px solid var(--nav-border)",
       display: "flex",
-      justify: "space-around",
+      justifyContent: "space-around",
       alignItems: "center",
       padding: "0 0.5rem",
-      position: "relative",
+      position: "sticky",
+      bottom: 0,
+      left: 0,
+      right: 0,
       zIndex: 100,
       flexShrink: 0,
-      boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.05)",
+      boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.08)",
       transition: "background 0.3s ease, border-color 0.3s ease"
     }}>
       
-      {/* TAB 1: TEACHER HOME */}
+      {/* TAB 1: HOME */}
       <Link
         href="/dashboard"
         style={{
@@ -43,86 +46,87 @@ export default function TeacherBottomNav() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 2,
+          gap: 3,
           textDecoration: "none",
-          color: isHome ? activeBlue : inactiveGray,
+          color: isHome ? activePurple : inactiveGray,
           transition: "all 0.2s ease"
         }}
       >
         <Home 
           size={22} 
-          color={isHome ? activeBlue : inactiveGray} 
-          fill={isHome ? activeBlue : "none"} 
-          strokeWidth={isHome ? 2.5 : 2} 
+          color={isHome ? activePurple : inactiveGray} 
+          fill={isHome ? "rgba(124, 58, 237, 0.15)" : "none"} 
+          strokeWidth={isHome ? 2.4 : 2} 
         />
-        <span style={{ fontSize: "0.68rem", fontWeight: isHome ? 900 : 700 }}>
+        <span style={{ fontSize: "0.68rem", fontWeight: isHome ? 800 : 600 }}>
           Home
         </span>
       </Link>
 
-      {/* TAB 2: TEACHER CLASSES */}
+      {/* TAB 2: CLASSES */}
       <Link
-        href="/attendance"
+        href="/classes"
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 2,
+          gap: 3,
           textDecoration: "none",
-          color: isClasses ? activeBlue : inactiveGray,
+          color: isClasses ? activePurple : inactiveGray,
           transition: "all 0.2s ease"
         }}
       >
         <School 
           size={22} 
-          color={isClasses ? activeBlue : inactiveGray} 
-          fill={isClasses ? activeBlue : "none"} 
-          strokeWidth={isClasses ? 2.5 : 2} 
+          color={isClasses ? activePurple : inactiveGray} 
+          fill={isClasses ? "rgba(124, 58, 237, 0.15)" : "none"} 
+          strokeWidth={isClasses ? 2.4 : 2} 
         />
-        <span style={{ fontSize: "0.68rem", fontWeight: isClasses ? 900 : 700 }}>
+        <span style={{ fontSize: "0.68rem", fontWeight: isClasses ? 800 : 600 }}>
           Classes
         </span>
       </Link>
 
-      {/* TAB 3: CENTER ELEVATED FLOATING CIRCULAR BUTTON (+) - QUICK CREATE / ACTION */}
+      {/* TAB 3: ACADEMICS (CENTER ELEVATED TAB) */}
       <Link
-        href="/homework/create"
+        href="/academics"
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          marginTop: "-28px",
-          zIndex: 110,
+          gap: 3,
           textDecoration: "none",
-          cursor: "pointer"
+          color: isAcademics ? activePurple : inactiveGray,
+          transition: "all 0.2s ease"
         }}
       >
         <div style={{
-          width: 56,
-          height: 56,
-          borderRadius: "50%",
-          background: "linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%)",
-          border: "4px solid var(--nav-bg)",
+          width: 44,
+          height: 44,
+          borderRadius: "14px",
+          background: isAcademics 
+            ? "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)" 
+            : "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
           color: "#ffffff",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: isActionActive 
-            ? "0 8px 24px rgba(29, 78, 216, 0.55)" 
-            : "0 6px 18px rgba(29, 78, 216, 0.38)",
-          transition: "transform 0.2s ease, box-shadow 0.2s ease"
+          marginTop: "-16px",
+          boxShadow: isAcademics 
+            ? "0 8px 20px rgba(124, 58, 237, 0.4)" 
+            : "0 6px 16px rgba(139, 92, 246, 0.25)",
+          transition: "all 0.2s ease"
         }}>
-          <Plus size={26} strokeWidth={3} />
+          <LayoutGrid size={22} strokeWidth={2.5} color="#ffffff" />
         </div>
-        <span style={{ fontSize: "0.68rem", fontWeight: 800, color: isActionActive ? activeBlue : inactiveGray, marginTop: 2 }}>
-          Create
+        <span style={{ fontSize: "0.68rem", fontWeight: isAcademics ? 800 : 600, color: isAcademics ? activePurple : inactiveGray }}>
+          Academics
         </span>
       </Link>
 
-      {/* TAB 4: TEACHER MESSAGES & PARENT COMMUNICATIONS */}
+      {/* TAB 4: MESSAGES */}
       <Link
         href="/communication/messages"
         style={{
@@ -130,24 +134,24 @@ export default function TeacherBottomNav() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 2,
+          gap: 3,
           textDecoration: "none",
-          color: isMessages ? activeBlue : inactiveGray,
+          color: isMessages ? activePurple : inactiveGray,
           transition: "all 0.2s ease"
         }}
       >
         <MessageSquare 
           size={22} 
-          color={isMessages ? activeBlue : inactiveGray} 
-          fill={isMessages ? activeBlue : "none"} 
-          strokeWidth={isMessages ? 2.5 : 2} 
+          color={isMessages ? activePurple : inactiveGray} 
+          fill={isMessages ? "rgba(124, 58, 237, 0.15)" : "none"} 
+          strokeWidth={isMessages ? 2.4 : 2} 
         />
-        <span style={{ fontSize: "0.68rem", fontWeight: isMessages ? 900 : 700 }}>
+        <span style={{ fontSize: "0.68rem", fontWeight: isMessages ? 800 : 600 }}>
           Messages
         </span>
       </Link>
 
-      {/* TAB 5: TEACHER PROFILE */}
+      {/* TAB 5: PROFILE */}
       <Link
         href="/profile"
         style={{
@@ -155,19 +159,19 @@ export default function TeacherBottomNav() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 2,
+          gap: 3,
           textDecoration: "none",
-          color: isProfile ? activeBlue : inactiveGray,
+          color: isProfile ? activePurple : inactiveGray,
           transition: "all 0.2s ease"
         }}
       >
         <User 
           size={22} 
-          color={isProfile ? activeBlue : inactiveGray} 
-          fill={isProfile ? activeBlue : "none"} 
-          strokeWidth={isProfile ? 2.5 : 2} 
+          color={isProfile ? activePurple : inactiveGray} 
+          fill={isProfile ? "rgba(124, 58, 237, 0.15)" : "none"} 
+          strokeWidth={isProfile ? 2.4 : 2} 
         />
-        <span style={{ fontSize: "0.68rem", fontWeight: isProfile ? 900 : 700 }}>
+        <span style={{ fontSize: "0.68rem", fontWeight: isProfile ? 800 : 600 }}>
           Profile
         </span>
       </Link>
