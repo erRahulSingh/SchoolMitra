@@ -90,11 +90,11 @@ export default function Navbar() {
             {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
           </button>
 
-          <Link href="/login" className="btn-ghost-nav desktop-only">
+          <Link href="/auth" className="btn-ghost-nav desktop-only">
             Login
           </Link>
 
-          <Link href="/contact" className="btn-primary-nav desktop-only">
+          <Link href="/auth?mode=signup" className="btn-primary-nav desktop-only">
             Get Started <ArrowRight size={15} />
           </Link>
 
@@ -187,7 +187,7 @@ export default function Navbar() {
 
             <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "0.85rem", marginTop: "0.35rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
               <Link
-                href="/login"
+                href="/auth"
                 onClick={() => setMobileMenuOpen(false)}
                 style={{
                   padding: "0.6rem",
@@ -204,7 +204,7 @@ export default function Navbar() {
                 Login
               </Link>
               <Link
-                href="/contact"
+                href="/auth?mode=signup"
                 onClick={() => setMobileMenuOpen(false)}
                 style={{
                   padding: "0.6rem",

@@ -108,7 +108,13 @@ const userSchema = new Schema({
   },
   password: {
     type: String,
-    required: [true, "Password is required"],
+    required: function(this: any) { return !this.googleId; },
+  },
+  googleId: {
+    type: String,
+    sparse: true,
+    unique: true,
+    index: true,
   },
   phone: { type: String, trim: true },
   avatar: { type: String },

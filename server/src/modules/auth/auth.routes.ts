@@ -14,6 +14,8 @@ import {
   resetPassword,
   sendOTP,
   verifyOTP,
+  googleLogin,
+  completeProfile,
 } from "./auth.controller";
 import { validate } from "../../middleware/validate";
 import { authLimiter } from "../../middleware/rateLimiter";
@@ -35,6 +37,8 @@ router.use(authLimiter);
 // Public auth endpoints with Zod validation
 router.post("/register", validate(registerSchema), registerSchool);
 router.post("/login", validate(loginSchema), loginUserRole);
+router.post("/google", googleLogin);
+router.post("/complete-profile", completeProfile);
 router.post("/refresh", refreshAccessToken);
 router.post("/logout", logoutUser);
 router.post("/verify-email", validate(verifyEmailSchema), verifyEmail);

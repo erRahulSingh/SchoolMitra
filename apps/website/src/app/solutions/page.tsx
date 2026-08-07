@@ -71,11 +71,7 @@ export default function SolutionsPage() {
             letterSpacing: "-0.03em",
             marginBottom: "1.4rem"
           }}>
-            Complete Digital Ecosystem for <span style={{
-              background: "linear-gradient(135deg, #3b82f6 0%, #4338ca 60%, #8b5cf6 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent"
-            }}>Every Stakeholder</span>
+            Complete Digital Ecosystem <span style={{ color: "#f97316" }}>for Every Stakeholder</span>
           </h1>
 
           <p style={{
@@ -91,7 +87,7 @@ export default function SolutionsPage() {
 
           <div className="hero-cta-group" style={{ display: "flex", gap: "1.2rem", alignItems: "center", flexWrap: "wrap" }}>
             <button
-              onClick={() => setModalOpen(true)}
+              onClick={() => window.location.href = "/auth?mode=signup"}
               style={{
                 padding: "0.95rem 2.2rem",
                 borderRadius: "12px",
@@ -218,7 +214,7 @@ export default function SolutionsPage() {
             SECTION 1 • STEP-BY-STEP WORKFLOW
           </span>
           <h2 style={{ fontSize: "clamp(2rem, 3.2vw, 2.6rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem" }}>
-            How SchoolMitra Operates in Your Campus
+            How SchoolMitra Operates <span style={{ color: "#f97316" }}>in Your Campus</span>
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", maxWidth: "640px", margin: "0.5rem auto 0 auto" }}>
             Get your school fully digitalized in 4 seamless steps without disrupting daily classes or administration.
@@ -331,7 +327,7 @@ export default function SolutionsPage() {
               SECTION 2 • FINANCIAL AUTOMATION
             </span>
             <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "#0f172a", marginTop: "0.4rem", marginBottom: "1rem" }}>
-              Smart Fee Collection &amp; Instant UPI Receipts
+              Smart Fee Collection <span style={{ color: "#f97316" }}>&amp; Instant UPI Receipts</span>
             </h2>
             <p style={{ color: "#475569", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               Eliminate manual fee register maintenance and cash handling errors. Parents pay via Google Pay, PhonePe, UPI QR code, or Cards with instant PDF receipts sent to WhatsApp.
@@ -410,7 +406,7 @@ export default function SolutionsPage() {
               SECTION 3 • TRANSPORT TELEMETRY
             </span>
             <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem", marginBottom: "1rem" }}>
-              Real-Time GPS Bus Telemetry &amp; Driver Safety App
+              Real-Time GPS Bus Telemetry <span style={{ color: "#f97316" }}>&amp; Driver Safety App</span>
             </h2>
             <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               Keep parents informed and students safe with live route tracking, driver speed enforcement, geofence safe zones, and 1-tap emergency panic dispatch.
@@ -462,7 +458,7 @@ export default function SolutionsPage() {
               SECTION 4 • ACADEMIC EVALUATION
             </span>
             <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "#1e1b4b", marginTop: "0.4rem", marginBottom: "1rem" }}>
-              CBSE &amp; ICSE Automated Report Card Engine
+              CBSE &amp; ICSE Automated <span style={{ color: "#f97316" }}>Report Card Engine</span>
             </h2>
             <p style={{ color: "#475569", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               Teachers upload subject marks; SchoolMitra automatically calculates total grades, rank, percentage, and generates beautiful PDF report cards aligned with board standards.
@@ -533,7 +529,7 @@ export default function SolutionsPage() {
               SECTION 5 • GATE SECURITY &amp; ATTENDANCE
             </span>
             <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem", marginBottom: "1rem" }}>
-              Biometric, RFID &amp; Digital Attendance Network
+              Biometric, RFID &amp; <span style={{ color: "#f97316" }}>Digital Attendance Network</span>
             </h2>
             <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               When a student taps their RFID card or a teacher marks roll call, an instant SMS &amp; App alert is delivered to parents guaranteeing child safety.
@@ -570,7 +566,7 @@ export default function SolutionsPage() {
               SECTION 6 • PARENT ENGAGEMENT
             </span>
             <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "#064e3b", marginTop: "0.4rem", marginBottom: "1rem" }}>
-              Seamless Parent-Teacher Collaboration
+              Seamless Parent-Teacher <span style={{ color: "#f97316" }}>Collaboration</span>
             </h2>
             <p style={{ color: "#334155", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               Teachers publish daily homework with PDF attachments, class circulars, and exam timetables. Parents can send direct queries to class teachers.
@@ -641,7 +637,7 @@ export default function SolutionsPage() {
               SECTION 7 • CLOUD &amp; DATA SECURITY
             </span>
             <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem", marginBottom: "1rem" }}>
-              Bank-Grade Encryption &amp; ISO-27001 Certified Security
+              Bank-Grade Encryption <span style={{ color: "#f97316" }}>&amp; ISO-27001 Certified Security</span>
             </h2>
             <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               Your school data is encrypted at rest and in transit. Automated daily off-site backups ensure your records are never lost.
@@ -678,7 +674,7 @@ export default function SolutionsPage() {
               SECTION 8 • TRUST &amp; MULTI-BRANCH GOVERNANCE
             </span>
             <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "#ffffff", marginTop: "0.4rem", marginBottom: "1rem" }}>
-              Multi-Branch Command Center for Educational Trusts
+              Multi-Branch Command Center <span style={{ color: "#f97316" }}>for Educational Trusts</span>
             </h2>
             <p style={{ color: "#94a3b8", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               Super Admin panel enables trust chairmen and directors to manage 2 to 50+ school campuses, compare branch revenues, and reallocate staff instantly.
@@ -723,7 +719,7 @@ export default function SolutionsPage() {
       <section id="solutions-matrix" style={{ padding: "30px 4% 60px 4%", maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "3rem" }}>
           <h2 style={{ fontSize: "clamp(2rem, 3.2vw, 2.6rem)", fontWeight: 800, color: "var(--text-main)" }}>
-            Solutions Designed for Every Stakeholder
+            Solutions Designed <span style={{ color: "#f97316" }}>for Every Stakeholder</span>
           </h2>
         </div>
 
@@ -937,7 +933,7 @@ export default function SolutionsPage() {
             </span>
 
             <h2 style={{ fontSize: "2.3rem", fontWeight: 800, color: "#ffffff", marginTop: "1rem", marginBottom: "1rem", lineHeight: 1.2 }}>
-              Calculate Your School&apos;s Estimated Savings
+              Calculate Your School&apos;s <span style={{ color: "#f97316" }}>Estimated Savings</span>
             </h2>
 
             <p style={{ color: "#94a3b8", fontSize: "1.05rem", lineHeight: 1.6, marginBottom: "2.2rem" }}>
@@ -1009,7 +1005,7 @@ export default function SolutionsPage() {
       {/* ========== FAQ SECTION ========== */}
       <section style={{ padding: "40px 4% 90px 4%", maxWidth: "1000px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <h2 style={{ fontSize: "2.3rem", fontWeight: 800, color: "var(--text-main)" }}>Frequently Asked Questions</h2>
+          <h2 style={{ fontSize: "2.3rem", fontWeight: 800, color: "var(--text-main)" }}>Frequently Asked <span style={{ color: "#f97316" }}>Questions</span></h2>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -1080,13 +1076,13 @@ export default function SolutionsPage() {
           boxShadow: "0 25px 60px rgba(37, 99, 235, 0.35)"
         }}>
           <h2 style={{ fontSize: "clamp(2.2rem, 3.5vw, 3rem)", fontWeight: 800, marginBottom: "1rem", letterSpacing: "-0.02em" }}>
-            Ready to Digitalize Your School Campus?
+            Ready to Digitalize <span style={{ color: "#f97316" }}>Your School Campus?</span>
           </h2>
           <p style={{ fontSize: "1.15rem", color: "rgba(255, 255, 255, 0.9)", maxWidth: "620px", margin: "0 auto 2.2rem auto", lineHeight: 1.65 }}>
             Join 500+ leading K-12 schools leveraging SchoolMitra. Book a 1-on-1 personalized demo tailored to your school&apos;s requirements.
           </p>
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={() => window.location.href = "/auth?mode=signup"}
             style={{
               padding: "1.05rem 2.6rem",
               borderRadius: "14px",
