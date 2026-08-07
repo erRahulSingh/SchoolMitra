@@ -7,11 +7,52 @@ import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { SupportTicketModel } from "../../models/SystemSchemas";
+import { Types } from "mongoose";
+
+const dummySchoolId = new Types.ObjectId("650000000000000000000001");
+const dummyUserId = new Types.ObjectId("650000000000000000000002");
+
+// Helper to seed support tickets if empty
+const getOrSeedSupportTickets = async () => {
+  let tickets = await SupportTicketModel.find().lean().catch(() => []);
+  if (tickets.length > 0) return tickets;
+
+  return await SupportTicketModel.create([
+    {
+      schoolId: dummySchoolId,
+      raisedBy: dummyUserId,
+      ticketNo: "REQ-2026-802",
+      subject: "Fee installment schedule query",
+      category: "Billing",
+      priority: "High",
+      status: "Open",
+      messages: [{
+        senderRole: "Parent",
+        text: "Please let me know if we can pay the quarter fee in monthly installments.",
+        sentAt: new Date()
+      }]
+    },
+    {
+      schoolId: dummySchoolId,
+      raisedBy: dummyUserId,
+      ticketNo: "REQ-2026-804",
+      subject: "Bus route extension to Sector 18",
+      category: "Other",
+      priority: "Medium",
+      status: "Open",
+      messages: [{
+        senderRole: "Parent",
+        text: "Please extend the bus route by 1km to cover Vasant Kunj Sector 18.",
+        sentAt: new Date()
+      }]
+    }
+  ]);
+};
 
 export const getSupportTickets = asyncHandler(async (_req: Request, res: Response) => {
-  const tickets = await SupportTicketModel.find().lean().catch(() => []);
+  const tickets = await getOrSeedSupportTickets();
 
-  const formatted = tickets.map(t => {
+  const formatted = tickets.map((t: any) => {
     // Map category
     let displayCat = "Attendance Issue";
     if (t.category === "Billing") displayCat = "Fee Issue";
@@ -33,7 +74,7 @@ export const getSupportTickets = asyncHandler(async (_req: Request, res: Respons
 
     return {
       id: t.ticketNo || `REQ-2026-${Math.floor(100 + Math.random() * 900)}`,
-      _id: t._id,
+      _id: t._id.toString(),
       category: displayCat,
       subject: t.subject,
       studentName: "Rahul Sharma",
@@ -59,8 +100,6 @@ export const createSupportTicket = asyncHandler(async (req: Request, res: Respon
     throw ApiError.badRequest("Category and subject are required.");
   }
 
-  const schoolId = "650000000000000000000001";
-  const raisedBy = "650000000000000000000002"; // dummy user
   const ticketNo = `REQ-2026-${Math.floor(100 + Math.random() * 899)}`;
 
   // Map category to schema enum: Technical, Billing, FeatureRequest, BugReport, Other
@@ -76,8 +115,8 @@ export const createSupportTicket = asyncHandler(async (req: Request, res: Respon
   else if (priority === "Low") mappedPriority = "Low";
 
   const ticket = await SupportTicketModel.create({
-    schoolId,
-    raisedBy,
+    schoolId: dummySchoolId,
+    raisedBy: dummyUserId,
     ticketNo,
     subject,
     category: mappedCategory,

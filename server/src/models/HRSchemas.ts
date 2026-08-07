@@ -116,3 +116,32 @@ const staffDocumentSchema = new Schema({
 
 staffDocumentSchema.index({ schoolId: 1, staffId: 1 });
 export const StaffDocumentModel = model("staffDocuments", staffDocumentSchema);
+
+// ──────────── EXPENSE CLAIMS & REIMBURSEMENTS ────────────
+const expenseClaimSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  staffId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+    index: true,
+  },
+  name: { type: String, required: true },
+  category: { type: String, required: true },
+  amount: { type: Number, required: true },
+  date: { type: String, required: true },
+  status: {
+    type: String,
+    enum: ["PENDING", "APPROVED", "REJECTED"],
+    default: "PENDING",
+    index: true,
+  }
+}, { timestamps: true });
+
+expenseClaimSchema.index({ schoolId: 1, staffId: 1 });
+export const ExpenseClaimModel = model("expenseClaims", expenseClaimSchema);

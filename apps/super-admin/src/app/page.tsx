@@ -10,39 +10,49 @@ import {
 import { superAdminApi } from "@/lib/api";
 
 export default function SuperAdminDashboard() {
+  const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({
-    totalSchools: 148,
-    activeSchools: 124,
-    trialSchools: 18,
-    expiredSchools: 6,
-    totalStudents: "1,42,850",
-    totalParents: "2,10,400",
-    totalDrivers: "3,240",
-    totalRevenue: "₹ 1.84 Cr",
-    monthlyRevenue: "₹ 24.8L",
-    todaysLogins: "48,920",
-    activeSessions: "8,450"
+    totalSchools: 0,
+    activeSchools: 0,
+    trialSchools: 0,
+    expiredSchools: 0,
+    totalStudents: "0",
+    totalParents: "0",
+    totalDrivers: "0",
+    totalRevenue: "₹ 0",
+    monthlyRevenue: "₹ 0",
+    todaysLogins: "0",
+    activeSessions: "0"
   });
 
-  useEffect(() => {
-    // Fetch live telemetry from backend
-    superAdminApi.getSchools().then((res) => {
-      if (res.success && res.schools) {
-        setMetrics((prev) => ({
-          ...prev,
-          totalSchools: res.pagination?.total || res.schools.length || prev.totalSchools
-        }));
-      }
-    });
-  }, []);
+  const [recentSchools, setRecentSchools] = useState<any[]>([]);
 
-  const [recentSchools] = useState([
-    { id: "SCH-101", name: "Delhi Public School (Dwarka)", plan: "Enterprise Pro", status: "Active", students: 1420, parents: 2100, drivers: 18, mrr: "₹ 45,000", expiry: "12 Dec 2027" },
-    { id: "SCH-102", name: "St. Xavier's Senior Secondary School", plan: "Growth Plan", status: "Active", students: 980, parents: 1450, drivers: 12, mrr: "₹ 32,000", expiry: "15 Oct 2026" },
-    { id: "SCH-103", name: "DAV Public School (Vasant Kunj)", plan: "Trial (14 Days)", status: "Trial", students: 1100, parents: 1600, drivers: 14, mrr: "₹ 0 (Trial)", expiry: "05 Aug 2026" },
-    { id: "SCH-104", name: "Kendriya Vidyalaya Sector 8", plan: "Starter Plan", status: "Expired", students: 650, parents: 900, drivers: 8, mrr: "₹ 18,000", expiry: "20 Jul 2026" },
-    { id: "SCH-105", name: "Modern School (Barakhamba Road)", plan: "Enterprise Pro", status: "Active", students: 2400, parents: 3600, drivers: 28, mrr: "₹ 75,000", expiry: "01 Jan 2028" }
-  ]);
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        // 1. Fetch Super Admin Telemetry Metrics from DB
+        const metricsRes = await superAdminApi.getSuperAdminMetrics();
+        if (metricsRes.success && metricsRes.metrics) {
+          setMetrics(metricsRes.metrics);
+        }
+
+        // 2. Fetch School Tenants from DB
+        const schoolsRes = await superAdminApi.getSchools();
+        if (schoolsRes.success && schoolsRes.data?.schools) {
+          setRecentSchools(schoolsRes.data.schools);
+        } else if (schoolsRes.success && (schoolsRes as any).schools) {
+          setRecentSchools((schoolsRes as any).schools);
+        }
+      } catch (err) {
+        console.error("SuperAdmin Dashboard Sync Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
@@ -109,7 +119,7 @@ export default function SuperAdminDashboard() {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
           {[
-            { label: "Total Active Students", value: metrics.totalStudents, sub: "Across 148 schools", color: "var(--primary)", icon: GraduationCap },
+            { label: "Total Active Students", value: metrics.totalStudents, sub: `Across ${metrics.totalSchools} schools`, color: "var(--primary)", icon: GraduationCap },
             { label: "Total Parent Accounts", value: metrics.totalParents, sub: "Mobile PWA Users", color: "var(--primary)", icon: Users },
             { label: "Total Bus Pilots", value: metrics.totalDrivers, sub: "Driver Cockpit App Users", color: "var(--primary)", icon: Bus }
           ].map((item, idx) => {
@@ -167,7 +177,7 @@ export default function SuperAdminDashboard() {
             <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 2 }}>Overview of latest active, trial, and expired subscriptions.</p>
           </div>
           <a href="/schools" className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
-            Manage All 148 Schools <ChevronRight size={16} />
+            Manage All {metrics.totalSchools} Schools <ChevronRight size={16} />
           </a>
         </div>
 

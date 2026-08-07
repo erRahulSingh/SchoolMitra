@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Sidebar from "@/components/layout/Sidebar";
-import Header from "@/components/layout/Header";
 import { ThemeProvider } from "@/context/ThemeContext";
+import AppLayout from "@/components/layout/AppLayout";
 
 export const metadata: Metadata = {
   title: "SchoolMitra ERP - School Management Portal",
@@ -18,15 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ThemeProvider>
-          <div className="app-container">
-            <Sidebar />
-            <div className="main-content">
-              <Header />
-              <main className="page-wrapper">
-                {children}
-              </main>
-            </div>
-          </div>
+          <AppLayout>{children}</AppLayout>
         </ThemeProvider>
       </body>
     </html>

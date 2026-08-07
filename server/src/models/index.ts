@@ -10,3 +10,4 @@ export * from "./CommunicationSchemas";
 export * from "./LibrarySchemas";
 export * from "./HRSchemas";
 export * from "./SystemSchemas";
+export * from "./InventorySchemas";

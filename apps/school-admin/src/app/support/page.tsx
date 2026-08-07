@@ -312,14 +312,14 @@ export default function SchoolAdminRequestManagementPage() {
 
       {/* FILTER BAR */}
       <div className="glass-card" style={{ padding: "1rem 1.25rem", display: "flex", gap: "0.85rem", alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, minWidth: "200px", background: "var(--bg-input)", padding: "0.45rem 0.75rem", borderRadius: 8, border: "1px solid var(--border-color)" }}>
-          <Search size={16} color="var(--text-muted)" />
+        <div style={{ position: "relative", flex: 1, minWidth: "200px" }}>
+          <Search size={16} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
           <input
             type="text"
             placeholder="Search student or ticket..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            style={{ border: "none", background: "transparent", outline: "none", color: "var(--text-heading)", width: "100%", fontSize: "0.85rem" }}
+            style={{ width: "100%", padding: "0.65rem 0.75rem 0.65rem 2.25rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.85rem", outline: "none" }}
           />
         </div>
 

@@ -244,7 +244,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .custom-table th {
-  padding: 0.85rem 1.15rem;
+  padding: 0.65rem 0.95rem;
   color: var(--text-dim);
   font-size: 0.72rem;
   font-weight: 800;
@@ -255,8 +255,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .custom-table td {
-  padding: 1rem 1.15rem;
-  border-bottom: 1px solid var(--table-border);
+  padding: 0.65rem 0.95rem;
+  border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
   color: var(--text-main);
   transition: background 0.15s ease;

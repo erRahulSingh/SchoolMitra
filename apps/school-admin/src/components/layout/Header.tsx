@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Bell, Calendar, ChevronDown } from "lucide-react";
+import { Search, Bell, Calendar, ChevronDown, Menu } from "lucide-react";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function Header() {
+  const { isSidebarCollapsed, setIsSidebarCollapsed } = useTheme();
   const [user, setUser] = useState({ name: "Principal Office", email: "admin@dps.edu.in", schoolName: "Delhi Public School" });
 
   useEffect(() => {
@@ -32,13 +34,34 @@ export default function Header() {
 
   return (
     <header className="top-header">
-      <div className="search-input-wrapper">
-        <Search className="search-icon" size={16} />
-        <input 
-          type="text" 
-          placeholder="Search students, roll no, teachers, buses..." 
-          className="search-input"
-        />
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <button 
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          style={{
+            background: "var(--bg-input)",
+            border: "1px solid var(--border-color)",
+            padding: "0.55rem",
+            borderRadius: "var(--radius-sm)",
+            color: "var(--text-main)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            outline: "none"
+          }}
+          title="Toggle Sidebar Collapse"
+        >
+          <Menu size={18} />
+        </button>
+
+        <div className="search-input-wrapper">
+          <Search className="search-icon" size={16} />
+          <input 
+            type="text" 
+            placeholder="Search students, roll no, teachers, buses..." 
+            className="search-input"
+          />
+        </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

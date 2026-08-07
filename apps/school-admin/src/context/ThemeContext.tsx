@@ -9,6 +9,8 @@ interface ThemeContextType {
   resolvedTheme: "dark" | "light";
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+  isSidebarCollapsed: boolean;
+  setIsSidebarCollapsed: (val: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -19,6 +21,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark");
   const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">("dark");
   const [mounted, setMounted] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const savedTheme = (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || "dark";
@@ -67,7 +70,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, toggleTheme, isSidebarCollapsed, setIsSidebarCollapsed }}>
       {children}
     </ThemeContext.Provider>
   );

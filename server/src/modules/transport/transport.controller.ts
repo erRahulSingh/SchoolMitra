@@ -13,6 +13,7 @@ import {
 import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
+import { Types } from "mongoose";
 
 // In-Memory SOS & Active Trips Store
 const sosAlertsStore: any[] = [
@@ -23,16 +24,44 @@ const activeTripsStore: Record<string, any> = {
   "Bus #01": { tripId: "TRIP-8801", busNo: "Bus #01", routeName: "Route 1 - Dwarka", startTime: "07:15 AM", status: "IN_TRANSIT" }
 };
 
-const fastQuery = <T>(promise: Promise<T>, fallback: T, ms: number = 300): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))
-  ]).catch(() => fallback);
+const dummySchoolId = new Types.ObjectId("650000000000000000000001");
+
+// Helper to seed buses if empty
+const getOrSeedBuses = async () => {
+  const buses = await BusModel.find().lean().catch(() => []);
+  if (buses.length > 0) return buses;
+
+  return await BusModel.create([
+    { schoolId: dummySchoolId, busNumber: "DL 01 AB 4321", capacity: 42, driverName: "Ram Singh", routeName: "Route 1 Dwarka", status: "Active", registrationNo: "DL 01 AB 4321" },
+    { schoolId: dummySchoolId, busNumber: "DL 01 CD 8765", capacity: 38, driverName: "Vikram Jeet", routeName: "Route 2 Vasant Kunj", status: "Active", registrationNo: "DL 01 CD 8765" }
+  ]);
+};
+
+// Helper to seed drivers if empty
+const getOrSeedDrivers = async () => {
+  const drivers = await DriverModel.find().lean().catch(() => []);
+  if (drivers.length > 0) return drivers;
+
+  return await DriverModel.create([
+    { schoolId: dummySchoolId, name: "Ram Singh", phone: "+91 98111 22334", licenseNo: "DL-14201100987", assignedBus: "Bus #01", status: "Active", licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000 * 5) },
+    { schoolId: dummySchoolId, name: "Vikram Jeet", phone: "+91 98222 33445", licenseNo: "DL-14201100543", assignedBus: "Bus #02", status: "Active", licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000 * 5) }
+  ]);
+};
+
+// Helper to seed routes if empty
+const getOrSeedRoutes = async () => {
+  const routes = await RouteModel.find().lean().catch(() => []);
+  if (routes.length > 0) return routes;
+
+  return await RouteModel.create([
+    { schoolId: dummySchoolId, routeName: "Route 1 Dwarka Belt", startPoint: "Sector 21 Metro", endPoint: "DPS Campus", distanceKm: 18 },
+    { schoolId: dummySchoolId, routeName: "Route 2 Vasant Kunj Belt", startPoint: "Fortis Gate", endPoint: "DPS Campus", distanceKm: 22 }
+  ]);
 };
 
 // ════════════ 1. BUS MANAGEMENT ════════════
 export const getBuses = asyncHandler(async (_req: Request, res: Response) => {
-  const buses = await BusModel.find().lean().catch(() => []);
+  const buses = await getOrSeedBuses();
   return ApiResponse.success(res, 200, "Fleet buses retrieved", { buses });
 });
 
@@ -43,15 +72,13 @@ export const createBus = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const created = await BusModel.create({
-    schoolId: "650000000000000000000001",
+    schoolId: dummySchoolId,
     busNumber,
     registrationNo: registrationNumber || registrationNo || busNumber,
     capacity: capacity || 40,
     driverName: driverName || "Unassigned Pilot",
     routeName: routeName || "Default School Route",
     status: "Active"
-  }).catch((err) => {
-    return { busNumber, capacity: capacity || 40, driverName, routeName };
   });
 
   return ApiResponse.created(res, "Fleet Bus & Driver registered successfully in database.", { bus: created });
@@ -59,7 +86,7 @@ export const createBus = asyncHandler(async (req: Request, res: Response) => {
 
 // ════════════ 2. ROUTE MANAGEMENT ════════════
 export const getRoutes = asyncHandler(async (_req: Request, res: Response) => {
-  const routes = await RouteModel.find().lean().catch(() => []);
+  const routes = await getOrSeedRoutes();
   return ApiResponse.success(res, 200, "Transport routes retrieved", { routes });
 });
 
@@ -69,9 +96,8 @@ export const createRoute = asyncHandler(async (req: Request, res: Response) => {
     throw ApiError.badRequest("Route name is required.");
   }
 
-  const schoolId = "650000000000000000000001";
   const created = await RouteModel.create({
-    schoolId,
+    schoolId: dummySchoolId,
     routeName,
     startPoint: startPoint || "Start Terminal",
     endPoint: endPoint || "School Gate",
@@ -91,11 +117,10 @@ export const createStop = asyncHandler(async (req: Request, res: Response) => {
   const { stopName, routeId, scheduledTime, order = 1 } = req.body;
   if (!stopName) throw ApiError.badRequest("Stop name is required.");
 
-  const schoolId = "650000000000000000000001";
-  const finalRouteId = routeId || "650000000000000000000501";
+  const finalRouteId = routeId || new Types.ObjectId("650000000000000000000501");
 
   const created = await StopModel.create({
-    schoolId,
+    schoolId: dummySchoolId,
     routeId: finalRouteId,
     stopName,
     order: Number(order) || 1,
@@ -107,7 +132,7 @@ export const createStop = asyncHandler(async (req: Request, res: Response) => {
 
 // ════════════ 4. DRIVER MANAGEMENT ════════════
 export const getDrivers = asyncHandler(async (_req: Request, res: Response) => {
-  const drivers = await DriverModel.find().lean().catch(() => []);
+  const drivers = await getOrSeedDrivers();
   return ApiResponse.success(res, 200, "Bus drivers retrieved", { drivers });
 });
 
@@ -117,9 +142,8 @@ export const createDriver = asyncHandler(async (req: Request, res: Response) => 
     throw ApiError.badRequest("Driver name and phone are required.");
   }
 
-  const schoolId = "650000000000000000000001";
   const created = await DriverModel.create({
-    schoolId,
+    schoolId: dummySchoolId,
     name,
     phone,
     licenseNo: licenseNo || "DL-PENDING",

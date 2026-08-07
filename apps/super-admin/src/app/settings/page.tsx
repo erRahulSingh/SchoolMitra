@@ -1,19 +1,86 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Settings, Globe, Mail, MessageSquare, Bell, Map, 
   CreditCard, Shield, Database, Save, CheckCircle2, 
   Upload, Key, Sliders, RefreshCw, AlertTriangle 
 } from "lucide-react";
+import { superAdminApi } from "@/lib/api";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"branding" | "smtp" | "sms" | "push" | "maps" | "razorpay" | "security" | "backup">("branding");
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleSave = () => {
+  // Global Settings Form State
+  const [form, setForm] = useState<any>({
+    corporateName: "SchoolMitra SaaS Technologies",
+    primaryColor: "#8b5cf6",
+    accentColor: "#6366f1",
+    supportEmail: "support@schoolmitra.in",
+    smtpHost: "smtp.mailgun.org",
+    smtpPort: "587",
+    smtpUser: "postmaster@schoolmitra.in",
+    smtpPass: "••••••••••••••••",
+    twilioSid: "AC_7820194820194820194",
+    twilioToken: "••••••••••••••••••••••••",
+    firebaseServerKey: "AAAA_8920148190:APA91bF...",
+    googleMapsApiKey: "AIzaSyD_8910481920...",
+    razorpayKeyId: "rzp_live_8910481920",
+    razorpayKeySecret: "••••••••••••••••••••",
+    enforce2FA: true,
+    sessionTimeoutMins: "30"
+  });
+
+  const fetchSettings = async () => {
+    setLoading(true);
+    const local = localStorage.getItem("saas_global_settings");
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (parsed && typeof parsed === "object") setForm(prev => ({ ...prev, ...parsed }));
+      } catch (e) {}
+    }
+
+    try {
+      const res = await superAdminApi.getGlobalSettings();
+      if (res.success && res.settings) {
+        setForm(prev => ({ ...prev, ...res.settings }));
+        localStorage.setItem("saas_global_settings", JSON.stringify(res.settings));
+      }
+    } catch (err) {
+      console.error("Error fetching global settings:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const handleChange = (key: string, value: any) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+
+    localStorage.setItem("saas_global_settings", JSON.stringify(form));
+
+    try {
+      const res = await superAdminApi.saveGlobalSettings(form);
+      if (res.success && res.settings) {
+        setForm(prev => ({ ...prev, ...res.settings }));
+        localStorage.setItem("saas_global_settings", JSON.stringify(res.settings));
+      }
+    } catch (err) {
+      console.error("Error saving global settings:", err);
+    } finally {
+      setTimeout(() => setSaved(false), 2000);
+    }
   };
 
   const inputStyle: React.CSSProperties = { width: "100%", padding: "0.75rem", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem" };
@@ -36,8 +103,8 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <button onClick={handleSave} className="btn btn-primary">
-          {saved ? <><CheckCircle2 size={16} /> Saved!</> : <><Save size={16} /> Save Platform Settings</>}
+        <button onClick={() => handleSave()} className="btn btn-primary">
+          {saved ? <><CheckCircle2 size={16} /> Saved to Database!</> : <><Save size={16} /> Save Platform Settings</>}
         </button>
       </div>
 
@@ -69,31 +136,28 @@ export default function SettingsPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
               <label style={labelStyle}>PLATFORM CORPORATE NAME</label>
-              <input type="text" defaultValue="SchoolMitra SaaS Technologies" style={inputStyle} />
+              <input type="text" value={form.corporateName} onChange={(e) => handleChange("corporateName", e.target.value)} style={inputStyle} />
+            </div>
+
+            <div>
+              <label style={labelStyle}>OFFICIAL SUPPORT EMAIL</label>
+              <input type="email" value={form.supportEmail} onChange={(e) => handleChange("supportEmail", e.target.value)} style={inputStyle} />
             </div>
             
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <div>
-                <label style={labelStyle}>SaaS CUSTOM BRAND COLOR</label>
+                <label style={labelStyle}>PRIMARY BRAND COLOR</label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <input type="color" defaultValue="#8b5cf6" style={{ width: 44, height: 40, border: "none", cursor: "pointer", background: "none" }} />
-                  <input type="text" defaultValue="#8b5cf6" style={inputStyle} />
+                  <input type="color" value={form.primaryColor} onChange={(e) => handleChange("primaryColor", e.target.value)} style={{ width: 44, height: 40, border: "none", cursor: "pointer", background: "none" }} />
+                  <input type="text" value={form.primaryColor} onChange={(e) => handleChange("primaryColor", e.target.value)} style={inputStyle} />
                 </div>
               </div>
               <div>
                 <label style={labelStyle}>SECONDARY ACCENT COLOR</label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <input type="color" defaultValue="#6366f1" style={{ width: 44, height: 40, border: "none", cursor: "pointer", background: "none" }} />
-                  <input type="text" defaultValue="#6366f1" style={inputStyle} />
+                  <input type="color" value={form.accentColor} onChange={(e) => handleChange("accentColor", e.target.value)} style={{ width: 44, height: 40, border: "none", cursor: "pointer", background: "none" }} />
+                  <input type="text" value={form.accentColor} onChange={(e) => handleChange("accentColor", e.target.value)} style={inputStyle} />
                 </div>
-              </div>
-            </div>
-
-            <div>
-              <label style={labelStyle}>UPLOAD PLATFORM LOGO (PNG/SVG)</label>
-              <div style={{ border: "2px dashed var(--border-color)", padding: "1.5rem", borderRadius: "var(--radius-md)", textAlign: "center", color: "var(--text-muted)" }}>
-                <Upload size={32} style={{ margin: "0 auto 0.5rem auto", color: "var(--primary)" }} />
-                <div style={{ fontSize: "0.85rem" }}>Drag & drop logo file here or click to browse</div>
               </div>
             </div>
           </div>
@@ -103,39 +167,27 @@ export default function SettingsPage() {
       {/* ════════════ TAB 2: SMTP EMAIL ════════════ */}
       {activeTab === "smtp" && (
         <div className="glass-card" style={{ padding: "2rem", maxWidth: "680px" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>SMTP Outgoing Email Protocol Settings</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>SMTP Transactional Email Gateway</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1rem" }}>
               <div>
                 <label style={labelStyle}>SMTP HOST</label>
-                <input type="text" defaultValue="smtp.sendgrid.net" style={inputStyle} />
+                <input type="text" value={form.smtpHost} onChange={(e) => handleChange("smtpHost", e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>SMTP PORT</label>
-                <input type="text" defaultValue="587" style={inputStyle} />
+                <label style={labelStyle}>PORT</label>
+                <input type="text" value={form.smtpPort} onChange={(e) => handleChange("smtpPort", e.target.value)} style={inputStyle} />
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div>
-                <label style={labelStyle}>SMTP USERNAME</label>
-                <input type="text" defaultValue="apikey" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>SMTP PASSWORD</label>
-                <input type="password" defaultValue="SG.xxxxxxxxxxxxx" style={inputStyle} />
-              </div>
+            <div>
+              <label style={labelStyle}>SMTP USERNAME</label>
+              <input type="text" value={form.smtpUser} onChange={(e) => handleChange("smtpUser", e.target.value)} style={inputStyle} />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div>
-                <label style={labelStyle}>SENDER EMAIL ADDRESS</label>
-                <input type="email" defaultValue="noreply@schoolmitra.com" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>SENDER NAME</label>
-                <input type="text" defaultValue="SchoolMitra Alerts" style={inputStyle} />
-              </div>
+            <div>
+              <label style={labelStyle}>SMTP PASSWORD</label>
+              <input type="password" value={form.smtpPass} onChange={(e) => handleChange("smtpPass", e.target.value)} style={inputStyle} />
             </div>
           </div>
         </div>
@@ -144,52 +196,29 @@ export default function SettingsPage() {
       {/* ════════════ TAB 3: SMS GATEWAY ════════════ */}
       {activeTab === "sms" && (
         <div className="glass-card" style={{ padding: "2rem", maxWidth: "680px" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Twilio / Msg91 SMS Gateway Credentials</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Twilio / SMS Gateway Credentials</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
-              <label style={labelStyle}>SMS GATEWAY PROVIDER</label>
-              <select style={inputStyle}>
-                <option style={{ background: "#0b0f19" }}>Twilio SMS Service</option>
-                <option style={{ background: "#0b0f19" }}>Msg91 SMS Hub</option>
-              </select>
+              <label style={labelStyle}>TWILIO ACCOUNT SID</label>
+              <input type="text" value={form.twilioSid} onChange={(e) => handleChange("twilioSid", e.target.value)} style={inputStyle} />
             </div>
 
             <div>
-              <label style={labelStyle}>ACCOUNT SID / API KEY</label>
-              <input type="text" defaultValue="AC882a1708ksp9012f" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>AUTH TOKEN / SECRET KEY</label>
-              <input type="password" defaultValue="xxxxxxxxxxxxxxxxxxxx" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>DEFAULT SENDER ID / NUMBER</label>
-              <input type="text" defaultValue="+18559021234" style={inputStyle} />
+              <label style={labelStyle}>TWILIO AUTH TOKEN</label>
+              <input type="password" value={form.twilioToken} onChange={(e) => handleChange("twilioToken", e.target.value)} style={inputStyle} />
             </div>
           </div>
         </div>
       )}
 
-      {/* ════════════ TAB 4: PUSH NOTIFICATION ════════════ */}
+      {/* ════════════ TAB 4: PUSH NOTIFICATIONS ════════════ */}
       {activeTab === "push" && (
         <div className="glass-card" style={{ padding: "2rem", maxWidth: "680px" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Firebase Cloud Messaging (FCM) Credentials</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Firebase FCM Push Notifications</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
-              <label style={labelStyle}>FIREBASE PROJECT ID</label>
-              <input type="text" defaultValue="schoolmitra-fcm" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>FCM SERVER KEY (V1 API)</label>
-              <textarea rows={4} defaultValue="AIzaSyA88fks8102-as810x992as..." style={{ ...inputStyle, resize: "none", fontFamily: "monospace" }} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>FIREBASE APP ID</label>
-              <input type="text" defaultValue="1:982012019:web:as9012as" style={inputStyle} />
+              <label style={labelStyle}>FIREBASE FCM SERVER KEY</label>
+              <input type="text" value={form.firebaseServerKey} onChange={(e) => handleChange("firebaseServerKey", e.target.value)} style={inputStyle} />
             </div>
           </div>
         </div>
@@ -198,41 +227,29 @@ export default function SettingsPage() {
       {/* ════════════ TAB 5: GOOGLE MAPS API ════════════ */}
       {activeTab === "maps" && (
         <div className="glass-card" style={{ padding: "2rem", maxWidth: "680px" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Google Maps Platform Credentials</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Google Maps Telemetry API Key</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
               <label style={labelStyle}>GOOGLE MAPS JAVASCRIPT API KEY</label>
-              <input type="password" defaultValue="AIzaSyA82fks902Fas..." style={inputStyle} />
-              <div style={{ fontSize: "0.7rem", color: "var(--text-dim)", marginTop: 4 }}>Used for rendering client maps on dashboards and tracking maps.</div>
-            </div>
-
-            <div>
-              <label style={labelStyle}>DIRECTIONS & DISTANCE MATRIX API KEY</label>
-              <input type="password" defaultValue="AIzaSyA55fks801Fas..." style={inputStyle} />
-              <div style={{ fontSize: "0.7rem", color: "var(--text-dim)", marginTop: 4 }}>Used for calculating driver telemetry ETA and school bus routing.</div>
+              <input type="text" value={form.googleMapsApiKey} onChange={(e) => handleChange("googleMapsApiKey", e.target.value)} style={inputStyle} />
             </div>
           </div>
         </div>
       )}
 
-      {/* ════════════ TAB 6: RAZORPAY / PAYMENT GATEWAY ════════════ */}
+      {/* ════════════ TAB 6: RAZORPAY ════════════ */}
       {activeTab === "razorpay" && (
         <div className="glass-card" style={{ padding: "2rem", maxWidth: "680px" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Razorpay Gateway Integration Credentials</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Razorpay Payment Gateway API</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
               <label style={labelStyle}>RAZORPAY KEY ID</label>
-              <input type="text" defaultValue="rzp_live_Op9921as00x" style={inputStyle} />
+              <input type="text" value={form.razorpayKeyId} onChange={(e) => handleChange("razorpayKeyId", e.target.value)} style={inputStyle} />
             </div>
 
             <div>
               <label style={labelStyle}>RAZORPAY KEY SECRET</label>
-              <input type="password" defaultValue="xxxxxxxxxxxxxxxxxxxx" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>WEBHOOK SECRET KEY</label>
-              <input type="password" defaultValue="xxxxxxxxxxxxxxxxxxxx" style={inputStyle} />
+              <input type="password" value={form.razorpayKeySecret} onChange={(e) => handleChange("razorpayKeySecret", e.target.value)} style={inputStyle} />
             </div>
           </div>
         </div>
@@ -241,30 +258,25 @@ export default function SettingsPage() {
       {/* ════════════ TAB 7: SECURITY & ACCESS ════════════ */}
       {activeTab === "security" && (
         <div className="glass-card" style={{ padding: "2rem", maxWidth: "680px" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Access & Platform Security Settings</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Platform Security & Access Controls</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-            {[
-              { title: "Enforce 2-Factor Authentication (2FA)", desc: "Require OTP verification for all Super Admins and School Admin Logins", enabled: true },
-              { title: "Restrict logins by IP Whitelist", desc: "Allow console logins only from whitelisted CIDR blocks", enabled: false },
-              { title: "IP Rate Limiting (Brute Force Block)", desc: "Enforce rate limit of 60 requests/minute per client IP", enabled: true }
-            ].map((opt, idx) => (
-              <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
-                <div>
-                  <div style={{ fontWeight: 800, color: "#fff", fontSize: "0.9rem" }}>{opt.title}</div>
-                  <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: 2 }}>{opt.desc}</div>
-                </div>
-                <div style={{
-                  width: 48, height: 26, borderRadius: 99, cursor: "pointer",
-                  background: opt.enabled ? "var(--primary)" : "rgba(255,255,255,0.08)",
-                  position: "relative", transition: "background 0.2s"
-                }}>
-                  <div style={{
-                    width: 20, height: 20, borderRadius: "50%", background: "#fff",
-                    position: "absolute", top: 3, left: opt.enabled ? 25 : 3, transition: "left 0.2s"
-                  }} />
-                </div>
-              </div>
-            ))}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+              <input 
+                type="checkbox" 
+                id="check2FA"
+                checked={form.enforce2FA} 
+                onChange={(e) => handleChange("enforce2FA", e.target.checked)} 
+                style={{ width: 18, height: 18, accentColor: "var(--primary)", cursor: "pointer" }} 
+              />
+              <label htmlFor="check2FA" style={{ fontSize: "0.88rem", color: "#fff", cursor: "pointer" }}>
+                Enforce Mandatory Two-Factor Authentication (2FA) for All Super Admins
+              </label>
+            </div>
+
+            <div>
+              <label style={labelStyle}>SESSION INACTIVITY TIMEOUT (MINUTES)</label>
+              <input type="number" value={form.sessionTimeoutMins} onChange={(e) => handleChange("sessionTimeoutMins", e.target.value)} style={inputStyle} />
+            </div>
           </div>
         </div>
       )}
@@ -272,25 +284,15 @@ export default function SettingsPage() {
       {/* ════════════ TAB 8: CLOUD BACKUPS ════════════ */}
       {activeTab === "backup" && (
         <div className="glass-card" style={{ padding: "2rem", maxWidth: "680px" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Cloud Backup Configurations</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.5rem" }}>Automated Cloud Backups Policy</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
-              <label style={labelStyle}>AUTOMATED BACKUP FREQUENCY</label>
-              <select style={inputStyle}>
-                <option style={{ background: "#0b0f19" }}>Every 12 Hours</option>
-                <option style={{ background: "#0b0f19" }}>Daily at 11:30 PM (Recommended)</option>
-                <option style={{ background: "#0b0f19" }}>Weekly on Sundays</option>
+              <label style={labelStyle}>SNAPSHOT FREQUENCY SCHEDULE</label>
+              <select defaultValue="daily" style={inputStyle}>
+                <option value="daily">Automated Daily Snapshot (02:00 AM IST)</option>
+                <option value="hourly">Hourly Transaction Log Archival</option>
+                <option value="weekly">Weekly Cold Storage Backup</option>
               </select>
-            </div>
-
-            <div>
-              <label style={labelStyle}>AWS S3 DEPLOYMENT BUCKET NAME</label>
-              <input type="text" defaultValue="s3://schoolmitra-db-snapshots" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>RETENTION PERIOD (DAYS)</label>
-              <input type="number" defaultValue={30} style={inputStyle} />
             </div>
           </div>
         </div>

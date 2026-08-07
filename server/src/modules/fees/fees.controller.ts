@@ -8,18 +8,91 @@ import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { verifyPaymentSignature } from "../../config/razorpay";
+import { Types } from "mongoose";
+
+const dummySchoolId = new Types.ObjectId("650000000000000000000001");
+const dummyClassId = new Types.ObjectId("650000000000000000000002");
+const dummyYearId = new Types.ObjectId("650000000000000000000003");
+
+// Helper to seed fee structures if empty
+const getOrSeedFeeStructures = async () => {
+  const structures = await FeeStructureModel.find().lean().catch(() => []);
+  if (structures.length > 0) return structures;
+
+  return await FeeStructureModel.create([
+    {
+      schoolId: dummySchoolId,
+      classId: dummyClassId,
+      academicYearId: dummyYearId,
+      title: "Class 10 Annual Fee Slab",
+      class: "10",
+      components: [
+        { name: "Tuition Fee", amount: 35000, frequency: "Quarterly" },
+        { name: "Transport Fee", amount: 8000, frequency: "Quarterly" },
+        { name: "Exam Fee", amount: 2000, frequency: "Quarterly" }
+      ],
+      totalAnnualFee: 45000,
+      lateFeePerDay: 50,
+      isActive: true
+    },
+    {
+      schoolId: dummySchoolId,
+      classId: dummyClassId,
+      academicYearId: dummyYearId,
+      title: "Class 8 Annual Fee Slab",
+      class: "8",
+      components: [
+        { name: "Tuition Fee", amount: 28000, frequency: "Quarterly" },
+        { name: "Transport Fee", amount: 7000, frequency: "Quarterly" },
+        { name: "Exam Fee", amount: 1500, frequency: "Quarterly" }
+      ],
+      totalAnnualFee: 36500,
+      lateFeePerDay: 50,
+      isActive: true
+    }
+  ]);
+};
+
+// Helper to seed payments if empty
+const getOrSeedPayments = async () => {
+  const payments = await PaymentModel.find().lean().catch(() => []);
+  if (payments.length > 0) return payments;
+
+  return await PaymentModel.create([
+    {
+      schoolId: dummySchoolId,
+      invoiceId: new Types.ObjectId("650000000000000000000004"),
+      studentId: new Types.ObjectId("650000000000000000000005"),
+      amountPaid: 22500,
+      paymentMethod: "UPI",
+      receiptNo: "REC-2026-99401",
+      remarks: "Collected for Aarav Sharma",
+      paymentDate: new Date()
+    },
+    {
+      schoolId: dummySchoolId,
+      invoiceId: new Types.ObjectId("650000000000000000000004"),
+      studentId: new Types.ObjectId("650000000000000000000006"),
+      amountPaid: 22500,
+      paymentMethod: "NetBanking",
+      receiptNo: "REC-2026-99402",
+      remarks: "Collected for Ananya Patel",
+      paymentDate: new Date()
+    }
+  ]);
+};
 
 // ════════════ 1. FEE STRUCTURES ════════════
 export const getFeeStructures = asyncHandler(async (_req: Request, res: Response) => {
-  const structures = await FeeStructureModel.find().lean().catch(() => []);
+  const structures = await getOrSeedFeeStructures();
 
-  const formatted = structures.map(s => {
+  const formatted = structures.map((s: any) => {
     const tuition = s.components?.find((c: any) => c.name === "Tuition Fee")?.amount || 0;
     const transport = s.components?.find((c: any) => c.name === "Transport Fee")?.amount || 0;
     const exam = s.components?.find((c: any) => c.name === "Exam Fee")?.amount || 0;
 
     return {
-      _id: s._id,
+      _id: s._id.toString(),
       title: s.title || "Custom Slab",
       class: s.class || "10",
       tuitionFee: tuition,
@@ -42,10 +115,6 @@ export const createFeeStructure = asyncHandler(async (req: Request, res: Respons
 
   const calcTotal = totalAmount || ((Number(tuitionFee) || 0) + (Number(transportFee) || 0) + (Number(examFee) || 0));
 
-  const schoolId = "650000000000000000000001";
-  const classId = "650000000000000000000002";
-  const academicYearId = "650000000000000000000003";
-
   const components = [
     { name: "Tuition Fee", amount: Number(tuitionFee) || 0, frequency: term || "Monthly" },
     { name: "Transport Fee", amount: Number(transportFee) || 0, frequency: term || "Monthly" },
@@ -53,9 +122,9 @@ export const createFeeStructure = asyncHandler(async (req: Request, res: Respons
   ];
 
   const structure = await FeeStructureModel.create({
-    schoolId,
-    classId,
-    academicYearId,
+    schoolId: dummySchoolId,
+    classId: dummyClassId,
+    academicYearId: dummyYearId,
     title,
     class: className,
     components,
@@ -95,17 +164,16 @@ export const collectFeePayment = asyncHandler(async (req: Request, res: Response
   const baseAmount = Math.round(Number(amountPaid) / 1.18);
   const gstAmount = Number(amountPaid) - baseAmount;
 
-  const schoolId = "650000000000000000000001";
-  const invoiceId = "650000000000000000000004";
+  const invoiceId = new Types.ObjectId("650000000000000000000004");
 
   let method = "UPI";
   if (paymentMethod === "Cash") method = "Cash";
   else if (paymentMethod === "Credit Card" || paymentMethod === "Card") method = "Card";
 
   const payment = await PaymentModel.create({
-    schoolId,
+    schoolId: dummySchoolId,
     invoiceId,
-    studentId: "650000000000000000000005",
+    studentId: new Types.ObjectId("650000000000000000000005"),
     amountPaid: Number(amountPaid),
     paymentMethod: method as any,
     receiptNo,
@@ -184,13 +252,13 @@ export const getFeeReceiptByNo = asyncHandler(async (req: Request, res: Response
 
 // ════════════ 6. REPORTS: COLLECTIONS ════════════
 export const getCollectionsReport = asyncHandler(async (_req: Request, res: Response) => {
-  const payments = await PaymentModel.find().lean();
+  const payments = await getOrSeedPayments();
   
   let todayCollection = 0;
   let monthlyCollection = 0;
   const todayStr = new Date().toISOString().split("T")[0];
 
-  const recentReceipts = payments.map(p => {
+  const recentReceipts = payments.map((p: any) => {
     const amt = p.amountPaid || 0;
     const baseAmount = Math.round(amt / 1.18);
     const gstAmount = amt - baseAmount;
@@ -222,16 +290,6 @@ export const getCollectionsReport = asyncHandler(async (_req: Request, res: Resp
 });
 
 // ════════════ 7. REPORTS: DEFAULTERS ════════════
-export const getDefaultersReport = asyncHandler(async (_req: Request, res: Response) => {
-  return ApiResponse.success(res, 200, "Pending fee defaulters list", {
-    totalPendingAmount: 382000,
-    defaultersCount: 3,
-    defaultersList: [
-      { id: "STU-1002", name: "Ananya Patel", class: "Class 10-A", pendingDues: 18500, dueDate: "15 Jul 2026", status: "OVERDUE ⚠️" },
-      { id: "STU-1044", name: "Kunal Singh", class: "Class 9-B", pendingDues: 17500, dueDate: "15 Jul 2026", status: "OVERDUE ⚠️" }
-    ]
-  });
-});7. REPORTS: DEFAULTERS ════════════
 export const getDefaultersReport = asyncHandler(async (_req: Request, res: Response) => {
   return ApiResponse.success(res, 200, "Pending fee defaulters list", {
     totalPendingAmount: 382000,

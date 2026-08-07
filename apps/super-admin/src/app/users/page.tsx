@@ -1,51 +1,95 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Users, UserCheck, Shield, Key, Plus, X, Search, 
   CheckCircle2, AlertCircle, RefreshCw, Sparkles, Mail, 
   Phone, Trash2, Edit3 
 } from "lucide-react";
+import { superAdminApi } from "@/lib/api";
 
 export default function UsersPage() {
   const [activeTab, setActiveTab] = useState<"admins" | "support">("admins");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Users State
-  const [users, setUsers] = useState([
-    { id: "USR-001", name: "Rahul Singh", email: "rahul@schoolmitra.com", phone: "+91 99999 88888", role: "Company Admin", status: "Active", permissions: ["Billing Edit", "Tenant Control", "Deploy code"] },
-    { id: "USR-002", name: "Amit Sharma", email: "amit.sharma@schoolmitra.com", phone: "+91 98888 77777", role: "Support Team L2", status: "Active", permissions: ["Ticket Resolve", "Telemetry Monitor"] },
-    { id: "USR-003", name: "Sanjay Kumar", email: "sanjay@schoolmitra.com", phone: "+91 97777 66666", role: "Support Team L1", status: "Active", permissions: ["Telemetry Monitor"] }
-  ]);
+  const [users, setUsers] = useState<any[]>([]);
 
   // Form State
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPhone, setNewUserPhone] = useState("");
   const [newUserRole, setNewUserRole] = useState("Support Team L1");
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await superAdminApi.getUsers();
+      if (res.success && res.users) {
+        setUsers(res.users);
+      }
+    } catch (err) {
+      console.error("Error fetching system users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUserName || !newUserEmail) return;
 
-    const created = {
-      id: `USR-00${users.length + 1}`,
+    const optimisticUser = {
+      _id: `usr-${Date.now()}`,
+      id: `usr-${Date.now()}`,
+      userCode: `USR-${Math.floor(100 + Math.random() * 900)}`,
       name: newUserName,
       email: newUserEmail,
-      phone: "+91 95555 44444",
+      phone: newUserPhone || "+91 95555 44444",
       role: newUserRole,
       status: "Active",
-      permissions: newUserRole === "Company Admin" ? ["Billing Edit", "Tenant Control"] : ["Telemetry Monitor"]
+      permissions: newUserRole === "Company Admin" ? ["Billing Edit", "Tenant Control", "Deploy code"] : newUserRole === "Support Team L2" ? ["Ticket Resolve", "Telemetry Monitor"] : ["Telemetry Monitor"]
     };
 
-    setUsers([...users, created]);
+    setUsers((prev) => [optimisticUser, ...prev]);
     setIsAddUserOpen(false);
     setNewUserName("");
     setNewUserEmail("");
+    setNewUserPhone("");
+
+    try {
+      const res = await superAdminApi.createUser({
+        name: newUserName,
+        email: newUserEmail,
+        phone: newUserPhone || "+91 95555 44444",
+        role: newUserRole,
+        status: "Active"
+      });
+
+      if (res.success && res.user) {
+        fetchUsers();
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
   };
 
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     if (confirm("Are you sure you want to revoke system credentials for this staff member?")) {
-      setUsers(users.filter(u => u.id !== id));
+      try {
+        const res = await superAdminApi.deleteUser(id);
+        if (res.success) {
+          setUsers(users.filter(u => u.id !== id && u._id !== id));
+          alert("User access revoked from database.");
+        }
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -102,26 +146,28 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {users
-                .filter(u => activeTab === "admins" ? u.role === "Company Admin" : u.role.includes("Support"))
+                .filter(u => activeTab === "admins" 
+                  ? (u.role === "Company Admin" || u.role === "Admin" || u.role === "SuperAdmin") 
+                  : (u.role && u.role.includes("Support")))
                 .map((u) => (
-                  <tr key={u.id}>
-                    <td style={{ fontWeight: 700, color: "var(--primary)", fontFamily: "monospace" }}>{u.id}</td>
+                  <tr key={u.id || u._id}>
+                    <td style={{ fontWeight: 700, color: "var(--primary)", fontFamily: "monospace" }}>{u.userCode || u.id}</td>
                     <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{u.name}</td>
                     <td style={{ color: "var(--primary)", fontWeight: 600 }}>{u.email}</td>
                     <td style={{ color: "var(--text-muted)" }}>{u.phone}</td>
                     <td><span className="badge badge-info">{u.role}</span></td>
                     <td>
                       <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
-                        {u.permissions.map((p, pi) => (
+                        {(u.permissions || ["Telemetry Monitor"]).map((p: string, pi: number) => (
                           <span key={pi} style={{ padding: "0.2rem 0.5rem", borderRadius: "4px", background: "var(--btn-secondary-bg)", border: "1px solid var(--border-color)", fontSize: "0.7rem", color: "var(--text-muted)" }}>
                             {p}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td><span className="badge badge-success">{u.status}</span></td>
+                    <td><span className={`badge ${u.status === "Active" ? "badge-success" : "badge-danger"}`}>{u.status}</span></td>
                     <td style={{ textAlign: "right" }}>
-                      <button onClick={() => handleDeleteUser(u.id)} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
+                      <button onClick={() => handleDeleteUser(u._id || u.id)} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
                         <Trash2 size={14} /> Revoke
                       </button>
                     </td>
@@ -156,11 +202,16 @@ export default function UsersPage() {
               </div>
 
               <div>
+                <label style={labelStyle}>CONTACT PHONE NUMBER</label>
+                <input type="text" value={newUserPhone} onChange={(e) => setNewUserPhone(e.target.value)} placeholder="+91 98765 43210" style={inputStyle} />
+              </div>
+
+              <div>
                 <label style={labelStyle}>ASSIGN CORPORATE ROLE</label>
                 <select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value)} style={inputStyle}>
-                  <option>Company Admin</option>
-                  <option>Support Team L2</option>
-                  <option>Support Team L1</option>
+                  <option value="Company Admin">Company Admin</option>
+                  <option value="Support Team L2">Support Team L2</option>
+                  <option value="Support Team L1">Support Team L1</option>
                 </select>
               </div>
 

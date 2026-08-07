@@ -1,87 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Building2, Plus, Search, Filter, Eye, Edit3, Trash2, 
   Ban, CheckCircle2, AlertCircle, X, Shield, Mail, Phone, 
   MapPin, Calendar, CreditCard, Users, GraduationCap, Bus, Clock, Sparkles 
 } from "lucide-react";
+import { superAdminApi } from "@/lib/api";
 
 export default function SchoolsPage() {
-  const [schools, setSchools] = useState([
-    {
-      id: "SCH-1001",
-      code: "CBSE-AFF-2730001",
-      name: "Delhi Public School (Dwarka)",
-      city: "New Delhi",
-      plan: "Enterprise Pro",
-      adminName: "Dr. Ashok Kumar",
-      email: "admin@dpsdwarka.edu.in",
-      phone: "+91 11 2617 7777",
-      status: "Active",
-      studentsCount: 1420,
-      teachersCount: 86,
-      parentsCount: 2100,
-      driversCount: 18,
-      mrr: "₹ 45,000",
-      expiry: "12 Dec 2027",
-      onboardedDate: "15 Jan 2024"
-    },
-    {
-      id: "SCH-1002",
-      code: "CBSE-AFF-1820042",
-      name: "St. Xavier's Senior Secondary School",
-      city: "Mumbai",
-      plan: "Growth Plan",
-      adminName: "Fr. Thomas D'Souza",
-      email: "admin@stxaviers.edu.in",
-      phone: "+91 22 2414 5566",
-      status: "Active",
-      studentsCount: 980,
-      teachersCount: 62,
-      parentsCount: 1450,
-      driversCount: 12,
-      mrr: "₹ 32,000",
-      expiry: "15 Oct 2026",
-      onboardedDate: "10 Mar 2024"
-    },
-    {
-      id: "SCH-1003",
-      code: "CBSE-AFF-2910088",
-      name: "DAV Public School (Vasant Kunj)",
-      city: "New Delhi",
-      plan: "Trial (14 Days)",
-      adminName: "Rajeshwar Sharma",
-      email: "principal@davvk.edu.in",
-      phone: "+91 11 2689 1234",
-      status: "Trial",
-      studentsCount: 1100,
-      teachersCount: 70,
-      parentsCount: 1600,
-      driversCount: 14,
-      mrr: "₹ 0 (Trial)",
-      expiry: "05 Aug 2026",
-      onboardedDate: "22 Jul 2026"
-    },
-    {
-      id: "SCH-1004",
-      code: "CBSE-AFF-3100099",
-      name: "Kendriya Vidyalaya Sector 8",
-      city: "Chandigarh",
-      plan: "Starter Plan",
-      adminName: "Sunita Verma",
-      email: "kv.sec8.chd@gmail.com",
-      phone: "+91 172 274 0011",
-      status: "Suspended",
-      studentsCount: 650,
-      teachersCount: 40,
-      parentsCount: 900,
-      driversCount: 8,
-      mrr: "₹ 18,000",
-      expiry: "20 Jul 2026",
-      onboardedDate: "05 Feb 2025"
-    }
-  ]);
+  const [schools, setSchools] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSchools = async () => {
+      setLoading(true);
+      try {
+        const res = await superAdminApi.getSchools();
+        if (res.success && res.data?.schools) {
+          setSchools(res.data.schools);
+        } else if (res.success && (res as any).schools) {
+          setSchools((res as any).schools);
+        }
+      } catch (err) {
+        console.error("Error fetching schools directory:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchools();
+  }, []);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -203,10 +152,10 @@ export default function SchoolsPage() {
               style={{
                 width: "100%",
                 padding: "0.65rem 0.75rem 0.65rem 2.5rem",
-                background: "rgba(255,255,255,0.03)",
+                background: "var(--bg-input)",
                 border: "1px solid var(--border-color)",
                 borderRadius: "var(--radius-md)",
-                color: "#ffffff",
+                color: "var(--text-main)",
                 fontSize: "0.85rem"
               }}
             />
@@ -220,30 +169,30 @@ export default function SchoolsPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
               style={{
                 padding: "0.65rem 1rem",
-                background: "rgba(255,255,255,0.03)",
+                background: "var(--bg-input)",
                 border: "1px solid var(--border-color)",
                 borderRadius: "var(--radius-md)",
-                color: "#ffffff",
+                color: "var(--text-main)",
                 fontSize: "0.85rem",
                 cursor: "pointer"
               }}
             >
-              <option value="All" style={{ background: "#0b0f19" }}>All Statuses</option>
-              <option value="Active" style={{ background: "#0b0f19" }}>Active</option>
-              <option value="Trial" style={{ background: "#0b0f19" }}>Trial</option>
-              <option value="Suspended" style={{ background: "#0b0f19" }}>Suspended</option>
-              <option value="Expired" style={{ background: "#0b0f19" }}>Expired</option>
+              <option value="All">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Trial">Trial</option>
+              <option value="Suspended">Suspended</option>
+              <option value="Expired">Expired</option>
             </select>
           </div>
         </div>
 
         <span style={{ fontSize: "0.825rem", color: "var(--text-muted)", fontWeight: 700 }}>
-          Showing <strong style={{ color: "#fff" }}>{filteredSchools.length}</strong> Registered Schools
+          Showing <strong style={{ color: "var(--text-heading)" }}>{filteredSchools.length}</strong> Registered Schools
         </span>
       </div>
 
       {/* ════════════ 1. SCHOOL LIST DIRECTORY TABLE ════════════ */}
-      <div className="glass-card" style={{ padding: "1.75rem" }}>
+      <div className="glass-card" style={{ padding: "1.25rem" }}>
         <div className="table-container">
           <table className="custom-table">
             <thead>
@@ -262,7 +211,7 @@ export default function SchoolsPage() {
               {filteredSchools.map((sch) => (
                 <tr key={sch.id}>
                   <td>
-                    <div style={{ fontWeight: 800, color: "#ffffff", fontSize: "0.95rem" }}>{sch.name}</div>
+                    <div style={{ fontWeight: 800, color: "var(--text-heading)", fontSize: "0.925rem" }}>{sch.name}</div>
                     <div style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 700, marginTop: 2 }}>
                       {sch.id} • {sch.city}
                     </div>
@@ -274,13 +223,13 @@ export default function SchoolsPage() {
                     <span className="badge badge-info">{sch.plan}</span>
                   </td>
                   <td>
-                    <div style={{ fontWeight: 700, color: "#ffffff" }}>{sch.adminName}</div>
+                    <div style={{ fontWeight: 700, color: "var(--text-heading)" }}>{sch.adminName}</div>
                     <div style={{ fontSize: "0.725rem", color: "var(--text-muted)", marginTop: 1 }}>{sch.email}</div>
                   </td>
-                  <td style={{ fontSize: "0.825rem", color: "var(--text-muted)" }}>
-                    <strong style={{ color: "#fff" }}>{sch.studentsCount}</strong> STU • <strong style={{ color: "#fff" }}>{sch.parentsCount}</strong> PAR • <strong style={{ color: "#fff" }}>{sch.driversCount}</strong> DRV
+                  <td style={{ fontSize: "0.8rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+                    <strong style={{ color: "var(--text-heading)" }}>{sch.studentsCount || sch.students || 0}</strong> STU • <strong style={{ color: "var(--text-heading)" }}>{sch.parentsCount || sch.parents || 0}</strong> PAR • <strong style={{ color: "var(--text-heading)" }}>{sch.driversCount || sch.drivers || 0}</strong> DRV
                   </td>
-                  <td style={{ fontWeight: 900, color: "#34d399", fontSize: "0.95rem" }}>
+                  <td style={{ fontWeight: 900, color: "var(--success)", fontSize: "0.925rem", whiteSpace: "nowrap" }}>
                     {sch.mrr}
                   </td>
                   <td>

@@ -13,6 +13,9 @@ try {
   // Fallback if setServers is restricted
 }
 
+// Disable Mongoose command buffering so queries fail immediately or fallback instead of timing out after 10000ms
+mongoose.set("bufferCommands", false);
+
 export const connectDB = async (): Promise<void> => {
   const connStr =
     process.env.MONGODB_URI ||

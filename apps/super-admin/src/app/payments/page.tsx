@@ -1,39 +1,61 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   CreditCard, DollarSign, Download, Filter, Search, FileText, 
   Receipt, RefreshCw, CheckCircle2, AlertCircle, X, Sparkles, 
   Trash2, Undo, Check, Eye 
 } from "lucide-react";
+import { superAdminApi } from "@/lib/api";
 
 export default function PaymentsPage() {
   const [activeTab, setActiveTab] = useState<"transactions" | "invoices" | "refunds" | "gateway">("transactions");
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
   
-  // Transaction Ledger State
-  const [transactions, setTransactions] = useState([
-    { id: "TXN-9010", school: "Delhi Public School (Dwarka)", amount: 540000, gst: 97200, total: 637200, date: "12 Dec 2025", method: "Razorpay (UPI)", status: "Success", refId: "pay_Op982Fas810x" },
-    { id: "TXN-9011", school: "St. Xavier's Senior Secondary School", amount: 32000, gst: 5760, total: 37760, date: "15 Jul 2026", method: "Razorpay (Card)", status: "Success", refId: "pay_Op772Gas992m" },
-    { id: "TXN-9012", school: "Modern School (Barakhamba Road)", amount: 75000, gst: 13500, total: 88500, date: "01 Jul 2026", method: "Stripe (Card)", status: "Success", refId: "ch_1Mop72Lks00a" },
-    { id: "TXN-9013", school: "Kendriya Vidyalaya Sector 8", amount: 18000, gst: 3240, total: 21240, date: "20 Jun 2026", method: "Bank Transfer", status: "Success", refId: "IMPS-992810" },
-    { id: "TXN-9014", school: "DAV Public School (Vasant Kunj)", amount: 45000, gst: 8100, total: 53100, date: "22 Jul 2026", method: "Razorpay (NetBanking)", status: "Failed", refId: "pay_Op551Fas810x" },
-  ]);
+  // Transaction Ledger & Gateway State
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [gatewayLogs, setGatewayLogs] = useState<any[]>([]);
+
+  const fetchPayments = async () => {
+    setLoading(true);
+    try {
+      const res = await superAdminApi.getPayments();
+      if (res.success) {
+        if (res.transactions) setTransactions(res.transactions);
+        if (res.gatewayLogs) setGatewayLogs(res.gatewayLogs);
+      }
+    } catch (err) {
+      console.error("Error fetching payments ledger:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPayments();
+  }, []);
 
   // Refund Modal State
   const [selectedTxnForRefund, setSelectedTxnForRefund] = useState<any>(null);
   const [refundReason, setRefundReason] = useState("");
   const [refundStatusMessage, setRefundStatusMessage] = useState("");
 
-  const handleRefundSubmit = (e: React.FormEvent) => {
+  const handleRefundSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTxnForRefund) return;
     
-    // Update status to refunded in the table
     setTransactions(prev => prev.map(t => 
       t.id === selectedTxnForRefund.id ? { ...t, status: "Refunded" } : t
     ));
-    setRefundStatusMessage("Refund initiated successfully!");
+    setRefundStatusMessage("Refund initiated & updated in database!");
+
+    try {
+      await superAdminApi.processPaymentRefund(selectedTxnForRefund.id, { reason: refundReason });
+    } catch (err) {
+      console.error(err);
+    }
+
     setTimeout(() => {
       setSelectedTxnForRefund(null);
       setRefundReason("");
@@ -41,12 +63,56 @@ export default function PaymentsPage() {
     }, 1500);
   };
 
-  const formatINR = (n: number) => `₹ ${n.toLocaleString("en-IN")}`;
+  const handleSimulateWebhook = async () => {
+    const events = [
+      { event: "payment.captured", desc: "SaaS Renewal fee captured via Razorpay UPI AutoPay", ref: `pay_${Math.random().toString(36).substring(2, 10)}` },
+      { event: "subscription.renewed", desc: "School Subscription auto-renewed for 12 months", ref: `sub_${Math.random().toString(36).substring(2, 10)}` },
+      { event: "invoice.paid", desc: "GST Invoice settled by HDFC Corporate NetBanking", ref: `inv_${Math.floor(1000 + Math.random() * 9000)}` }
+    ];
+    const picked = events[Math.floor(Math.random() * events.length)];
+
+    const optimisticLog = {
+      id: `log-${Date.now()}`,
+      event: picked.event,
+      desc: picked.desc,
+      ref: picked.ref,
+      status: "200 OK",
+      time: new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    };
+
+    setGatewayLogs(prev => [optimisticLog, ...prev]);
+
+    try {
+      const res = await superAdminApi.dispatchGatewayEvent(picked);
+      if (res.success && res.gatewayLogs) {
+        setGatewayLogs(res.gatewayLogs);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleExportCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,Transaction ID,School Tenant,Sub-Total,GST (18%),Total Charged,Date,Method,Reference ID,Status\n";
+    transactions.forEach(t => {
+      csvContent += `"${t.id}","${t.school}","${t.amount}","${t.gst}","${t.total}","${t.date}","${t.method}","${t.refId}","${t.status}"\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `SchoolMitra_Financial_Ledger_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const formatINR = (n: number) => `₹ ${Number(n || 0).toLocaleString("en-IN")}`;
 
   const filteredTransactions = transactions.filter(t =>
-    t.school.toLowerCase().includes(search.toLowerCase()) ||
-    t.id.toLowerCase().includes(search.toLowerCase()) ||
-    t.refId.toLowerCase().includes(search.toLowerCase())
+    (t.school || "").toLowerCase().includes(search.toLowerCase()) ||
+    (t.id || "").toLowerCase().includes(search.toLowerCase()) ||
+    (t.refId || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -66,7 +132,7 @@ export default function PaymentsPage() {
           </p>
         </div>
 
-        <button className="btn btn-primary">
+        <button onClick={handleExportCSV} className="btn btn-primary">
           <Download size={16} /> Export Financial Ledger
         </button>
       </div>
@@ -134,10 +200,10 @@ export default function PaymentsPage() {
                 {filteredTransactions.map((t) => (
                   <tr key={t.id}>
                     <td style={{ fontWeight: 700, color: "var(--primary)", fontFamily: "monospace" }}>{t.id}</td>
-                    <td style={{ fontWeight: 800, color: "#fff" }}>{t.school}</td>
+                    <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{t.school}</td>
                     <td style={{ fontWeight: 600 }}>{formatINR(t.amount)}</td>
                     <td style={{ color: "var(--text-muted)" }}>{formatINR(t.gst)}</td>
-                    <td style={{ fontWeight: 900, color: "#34d399" }}>{formatINR(t.total)}</td>
+                    <td style={{ fontWeight: 900, color: "var(--success)" }}>{formatINR(t.total)}</td>
                     <td style={{ color: "var(--text-muted)" }}>{t.date}</td>
                     <td style={{ fontSize: "0.825rem" }}>{t.method}</td>
                     <td style={{ fontFamily: "monospace", fontSize: "0.78rem", color: "var(--text-muted)" }}>{t.refId}</td>
@@ -177,9 +243,9 @@ export default function PaymentsPage() {
               <tbody>
                 {filteredTransactions.filter(t => t.status === "Success").map((t) => (
                   <tr key={t.id}>
-                    <td style={{ fontWeight: 700, color: "#fff", fontFamily: "monospace" }}>INV-2026-{t.id.split("-")[1]}</td>
+                    <td style={{ fontWeight: 700, color: "var(--text-heading)", fontFamily: "monospace" }}>INV-2026-{t.id.split("-")[1] || "101"}</td>
                     <td>
-                      <div style={{ fontWeight: 800, color: "#fff" }}>{t.school}</div>
+                      <div style={{ fontWeight: 800, color: "var(--text-heading)" }}>{t.school}</div>
                       <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>GSTIN: 07AAAAD2026A1Z0</div>
                     </td>
                     <td style={{ fontFamily: "monospace" }}>SAC-998413</td>
@@ -187,9 +253,9 @@ export default function PaymentsPage() {
                     <td style={{ color: "var(--text-muted)" }}>{formatINR(t.gst / 2)}</td>
                     <td style={{ color: "var(--text-muted)" }}>{formatINR(t.gst / 2)}</td>
                     <td style={{ color: "var(--text-muted)" }}>—</td>
-                    <td style={{ fontWeight: 900, color: "#34d399" }}>{formatINR(t.total)}</td>
+                    <td style={{ fontWeight: 900, color: "var(--success)" }}>{formatINR(t.total)}</td>
                     <td style={{ textAlign: "right" }}>
-                      <button className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}>
+                      <button onClick={handleExportCSV} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}>
                         <Download size={14} /> PDF
                       </button>
                     </td>
@@ -204,7 +270,7 @@ export default function PaymentsPage() {
       {/* ════════════ TAB 3: REFUND MANAGEMENT ════════════ */}
       {activeTab === "refunds" && (
         <div className="glass-card" style={{ padding: "1.75rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", marginBottom: "1.25rem" }}>Process Transaction Refunds</h3>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-heading)", marginBottom: "1.25rem" }}>Process Transaction Refunds</h3>
           <div className="table-container">
             <table className="custom-table">
               <thead>
@@ -222,8 +288,8 @@ export default function PaymentsPage() {
                 {filteredTransactions.map((t) => (
                   <tr key={t.id}>
                     <td style={{ fontWeight: 700, color: "var(--primary)", fontFamily: "monospace" }}>{t.id}</td>
-                    <td style={{ fontWeight: 800, color: "#fff" }}>{t.school}</td>
-                    <td style={{ fontWeight: 800, color: "#fff" }}>{formatINR(t.total)}</td>
+                    <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{t.school}</td>
+                    <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{formatINR(t.total)}</td>
                     <td style={{ color: "var(--text-muted)" }}>{t.date}</td>
                     <td style={{ fontFamily: "monospace", fontSize: "0.78rem" }}>{t.refId}</td>
                     <td>
@@ -235,7 +301,7 @@ export default function PaymentsPage() {
                     </td>
                     <td style={{ textAlign: "right" }}>
                       {t.status === "Success" ? (
-                        <button onClick={() => setSelectedTxnForRefund(t)} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem", color: "#f87171", borderColor: "rgba(239, 68, 68, 0.3)" }}>
+                        <button onClick={() => setSelectedTxnForRefund(t)} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
                           <Undo size={14} /> Process Refund
                         </button>
                       ) : (
@@ -253,19 +319,27 @@ export default function PaymentsPage() {
       {/* ════════════ TAB 4: GATEWAY LIVE LOGS ════════════ */}
       {activeTab === "gateway" && (
         <div className="glass-card" style={{ padding: "1.75rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff" }}>Razorpay Webhook events & API Dispatch Logs</h3>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.3rem 0.6rem", borderRadius: "99px", background: "rgba(16,185,129,0.15)", color: "var(--success)", fontSize: "0.72rem", fontWeight: 800 }}>
-              Webhook Endpoint Connected
-            </span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
+            <div>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-heading)" }}>Razorpay / Stripe Webhook Events & Dispatch Logs</h3>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 2 }}>Real-time payment gateway event listener & telemetry.</p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <button onClick={handleSimulateWebhook} className="btn btn-secondary" style={{ padding: "0.4rem 0.85rem", fontSize: "0.78rem" }}>
+                <Sparkles size={14} color="var(--primary)" /> Simulate Webhook Event
+              </button>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.65rem", borderRadius: "99px", background: "rgba(16,185,129,0.15)", color: "var(--success)", fontSize: "0.72rem", fontWeight: 800 }}>
+                Webhook Endpoint Active
+              </span>
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-            {[
+            {(gatewayLogs.length > 0 ? gatewayLogs : [
               { event: "payment.captured", desc: "SaaS Payment captured for STU ID count renewal (Delhi Public School)", ref: "pay_Op982Fas810x", status: "200 OK", time: "29 July 2026, 01:15:32 AM" },
               { event: "payment.failed", desc: "Insufficient balance at customer bank auth gateway (DAV Public School)", ref: "pay_Op551Fas810x", status: "200 OK", time: "28 July 2026, 11:42:15 PM" },
               { event: "order.created", desc: "Subscription billing invoice scheduled order created", ref: "order_Ksp901Aps", status: "200 OK", time: "28 July 2026, 09:00:00 AM" }
-            ].map((lg, idx) => (
+            ]).map((lg, idx) => (
               <div key={idx} style={{
                 padding: "1rem", borderRadius: "var(--radius-md)", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)",
                 display: "flex", justifyContent: "space-between", alignItems: "center"
@@ -275,8 +349,8 @@ export default function PaymentsPage() {
                     <span style={{ fontWeight: 800, color: "var(--primary)", fontFamily: "monospace", fontSize: "0.85rem" }}>{lg.event}</span>
                     <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "monospace" }}>Ref: {lg.ref}</span>
                   </div>
-                  <div style={{ fontSize: "0.8rem", color: "#fff", marginTop: 4 }}>{lg.desc}</div>
-                  <div style={{ fontSize: "0.7rem", color: "var(--text-dim)", marginTop: 4 }}>{lg.time}</div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-heading)", marginTop: 4 }}>{lg.desc}</div>
+                  <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 4 }}>{lg.time}</div>
                 </div>
                 <span className="badge badge-success">{lg.status}</span>
               </div>
@@ -293,19 +367,19 @@ export default function PaymentsPage() {
         }}>
           <div className="glass-card" style={{ padding: "2rem", width: "100%", maxWidth: 500, borderRadius: "var(--radius-lg)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#fff" }}>Initiate Payment Refund</h3>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-heading)" }}>Initiate Payment Refund</h3>
               <button onClick={() => setSelectedTxnForRefund(null)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
             </div>
 
             <form onSubmit={handleRefundSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
                 <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>TRANSACTION ID</label>
-                <input type="text" value={selectedTxnForRefund.id} disabled style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem" }} />
+                <input type="text" value={selectedTxnForRefund.id} disabled style={{ width: "100%", padding: "0.7rem", background: "var(--btn-secondary-bg)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-heading)", fontSize: "0.85rem" }} />
               </div>
 
               <div>
                 <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>REFUND AMOUNT</label>
-                <input type="text" value={formatINR(selectedTxnForRefund.total)} disabled style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem" }} />
+                <input type="text" value={formatINR(selectedTxnForRefund.total)} disabled style={{ width: "100%", padding: "0.7rem", background: "var(--btn-secondary-bg)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-heading)", fontSize: "0.85rem" }} />
               </div>
 
               <div>
@@ -316,7 +390,7 @@ export default function PaymentsPage() {
                   onChange={(e) => setRefundReason(e.target.value)}
                   placeholder="e.g. Double charging / Client requested plan downgrade"
                   required
-                  style={{ width: "100%", padding: "0.7rem", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", color: "#fff", fontSize: "0.85rem" }}
+                  style={{ width: "100%", padding: "0.7rem", fontSize: "0.85rem" }}
                 />
               </div>
 

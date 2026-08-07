@@ -78,11 +78,11 @@ export default function FeesPage() {
 
   // Stats bar
   const [stats, setStats] = useState({
-    todayCollection: 48500,
-    monthlyCollection: 1245000,
-    pendingFees: 382000,
-    overdueFees: 124000,
-    collectionPercentage: "77%"
+    todayCollection: 0,
+    monthlyCollection: 0,
+    pendingFees: 0,
+    overdueFees: 0,
+    collectionPercentage: "0%"
   });
 
   // ════════════ STATE DECLARATIONS ════════════
@@ -91,36 +91,25 @@ export default function FeesPage() {
   const [editingSlabId, setEditingSlabId] = useState<string | null>(null);
   const [slabForm, setSlabForm] = useState({ title: "", className: "10", tuitionFee: 20000, transportFee: 5000, examFee: 1500, term: "Quarterly" });
 
-  const [assignedFees, setAssignedFees] = useState<FeeAssignment[]>([
-    { id: "ASG-01", studentName: "Aarav Sharma", rollNo: "10-A-01", slabName: "Class 10 Annual Fee", totalExpected: 35000 },
-    { id: "ASG-02", studentName: "Ananya Patel", rollNo: "10-A-02", slabName: "Class 10 Annual Fee", totalExpected: 35000 }
-  ]);
+  const [assignedFees, setAssignedFees] = useState<FeeAssignment[]>([]);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [assignForm, setAssignForm] = useState({ studentName: "Aarav Sharma", slabName: "Class 10 Annual Fee", totalExpected: 35000 });
+  const [assignForm, setAssignForm] = useState({ studentName: "", slabName: "", totalExpected: 0 });
 
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [verificationLogs, setVerificationLogs] = useState<any[]>([]);
   
-  const [scholarships, setScholarships] = useState<ScholarshipWaiver[]>([
-    { id: "DSC-01", name: "Aarav Sharma", type: "Sibling Discount", percentage: "15%", status: "Active" },
-    { id: "DSC-02", name: "Ananya Patel", type: "Merit Scholarship", percentage: "50%", status: "Active" }
-  ]);
+  const [scholarships, setScholarships] = useState<ScholarshipWaiver[]>([]);
   const [isScholarshipModalOpen, setIsScholarshipModalOpen] = useState(false);
-  const [scholarshipForm, setScholarshipForm] = useState({ name: "Aarav Sharma", type: "Sibling Discount", percentage: "15%", status: "Active" as const });
+  const [scholarshipForm, setScholarshipForm] = useState({ name: "", type: "Sibling Discount", percentage: "15%", status: "Active" as const });
 
-  const [fines, setFines] = useState<FineRecord[]>([
-    { id: "FIN-01", name: "Rohan Verma", type: "Late tuition Fee Payment", amount: 500, date: "2026-08-01", status: "Unpaid" },
-    { id: "FIN-02", name: "Dev Malhotra", type: "Library Book Overdue", amount: 120, date: "2026-07-28", status: "Waived" }
-  ]);
+  const [fines, setFines] = useState<FineRecord[]>([]);
   const [isFineModalOpen, setIsFineModalOpen] = useState(false);
-  const [fineForm, setFineForm] = useState({ name: "Rohan Verma", type: "Late tuition Fee Payment", amount: "500", date: "2026-08-06", status: "Unpaid" as const });
+  const [fineForm, setFineForm] = useState({ name: "", type: "Late tuition Fee Payment", amount: "500", date: "2026-08-06", status: "Unpaid" as const });
 
-  const [refunds, setRefunds] = useState<RefundRecord[]>([
-    { id: "REF-01", name: "Priya Singh", amount: 4500, type: "Excess Tuition Paid", date: "2026-08-01", status: "Refunded" }
-  ]);
+  const [refunds, setRefunds] = useState<RefundRecord[]>([]);
 
-  const [selectedStudentId, setSelectedStudentId] = useState("STU-1001");
-  const [collectAmount, setCollectAmount] = useState(22500);
+  const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [collectAmount, setCollectAmount] = useState(0);
   const [collectMode, setCollectMode] = useState("UPI");
 
   // Load from Express APIs with fallback
@@ -137,11 +126,7 @@ export default function FeesPage() {
         setFeeSlabs(data.data.structures);
       }
     } catch (e) {
-      // Fallback
-      setFeeSlabs([
-        { _id: "SLAB-01", title: "Class 10 Annual Fee", className: "10", tuitionFee: 35000, transportFee: 8000, examFee: 2000, totalAmount: 45000, term: "Quarterly" },
-        { _id: "SLAB-02", title: "Class 8 Annual Fee", className: "8", tuitionFee: 28000, transportFee: 7000, examFee: 1500, totalAmount: 36500, term: "Quarterly" }
-      ]);
+      console.error(e);
     }
   };
 
@@ -161,14 +146,7 @@ export default function FeesPage() {
         setVerificationLogs(data.data.recentReceipts);
       }
     } catch (e) {
-      // Fallback transactions
-      setTransactions([
-        { receiptNo: "REC-99401", studentId: "STU-1001", studentName: "Aarav Sharma", className: "10-A", amountPaid: 22500, paymentMethod: "UPI", date: "2026-08-06", status: "PAID ✅" },
-        { receiptNo: "REC-99402", studentId: "STU-1002", studentName: "Ananya Patel", className: "10-A", amountPaid: 18500, paymentMethod: "Card", date: "2026-08-05", status: "PAID ✅" }
-      ]);
-      setVerificationLogs([
-        { receiptNo: "REC-99401", studentId: "STU-1001", studentName: "Aarav Sharma", className: "10-A", amountPaid: 22500, paymentMethod: "UPI", date: "2026-08-06", status: "PAID ✅" }
-      ]);
+      console.error(e);
     }
   };
 
@@ -196,20 +174,8 @@ export default function FeesPage() {
         setIsSlabModalOpen(false);
       }
     } catch (err) {
-      // Local fallback
-      const created: FeeSlab = {
-        _id: `SLAB-${Date.now()}`,
-        title: slabForm.title,
-        className: slabForm.className,
-        tuitionFee: Number(slabForm.tuitionFee),
-        transportFee: Number(slabForm.transportFee),
-        examFee: Number(slabForm.examFee),
-        totalAmount,
-        term: slabForm.term
-      };
-      setFeeSlabs([...feeSlabs, created]);
-      setIsSlabModalOpen(false);
-      alert("Saved locally (offline mode).");
+      console.error(err);
+      alert("Failed to save fee structure.");
     }
   };
 
