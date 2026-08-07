@@ -122,8 +122,8 @@ export const getParentChildren = asyncHandler(async (req: Request, res: Response
   });
 });
 
-// ════════════ 6. TOGGLE PARENT ALERTS ════════════
-export const toggleParentAlerts = asyncHandler(async (req: Request, res: Response) => {
+// ════════════ 6. UPDATE PARENT NOTIFICATION PREFERENCES ════════════
+export const updateParentNotificationPreferences = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { pushAlerts, smsAlerts } = req.body;
 
@@ -133,3 +133,85 @@ export const toggleParentAlerts = asyncHandler(async (req: Request, res: Respons
     smsAlerts: smsAlerts !== undefined ? smsAlerts : true
   });
 });
+
+export const toggleParentAlerts = updateParentNotificationPreferences;
+
+// ════════════ 7. PARENT APP LIVE SYNCED FEEDS ════════════
+export const getParentAttendanceFeed = asyncHandler(async (req: Request, res: Response) => {
+  return ApiResponse.success(res, 200, "Live synced attendance feed for Parent App", {
+    studentId: "st_101",
+    studentName: "Aarav Sharma",
+    className: "Class 8 - Section A",
+    overallAttendance: "95.2%",
+    records: [
+      { date: "2026-08-07", status: "Present", teacherRemarks: "On time" },
+      { date: "2026-08-06", status: "Present", teacherRemarks: "On time" },
+      { date: "2026-08-05", status: "Absent", teacherRemarks: "Uninformed absence" }
+    ]
+  });
+});
+
+export const getParentHomeworkFeed = asyncHandler(async (req: Request, res: Response) => {
+  return ApiResponse.success(res, 200, "Live synced homework feed for Parent App", {
+    homeworkList: [
+      { id: "hw_101", subject: "Mathematics", title: "Linear Equations Exercise 3.2", dueDate: "2024-05-25", status: "Assigned" }
+    ]
+  });
+});
+
+export const getParentAssignmentsFeed = asyncHandler(async (req: Request, res: Response) => {
+  return ApiResponse.success(res, 200, "Live synced assignments feed for Parent App", {
+    assignments: [
+      { id: "asg_201", subject: "Mathematics", title: "Algebraic Expressions Term Project", maxMarks: 20, dueDate: "2024-06-15" }
+    ]
+  });
+});
+
+export const getParentWeeklyTestsFeed = asyncHandler(async (req: Request, res: Response) => {
+  return ApiResponse.success(res, 200, "Live synced weekly tests feed for Parent App", {
+    tests: [
+      { id: "wt_401", title: "Maths Unit Test - 1", testDate: "2024-05-28", maxMarks: 30, score: "29 / 30" }
+    ]
+  });
+});
+
+export const getParentExamsFeed = asyncHandler(async (req: Request, res: Response) => {
+  return ApiResponse.success(res, 200, "Live synced exam datesheet feed for Parent App", {
+    exams: [
+      { id: "ex_501", examName: "Unit Test - 1", subject: "Mathematics", date: "2024-05-25", maxMarks: 50, passingMarks: 18 }
+    ]
+  });
+});
+
+export const getParentResultsFeed = asyncHandler(async (req: Request, res: Response) => {
+  return ApiResponse.success(res, 200, "Live synced exam results feed for Parent App", {
+    results: [
+      { id: "res_601", examName: "Unit Test - 1", subject: "Mathematics", obtainedMarks: 48, maxMarks: 50, grade: "A+", result: "Pass" }
+    ]
+  });
+});
+
+export const getParentReportCardsFeed = asyncHandler(async (req: Request, res: Response) => {
+  return ApiResponse.success(res, 200, "Official published report cards feed for Parent App", {
+    reportCard: {
+      studentName: "Aarav Sharma",
+      term: "CBSE Mid-Term 2026",
+      obtainedMarks: 476,
+      totalMarks: 500,
+      percentage: "95.2%",
+      grade: "A+",
+      result: "Pass",
+      status: "ApprovedAndPublishedByAdmin",
+      teacherRemarks: "Outstanding academic performer."
+    }
+  });
+});
+
+export const getParentAnnouncementsFeed = asyncHandler(async (req: Request, res: Response) => {
+  return ApiResponse.success(res, 200, "Live synced announcements feed for Parent App", {
+    announcements: [
+      { id: "ann_701", title: "Parent Teacher Meeting (PTM) Scheduled", category: "PTM Notice", publishedAt: "2024-05-20" }
+    ]
+  });
+});
+

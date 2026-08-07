@@ -77,16 +77,28 @@ export class ApiResponse {
   }
 
   /**
-   * Error response
+   * Standardized Global Error response
    */
-  static error(res: Response, statusCode: number = HTTP_STATUS.BAD_REQUEST, message: string = "Error", errorDetails?: any): Response {
+  static error(res: Response, statusCode: number = HTTP_STATUS.BAD_REQUEST, message: string = "Error", code?: string, errorDetails?: any): Response {
+    const errorCode = code || (
+      statusCode === 400 ? "BAD_REQUEST" :
+      statusCode === 401 ? "UNAUTHORIZED_ACCESS" :
+      statusCode === 403 ? "FORBIDDEN_SCOPE" :
+      statusCode === 404 ? "RESOURCE_NOT_FOUND" :
+      statusCode === 422 ? "VALIDATION_ERROR" :
+      statusCode === 429 ? "RATE_LIMIT_EXCEEDED" : "INTERNAL_SERVER_ERROR"
+    );
+
     return res.status(statusCode).json({
       success: false,
       statusCode,
       message,
-      errorDetails
+      code: errorCode,
+      errorDetails,
+      timestamp: new Date().toISOString()
     });
   }
+
 
   /**
    * Created response (201)

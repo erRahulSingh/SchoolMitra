@@ -176,8 +176,11 @@ const teacherSchema = new Schema({
 }, { timestamps: true });
 
 teacherSchema.index({ schoolId: 1, phone: 1 }, { unique: true });
+teacherSchema.index({ schoolId: 1, userId: 1 });
 teacherSchema.index({ schoolId: 1, status: 1 });
+teacherSchema.index({ schoolId: 1, createdAt: -1 });
 export const TeacherModel = model("teachers", teacherSchema);
+
 
 // ──────────── 11. STAFF ────────────
 const staffSchema = new Schema({
@@ -333,3 +336,53 @@ const academicYearSchema = new Schema({
 
 academicYearSchema.index({ schoolId: 1, year: 1 }, { unique: true });
 export const AcademicYearModel = model("academicYears", academicYearSchema);
+
+// ──────────── 16. TEACHER ASSIGNMENTS ────────────
+const teacherAssignmentSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  teacherId: {
+    type: Schema.Types.ObjectId,
+    ref: "teachers",
+    required: true,
+    index: true,
+  },
+  classId: {
+    type: Schema.Types.ObjectId,
+    ref: "classes",
+    required: true,
+    index: true,
+  },
+  sectionId: {
+    type: Schema.Types.ObjectId,
+    ref: "sections",
+  },
+  subjectId: {
+    type: Schema.Types.ObjectId,
+    ref: "subjects",
+    required: true,
+  },
+  academicYear: {
+    type: String,
+    default: "2024-2025",
+    trim: true,
+  },
+  status: {
+    type: String,
+    enum: ["Active", "Inactive"],
+    default: "Active",
+    index: true,
+  },
+}, { timestamps: true });
+
+teacherAssignmentSchema.index({ schoolId: 1, teacherId: 1, classId: 1, subjectId: 1 }, { unique: true });
+teacherAssignmentSchema.index({ schoolId: 1, teacherId: 1 });
+teacherAssignmentSchema.index({ schoolId: 1, teacherId: 1, classId: 1 });
+teacherAssignmentSchema.index({ schoolId: 1, classId: 1, sectionId: 1 });
+export const TeacherAssignmentModel = model("teacherAssignments", teacherAssignmentSchema);
+
+

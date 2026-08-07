@@ -288,3 +288,59 @@ const remarkSchema = new Schema({
 remarkSchema.index({ schoolId: 1, studentId: 1 });
 export const RemarkModel = model("remarks", remarkSchema);
 export { ExamScheduleModel as ExamModel };
+
+// ──────────── 25. STUDENT ATTENDANCE (UNIQUE COMPOUND INDEX PREVENTS DUPLICATES) ────────────
+const attendanceSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  teacherId: {
+    type: Schema.Types.ObjectId,
+    ref: "teachers",
+    required: true,
+    index: true,
+  },
+  classId: {
+    type: Schema.Types.ObjectId,
+    ref: "classes",
+    required: true,
+    index: true,
+  },
+  sectionId: {
+    type: Schema.Types.ObjectId,
+    ref: "sections",
+  },
+  studentId: {
+    type: Schema.Types.ObjectId,
+    ref: "students",
+    required: true,
+    index: true,
+  },
+  date: {
+    type: String, // Format: YYYY-MM-DD
+    required: true,
+    index: true,
+  },
+  status: {
+    type: String,
+    enum: ["Present", "Absent", "Leave", "Late"],
+    default: "Present",
+    required: true,
+  },
+  remarks: { type: String, trim: true },
+}, { timestamps: true });
+
+// 1. UNIQUE COMPOUND INDEX: Prevents duplicate attendance entry per student per day
+attendanceSchema.index({ schoolId: 1, studentId: 1, date: 1 }, { unique: true });
+
+// 2. CLASS DAILY ATTENDANCE RECORD INDEX
+attendanceSchema.index({ schoolId: 1, classId: 1, sectionId: 1, date: 1 });
+
+// 3. TEACHER ATTENDANCE DISPATCH TIMELINE INDEX
+attendanceSchema.index({ schoolId: 1, teacherId: 1, createdAt: -1 });
+
+export const AttendanceModel = model("attendances", attendanceSchema);
+

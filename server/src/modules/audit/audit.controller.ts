@@ -1,20 +1,30 @@
 import { Request, Response } from "express";
-import { AuditLogModel } from "../../models/SystemSchemas";
+import { memoryTeacherAuditLogs } from "../../services/auditLogService";
+import { ApiResponse } from "../../utils/ApiResponse";
+import { asyncHandler } from "../../utils/asyncHandler";
 
-export const getAuditLogs = async (req: Request, res: Response) => {
-  try {
-    const logs = await AuditLogModel.find().sort({ createdAt: -1 }).limit(100).lean();
-    return res.json({
-      success: true,
-      logs: logs.map(l => ({
-        id: l._id,
-        action: l.action || "System Config Access",
-        user: l.userId || "System System",
-        ip: l.ip || "127.0.0.1",
-        timestamp: l.createdAt
-      }))
-    });
-  } catch (err: any) {
-    return res.status(500).json({ success: false, message: err.message });
+export const getTeacherAuditLogs = asyncHandler(async (req: Request, res: Response) => {
+  const { teacherId, classId, studentId, action } = req.query;
+
+  let filteredLogs = [...memoryTeacherAuditLogs];
+
+  if (teacherId) {
+    filteredLogs = filteredLogs.filter(l => l.teacherId === teacherId);
   }
-};
+  if (classId) {
+    filteredLogs = filteredLogs.filter(l => l.classId === classId);
+  }
+  if (studentId) {
+    filteredLogs = filteredLogs.filter(l => l.studentId === studentId);
+  }
+  if (action) {
+    filteredLogs = filteredLogs.filter(l => l.action === action);
+  }
+
+  return ApiResponse.success(res, 200, "Teacher audit logs retrieved successfully", {
+    totalLogs: filteredLogs.length,
+    logs: filteredLogs
+  });
+});
+
+export const getAuditLogs = getTeacherAuditLogs;
