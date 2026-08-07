@@ -90,7 +90,7 @@ export default function TeacherForgotPasswordPage() {
           Forgot Password?
         </h1>
         <p style={{ marginTop: "0.35rem", fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: 1.45 }}>
-          Don't worry! Enter your registered details below and we will send you a 6-digit OTP code.
+          Don&apos;t worry! Enter your registered details below and we will send you a 6-digit OTP code.
         </p>
       </div>
 

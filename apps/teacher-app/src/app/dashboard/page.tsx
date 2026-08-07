@@ -77,7 +77,7 @@ export default function TeacherDashboardPage() {
               You have 3 classes today
             </h2>
             <p style={{ fontSize: "0.75rem", color: "rgba(255, 255, 255, 0.9)", fontWeight: 600, marginTop: "0.35rem", margin: "4px 0 0 0" }}>
-              Keep going, you're doing great!
+              Keep going, you&apos;re doing great!
             </p>
           </div>
 

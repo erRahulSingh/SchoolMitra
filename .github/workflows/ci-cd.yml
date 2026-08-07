@@ -33,6 +33,12 @@ jobs:
           npm install
           npm run build
 
+      - name: Build & Verify Teacher App
+        run: |
+          cd apps/teacher-app
+          npm install
+          npm run build
+
       - name: Build & Verify Driver App
         run: |
           cd apps/driver-app
