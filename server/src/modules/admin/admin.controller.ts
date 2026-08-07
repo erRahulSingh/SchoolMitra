@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import { SchoolModel, UserModel, RoleModel } from "../../models/AuthSchemas";
 import { PlanModel, SubscriptionModel, SupportTicketModel, AuditLogModel, SettingModel } from "../../models/SystemSchemas";
 import { StudentModel } from "../../models/Student";
-import { BusModel } from "../../models/TransportSchemas";
+import { BusModel, DriverModel } from "../../models/TransportSchemas";
 import { ExamModel } from "../../models/AcademicSchemas";
+import { PaymentModel } from "../../models/FeeSchemas";
 
 // ════════════ 1. GET DASHBOARD OVERVIEW ════════════
 export const getDashboardOverview = async (req: Request, res: Response) => {
@@ -1332,7 +1334,7 @@ let memoryFeedback: any[] = [
   { id: "FDB-102", school: "St. Xavier's Senior Secondary School", user: "Fr. Thomas D'Souza", score: "4/5 ★", comment: "The daily attendance marking toggle is super fast. Marks gradebook features are highly appreciated.", date: "27 Jul 2026" }
 ];
 
-export const getSupportTickets = async (_req: Request, res: Response) => {
+export const getSupportTicketsList = async (_req: Request, res: Response) => {
   try {
     if (mongoose.connection.readyState === 1) {
       const dbTickets = await SupportTicketModel.find().lean().catch(() => []);
@@ -1878,7 +1880,7 @@ let memoryAuditLogs: any[] = [
   { id: "aud_103", user: "Rahul Singh (Super Admin)", action: "Feature Flag Update: FEATURE_ONLINE_FEES Enabled", ip: "49.36.14.210", timestamp: "27 Jul 2026, 04:15 PM" }
 ];
 
-export const getAuditLogs = async (_req: Request, res: Response) => {
+export const getAuditLogsList = async (_req: Request, res: Response) => {
   try {
     if (mongoose.connection.readyState === 1) {
       const doc = await SettingModel.findOne({ key: "saas_audit_logs" }).lean().catch(() => null);
