@@ -225,11 +225,7 @@ export default function FeaturesPage() {
               letterSpacing: "-0.03em",
               marginBottom: "1.4rem"
             }}>
-              Everything You Need to Run a <span style={{
-                background: "linear-gradient(135deg, #3b82f6 0%, #4338ca 60%, #8b5cf6 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent"
-              }}>Smarter School</span>
+              Everything You Need to Run a <span style={{ color: "#f97316" }}>Smarter School</span>
             </h1>
 
             <p style={{
@@ -244,7 +240,7 @@ export default function FeaturesPage() {
             </p>
 
             <div className="hero-cta-group" style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-              <button onClick={() => setModalOpen(true)} className="btn-interactive-glow" style={{
+              <button onClick={() => window.location.href = "/auth?mode=signup"} className="btn-interactive-glow" style={{
                 padding: "0.9rem 2rem",
                 borderRadius: "12px",
                 background: "linear-gradient(135deg, #4338ca 0%, #3b82f6 100%)",
@@ -440,7 +436,7 @@ export default function FeaturesPage() {
             letterSpacing: "-0.03em",
             marginBottom: "1rem"
           }}>
-            Powerful Features for Every Role
+            Powerful Features <span style={{ color: "#f97316" }}>for Every Role</span>
           </h1>
           <p style={{
             fontSize: "1.1rem",
@@ -635,7 +631,7 @@ export default function FeaturesPage() {
               marginBottom: "1rem",
               lineHeight: 1.2
             }}>
-              Real-time Tracking for <span style={{ color: "#3b82f6" }}>Peace of Mind</span>
+              Real-time Tracking for <span style={{ color: "#f97316" }}>Peace of Mind</span>
             </h2>
 
             <p style={{
@@ -661,7 +657,7 @@ export default function FeaturesPage() {
               ))}
             </div>
 
-            <button onClick={() => setModalOpen(true)} className="btn-interactive-glow" style={{
+            <button onClick={() => window.location.href = "/auth?mode=signup"} className="btn-interactive-glow" style={{
               padding: "0.85rem 2.2rem",
               borderRadius: "12px",
               background: "#3b82f6",
@@ -700,7 +696,7 @@ export default function FeaturesPage() {
               letterSpacing: "-0.02em",
               marginBottom: "1.5rem"
             }}>
-              Why Schools Love SchoolMitra
+              Why Schools Love <span style={{ color: "#f97316" }}>SchoolMitra</span>
             </h2>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.95rem", marginBottom: "2.2rem" }}>
@@ -718,7 +714,7 @@ export default function FeaturesPage() {
             </div>
 
             <div className="hero-cta-group" style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-              <button onClick={() => setModalOpen(true)} className="btn-interactive-glow" style={{
+              <button onClick={() => window.location.href = "/auth?mode=signup"} className="btn-interactive-glow" style={{
                 padding: "0.85rem 2rem",
                 borderRadius: "12px",
                 background: "#3b82f6",
@@ -814,7 +810,7 @@ export default function FeaturesPage() {
               letterSpacing: "-0.02em",
               marginBottom: "0.6rem"
             }}>
-              Ready to Experience These Powerful Features?
+              Ready to Experience <span style={{ color: "#f97316" }}>These Powerful Features?</span>
             </h2>
             <p style={{
               fontSize: "1.05rem",
@@ -825,7 +821,7 @@ export default function FeaturesPage() {
             </p>
           </div>
 
-          <button onClick={() => setModalOpen(true)} style={{
+          <button onClick={() => window.location.href = "/auth?mode=signup"} style={{
             padding: "0.95rem 2.2rem",
             borderRadius: "14px",
             background: "#ffffff",

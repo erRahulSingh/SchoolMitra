@@ -123,11 +123,7 @@ export default function PricingPage() {
               letterSpacing: "-0.03em",
               marginBottom: "1.4rem"
             }}>
-              Choose the Perfect Plan <span style={{
-                background: "linear-gradient(135deg, #3b82f6 0%, #4338ca 60%, #8b5cf6 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent"
-              }}>for Your School</span>
+              Choose the Perfect Plan <span style={{ color: "#f97316" }}>for Your School</span>
             </h1>
 
             <p style={{
@@ -329,7 +325,7 @@ export default function PricingPage() {
               </div>
             </div>
 
-            <button onClick={() => setModalOpen(true)} style={{
+            <button onClick={() => window.location.href = "/auth?mode=signup"} style={{
               width: "100%",
               padding: "0.85rem",
               borderRadius: "12px",
@@ -427,7 +423,7 @@ export default function PricingPage() {
               </div>
             </div>
 
-            <button onClick={() => setModalOpen(true)} className="btn-interactive-glow" style={{
+            <button onClick={() => window.location.href = "/auth?mode=signup"} className="btn-interactive-glow" style={{
               width: "100%",
               padding: "0.85rem",
               borderRadius: "12px",
@@ -505,7 +501,7 @@ export default function PricingPage() {
               </div>
             </div>
 
-            <button onClick={() => setModalOpen(true)} style={{
+            <button onClick={() => window.location.href = "/auth?mode=signup"} style={{
               width: "100%",
               padding: "0.85rem",
               borderRadius: "12px",
@@ -533,7 +529,7 @@ export default function PricingPage() {
           marginBottom: "2.5rem",
           letterSpacing: "-0.02em"
         }}>
-          Compare Plans
+          Compare <span style={{ color: "#f97316" }}>Plans</span>
         </h2>
 
         <div className="pricing-compare-table-container" style={{
@@ -638,7 +634,7 @@ export default function PricingPage() {
       <section style={{ padding: "20px 4% 90px 4%", maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "3rem" }}>
           <h2 style={{ fontSize: "2.4rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.6rem", letterSpacing: "-0.02em" }}>
-            Powerful Add-ons
+            Powerful <span style={{ color: "#f97316" }}>Add-ons</span>
           </h2>
           <p style={{ fontSize: "1.05rem", color: "var(--text-muted)", fontWeight: 500 }}>
             Add more power to your plan with our premium add-ons.
@@ -747,7 +743,7 @@ export default function PricingPage() {
             marginBottom: "3.5rem",
             letterSpacing: "-0.02em"
           }}>
-            Frequently Asked Questions
+            Frequently Asked <span style={{ color: "#f97316" }}>Questions</span>
           </h2>
 
           <div className="pricing-faq-grid" style={{
@@ -879,7 +875,7 @@ export default function PricingPage() {
       <section style={{ padding: "80px 4%", maxWidth: "1280px", margin: "0 auto", overflow: "hidden" }}>
         <div style={{ textAlign: "center", marginBottom: "3rem" }}>
           <h2 style={{ fontSize: "clamp(2rem, 3.2vw, 2.6rem)", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
-            What Schools Are Saying
+            What Schools <span style={{ color: "#f97316" }}>Are Saying</span>
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "1.02rem", marginTop: "0.5rem" }}>
             Real reviews from principals, administrators, and directors across 500+ campuses
@@ -1005,7 +1001,7 @@ export default function PricingPage() {
               marginBottom: "1rem",
               lineHeight: 1.2
             }}>
-              Ready to Transform Your School?
+              Ready to Transform <span style={{ color: "#f97316" }}>Your School?</span>
             </h2>
             <p style={{
               fontSize: "1.1rem",
@@ -1017,7 +1013,7 @@ export default function PricingPage() {
             }}>
               Join 500+ schools already using EduTrack Pro to manage and grow better.
             </p>
-            <button onClick={() => setModalOpen(true)} style={{
+            <button onClick={() => window.location.href = "/auth?mode=signup"} style={{
               padding: "0.9rem 2.2rem",
               borderRadius: "12px",
               background: "#ffffff",

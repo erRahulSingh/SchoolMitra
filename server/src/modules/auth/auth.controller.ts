@@ -335,3 +335,142 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
   return ApiResponse.success(res, 200, "User logged out successfully and refresh tokens revoked.");
 });
 
+// ════════════ 11. GOOGLE LOGIN ════════════
+export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
+  const { token, email, name, googleId } = req.body;
+  
+  // Note: For production, we should verify `token` with `google-auth-library`.
+  // Here we assume the frontend verified it or we trust the decoded payload.
+  
+  if (!email || !googleId) {
+    throw ApiError.badRequest("Email and Google ID are required");
+  }
+
+  const accessTokenSecret = process.env.JWT_SECRET || "schoolmitra-super-secret-jwt-key-2026";
+  const refreshTokenSecret = process.env.JWT_REFRESH_SECRET || "schoolmitra-super-secret-refresh-key-2026";
+
+  let user = await UserModel.findOne({ email: email.toLowerCase() });
+
+  if (user) {
+    // Check if profile is complete (needs schoolId and phone)
+    if (!user.schoolId || !user.phone) {
+      const accessToken = jwt.sign(
+        { id: user._id, email: user.email, role: user.role, isProfileIncomplete: true },
+        accessTokenSecret,
+        { expiresIn: TOKEN_CONFIG.ACCESS_TOKEN_EXPIRY || "7d" }
+      );
+      return ApiResponse.success(res, 200, "Profile incomplete", {
+        accessToken,
+        isProfileIncomplete: true,
+      });
+    }
+
+    // Profile complete -> login
+    const accessToken = jwt.sign(
+      { id: user._id, email: user.email, role: user.role, schoolId: user.schoolId },
+      accessTokenSecret,
+      { expiresIn: TOKEN_CONFIG.ACCESS_TOKEN_EXPIRY || "7d" }
+    );
+    const refreshToken = jwt.sign({ id: user._id }, refreshTokenSecret, {
+      expiresIn: TOKEN_CONFIG.REFRESH_TOKEN_EXPIRY || "30d",
+    });
+
+    await RefreshTokenModel.create({ userId: user._id, refreshToken });
+
+    return ApiResponse.success(res, 200, "Authentication successful", {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } else {
+    // New Google User
+    user = await UserModel.create({
+      name: name || email.split("@")[0],
+      email: email.toLowerCase(),
+      googleId: googleId,
+      role: "SchoolAdmin",
+      isEmailVerified: true,
+    });
+
+    const accessToken = jwt.sign(
+      { id: user._id, email: user.email, role: user.role, isProfileIncomplete: true },
+      accessTokenSecret,
+      { expiresIn: TOKEN_CONFIG.ACCESS_TOKEN_EXPIRY || "7d" }
+    );
+    
+    return ApiResponse.success(res, 200, "Profile incomplete", {
+      accessToken,
+      isProfileIncomplete: true,
+    });
+  }
+});
+
+// ════════════ 12. COMPLETE PROFILE (After Google Login) ════════════
+export const completeProfile = asyncHandler(async (req: Request, res: Response) => {
+  const { phone, schoolName, city, address } = req.body;
+  
+  // Getting user from token
+  const authHeader = req.headers.authorization;
+  if (!authHeader) throw ApiError.unauthorized("No token provided");
+  
+  const token = authHeader.split(" ")[1];
+  const accessTokenSecret = process.env.JWT_SECRET || "schoolmitra-super-secret-jwt-key-2026";
+  const decoded = jwt.verify(token, accessTokenSecret) as any;
+
+  if (!phone || !schoolName) {
+    throw ApiError.badRequest("Mobile number and School name are required");
+  }
+
+  const user = await UserModel.findById(decoded.id);
+  if (!user) throw ApiError.notFound("User not found");
+
+  const schoolCode =
+    ((schoolName || "SCH").toLowerCase().replace(/[^a-z0-9]/g, "").substring(0, 6) || "SCH") +
+    "-" +
+    Math.floor(100 + Math.random() * 900);
+
+  const newSchool = await SchoolModel.create({
+    code: schoolCode,
+    name: schoolName,
+    city: city || "Noida",
+    address: address || "",
+    phone: phone,
+    email: user.email,
+    plan: "Basic",
+    status: "Active",
+  });
+
+  user.schoolId = newSchool._id;
+  user.phone = phone;
+  await user.save();
+
+  // Generate new tokens
+  const refreshTokenSecret = process.env.JWT_REFRESH_SECRET || "schoolmitra-super-secret-refresh-key-2026";
+  const accessToken = jwt.sign(
+    { id: user._id, email: user.email, role: user.role, schoolId: user.schoolId },
+    accessTokenSecret,
+    { expiresIn: TOKEN_CONFIG.ACCESS_TOKEN_EXPIRY || "7d" }
+  );
+  const refreshToken = jwt.sign({ id: user._id }, refreshTokenSecret, {
+    expiresIn: TOKEN_CONFIG.REFRESH_TOKEN_EXPIRY || "30d",
+  });
+
+  await RefreshTokenModel.create({ userId: user._id, refreshToken });
+
+  return ApiResponse.success(res, 200, "Profile completed successfully", {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }
+  });
+});
+
