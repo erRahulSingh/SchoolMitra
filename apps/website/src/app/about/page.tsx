@@ -92,11 +92,7 @@ export default function AboutPage() {
               marginBottom: "1.4rem",
               color: "var(--text-main)"
             }}>
-              Pioneering Next-Gen <span style={{
-                background: "linear-gradient(135deg, #3b82f6 0%, #4338ca 60%, #8b5cf6 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent"
-              }}>Digital Campuses</span>
+              Pioneering Next-Gen <span style={{ color: "#f97316" }}>Digital Campuses</span>
             </h1>
 
             <p style={{
@@ -113,7 +109,7 @@ export default function AboutPage() {
             {/* CTA Buttons */}
             <div style={{ display: "flex", gap: "1.2rem", alignItems: "center", flexWrap: "wrap" }}>
               <button
-                onClick={() => setModalOpen(true)}
+                onClick={() => window.location.href = "/auth?mode=signup"}
                 style={{
                   padding: "0.95rem 2.2rem",
                   borderRadius: 12,
@@ -239,7 +235,7 @@ export default function AboutPage() {
             OUR PURPOSE &amp; VISION
           </span>
           <h2 style={{ fontSize: "clamp(2rem, 3.2vw, 2.6rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem" }}>
-            Driven by a Commitment to Educational Innovation
+            Driven by a Commitment <span style={{ color: "#f97316" }}>to Educational Innovation</span>
           </h2>
         </div>
 
@@ -319,7 +315,7 @@ export default function AboutPage() {
             WHY SCHOOLS TRUST SCHOOLMITRA
           </span>
           <h2 style={{ fontSize: "clamp(2rem, 3.2vw, 2.6rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem" }}>
-            Built on 4 Pillars of Excellence
+            Built on 4 Pillars <span style={{ color: "#f97316" }}>of Excellence</span>
           </h2>
         </div>
 
@@ -399,7 +395,7 @@ export default function AboutPage() {
               OUR JOURNEY
             </span>
             <h2 style={{ fontSize: "clamp(2rem, 3.2vw, 2.6rem)", fontWeight: 800, color: "#ffffff", marginTop: "0.4rem" }}>
-              How SchoolMitra Transformed School ERP
+              How SchoolMitra Transformed <span style={{ color: "#f97316" }}>School ERP</span>
             </h2>
           </div>
 
@@ -443,7 +439,7 @@ export default function AboutPage() {
             THE MINDS BEHIND SCHOOLMITRA
           </span>
           <h2 style={{ fontSize: "clamp(2rem, 3.2vw, 2.6rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem" }}>
-            Meet Our Leadership Team
+            Meet Our <span style={{ color: "#f97316" }}>Leadership Team</span>
           </h2>
         </div>
 
@@ -460,8 +456,8 @@ export default function AboutPage() {
               avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=250&auto=format&fit=crop&q=80"
             },
             {
-              name: "Dr. Ananya Roy",
-              role: "VP of Product & AI",
+              name: "Rahul Yadav",
+              role: "Co-founder & CTO",
               desc: "Former education consultant & curriculum architect.",
               avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=250&auto=format&fit=crop&q=80"
             },
@@ -517,7 +513,7 @@ export default function AboutPage() {
             OUR PRESENCE
           </span>
           <h2 style={{ fontSize: "clamp(2rem, 3.2vw, 2.6rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem" }}>
-            Our Offices &amp; Support Hubs
+            Our Offices <span style={{ color: "#f97316" }}>&amp; Support Hubs</span>
           </h2>
         </div>
 

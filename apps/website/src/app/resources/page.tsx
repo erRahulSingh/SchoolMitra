@@ -189,10 +189,7 @@ export default function ResourcesPage() {
             }}>
               Learning Center<br />
               for{" "}
-              <span style={{
-                background: "linear-gradient(135deg,#4338ca 0%,#3b82f6 100%)",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-              }}>Modern Schools</span>
+              <span style={{ color: "#f97316" }}>Modern Schools</span>
             </h1>
 
             {/* Sub-text */}
@@ -312,7 +309,7 @@ export default function ResourcesPage() {
         {/* Heading row */}
         <div className="resources-section-header" style={{ textAlign: "center", marginBottom: "2.5rem" }}>
           <h2 style={{ fontSize: "1.7rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
-            Featured Resources
+            Featured <span style={{ color: "#f97316" }}>Resources</span>
           </h2>
           <p style={{ fontSize: "0.92rem", color: "var(--text-muted)", marginTop: "0.35rem" }}>
             Handpicked content to help you get the most out of SchoolMitra
@@ -396,7 +393,7 @@ export default function ResourcesPage() {
       {filtered.length > 3 && (
         <section style={{ maxWidth: 1280, margin: "0 auto", padding: "0 5% 4.5rem" }}>
           <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "1.5rem" }}>
-            More Resources ({filtered.length - 3})
+            More <span style={{ color: "#f97316" }}>Resources</span> ({filtered.length - 3})
           </h3>
           <div className="resources-more-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(310px,1fr))", gap: "1.5rem" }}>
             {filtered.slice(3).map(r => (
@@ -438,7 +435,7 @@ export default function ResourcesPage() {
         {/* Header row */}
         <div className="resources-articles-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
           <div>
-            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Latest Articles</h2>
+            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Latest <span style={{ color: "#f97316" }}>Articles</span></h2>
             <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Insights, tips and trends from the world of school management</p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -498,7 +495,7 @@ export default function ResourcesPage() {
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "0 5% 4rem" }}>
         <div className="resources-guides-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem" }}>
           <div>
-            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Helpful Guides & Downloads</h2>
+            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Helpful Guides <span style={{ color: "#f97316" }}>& Downloads</span></h2>
             <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Free resources to get you started</p>
           </div>
           <button style={{
@@ -549,7 +546,7 @@ export default function ResourcesPage() {
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "0 5% 4rem" }}>
         <div className="resources-events-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem" }}>
           <div>
-            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Upcoming Webinars & Events</h2>
+            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Upcoming Webinars <span style={{ color: "#f97316" }}>& Events</span></h2>
             <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Learn from our education experts and industry leaders</p>
           </div>
           <button style={{
@@ -673,7 +670,7 @@ export default function ResourcesPage() {
         }}>
           <div>
             <span style={{ fontSize: "0.82rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.9 }}>Never Miss an Update</span>
-            <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: "0.5rem 0 1rem" }}>Join 50,000+ Educators & Administrators</h2>
+            <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: "0.5rem 0 1rem" }}>Join 50,000+ Educators <span style={{ color: "#f97316" }}>& Administrators</span></h2>
             <p style={{ fontSize: "1rem", opacity: 0.9, lineHeight: 1.6, maxWidth: 500 }}>Get weekly guides, ERP tips, compliance checklists, and exclusive school technology insights delivered directly to your inbox.</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem" }}>

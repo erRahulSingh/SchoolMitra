@@ -82,7 +82,7 @@ export default function LandingPage() {
               letterSpacing: "-0.03em",
               marginBottom: "1.5rem"
             }}>
-              Simplify School Management &amp; Enhance Parent Connection
+              Simplify School Management <span style={{ color: "#f97316" }}>&amp; Enhance Parent Connection</span>
             </h1>
 
             <p className="hero-subtitle" style={{
@@ -97,7 +97,7 @@ export default function LandingPage() {
             </p>
 
             <div className="hero-cta-group" style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-              <button onClick={() => setModalOpen(true)} style={{
+              <button onClick={() => window.location.href = "/auth?mode=signup"} style={{
                 padding: "0.85rem 1.8rem",
                 borderRadius: "12px",
                 background: "linear-gradient(135deg, #4338ca 0%, #3b82f6 100%)",
@@ -149,7 +149,7 @@ export default function LandingPage() {
               position: "relative",
               zIndex: 1,
               width: "100%",
-              maxWidth: "600px",
+              maxWidth: "500px",
               borderRadius: "24px",
               overflow: "hidden",
               border: "1px solid rgba(255, 255, 255, 0.2)",
@@ -261,7 +261,7 @@ export default function LandingPage() {
               letterSpacing: "-0.02em",
               marginBottom: "0.75rem"
             }}>
-              Empowering India&apos;s Most Prestigious Schools
+              Empowering India&apos;s <span style={{ color: "#f97316" }}>Most Prestigious Schools</span>
             </h2>
             <p style={{
               color: "var(--text-muted)",
@@ -495,7 +495,7 @@ export default function LandingPage() {
             letterSpacing: "-0.03em",
             marginBottom: "1rem"
           }}>
-            Powerful Features for Every Role
+            Powerful Features <span style={{ color: "#f97316" }}>for Every Role</span>
           </h2>
           <p style={{
             fontSize: "1.08rem",
@@ -731,7 +731,7 @@ export default function LandingPage() {
             Live ERP Control Center
           </span>
           <h2 style={{ fontSize: "2.6rem", fontWeight: 800, color: "var(--text-main)", marginTop: "0.8rem", marginBottom: "1rem", letterSpacing: "-0.02em" }}>
-            Powerful School ERP &amp; Analytics Dashboard
+            Powerful School ERP <span style={{ color: "#f97316" }}>&amp; Analytics Dashboard</span>
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "1.1rem", lineHeight: 1.6 }}>
             Take complete control of school administration with real-time attendance tracking, fee collection analytics, student performance statistics, and automated reporting.
@@ -869,7 +869,7 @@ export default function LandingPage() {
                   <button style={{ padding: "0.55rem 1rem", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0", fontWeight: 700, fontSize: "0.85rem", color: "#334155", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     ↻ Refresh Data
                   </button>
-                  <button onClick={() => setModalOpen(true)} style={{ padding: "0.55rem 1.2rem", borderRadius: "8px", background: "linear-gradient(135deg, #4338ca, #3b82f6)", border: "none", fontWeight: 700, fontSize: "0.85rem", color: "#ffffff", cursor: "pointer" }}>
+                  <button onClick={() => window.location.href = "/auth?mode=signup"} style={{ padding: "0.55rem 1.2rem", borderRadius: "8px", background: "linear-gradient(135deg, #4338ca, #3b82f6)", border: "none", fontWeight: 700, fontSize: "0.85rem", color: "#ffffff", cursor: "pointer" }}>
                     + Quick Action
                   </button>
                 </div>
@@ -1036,7 +1036,7 @@ export default function LandingPage() {
             letterSpacing: "-0.03em",
             marginBottom: "1rem"
           }}>
-            Choose the Perfect Plan for Your School
+            Choose the Perfect Plan <span style={{ color: "#f97316" }}>for Your School</span>
           </h2>
           <p style={{
             fontSize: "1.1rem",
@@ -1161,7 +1161,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <button onClick={() => setModalOpen(true)} style={{
+            <button onClick={() => window.location.href = "/auth?mode=signup"} style={{
               width: "100%",
               padding: "0.85rem",
               borderRadius: "12px",
@@ -1258,7 +1258,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <button onClick={() => setModalOpen(true)} className="btn-interactive-glow" style={{
+            <button onClick={() => window.location.href = "/auth?mode=signup"} className="btn-interactive-glow" style={{
               width: "100%",
               padding: "0.85rem",
               borderRadius: "12px",
@@ -1336,7 +1336,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <button onClick={() => setModalOpen(true)} style={{
+            <button onClick={() => window.location.href = "/auth?mode=signup"} style={{
               width: "100%",
               padding: "0.85rem",
               borderRadius: "12px",
@@ -1357,7 +1357,7 @@ export default function LandingPage() {
       <section style={{ padding: "90px 4%", background: "var(--bg-subtle)", borderTop: "1px solid var(--border-color)", borderBottom: "1px solid var(--border-color)" }}>
         <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 3.5rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
-            Testimonials cards
+            Testimonials <span style={{ color: "#f97316" }}>cards</span>
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.6, marginTop: "0.6rem" }}>
             Authentic stories with satisfied schools and parents.
@@ -1571,7 +1571,7 @@ export default function LandingPage() {
       <section style={{ padding: "90px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
         <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 4rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
-            How It Works
+            How It <span style={{ color: "#f97316" }}>Works</span>
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.6, marginTop: "0.8rem" }}>
             Onboarding &amp; implementation process made simple and seamless for your school.
@@ -1685,7 +1685,7 @@ export default function LandingPage() {
             <Bus size={15} color="#0284c7" /> Real-time Fleet Telemetry
           </span>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
-            Live GPS Bus Tracking
+            Live GPS <span style={{ color: "#f97316" }}>Bus Tracking</span>
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.6, marginTop: "0.6rem" }}>
             Real-time bus route telemetry, live driver location streaming, and automated instant ETA alerts for parents.
@@ -1862,7 +1862,7 @@ export default function LandingPage() {
 
             {/* CTA Button */}
             <button
-              onClick={() => setModalOpen(true)}
+              onClick={() => window.location.href = "/auth?mode=signup"}
               style={{
                 width: "100%",
                 padding: "0.85rem",
@@ -1891,7 +1891,7 @@ export default function LandingPage() {
       <section style={{ padding: "90px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
         <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 4rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
-            Parent Mobile App
+            Parent <span style={{ color: "#f97316" }}>Mobile App</span>
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.6, marginTop: "0.8rem" }}>
             Dedicated parent mobile app for instant notifications, fee payments, attendance tracking, and transport personnel.
@@ -2132,7 +2132,7 @@ export default function LandingPage() {
       <section style={{ padding: "90px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
         <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 4rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
-            Teacher &amp; Driver App
+            Teacher &amp; <span style={{ color: "#f97316" }}>Driver App</span>
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.6, marginTop: "0.8rem" }}>
             Specialized mobile apps designed for educators, school staff, and transport personnel.
@@ -2288,7 +2288,7 @@ export default function LandingPage() {
       <section id="faq" style={{ padding: "90px 4%", background: "var(--bg-page)", borderTop: "1px solid var(--border-color)" }}>
         <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 3.5rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
-            FAQ
+            F<span style={{ color: "#f97316" }}>AQ</span>
           </h2>
         </div>
 
@@ -2452,7 +2452,7 @@ export default function LandingPage() {
             marginBottom: "1.2rem",
             lineHeight: 1.2
           }}>
-            Elevate Your School&apos;s Experience Today
+            Elevate Your School&apos;s <span style={{ color: "#f97316" }}>Experience Today</span>
           </h2>
 
           <p style={{
