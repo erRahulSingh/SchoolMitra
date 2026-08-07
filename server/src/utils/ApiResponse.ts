@@ -77,6 +77,18 @@ export class ApiResponse {
   }
 
   /**
+   * Error response
+   */
+  static error(res: Response, statusCode: number = HTTP_STATUS.BAD_REQUEST, message: string = "Error", errorDetails?: any): Response {
+    return res.status(statusCode).json({
+      success: false,
+      statusCode,
+      message,
+      errorDetails
+    });
+  }
+
+  /**
    * Created response (201)
    */
   static created(res: Response, message: string = "Resource created successfully", data?: any): Response {

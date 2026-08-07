@@ -287,3 +287,4 @@ const remarkSchema = new Schema({
 
 remarkSchema.index({ schoolId: 1, studentId: 1 });
 export const RemarkModel = model("remarks", remarkSchema);
+export { ExamScheduleModel as ExamModel };

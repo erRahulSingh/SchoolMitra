@@ -175,7 +175,7 @@ export default function TeacherResetPasswordPage() {
           </div>
 
           <div style={{ textAlign: "center", marginTop: "0.6rem", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-            Didn't receive code?{" "}
+            Didn&apos;t receive code?{" "}
             <button
               type="button"
               onClick={handleResendOtp}
