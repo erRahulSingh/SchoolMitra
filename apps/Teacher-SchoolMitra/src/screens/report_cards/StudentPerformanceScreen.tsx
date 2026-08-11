@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,25 +7,62 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import {
   ChevronLeft,
   SlidersHorizontal,
   User,
-  ChevronRight
+  AlertCircle
 } from 'lucide-react-native';
+import { teacherApi } from '../../services/apiService';
 
-export default function StudentPerformanceScreen({ navigation }: any) {
+export default function StudentPerformanceScreen({ route, navigation }: any) {
+  const studentParam = route?.params?.student || {};
+  const studentId = studentParam.studentId || studentParam.id || 'st_101';
+  const studentNameParam = studentParam.studentName || studentParam.name || 'Aarav Sharma';
+  const rollNoParam = studentParam.rollNo || studentParam.roll || 'N/A';
+  const classNameParam = studentParam.className || 'Class 8-A';
+
   const [activeTab, setActiveTab] = useState('Overview');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [perfData, setPerfData] = useState<any>(null);
 
-  const subjects = [
-    { name: 'Mathematics', grade: 'A', score: '18/20', color: '#16a34a', bg: '#ecfdf5' },
-    { name: 'Science', grade: 'A-', color: '#16a34a', bg: '#ecfdf5', score: '17/20' },
-    { name: 'English', grade: 'B+', color: '#ea580c', bg: '#ffedd5', score: '15/20' },
-    { name: 'Social Science', grade: 'A', color: '#16a34a', bg: '#ecfdf5', score: '17/20' },
-    { name: 'Hindi', grade: 'B', color: '#ea580c', bg: '#ffedd5', score: '14/20' }
-  ];
+  const fetchPerformance = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res: any = await teacherApi.getStudentPerformance(studentId);
+      if (res?.success && res?.data) {
+        setPerfData(res.data);
+      } else {
+        throw new Error(res?.message || 'Failed to load performance analytics');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load performance analytics');
+    } finally {
+      setLoading(false);
+    }
+  }, [studentId]);
+
+  useEffect(() => {
+    fetchPerformance();
+  }, [fetchPerformance]);
+
+  const studentInfo = perfData?.studentInfo || {
+    name: studentNameParam,
+    rollNo: rollNoParam,
+    className: classNameParam,
+    overallRank: '—',
+    gpa: '—'
+  };
+
+  const attendance = perfData?.attendanceAnalytics?.overallPercentage || '—';
+  const homework = perfData?.homeworkAnalytics?.completionRate || '—';
+  const weeklyTests = perfData?.weeklyTestsAnalytics?.averageTestScore || '—';
+  const examMarks = perfData?.examMarksAnalytics || { overallPercentage: '—', grade: '—' };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,7 +74,7 @@ export default function StudentPerformanceScreen({ navigation }: any) {
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Student Performance</Text>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => Alert.alert('Filter', 'Filter subjects...')}>
+        <TouchableOpacity style={styles.filterBtn} onPress={() => Alert.alert('Filter', 'Filter parameters...')}>
           <SlidersHorizontal size={18} color="#0f172a" />
         </TouchableOpacity>
       </View>
@@ -49,15 +86,15 @@ export default function StudentPerformanceScreen({ navigation }: any) {
             <User size={28} color="#7c3aed" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.studentName}>Aarav Sharma</Text>
-            <Text style={styles.studentInfo}>Class 8 - A</Text>
-            <Text style={styles.studentInfo}>Roll No. 1</Text>
+            <Text style={styles.studentName}>{studentInfo.name || studentNameParam}</Text>
+            <Text style={styles.studentInfo}>{studentInfo.className || classNameParam}</Text>
+            <Text style={styles.studentInfo}>Roll No. {studentInfo.rollNo || rollNoParam}</Text>
           </View>
         </View>
 
         {/* TAB SELECTORS */}
         <View style={styles.tabRow}>
-          {['Overview', 'Subject Wise', 'Test Wise'].map((tab) => (
+          {['Overview', 'Details'].map((tab) => (
             <TouchableOpacity
               key={tab}
               style={[styles.tabPill, activeTab === tab && styles.tabPillActive]}
@@ -70,74 +107,80 @@ export default function StudentPerformanceScreen({ navigation }: any) {
           ))}
         </View>
 
-        {/* OVERALL PERFORMANCE */}
-        {activeTab === 'Overview' && (
-          <View>
-            <Text style={styles.sectionTitle}>Overall Performance</Text>
-            <View style={styles.overallCard}>
-              {/* Circular green ring */}
-              <View style={styles.progressCircle}>
-                <Text style={styles.progressVal}>82%</Text>
-                <Text style={styles.progressLabel}>Overall Score</Text>
-              </View>
-
-              <View style={styles.statsCol}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Total Tests</Text>
-                  <Text style={styles.statValRight}>12</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Average Score</Text>
-                  <Text style={[styles.statValRight, { color: '#0f172a' }]}>16.4/20</Text>
-                </View>
-                <View style={[styles.statItem, { borderBottomWidth: 0, paddingBottom: 0 }]}>
-                  <Text style={styles.statLabel}>Rank</Text>
-                  <Text style={[styles.statValRight, { color: '#7c3aed' }]}>3 / 42</Text>
-                </View>
-              </View>
-            </View>
+        {loading ? (
+          <ActivityIndicator size="large" color="#7c3aed" style={{ marginTop: 40 }} />
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <AlertCircle size={40} color="#dc2626" />
+            <Text style={styles.errorText}>{error}</Text>
           </View>
-        )}
+        ) : (
+          <>
+            {/* OVERVIEW PERFORMANCE */}
+            {activeTab === 'Overview' && (
+              <View>
+                <Text style={styles.sectionTitle}>Overall Performance</Text>
+                <View style={styles.overallCard}>
+                  {/* Circular green ring */}
+                  <View style={styles.progressCircle}>
+                    <Text style={styles.progressVal}>{examMarks.overallPercentage}</Text>
+                    <Text style={styles.progressLabel}>Overall Score</Text>
+                  </View>
 
-        {/* SUBJECT WISE PERFORMANCE */}
-        {(activeTab === 'Overview' || activeTab === 'Subject Wise') && (
-          <View style={{ marginTop: 10 }}>
-            <Text style={styles.sectionTitle}>Subject Wise Performance</Text>
-            <View style={styles.subjectsCard}>
-              {subjects.map((sub, idx) => (
-                <View
-                  key={idx}
-                  style={[
-                    styles.subjectRow,
-                    idx === subjects.length - 1 && { borderBottomWidth: 0 }
-                  ]}
-                >
-                  <Text style={styles.subjectName}>{sub.name}</Text>
-                  
-                  <View style={styles.subjectRight}>
-                    <View style={[styles.gradeBadge, { backgroundColor: sub.bg }]}>
-                      <Text style={[styles.gradeText, { color: sub.color }]}>{sub.grade}</Text>
+                  <View style={styles.statsCol}>
+                    <View style={styles.statItem}>
+                      <Text style={styles.statLabel}>Attendance Rate</Text>
+                      <Text style={styles.statValRight}>{attendance}</Text>
                     </View>
-                    <Text style={styles.scoreText}>{sub.score}</Text>
+                    <View style={styles.statItem}>
+                      <Text style={styles.statLabel}>Homework Done</Text>
+                      <Text style={[styles.statValRight, { color: '#0f172a' }]}>{homework}</Text>
+                    </View>
+                    <View style={[styles.statItem, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+                      <Text style={styles.statLabel}>Academic Grade</Text>
+                      <Text style={[styles.statValRight, { color: '#7c3aed' }]}>{examMarks.grade}</Text>
+                    </View>
                   </View>
                 </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* RECENT TESTS */}
-        {(activeTab === 'Overview' || activeTab === 'Test Wise') && (
-          <View style={{ marginTop: 10 }}>
-            <Text style={styles.sectionTitle}>Recent Tests</Text>
-            <View style={styles.recentCard}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.recentTitle}>Unit Test - 1 (Mathematics)</Text>
-                <Text style={styles.recentDate}>28 May 2024</Text>
               </View>
-              <Text style={styles.recentScore}>18/20</Text>
-            </View>
-          </View>
+            )}
+
+            {/* DETAILS WISE PERFORMANCE */}
+            {activeTab === 'Details' && (
+              <View style={{ marginTop: 10 }}>
+                <Text style={styles.sectionTitle}>Module Wise Breakdown</Text>
+                <View style={styles.subjectsCard}>
+                  <View style={styles.subjectRow}>
+                    <Text style={styles.subjectName}>Exams & Terms</Text>
+                    <View style={styles.subjectRight}>
+                      <Text style={styles.scoreText}>{examMarks.overallPercentage}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.subjectRow}>
+                    <Text style={styles.subjectName}>Weekly Tests</Text>
+                    <View style={styles.subjectRight}>
+                      <Text style={styles.scoreText}>{weeklyTests}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.subjectRow}>
+                    <Text style={styles.subjectName}>Homework Completion</Text>
+                    <View style={styles.subjectRight}>
+                      <Text style={styles.scoreText}>{homework}</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.subjectRow, { borderBottomWidth: 0 }]}>
+                    <Text style={styles.subjectName}>Attendance Record</Text>
+                    <View style={styles.subjectRight}>
+                      <Text style={styles.scoreText}>{attendance}</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -266,24 +309,7 @@ const styles = StyleSheet.create({
   },
   subjectName: { fontSize: 14, fontWeight: '700', color: '#334155' },
   subjectRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  gradeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8
-  },
-  gradeText: { fontSize: 12, fontWeight: '950' },
-  scoreText: { fontSize: 13, fontWeight: '800', color: '#475569', width: 60, textAlign: 'right' },
-  recentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 30
-  },
-  recentTitle: { fontSize: 14, fontWeight: '800', color: '#0f172a' },
-  recentDate: { fontSize: 12, color: '#94a3b8', marginTop: 4, fontWeight: '600' },
-  recentScore: { fontSize: 15, fontWeight: '900', color: '#7c3aed' }
+  scoreText: { fontSize: 13, fontWeight: '900', color: '#475569', textAlign: 'right' },
+  centerContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 12 },
+  errorText: { fontSize: 14, fontWeight: '700', color: '#dc2626' }
 });

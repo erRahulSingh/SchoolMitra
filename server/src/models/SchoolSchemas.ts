@@ -347,7 +347,7 @@ const teacherAssignmentSchema = new Schema({
   },
   teacherId: {
     type: Schema.Types.ObjectId,
-    ref: "teachers",
+    ref: "users",
     required: true,
     index: true,
   },
@@ -360,15 +360,22 @@ const teacherAssignmentSchema = new Schema({
   sectionId: {
     type: Schema.Types.ObjectId,
     ref: "sections",
+    required: true,
+    index: true,
   },
   subjectId: {
     type: Schema.Types.ObjectId,
     ref: "subjects",
     required: true,
+    index: true,
+  },
+  academicYearId: {
+    type: Schema.Types.ObjectId,
+    ref: "academicYears",
+    index: true,
   },
   academicYear: {
     type: String,
-    default: "2024-2025",
     trim: true,
   },
   status: {
@@ -384,5 +391,117 @@ teacherAssignmentSchema.index({ schoolId: 1, teacherId: 1 });
 teacherAssignmentSchema.index({ schoolId: 1, teacherId: 1, classId: 1 });
 teacherAssignmentSchema.index({ schoolId: 1, classId: 1, sectionId: 1 });
 export const TeacherAssignmentModel = model("teacherAssignments", teacherAssignmentSchema);
+
+// ──────────── 17. CLASS TEACHER ASSIGNMENTS ────────────
+const classTeacherAssignmentSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  teacherId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+    index: true,
+  },
+  classId: {
+    type: Schema.Types.ObjectId,
+    ref: "classes",
+    required: true,
+    index: true,
+  },
+  sectionId: {
+    type: Schema.Types.ObjectId,
+    ref: "sections",
+    required: true,
+    index: true,
+  },
+  academicYearId: {
+    type: Schema.Types.ObjectId,
+    ref: "academicYears",
+    index: true,
+  },
+  academicYear: {
+    type: String,
+    trim: true,
+  },
+  status: {
+    type: String,
+    enum: ["Active", "Inactive"],
+    default: "Active",
+    index: true,
+  },
+}, { timestamps: true });
+
+classTeacherAssignmentSchema.index({ schoolId: 1, classId: 1, sectionId: 1 }, { unique: true });
+classTeacherAssignmentSchema.index({ schoolId: 1, teacherId: 1 });
+
+export const ClassTeacherAssignmentModel = model("classTeacherAssignments", classTeacherAssignmentSchema);
+
+// ──────────── 18. TIMETABLES ────────────
+const timetableSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  academicYearId: {
+    type: Schema.Types.ObjectId,
+    ref: "academicYears",
+    index: true,
+  },
+  dayOfWeek: {
+    type: String,
+    enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    required: true,
+    index: true,
+  },
+  startTime: {
+    type: String, // format: "HH:MM"
+    required: true,
+  },
+  endTime: {
+    type: String, // format: "HH:MM"
+    required: true,
+  },
+  classId: {
+    type: Schema.Types.ObjectId,
+    ref: "classes",
+    required: true,
+    index: true,
+  },
+  sectionId: {
+    type: Schema.Types.ObjectId,
+    ref: "sections",
+    required: true,
+    index: true,
+  },
+  subjectId: {
+    type: Schema.Types.ObjectId,
+    ref: "subjects",
+    required: true,
+    index: true,
+  },
+  teacherId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+    index: true,
+  },
+  room: {
+    type: String,
+    trim: true,
+  },
+}, { timestamps: true });
+
+timetableSchema.index({ schoolId: 1, classId: 1, sectionId: 1, dayOfWeek: 1, startTime: 1 }, { unique: true });
+timetableSchema.index({ schoolId: 1, teacherId: 1, dayOfWeek: 1 });
+
+export const TimetableModel = model("timetables", timetableSchema);
+
+
 
 

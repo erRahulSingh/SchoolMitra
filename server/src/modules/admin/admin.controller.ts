@@ -4,7 +4,7 @@ import { SchoolModel, UserModel, RoleModel } from "../../models/AuthSchemas";
 import { PlanModel, SubscriptionModel, SupportTicketModel, AuditLogModel, SettingModel } from "../../models/SystemSchemas";
 import { StudentModel } from "../../models/Student";
 import { BusModel, DriverModel } from "../../models/TransportSchemas";
-import { ExamModel } from "../../models/AcademicSchemas";
+import { ExamModel, AttendanceModel, AttendanceCorrectionRequestModel } from "../../models/AcademicSchemas";
 import { PaymentModel } from "../../models/FeeSchemas";
 
 // ════════════ 1. GET DASHBOARD OVERVIEW ════════════
@@ -2246,26 +2246,33 @@ export const rejectAcademicSubmission = async (req: Request, res: Response) => {
 // ════════════ 17. SCHOOL ADMIN ATTENDANCE LOCK CORRECTION APIs ════════════
 export const getAttendanceCorrectionRequests = async (req: Request, res: Response) => {
   try {
+    const schoolId = (req as any).user?.schoolId || "sch_default";
+    const requests = await AttendanceCorrectionRequestModel.find({ schoolId })
+      .populate("teacherId", "name email")
+      .populate("studentId", "name rollNo")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const formattedRequests = requests.map(r => ({
+      requestId: String(r._id),
+      attendanceId: String(r.attendanceId),
+      teacherName: (r.teacherId as any)?.name || "Teacher",
+      studentId: String(r.studentId?._id || r.studentId),
+      studentName: (r.studentId as any)?.name || "Student",
+      rollNo: (r.studentId as any)?.rollNo || "N/A",
+      date: r.date,
+      currentStatus: r.currentStatus,
+      requestedStatus: r.requestedStatus,
+      reason: r.reason,
+      status: r.status,
+      submittedAt: r.createdAt
+    }));
+
     return res.json({
       success: true,
       message: "Attendance correction requests retrieved for School Admin",
-      totalRequests: 2,
-      requests: [
-        {
-          requestId: "corr_101",
-          attendanceId: "att_101",
-          teacherName: "Rahul Sharma",
-          className: "Class 8 - Section A",
-          studentId: "st_101",
-          studentName: "Aarav Sharma",
-          date: "2026-08-01",
-          currentStatus: "Absent",
-          requestedStatus: "Present",
-          reason: "Student arrived late after attendance submission due to medical checkup.",
-          status: "PendingAdminApproval",
-          submittedAt: "2026-08-02T10:00:00.000Z"
-        }
-      ]
+      totalRequests: formattedRequests.length,
+      requests: formattedRequests
     });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });
@@ -2275,28 +2282,62 @@ export const getAttendanceCorrectionRequests = async (req: Request, res: Respons
 export const approveAttendanceCorrectionRequest = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { status = "Approved", adminRemarks } = req.body;
+    const { status = "Approved", adminRemarks } = req.body; // status can be "Approved" or "Rejected"
+    const schoolId = (req as any).user?.schoolId || "sch_default";
+    const adminId = (req as any).user?.id || (req as any).user?._id;
 
-    // Dispatch Push Notification & Socket.IO to Parent App
-    notifyParent(
-      "ExponentPushToken[SampleParentToken]",
-      "ATTENDANCE_UPDATE",
-      "Attendance Correction Approved 📅",
-      "Attendance record has been corrected and updated by School Admin.",
-      { correctionId: id }
-    );
+    const requestDoc = await AttendanceCorrectionRequestModel.findById(id);
+    if (!requestDoc) {
+      return res.status(404).json({ success: false, message: "Attendance correction request not found." });
+    }
+
+    if (String(requestDoc.schoolId) !== String(schoolId)) {
+      return res.status(403).json({ success: false, message: "Forbidden: Cross-tenant modification blocked." });
+    }
+
+    if (requestDoc.status !== "PendingAdminApproval") {
+      return res.status(400).json({ success: false, message: `Request is already processed: ${requestDoc.status}` });
+    }
+
+    requestDoc.status = status as any;
+    requestDoc.adminRemarks = adminRemarks || `${status} by School Admin`;
+    requestDoc.processedBy = adminId ? new mongoose.Types.ObjectId(adminId) : undefined;
+    requestDoc.processedAt = new Date();
+    await requestDoc.save();
+
+    if (status === "Approved") {
+      // Correct actual attendance record status
+      await AttendanceModel.findByIdAndUpdate(requestDoc.attendanceId, {
+        status: requestDoc.requestedStatus
+      });
+
+      // Dispatch Push Notification to Parent App
+      try {
+        notifyParent(
+          "ExponentPushToken[SampleParentToken]",
+          "ATTENDANCE_UPDATE",
+          "Attendance Correction Approved 📅",
+          "Attendance record has been corrected and updated by School Admin.",
+          { correctionId: id }
+        );
+      } catch (pushErr) {}
+    }
 
     return res.json({
       success: true,
-      message: `Attendance correction request ${id} approved by School Admin! Attendance record unlocked & updated.`,
+      message: `Attendance correction request status updated to ${status}.`,
       correction: {
         requestId: id,
         status,
-        adminRemarks: adminRemarks || "Approved by School Admin",
-        attendanceUpdated: true,
-        updatedAt: new Date().toISOString()
+        adminRemarks: requestDoc.adminRemarks,
+        attendanceUpdated: status === "Approved",
+        updatedAt: new Date()
       }
     });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
 // ════════════ 18. SCHOOL ADMIN TEACHER ACTIVITY MONITORING DASHBOARD ════════════
 export const getTeacherActivityMonitoringDashboard = async (req: Request, res: Response) => {
   try {
@@ -2337,7 +2378,12 @@ export const getTeacherActivityMonitoringDashboard = async (req: Request, res: R
         approvedAndPublished: 7,
         pendingAdminReview: 8,
         complianceRate: "46.7%"
-      },
+      }
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
 // ════════════ 19. SCHOOL ADMIN TEACHER PERFORMANCE REPORT APIs ════════════
 export const getTeachersPerformanceReport = async (req: Request, res: Response) => {
   try {

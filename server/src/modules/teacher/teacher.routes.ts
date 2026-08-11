@@ -30,6 +30,7 @@ import {
   getTeacherAssignmentById,
   updateTeacherAssignmentById,
   deleteTeacherAssignmentById,
+  publishTeacherAssignmentById,
   getAssignmentSubmissions,
 
   getTeacherMaterials,
@@ -86,9 +87,6 @@ import {
 
   switchActiveAcademicYear,
   getTeacherClassById,
-
-
-
   getTeacherClassStudents,
   getStudentPerformanceAnalytics,
   getTeacherSubjects,
@@ -98,10 +96,15 @@ import {
   getTeacherById,
 
   updateTeacher,
-  deleteTeacher
+  deleteTeacher,
+  getTeacherAnalyticsOverview,
+  getTeacherAnalyticsClassById
 } from "./teacher.controller";
 
 import { enforceTeacherPermissions } from "../../middlewares/teacherPermissions";
+import { authenticate, requireSchool, requireRole, requirePermission } from "../../middleware/authGuards";
+import { getTeacherMe, getTeacherMyPermissions } from "../admin/adminTeacher.controller";
+import { getTeacherTimetableHandler } from "../academic/timetable.controller";
 
 const router = Router();
 
@@ -109,6 +112,15 @@ import { teacherOpenApiSpec } from "../../docs/swaggerTeacherDoc";
 
 // ──────────── 0. SWAGGER OPENAPI SPEC DOCUMENTATION ENDPOINT ────────────
 router.get("/docs", (req, res) => res.json(teacherOpenApiSpec));
+
+// Protect all downstream teacher routes
+router.use(authenticate);
+router.use(requireSchool);
+
+// ──────────── 0.1 TEACHER SELF ENDPOINTS (Authenticated) ────────────
+// GET /api/v1/teacher/me — Get own profile
+router.get("/me", getTeacherMe);
+router.get("/permissions", getTeacherMyPermissions);
 
 // ──────────── 1. TEACHER PROFILE & PERSONAL MANAGEMENT APIs ────────────
 router.get("/profile", getTeacherProfile);
@@ -123,9 +135,9 @@ router.get("/leaves/:id", getTeacherLeaveById);
 
 
 // ──────────── 1.1 TIMETABLE ENDPOINTS (READ-ONLY) ────────────
-router.get("/timetable", getTeacherTimetable);
-router.get("/timetable/today", getTeacherTodayTimetable);
-router.get("/timetable/week", getTeacherWeeklyTimetable);
+router.get("/timetable", getTeacherTimetableHandler);
+router.get("/timetable/today", getTeacherTimetableHandler);
+router.get("/timetable/week", getTeacherTimetableHandler);
 
 // ──────────── 1.2 PARENT APP SYNCHRONIZATION ENGINE TELEMETRY & TESTING ────────────
 router.get("/parent-sync/status", getParentSyncStatus);
@@ -152,6 +164,7 @@ router.get("/classes/:classId/students", getTeacherClassStudents);
 router.get("/subjects", getTeacherSubjects);
 router.get("/students", getTeacherStudents);
 router.get("/students/:studentId/performance", getStudentPerformanceAnalytics);
+router.get("/students/:id/performance", getStudentPerformanceAnalytics);
 
 
 
@@ -160,10 +173,10 @@ import { validateAttendancePayload, validatePayload } from "../../middlewares/va
 
 // ──────────── 3. ATTENDANCE ENGINE ENDPOINTS ────────────
 router.get("/attendance", getTeacherAttendance);
-router.post("/attendance", attendanceRateLimiter, validateAttendancePayload, saveTeacherAttendance);
-router.post("/attendance/offline-sync", attendanceRateLimiter, syncOfflineAttendanceBatch);
+router.post("/attendance", attendanceRateLimiter, validateAttendancePayload, requirePermission("attendance.create"), saveTeacherAttendance);
+router.post("/attendance/offline-sync", attendanceRateLimiter, requirePermission("attendance.create"), syncOfflineAttendanceBatch);
 router.post("/attendance/correction-request", attendanceRateLimiter, requestAttendanceCorrection);
-router.put("/attendance/:id", attendanceRateLimiter, updateTeacherAttendanceById);
+router.put("/attendance/:id", attendanceRateLimiter, requirePermission("attendance.update"), updateTeacherAttendanceById);
 router.get("/attendance/student/:studentId", getStudentAttendanceHistory);
 router.get("/attendance/report", getTeacherAttendanceReport);
 
@@ -173,38 +186,42 @@ router.get("/attendance/report", getTeacherAttendanceReport);
 
 // ──────────── 4. HOMEWORK ENGINE ENDPOINTS ────────────
 router.get("/homework", getTeacherHomework);
-router.post("/homework", createTeacherHomework);
+router.post("/homework", requirePermission("homework.create"), createTeacherHomework);
 router.get("/homework/:id", getTeacherHomeworkById);
-router.put("/homework/:id", updateTeacherHomeworkById);
-router.delete("/homework/:id", deleteTeacherHomeworkById);
-router.post("/homework/:id/publish", publishTeacherHomeworkById);
+router.put("/homework/:id", requirePermission("homework.update"), updateTeacherHomeworkById);
+router.delete("/homework/:id", requirePermission("homework.delete"), deleteTeacherHomeworkById);
+router.post("/homework/:id/publish", requirePermission("homework.publish"), publishTeacherHomeworkById);
+router.patch("/homework/:id/publish", requirePermission("homework.publish"), publishTeacherHomeworkById);
 
 
 // ──────────── 5. ASSIGNMENTS ENGINE ENDPOINTS ────────────
 router.get("/assignments", getTeacherAssignments);
-router.post("/assignments", createTeacherAssignment);
+router.post("/assignments", requirePermission("assignments.create"), createTeacherAssignment);
 router.get("/assignments/:id", getTeacherAssignmentById);
-router.put("/assignments/:id", updateTeacherAssignmentById);
-router.delete("/assignments/:id", deleteTeacherAssignmentById);
+router.put("/assignments/:id", requirePermission("assignments.update"), updateTeacherAssignmentById);
+router.delete("/assignments/:id", requirePermission("assignments.delete"), deleteTeacherAssignmentById);
 router.get("/assignments/:id/submissions", getAssignmentSubmissions);
+router.post("/assignments/:id/publish", requirePermission("assignments.publish"), publishTeacherAssignmentById);
+router.patch("/assignments/:id/publish", requirePermission("assignments.publish"), publishTeacherAssignmentById);
 
 
 // ──────────── 6. STUDY MATERIAL LIBRARY ENDPOINTS ────────────
 router.get("/materials", getTeacherMaterials);
-router.post("/materials", uploadTeacherMaterial);
+router.post("/materials", requirePermission("materials.create"), uploadTeacherMaterial);
 router.get("/materials/:id", getTeacherMaterialById);
-router.put("/materials/:id", updateTeacherMaterialById);
-router.delete("/materials/:id", deleteTeacherMaterialById);
+router.put("/materials/:id", requirePermission("materials.update"), updateTeacherMaterialById);
+router.delete("/materials/:id", requirePermission("materials.delete"), deleteTeacherMaterialById);
 
 
 // ──────────── 7. WEEKLY TEST ENGINE ENDPOINTS ────────────
-router.post("/weekly-tests", createTeacherTest);
+router.post("/weekly-tests", requirePermission("weeklytests.create"), createTeacherTest);
 router.get("/weekly-tests", getTeacherTests);
 router.get("/weekly-tests/:id", getTeacherTestById);
-router.put("/weekly-tests/:id", updateTeacherTestById);
-router.post("/weekly-tests/:id/questions", addQuestionsToWeeklyTest);
-router.post("/weekly-tests/:id/publish", publishWeeklyTest);
-router.post("/weekly-tests/:id/results", submitWeeklyTestResults);
+router.put("/weekly-tests/:id", requirePermission("weeklytests.update"), updateTeacherTestById);
+router.post("/weekly-tests/:id/questions", requirePermission("weeklytests.update"), addQuestionsToWeeklyTest);
+router.post("/weekly-tests/:id/publish", requirePermission("weeklytests.publish"), publishWeeklyTest);
+router.patch("/weekly-tests/:id/publish", requirePermission("weeklytests.publish"), publishWeeklyTest);
+router.post("/weekly-tests/:id/results", requirePermission("weeklyresults.create"), submitWeeklyTestResults);
 router.get("/weekly-tests/:id/results", getWeeklyTestResults);
 
 // Legacy tests route
@@ -216,22 +233,27 @@ router.post("/tests", createTeacherTest);
 router.get("/exams", getTeacherExams);
 router.get("/exams/:id", getTeacherExamById);
 router.get("/exams/:id/students", getTeacherExamStudentsForMarks);
-router.post("/exams/:id/marks", saveTeacherMarks);
-router.put("/exams/:id/marks", updateTeacherMarksById);
+router.post("/exams/:id/marks", requirePermission("marks.create"), saveTeacherMarks);
+router.put("/exams/:id/marks", requirePermission("marks.update"), updateTeacherMarksById);
+router.put("/exams/:id/marks/:studentId", requirePermission("marks.update"), updateTeacherMarksById);
+
+// Direct Aliases
+router.post("/marks", requirePermission("marks.create"), saveTeacherMarks);
+router.put("/marks/:id", requirePermission("marks.update"), updateTeacherMarksById);
 
 
 // ──────────── 9. REPORT CARD SUBMISSION ENDPOINTS ────────────
 router.get("/report-cards", getTeacherReportCards);
 router.get("/report-cards/:studentId", getStudentReportCardById);
-router.post("/report-cards/:studentId/submit", submitStudentReportCard);
-router.post("/report-cards/publish", publishTeacherReportCards);
+router.post("/report-cards/:studentId/submit", requirePermission("reports.create"), submitStudentReportCard);
+router.post("/report-cards/publish", requirePermission("reports.publish"), publishTeacherReportCards);
 
 
 // ──────────── 10. MESSAGES & ANNOUNCEMENTS ENDPOINTS ────────────
 router.get("/messages", getTeacherMessages);
-router.post("/messages", sendTeacherMessage);
+router.post("/messages", requirePermission("messages.create"), sendTeacherMessage);
 router.get("/messages/:id", getTeacherMessageThreadById);
-router.post("/announcements", createTeacherAnnouncement);
+router.post("/announcements", requirePermission("announcements.create"), createTeacherAnnouncement);
 router.get("/announcements", getTeacherAnnouncements);
 
 // ──────────── 11. NOTIFICATION CENTER ENDPOINTS ────────────
@@ -241,6 +263,11 @@ router.patch("/notifications/:id/read", markTeacherNotificationRead);
 
 
 
+
+// ──────────── 12. TEACHER ANALYTICS ENDPOINTS ────────────
+router.get("/analytics/overview", getTeacherAnalyticsOverview);
+router.get("/analytics/classes/:id", getTeacherAnalyticsClassById);
+router.get("/analytics/students/:id", getStudentPerformanceAnalytics);
 
 // Legacy Root Endpoints
 router.get("/", getTeachers);

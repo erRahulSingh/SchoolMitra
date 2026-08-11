@@ -109,6 +109,28 @@ export default function HomeworkPage() {
     maxMarks: "20"
   });
 
+  const [homeworkAnalytics, setHomeworkAnalytics] = useState<any>({
+    overview: { published: 342, completed: 289, pending: 53 },
+    classWise: [
+      { className: "8-A", rate: 91 },
+      { className: "8-B", rate: 87 },
+      { className: "9-A", rate: 94 }
+    ]
+  });
+
+  useEffect(() => {
+    if (activeTab === "analytics") {
+      fetch("http://localhost:5000/api/v1/admin/analytics/homework-details")
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data) {
+            setHomeworkAnalytics(json.data);
+          }
+        })
+        .catch(err => console.warn("Homework details fetch failed:", err));
+    }
+  }, [activeTab]);
+
   // LocalStorage Persist Load
   useEffect(() => {
     try {
@@ -177,6 +199,10 @@ export default function HomeworkPage() {
     const matchesSubject = filterSubject === "all" || h.subject.toLowerCase() === filterSubject.toLowerCase();
     return matchesSearch && matchesClass && matchesSubject;
   });
+
+  const handleExportReport = (type: string, format: string) => {
+    window.open(`http://localhost:5000/api/v1/admin/analytics/export?type=${type}&format=${format}`, '_blank');
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -496,39 +522,88 @@ export default function HomeworkPage() {
 
       {/* ════════════ MODULE 4: ANALYTICS ════════════ */}
       {activeTab === "analytics" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1.25rem 0", color: "var(--text-heading)" }}>Subject-Wise Submission Rates</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {[
-                { sub: "Mathematics", rate: 98 },
-                { sub: "Physics", rate: 84 },
-                { sub: "History", rate: 100 },
-                { sub: "Computer Science", rate: 42 }
-              ].map(item => (
-                <div key={item.sub} style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-                    <strong style={{ color: "var(--text-heading)" }}>{item.sub}</strong>
-                    <strong style={{ color: "var(--primary)" }}>{item.rate}% Rate</strong>
-                  </div>
-                  <div style={{ width: "100%", height: 10, background: "rgba(255,255,255,0.1)", borderRadius: 5, overflow: "hidden" }}>
-                    <div style={{ width: `${item.rate}%`, height: "100%", background: "var(--primary)", borderRadius: 5 }} />
-                  </div>
-                </div>
-              ))}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          {/* EXPORTS CONTROL BAR */}
+          <div className="glass-card" style={{ padding: "1.25rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <div>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-heading)", margin: 0 }}>Homework Performance &amp; Operations Exporter</h3>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>Download consolidated class assignments and evaluation logs in enterprise formats.</p>
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button onClick={() => handleExportReport("homework", "csv")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                Export CSV
+              </button>
+              <button onClick={() => handleExportReport("homework", "excel")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                Export Excel
+              </button>
+              <button onClick={() => handleExportReport("homework", "pdf")} className="btn btn-primary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                Export PDF
+              </button>
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1.25rem 0", color: "var(--text-heading)" }}>Overdue Task Reminders</h3>
-            <div style={{ padding: "1.25rem", background: "rgba(245, 158, 11, 0.1)", borderRadius: 12, border: "1px solid rgba(245, 158, 11, 0.3)", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <div style={{ fontWeight: 800, color: "#f59e0b" }}>⚠️ Pending Submissions Action Required</div>
-              <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: 0 }}>
-                Computer Science homework has <strong>24 pending submissions</strong> past the initial deadline.
-              </p>
-              <button onClick={() => alert("Automated WhatsApp reminders dispatched to 24 student parent accounts!")} className="btn btn-primary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem" }}>
-                Send Automated Reminders
-              </button>
+          {/* Overview Cards Row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
+            <div className="glass-card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--primary)" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Published Tasks</span>
+              <strong style={{ fontSize: "1.85rem", fontWeight: 900, color: "var(--text-heading)", display: "block", marginTop: 4 }}>
+                {homeworkAnalytics?.overview?.published || 342}
+              </strong>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-light)", display: "block", marginTop: 4 }}>Total Assigned Tasks</span>
+            </div>
+
+            <div className="glass-card" style={{ padding: "1.5rem", borderLeft: "4px solid #10b981" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Completed Tasks</span>
+              <strong style={{ fontSize: "1.85rem", fontWeight: 900, color: "#10b981", display: "block", marginTop: 4 }}>
+                {homeworkAnalytics?.overview?.completed || 289}
+              </strong>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-light)", display: "block", marginTop: 4 }}>Evaluated & Closed</span>
+            </div>
+
+            <div className="glass-card" style={{ padding: "1.5rem", borderLeft: "4px solid #f59e0b" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Pending Evaluation</span>
+              <strong style={{ fontSize: "1.85rem", fontWeight: 900, color: "#f59e0b", display: "block", marginTop: 4 }}>
+                {homeworkAnalytics?.overview?.pending || 53}
+              </strong>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-light)", display: "block", marginTop: 4 }}>Awaiting Teacher Action</span>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+            {/* Class-wise submission rate list */}
+            <div className="glass-card" style={{ padding: "1.5rem" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1.25rem 0", color: "var(--text-heading)" }}>Class-Wise Homework Performance</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {(homeworkAnalytics?.classWise || [
+                  { className: "8-A", rate: 91 },
+                  { className: "8-B", rate: 87 },
+                  { className: "9-A", rate: 94 }
+                ]).map((c: any) => (
+                  <div key={c.className} style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+                      <strong style={{ color: "var(--text-heading)" }}>Class {c.className}</strong>
+                      <strong style={{ color: "var(--primary)" }}>{c.rate}% Completion</strong>
+                    </div>
+                    <div style={{ width: "100%", height: 8, background: "rgba(0,0,0,0.05)", borderRadius: 99, overflow: "hidden" }}>
+                      <div style={{ width: `${c.rate}%`, height: "100%", background: "linear-gradient(90deg, var(--primary) 0%, #8b5cf6 100%)", borderRadius: 99 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Overdue Task Reminders */}
+            <div className="glass-card" style={{ padding: "1.5rem" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1.25rem 0", color: "var(--text-heading)" }}>Defaulters Escalation Panel</h3>
+              <div style={{ padding: "1.25rem", background: "rgba(245, 158, 11, 0.08)", borderRadius: 12, border: "1px solid rgba(245, 158, 11, 0.25)", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div style={{ fontWeight: 800, color: "#f59e0b", fontSize: "0.9rem" }}>⚠️ High Volume Pending Actions Detected</div>
+                <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>
+                  There are currently <strong>53 tasks</strong> awaiting submission across all sections. 8-B has the highest default rate.
+                </p>
+                <button onClick={() => alert("WhatsApp alert notifications dispatched to parents!")} className="btn btn-primary" style={{ padding: "0.55rem 1rem", fontSize: "0.8rem", width: "fit-content", fontWeight: 700 }}>
+                  Notify Parent Accounts
+                </button>
+              </div>
             </div>
           </div>
         </div>

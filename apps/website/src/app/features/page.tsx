@@ -626,7 +626,7 @@ export default function FeaturesPage() {
             <h2 style={{
               fontSize: "clamp(2rem, 3.2vw, 2.8rem)",
               fontWeight: 800,
-              color: "#0f172a",
+              color: "var(--text-main)",
               letterSpacing: "-0.02em",
               marginBottom: "1rem",
               lineHeight: 1.2
@@ -636,7 +636,7 @@ export default function FeaturesPage() {
 
             <p style={{
               fontSize: "1.05rem",
-              color: "#475569",
+              color: "var(--text-muted)",
               lineHeight: 1.6,
               marginBottom: "1.8rem"
             }}>
@@ -650,7 +650,7 @@ export default function FeaturesPage() {
                 "ETA & route updates",
                 "Geo-fencing & safe zones"
               ].map((item, idx) => (
-                <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.65rem", fontSize: "0.95rem", fontWeight: 700, color: "#1e293b" }}>
+                <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.65rem", fontSize: "0.95rem", fontWeight: 700, color: "var(--text-main)" }}>
                   <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid #3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", color: "#3b82f6" }}>⊙</div>
                   <span>{item}</span>
                 </div>

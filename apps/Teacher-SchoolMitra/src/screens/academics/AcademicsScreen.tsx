@@ -38,31 +38,70 @@ import Header from '../../components/Header';
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 40 - 24) / 4; // Computed 4-column layout (1*4)
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
+
 export default function AcademicsScreen({ navigation }: any) {
+  const isFocused = useIsFocused();
+  const [permissions, setPermissions] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    const loadPermissions = async () => {
+      try {
+        const storedPerms = await AsyncStorage.getItem('permissions');
+        if (storedPerms) {
+          setPermissions(JSON.parse(storedPerms));
+        } else {
+          setPermissions([
+            "students.view",
+            "attendance.view",
+            "attendance.create",
+            "attendance.update",
+            "homework.view",
+            "homework.create",
+            "marks.view",
+            "marks.create"
+          ]);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    if (isFocused) {
+      loadPermissions();
+    }
+  }, [isFocused]);
+
   const tools = [
-    { label: 'Attendance', icon: UserCheck, screen: 'MarkAttendance', color: '#10b981', bg: '#ecfdf5' },
-    { label: 'Homework', icon: BookOpen, screen: 'HomeworkList', color: '#3b82f6', bg: '#eff6ff' },
-    { label: 'Assignments', icon: FileText, screen: 'AssignmentList', color: '#f97316', bg: '#fff7ed' },
-    { label: 'Study Material', icon: Layers, screen: 'MaterialLibrary', color: '#8b5cf6', bg: '#f5f3ff' },
-    { label: 'Weekly Test', icon: HelpCircle, screen: 'WeeklyTestList', color: '#ef4444', bg: '#fef2f2' },
-    { label: 'Exams', icon: Award, screen: 'ExamSchedule', color: '#2563eb', bg: '#eff6ff' },
-    { label: 'Marks Entry', icon: ClipboardList, screen: 'ExamMarksEntry', color: '#06b6d4', bg: '#ecfeff' },
-    { label: 'Report Cards', icon: FileCheck, screen: 'ReportCardGenerator', color: '#16a34a', bg: '#f0fdf4' },
+    { label: 'Attendance', icon: UserCheck, screen: 'MarkAttendance', color: '#10b981', bg: '#ecfdf5', permissions: ['attendance.view', 'attendance.create'] },
+    { label: 'Homework', icon: BookOpen, screen: 'HomeworkList', color: '#3b82f6', bg: '#eff6ff', permissions: ['homework.view', 'homework.create'] },
+    { label: 'Assignments', icon: FileText, screen: 'AssignmentList', color: '#f97316', bg: '#fff7ed', permissions: ['assignments.view', 'assignments.create'] },
+    { label: 'Study Material', icon: Layers, screen: 'MaterialLibrary', color: '#8b5cf6', bg: '#f5f3ff', permissions: ['materials.view', 'materials.create'] },
+    { label: 'Weekly Test', icon: HelpCircle, screen: 'WeeklyTestList', color: '#ef4444', bg: '#fef2f2', permissions: ['exams.view', 'exams.create'] },
+    { label: 'Exams', icon: Award, screen: 'ExamSchedule', color: '#2563eb', bg: '#eff6ff', permissions: ['exams.view'] },
+    { label: 'Marks Entry', icon: ClipboardList, screen: 'ExamMarksEntry', color: '#06b6d4', bg: '#ecfeff', permissions: ['marks.view', 'marks.create'] },
+    { label: 'Report Cards', icon: FileCheck, screen: 'ReportCardGenerator', color: '#16a34a', bg: '#f0fdf4', permissions: ['reports.view', 'reports.create'] },
     { label: 'Live Class', icon: Video, screen: 'LiveClass', color: '#ec4899', bg: '#fce7f3' },
     { label: 'Fees Overview', icon: DollarSign, screen: 'FeesOverview', color: '#06b6d4', bg: '#ecfeff' },
     { label: 'Transport Duty', icon: Bus, screen: 'TransportDuty', color: '#10b981', bg: '#ecfdf5' },
     { label: 'Holiday Calendar', icon: Calendar, screen: 'HolidayCalendar', color: '#ea580c', bg: '#ffedd5' },
     { label: 'Event Management', icon: Trophy, screen: 'EventManagement', color: '#7c3aed', bg: '#f3e8ff' },
     { label: 'My Documents', icon: FolderOpen, screen: 'MyDocuments', color: '#2563eb', bg: '#eff6ff' },
-    { label: 'Class Notes', icon: FileText, screen: 'ClassNotes', color: '#ea580c', bg: '#ffedd5' },
-    { label: 'Student Portfolio', icon: FolderOpen, screen: 'StudentPortfolio', color: '#7c3aed', bg: '#f3e8ff' },
-    { label: 'Communications', icon: MessageSquare, screen: 'Communications', color: '#2563eb', bg: '#eff6ff' },
+    { label: 'Class Notes', icon: FileText, screen: 'ClassNotes', color: '#ea580c', bg: '#ffedd5', permissions: ['materials.view', 'materials.create'] },
+    { label: 'Student Portfolio', icon: FolderOpen, screen: 'StudentPortfolio', color: '#7c3aed', bg: '#f3e8ff', permissions: ['students.view'] },
+    { label: 'Communications', icon: MessageSquare, screen: 'Communications', color: '#2563eb', bg: '#eff6ff', permissions: ['messages.view', 'messages.create'] },
     { label: 'Calendar', icon: Calendar, screen: 'Calendar', color: '#10b981', bg: '#ecfdf5' },
     { label: 'Salary & Payroll', icon: Wallet, screen: 'Payroll', color: '#ea580c', bg: '#ffedd5' },
-    { label: 'School Circulars', icon: Megaphone, screen: 'ClassAnnouncements', color: '#7c3aed', bg: '#f3e8ff' },
-    { label: 'Parent Communication', icon: Users, screen: 'ParentCommunication', color: '#2563eb', bg: '#eff6ff' },
-    { label: 'Analytics', icon: BarChart3, screen: 'HomeworkAnalytics', color: '#d946ef', bg: '#fdf4ff' }
+    { label: 'School Circulars', icon: Megaphone, screen: 'ClassAnnouncements', color: '#7c3aed', bg: '#f3e8ff', permissions: ['announcements.create'] },
+    { label: 'Parent Communication', icon: Users, screen: 'ParentCommunication', color: '#2563eb', bg: '#eff6ff', permissions: ['messages.view', 'messages.create'] },
+    { label: 'Analytics', icon: BarChart3, screen: 'HomeworkAnalytics', color: '#d946ef', bg: '#fdf4ff', permissions: ['homework.view', 'assignments.view'] }
   ];
+
+  const filteredTools = tools.filter(tool => {
+    if (!tool.permissions) return true;
+    return tool.permissions.some(p => permissions.includes(p));
+  });
+
 
   const recentActivities = [
     { id: '1', title: 'Homework uploaded', sub: 'Class 8 - A • Maths', time: '2h ago', color: '#8b5cf6', bg: '#f5f3ff', icon: BookOpen },
@@ -99,7 +138,7 @@ export default function AcademicsScreen({ navigation }: any) {
         <Text style={styles.sectionTitle}>Academic Tools</Text>
 
         <View style={styles.toolsGrid}>
-          {tools.map((item, idx) => {
+          {filteredTools.map((item, idx) => {
             const IconComp = item.icon;
             return (
               <TouchableOpacity

@@ -28,7 +28,40 @@ import Header from '../../components/Header';
 
 import { LinearGradient } from 'expo-linear-gradient';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
+
 export default function MainDashboard({ navigation }: any) {
+  const isFocused = useIsFocused();
+  const [permissions, setPermissions] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    const loadPermissions = async () => {
+      try {
+        const storedPerms = await AsyncStorage.getItem('permissions');
+        if (storedPerms) {
+          setPermissions(JSON.parse(storedPerms));
+        } else {
+          setPermissions([
+            "students.view",
+            "attendance.view",
+            "attendance.create",
+            "attendance.update",
+            "homework.view",
+            "homework.create",
+            "marks.view",
+            "marks.create"
+          ]);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    if (isFocused) {
+      loadPermissions();
+    }
+  }, [isFocused]);
+
   const todayClasses = [
     { id: 'c1', time: '08:00 AM', subject: 'Maths', class: 'Class 8 - A', icon: BookOpen, color: '#7c3aed', bg: '#f3e8ff' },
     { id: 'c2', time: '09:30 AM', subject: 'Science', class: 'Class 8 - A', icon: FlaskConical, color: '#16a34a', bg: '#dcfce7' },
@@ -43,11 +76,29 @@ export default function MainDashboard({ navigation }: any) {
   ];
 
   const quickActions = [
-    { label: 'Attendance', icon: UserCheck, screen: 'MarkAttendance', color: '#7c3aed', bg: '#f3e8ff' },
-    { label: 'Homework', icon: BookOpen, screen: 'HomeworkList', color: '#7c3aed', bg: '#f3e8ff' },
-    { label: 'Weekly Test', icon: HelpCircle, screen: 'WeeklyTestList', color: '#2563eb', bg: '#eff6ff' },
-    { label: 'Marks Entry', icon: Award, screen: 'ExamSchedule', color: '#ea580c', bg: '#ffedd5' }
+    { label: 'Attendance', icon: UserCheck, screen: 'MarkAttendance', color: '#7c3aed', bg: '#f3e8ff', permission: 'attendance.view' },
+    { label: 'Homework', icon: BookOpen, screen: 'HomeworkList', color: '#7c3aed', bg: '#f3e8ff', permission: 'homework.view' },
+    { label: 'Weekly Test', icon: HelpCircle, screen: 'WeeklyTestList', color: '#2563eb', bg: '#eff6ff', permission: 'exams.view' },
+    { label: 'Marks Entry', icon: Award, screen: 'ExamSchedule', color: '#ea580c', bg: '#ffedd5', permission: 'marks.view' }
   ];
+
+  const filteredQuickActions = quickActions.filter(action => {
+    // If user has either view or create for that module, show it
+    if (action.label === 'Attendance') {
+      return permissions.includes('attendance.view') || permissions.includes('attendance.create');
+    }
+    if (action.label === 'Homework') {
+      return permissions.includes('homework.view') || permissions.includes('homework.create');
+    }
+    if (action.label === 'Weekly Test') {
+      return permissions.includes('exams.view') || permissions.includes('exams.create');
+    }
+    if (action.label === 'Marks Entry') {
+      return permissions.includes('marks.view') || permissions.includes('marks.create');
+    }
+    return true;
+  });
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -131,7 +182,7 @@ export default function MainDashboard({ navigation }: any) {
         </View>
 
         <View style={styles.quickActionsGrid}>
-          {quickActions.map((action, idx) => {
+          {filteredQuickActions.map((action, idx) => {
             const IconComp = action.icon;
             return (
               <TouchableOpacity

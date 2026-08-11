@@ -123,6 +123,21 @@ export default function TeachersPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTeacherForm, setEditTeacherForm] = useState<TeacherRecord | null>(null);
 
+  const [teacherAnalytics, setTeacherAnalytics] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (activeTeacherTab === "performance") {
+      fetch("http://localhost:5000/api/v1/admin/analytics/teacher-performance")
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data?.teachers) {
+            setTeacherAnalytics(json.data.teachers);
+          }
+        })
+        .catch(err => console.warn("Teacher performance analytics fetch error:", err));
+    }
+  }, [activeTeacherTab]);
+
   // Fetch Teachers from Backend API / LocalStorage
   useEffect(() => {
     try {
@@ -476,6 +491,10 @@ export default function TeachersPage() {
   });
 
   const activeTeacher = selectedTeacherDossier || teachers[0] || defaultTeachers[0];
+
+  const handleExportReport = (type: string, format: string) => {
+    window.open(`http://localhost:5000/api/v1/admin/analytics/export?type=${type}&format=${format}`, '_blank');
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -911,41 +930,68 @@ export default function TeachersPage() {
 
       {/* ════════════ MODULE 9: PERFORMANCE METRICS (SCREENSHOT 3) ════════════ */}
       {activeTeacherTab === "performance" && (
-        <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1.25rem", color: "var(--text-heading)" }}>Faculty Annual Performance Ratings</h3>
+        <div className="glass-card" style={{ padding: "1.50rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.85rem" }}>
+            <div>
+              <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--text-heading)", margin: 0 }}>Teacher Performance & Operations Monitoring</h3>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>Operational logging for syllabus progression, homework assignments, and marks submission.</p>
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <button onClick={() => handleExportReport("teacher", "csv")} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", gap: "0.2rem" }}>
+                Export CSV
+              </button>
+              <button onClick={() => handleExportReport("teacher", "excel")} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", gap: "0.2rem" }}>
+                Export Excel
+              </button>
+              <button onClick={() => handleExportReport("teacher", "pdf")} className="btn btn-primary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem", gap: "0.2rem" }}>
+                Export PDF
+              </button>
+            </div>
+          </div>
 
-          <table className="custom-table">
+          {/* Operation Monitor Notice */}
+          <div style={{ padding: "0.85rem 1.1rem", background: "rgba(99, 102, 241, 0.08)", border: "1px solid rgba(99, 102, 241, 0.2)", borderRadius: "10px", fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.4 }}>
+            <strong>💡 Operations Note:</strong> This monitoring suite compiles progress rate metrics of curriculum delivery and test cycles. It is designed to assist academic coordination and support teachers, not as a disciplinary measurement tool.
+          </div>
+
+          <table className="custom-table" style={{ marginTop: "0.5rem" }}>
             <thead>
               <tr>
-                <th>TEACHER</th>
-                <th>ANNUAL ATTENDANCE</th>
-                <th>HOMEWORK COMPLETION</th>
-                <th>FEEDBACK RATING</th>
-                <th>STATUS INDEX</th>
-                <th style={{ textAlign: "right" }}>UPDATE RATING</th>
+                <th>TEACHER / SUBJECT</th>
+                <th style={{ textAlign: "center" }}>CLASSES</th>
+                <th style={{ textAlign: "center" }}>STUDENTS</th>
+                <th style={{ textAlign: "center" }}>ATTENDANCE</th>
+                <th style={{ textAlign: "center" }}>HOMEWORK</th>
+                <th style={{ textAlign: "center" }}>TESTS CONDUCTED</th>
+                <th style={{ textAlign: "center" }}>MARKS SUBMITTED</th>
+                <th style={{ textAlign: "right" }}>PENDING ROSTERS</th>
               </tr>
             </thead>
             <tbody>
-              {performanceMetrics.map(pm => (
-                <tr key={pm.id}>
+              {(teacherAnalytics.length > 0 ? teacherAnalytics : [
+                { name: "Amit Kumar", subject: "Mathematics", classes: 4, students: 156, attendance: "96%", homework: "91%", testsConducted: 12, marksSubmitted: "100%", pending: 0 },
+                { name: "Neha Sharma", subject: "Science", classes: 3, students: 110, attendance: "94%", homework: "88%", testsConducted: 10, marksSubmitted: "90%", pending: 1 },
+                { name: "Ravi Singh", subject: "English", classes: 5, students: 185, attendance: "97%", homework: "95%", testsConducted: 15, marksSubmitted: "100%", pending: 0 }
+              ]).map((t: any, idx: number) => (
+                <tr key={idx}>
                   <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                      <img src={pm.avatar} alt={pm.teacherName} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />
-                      <strong style={{ color: "var(--text-heading)" }}>{pm.teacherName}</strong>
+                    <div>
+                      <strong style={{ color: "var(--text-heading)", display: "block" }}>{t.name}</strong>
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{t.subject}</span>
                     </div>
                   </td>
-                  <td style={{ fontWeight: 700 }}>{pm.attendance}</td>
-                  <td style={{ fontWeight: 700 }}>{pm.homework}</td>
-                  <td style={{ fontWeight: 900, color: "#f59e0b" }}>⭐ {pm.rating} / 5</td>
-                  <td><span className="badge badge-success">{pm.statusIndex} ✅</span></td>
-                  <td style={{ textAlign: "right" }}>
-                    <div style={{ display: "inline-flex", gap: "0.35rem" }}>
-                      {[4.5, 4.8, 5.0].map(r => (
-                        <button key={r} onClick={() => handleUpdateRating(pm.id, r)} className="btn btn-secondary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.7rem" }}>
-                          {r} ⭐
-                        </button>
-                      ))}
-                    </div>
+                  <td style={{ textAlign: "center", fontWeight: 700 }}>{t.classes}</td>
+                  <td style={{ textAlign: "center", fontWeight: 700 }}>{t.students}</td>
+                  <td style={{ textAlign: "center", fontWeight: 700, color: "var(--primary)" }}>{t.attendance}</td>
+                  <td style={{ textAlign: "center", fontWeight: 700, color: "#8b5cf6" }}>{t.homework}</td>
+                  <td style={{ textAlign: "center", fontWeight: 700 }}>{t.testsConducted}</td>
+                  <td style={{ textAlign: "center" }}>
+                    <span className={`badge ${t.marksSubmitted === "100%" ? "badge-success" : "badge-warning"}`}>
+                      {t.marksSubmitted}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: "right", fontWeight: 800, color: t.pending > 0 ? "#f43f5e" : "var(--text-muted)" }}>
+                    {t.pending}
                   </td>
                 </tr>
               ))}

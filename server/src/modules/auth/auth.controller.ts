@@ -6,8 +6,9 @@ import mongoose from "mongoose";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { UserModel, SchoolModel, RefreshTokenModel } from "../../models/AuthSchemas";
+import { UserModel, SchoolModel, RefreshTokenModel, RoleModel, UserPermissionOverrideModel } from "../../models/AuthSchemas";
 import { SystemRole, SYSTEM_ROLES_CONFIG } from "./roles.config";
+import { GLOBAL_PERMISSIONS_REGISTRY, DEFAULT_TEACHER_PERMISSIONS } from "../../constants/permissions.config";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -108,12 +109,6 @@ export const loginUserRole = asyncHandler(async (req: Request, res: Response) =>
     throw ApiError.badRequest("Email and password are required.");
   }
 
-  const userRole: SystemRole = (role || "SchoolAdmin") as SystemRole;
-  const roleConfig = SYSTEM_ROLES_CONFIG[userRole] || SYSTEM_ROLES_CONFIG["SchoolAdmin"];
-
-  const accessTokenSecret = process.env.JWT_SECRET || "schoolmitra-super-secret-jwt-key-2026";
-  const refreshTokenSecret = process.env.JWT_REFRESH_SECRET || "schoolmitra-super-secret-refresh-key-2026";
-
   let user: any = null;
 
   try {
@@ -133,16 +128,102 @@ export const loginUserRole = asyncHandler(async (req: Request, res: Response) =>
     logger.warn(`[Login DB Warning] ${err?.message || err}. Using session auth.`);
   }
 
+  // Resolve role dynamically: prefer DB role, then body role, then fallback to SchoolAdmin
+  const resolvedRole = user?.role || role || "SchoolAdmin";
+  let userRole: SystemRole = "SchoolAdmin";
+  const matchedRole = Object.keys(SYSTEM_ROLES_CONFIG).find(
+    k => k.toLowerCase() === resolvedRole.toLowerCase()
+  ) as SystemRole;
+  if (matchedRole) {
+    userRole = matchedRole;
+  }
+
+  const roleConfig = SYSTEM_ROLES_CONFIG[userRole] || SYSTEM_ROLES_CONFIG["SchoolAdmin"];
+
+  const accessTokenSecret = process.env.JWT_SECRET || "schoolmitra-super-secret-jwt-key-2026";
+  const refreshTokenSecret = process.env.JWT_REFRESH_SECRET || "schoolmitra-super-secret-refresh-key-2026";
+
   // Fallback active user session if DB buffering or newly registered
   const userId = user?._id || new mongoose.Types.ObjectId();
   const rawName = email.split("@")[0].replace(/[^a-zA-Z0-9]/g, " ");
   const userName = user?.name || (rawName.charAt(0).toUpperCase() + rawName.slice(1) || "School Admin");
+
+  // ─── 4-Layer Permission Resolution Engine for Login Response ───
+  let permissionsList: string[] = [];
+  const normalizedRole = String(userRole).toUpperCase();
+
+  if (normalizedRole === "TEACHER") {
+    const schoolId = user?.schoolId || "sch_default";
+
+    // Layer 3: Role defaults
+    let rolePermissions = [...DEFAULT_TEACHER_PERMISSIONS];
+    try {
+      const teacherRole = await RoleModel.findOne({ systemRole: "TEACHER", schoolId }).lean();
+      if (teacherRole && Array.isArray((teacherRole as any).permissions) && (teacherRole as any).permissions.length > 0) {
+        rolePermissions = (teacherRole as any).permissions;
+      }
+    } catch (err) {}
+
+    // Layer 1: Overrides
+    let overrideMap: Record<string, string> = {};
+    try {
+      const overrides = await UserPermissionOverrideModel.find({ userId, schoolId }).lean();
+      overrides.forEach((o: any) => {
+        overrideMap[o.permissionKey] = o.effect;
+      });
+    } catch (err) {}
+
+    // Layer 2: Embedded permissions
+    const embeddedPermissions = user?.permissions;
+
+    // Resolve
+    const grantedPermissions = new Set<string>();
+    for (const perm of GLOBAL_PERMISSIONS_REGISTRY) {
+      const isRoleDefault = rolePermissions.includes(perm.key);
+      const override = overrideMap[perm.key];
+
+      let effective = false;
+      if (override === "ALLOW") {
+        effective = true;
+      } else if (override === "DENY") {
+        effective = false;
+      } else {
+        // DEFAULT: check embedded if present
+        if (embeddedPermissions) {
+          const [mod, act] = perm.key.split(".");
+          if (mod && act && embeddedPermissions[mod] && typeof embeddedPermissions[mod] === "object") {
+            const mappedAct = act === "update" ? (embeddedPermissions[mod].update ?? embeddedPermissions[mod].edit) : embeddedPermissions[mod][act];
+            if (mappedAct !== undefined) {
+              effective = Boolean(mappedAct);
+            } else {
+              effective = isRoleDefault;
+            }
+          } else {
+            effective = isRoleDefault;
+          }
+        } else {
+          effective = isRoleDefault;
+        }
+      }
+
+      if (effective) {
+        grantedPermissions.add(perm.key);
+      }
+    }
+    permissionsList = Array.from(grantedPermissions);
+  } else if (normalizedRole === "SCHOOLADMIN" || normalizedRole === "SUPERADMIN" || normalizedRole === "PRINCIPAL") {
+    permissionsList = GLOBAL_PERMISSIONS_REGISTRY.map(p => p.key);
+  } else {
+    // Other roles get default modules from roles config
+    permissionsList = roleConfig?.allowedModules || [];
+  }
 
   const payload = {
     id: userId,
     email: email.toLowerCase(),
     role: userRole,
     schoolId: user?.schoolId || undefined,
+    permissions: permissionsList
   };
 
   const accessToken = jwt.sign(payload, accessTokenSecret, {
@@ -168,11 +249,10 @@ export const loginUserRole = asyncHandler(async (req: Request, res: Response) =>
     user: {
       id: userId,
       name: userName,
-      email: email.toLowerCase(),
-      role: userRole,
-      portal: roleConfig.portal,
-      allowedModulesCount: roleConfig.allowedModules.length,
+      role: normalizedRole, // Return UPPERCASE role as requested: "TEACHER"
+      schoolId: user?.schoolId || null
     },
+    permissions: permissionsList // Return permissions list in login response
   });
 });
 

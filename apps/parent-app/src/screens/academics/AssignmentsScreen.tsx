@@ -1,42 +1,199 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
-import { ChevronLeft, FileText, Clock, CheckCircle2 } from 'lucide-react-native';
+import { ChevronLeft, Calendar as CalendarIcon, FileText, FlaskConical, Lightbulb, Monitor } from 'lucide-react-native';
 
 export default function AssignmentsScreen({ navigation }: any) {
-  const assignments = [
-    { id: 1, subject: 'Mathematics', title: 'Algebraic Expressions Term Project', maxMarks: 20, dueDate: '15 Aug 2025', status: 'Pending' },
-    { id: 2, subject: 'Science', title: 'Working Model: Solar System', maxMarks: 25, dueDate: '20 Aug 2025', status: 'Pending' },
-    { id: 3, subject: 'English', title: 'Book Report: The Secret Garden', maxMarks: 15, dueDate: '10 Aug 2025', status: 'Submitted', score: 14 },
-    { id: 4, subject: 'Social Science', title: 'Project: Indian Freedom Fighters', maxMarks: 20, dueDate: '01 Aug 2025', status: 'Graded', score: 18 }
+  const [activeTab, setActiveTab] = useState('All');
+
+  const tabs = ['All', 'Upcoming', 'Submitted', 'Graded'];
+
+  const assignmentsList = [
+    {
+      subject: 'Mathematics Project',
+      title: "Create a model on 'Types of Triangles'",
+      dueDate: 'Due Date: 25 May 2025',
+      status: 'Upcoming',
+      icon: FileText,
+      color: '#7c3aed',
+      bg: '#f3e8ff',
+      statusColor: '#7c3aed',
+      statusBg: '#f3e8ff',
+    },
+    {
+      subject: 'Science Activity',
+      title: 'Prepare a working model of Volcano',
+      dueDate: 'Due Date: 28 May 2025',
+      status: 'Upcoming',
+      icon: FlaskConical,
+      color: '#0d9488',
+      bg: '#ccfbf1',
+      statusColor: '#0d9488',
+      statusBg: '#ccfbf1',
+    },
+    {
+      subject: 'English Presentation',
+      title: "Prepare a presentation on 'The Nation Builders'",
+      dueDate: 'Due Date: 30 May 2025',
+      status: 'Upcoming',
+      icon: Lightbulb,
+      color: '#ea580c',
+      bg: '#ffedd5',
+      statusColor: '#ea580c',
+      statusBg: '#ffedd5',
+    },
+    {
+      subject: 'Computer',
+      title: "Make a PPT on 'Uses of Internet'",
+      dueDate: 'Due Date: 02 Jun 2025',
+      status: 'Submitted',
+      icon: Monitor,
+      color: '#0284c7',
+      bg: '#e0f2fe',
+      statusColor: '#0284c7',
+      statusBg: '#e0f2fe',
+    },
   ];
+
+  const filteredAssignments = activeTab === 'All'
+    ? assignmentsList
+    : assignmentsList.filter(a => a.status === activeTab);
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.header}><TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><ChevronLeft size={22} color="#0f172a" /></TouchableOpacity><Text style={styles.headerTitle}>Assignments</Text><FileText size={20} color="#4f46e5" /></View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {assignments.map((a) => (
-          <View key={a.id} style={styles.card}>
-            <View style={styles.cardTop}><Text style={styles.subjectTag}>{a.subject}</Text><View style={[styles.badge, { backgroundColor: a.status === 'Pending' ? '#fef3c7' : '#dcfce7' }]}>{a.status === 'Pending' ? <Clock size={12} color="#d97706" /> : <CheckCircle2 size={12} color="#16a34a" />}<Text style={{ fontSize: 11, fontWeight: '800', color: a.status === 'Pending' ? '#d97706' : '#16a34a' }}>{a.status}</Text></View></View>
-            <Text style={styles.title}>{a.title}</Text>
-            <View style={styles.metaRow}><Text style={styles.meta}>Max Marks: {a.maxMarks}</Text>{a.score !== undefined && <Text style={styles.score}>Score: {a.score}/{a.maxMarks}</Text>}<Text style={styles.meta}>Due: {a.dueDate}</Text></View>
-          </View>
-        ))}
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      
+      {/* Header Bar */}
+      <View style={styles.headerBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <ChevronLeft size={22} color="#0f172a" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Assignments</Text>
+        <TouchableOpacity style={styles.calBtn}>
+          <CalendarIcon size={20} color="#0f172a" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+        {/* Category Pills Row */}
+        <View style={styles.pillsRow}>
+          {tabs.map((tab, idx) => {
+            const isActive = activeTab === tab;
+            return (
+              <TouchableOpacity
+                key={idx}
+                style={[styles.pillBtn, isActive && styles.pillActive]}
+                onPress={() => setActiveTab(tab)}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.pillText, isActive && styles.pillTextActive]}>{tab}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Assignments Cards List */}
+        <View style={styles.listContainer}>
+          {filteredAssignments.map((item, idx) => {
+            const IconComp = item.icon;
+            return (
+              <View key={idx} style={styles.assignmentCard}>
+                <View style={styles.cardMainRow}>
+                  {/* Subject Icon Box */}
+                  <View style={[styles.iconSquare, { backgroundColor: item.bg }]}>
+                    <IconComp size={22} color={item.color} strokeWidth={2} />
+                  </View>
+
+                  {/* Title & Info */}
+                  <View style={styles.infoCol}>
+                    <Text style={styles.subjectNameText}>{item.subject}</Text>
+                    <Text style={styles.taskTitleText}>{item.title}</Text>
+                    <Text style={styles.dueDateText}>{item.dueDate}</Text>
+                  </View>
+
+                  {/* Status Badge */}
+                  <View style={[styles.statusBadge, { backgroundColor: item.statusBg }]}>
+                    <Text style={[styles.statusBadgeText, { color: item.statusColor }]}>{item.status}</Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
       </ScrollView>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 56, paddingBottom: 14, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a' },
-  scrollContent: { padding: 16, gap: 10 },
-  card: { backgroundColor: '#ffffff', borderRadius: 18, padding: 16, borderWidth: 1, borderColor: '#e2e8f0' },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  subjectTag: { fontSize: 12, fontWeight: '800', color: '#4f46e5' },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  title: { fontSize: 15, fontWeight: '800', color: '#0f172a' },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  meta: { fontSize: 11, color: '#64748b', fontWeight: '600' },
-  score: { fontSize: 12, color: '#16a34a', fontWeight: '800' }
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 8 : 48,
+    paddingBottom: 12,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
+  calBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '900', color: '#0f172a' },
+  scrollContent: { padding: 16, paddingBottom: 100 },
+
+  // Category Pills
+  pillsRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  pillBtn: {
+    flex: 1,
+    paddingVertical: 9,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  pillActive: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
+  pillText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
+  pillTextActive: { color: '#ffffff', fontWeight: '900' },
+
+  // List Cards
+  listContainer: { gap: 12 },
+  assignmentCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    elevation: 2,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+  },
+  cardMainRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  iconSquare: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoCol: { flex: 1 },
+  subjectNameText: { fontSize: 13, fontWeight: '800', color: '#0f172a' },
+  taskTitleText: { fontSize: 14, fontWeight: '900', color: '#0f172a', marginTop: 2 },
+  dueDateText: { fontSize: 11, color: '#94a3b8', fontWeight: '500', marginTop: 6 },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  statusBadgeText: { fontSize: 11, fontWeight: '800' },
 });

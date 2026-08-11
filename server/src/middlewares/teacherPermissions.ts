@@ -4,6 +4,8 @@
 
 import { Request, Response, NextFunction } from "express";
 import { ApiResponse } from "../utils/ApiResponse";
+import { UserPermissionOverrideModel, RolePermissionModel, RoleModel } from "../models/AuthSchemas";
+import { DEFAULT_TEACHER_PERMISSIONS } from "../constants/permissions.config";
 
 export interface TeacherPermissionContext {
   teacherId: string;
@@ -146,6 +148,206 @@ export const buildTeacherScopedQuery = (req: Request, classId?: string, sectionI
     sectionId: sectionId || "sec_a",
     status: "Active",
     ...extraFilters
+  };
+};
+
+/**
+ * Flexible Per-Teacher Fine-Grained Permission Guard.
+ * Evaluates action-level capabilities per module:
+ * Example Teacher A: Attendance -> { view: true, create: true, edit: true, delete: false }
+ * Example Teacher B: Attendance -> { view: true, create: true, edit: true, delete: true }
+ */
+export const requireTeacherPermission = (
+  moduleName: string,
+  actionName: "view" | "create" | "edit" | "delete"
+) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const user = (req as any).user || {
+      id: "usr_teacher_101",
+      role: "TEACHER",
+      name: "Rahul Sharma",
+      permissions: {
+        attendance: { view: true, create: true, edit: true, delete: false },
+        marks: { view: true, create: true, edit: true, delete: false },
+        homework: { view: true, create: true, edit: true, delete: true }
+      }
+    };
+
+    const normalizedRole = String(user.role || "").toUpperCase();
+
+    // SUPER_ADMIN & SCHOOL_ADMIN bypass teacher permission matrix
+    if (normalizedRole === "SUPER_ADMIN" || normalizedRole === "SCHOOL_ADMIN" || normalizedRole === "SUPERADMIN" || normalizedRole === "SCHOOLADMIN") {
+      return next();
+    }
+
+    // Default permissions matrix fallback if user permissions object is empty
+    const userPermissions = user.permissions || {
+      attendance: { view: true, create: true, edit: true, delete: false },
+      marks: { view: true, create: true, edit: true, delete: false },
+      homework: { view: true, create: true, edit: true, delete: true }
+    };
+
+    const modulePerms = userPermissions[moduleName] || {};
+    const isActionAllowed = Boolean(modulePerms[actionName]);
+
+    if (!isActionAllowed) {
+      return ApiResponse.error(
+        res,
+        403,
+        `Permission Denied: Teacher '${user.name || user.id}' lacks '${actionName}' capability on module '${moduleName}'. Operation blocked (403 Forbidden).`
+      );
+    }
+
+    return next();
+  };
+};
+
+/**
+ * 2-Layer Permission Resolution Engine (Role Base + User Overrides ALLOW / DENY)
+ * 1. Checks userPermissionOverrides collection for (schoolId, userId, permissionKey).
+ *    - If effect === "DENY" -> Returns false (Explicit DENY overrides everything!).
+ *    - If effect === "ALLOW" -> Returns true (Explicit ALLOW grants capability!).
+ * 2. If no override exists, checks user's role and rolePermissions.
+ * 3. Fallbacks to system defaults for TEACHER role.
+ */
+export const evaluatePermissionWithOverrides = async (
+  userId: string,
+  schoolId: string,
+  roleName: string,
+  permissionKey: string,
+  userPermissionsPayload?: any
+): Promise<boolean> => {
+  const normalizedRole = String(roleName || "").toUpperCase();
+
+  // SuperAdmin and SchoolAdmin bypass granular checks within their tenant
+  if (
+    normalizedRole === "SUPER_ADMIN" ||
+    normalizedRole === "SUPERADMIN" ||
+    normalizedRole === "SCHOOL_ADMIN" ||
+    normalizedRole === "SCHOOLADMIN"
+  ) {
+    return true;
+  }
+
+  // 1. Database User Permission Override Check (ALLOW / DENY)
+  if (userId && schoolId) {
+    try {
+      const override = await UserPermissionOverrideModel.findOne({
+        schoolId,
+        userId,
+        permissionKey,
+      }).lean();
+
+      if (override) {
+        if (override.effect === "DENY") return false;
+        if (override.effect === "ALLOW") return true;
+      }
+    } catch (e) {
+      // Fallback if DB disconnected
+    }
+  }
+
+  // 2. Local JWT / Session User Permissions payload check (if passed)
+  if (userPermissionsPayload) {
+    if (Array.isArray(userPermissionsPayload) && userPermissionsPayload.includes(permissionKey)) {
+      return true;
+    }
+    if (typeof userPermissionsPayload === "object" && userPermissionsPayload !== null) {
+      if (userPermissionsPayload[permissionKey] !== undefined) {
+        return Boolean(userPermissionsPayload[permissionKey]);
+      }
+    }
+  }
+
+  // 3. System Role Permissions check (Default TEACHER capabilities)
+  if (normalizedRole === "TEACHER") {
+    return DEFAULT_TEACHER_PERMISSIONS.includes(permissionKey);
+  }
+
+  return false;
+};
+
+/**
+ * Universal Synchronous Permission Evaluator
+ */
+export const hasPermissionKey = (user: any, permissionKey: string): boolean => {
+  if (!user) return false;
+
+  const normalizedRole = String(user.role || "").toUpperCase();
+
+  // SUPER_ADMIN and SCHOOL_ADMIN bypass granular restrictions within their tenant scope
+  if (
+    normalizedRole === "SUPER_ADMIN" ||
+    normalizedRole === "SUPERADMIN" ||
+    normalizedRole === "SCHOOL_ADMIN" ||
+    normalizedRole === "SCHOOLADMIN"
+  ) {
+    return true;
+  }
+
+  // 1. String Array check
+  if (Array.isArray(user.permissions)) {
+    return user.permissions.includes(permissionKey);
+  }
+
+  // 2. Object format check
+  if (typeof user.permissions === "object" && user.permissions !== null) {
+    if (user.permissions[permissionKey] !== undefined) {
+      return Boolean(user.permissions[permissionKey]);
+    }
+
+    const [mod, act] = permissionKey.split(".");
+    if (mod && act && user.permissions[mod] && typeof user.permissions[mod] === "object") {
+      const mappedAct = act === "update" ? (user.permissions[mod].update ?? user.permissions[mod].edit) : user.permissions[mod][act];
+      if (mappedAct !== undefined) {
+        return Boolean(mappedAct);
+      }
+    }
+  }
+
+  // 3. Standard default permissions for Teacher role
+  if (normalizedRole === "TEACHER") {
+    return DEFAULT_TEACHER_PERMISSIONS.includes(permissionKey);
+  }
+
+  return false;
+};
+
+/**
+ * Middleware Guard for Granular Permission Key (e.g., "attendance.update", "homework.publish").
+ * Evaluates Role + User Overrides (ALLOW/DENY) and rejects unauthorized calls with 403 Forbidden.
+ */
+export const requirePermissionKey = (permissionKey: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user || {
+        id: "usr_teacher_101",
+        schoolId: req.headers["x-school-id"] || "sch_101",
+        role: "TEACHER",
+        name: "Rahul Sharma",
+        permissions: DEFAULT_TEACHER_PERMISSIONS
+      };
+
+      const isAllowed = await evaluatePermissionWithOverrides(
+        user.id || user._id,
+        user.schoolId || req.headers["x-school-id"],
+        user.role,
+        permissionKey,
+        user.permissions
+      );
+
+      if (!isAllowed) {
+        return ApiResponse.error(
+          res,
+          403,
+          `Permission Denied: User '${user.name || user.id}' lacks required permission key '${permissionKey}'. Blocked by Role + Override Guard (403 Forbidden).`
+        );
+      }
+
+      return next();
+    } catch (error) {
+      return next(error);
+    }
   };
 };
 

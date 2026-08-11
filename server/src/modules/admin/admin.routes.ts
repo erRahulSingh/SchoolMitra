@@ -201,14 +201,168 @@ router.get("/teacher-monitoring", getTeacherActivityMonitoringDashboard);
 router.get("/teachers/performance", getTeachersPerformanceReport);
 router.get("/teachers/:teacherId/performance", getSingleTeacherPerformanceDossier);
 
+// ════════════ SCHOOL ADMIN ACADEMIC CONTROL APIs ════════════
+import { authenticate, requireSchool, requireRole } from "../../middleware/authGuards";
+import {
+  getAdminHomework,
+  updateAdminHomework,
+  deleteAdminHomework,
+  publishAdminHomework,
+  getAdminAssignments,
+  updateAdminAssignment,
+  deleteAdminAssignment,
+  publishAdminAssignment,
+  getAdminMaterials,
+  updateAdminMaterial,
+  deleteAdminMaterial,
+  getAdminWeeklyTests,
+  updateAdminWeeklyTest,
+  publishAdminWeeklyTest,
+  getAdminWeeklyTestResults,
+  updateAdminWeeklyTestResult
+} from "./adminAcademic.controller";
+
+const schoolAdminGuards = [authenticate, requireSchool, requireRole("SchoolAdmin", "SuperAdmin")];
+
+// Homework Admin control
+router.get("/academics/homework", schoolAdminGuards, getAdminHomework);
+router.put("/academics/homework/:id", schoolAdminGuards, updateAdminHomework);
+router.delete("/academics/homework/:id", schoolAdminGuards, deleteAdminHomework);
+router.patch("/academics/homework/:id/publish", schoolAdminGuards, publishAdminHomework);
+router.post("/academics/homework/:id/publish", schoolAdminGuards, publishAdminHomework);
+
+// Assignments Admin control
+router.get("/academics/assignments", schoolAdminGuards, getAdminAssignments);
+router.put("/academics/assignments/:id", schoolAdminGuards, updateAdminAssignment);
+router.delete("/academics/assignments/:id", schoolAdminGuards, deleteAdminAssignment);
+router.patch("/academics/assignments/:id/publish", schoolAdminGuards, publishAdminAssignment);
+router.post("/academics/assignments/:id/publish", schoolAdminGuards, publishAdminAssignment);
+
+// Materials Admin control
+router.get("/academics/materials", schoolAdminGuards, getAdminMaterials);
+router.put("/academics/materials/:id", schoolAdminGuards, updateAdminMaterial);
+router.delete("/academics/materials/:id", schoolAdminGuards, deleteAdminMaterial);
+
+// Weekly Tests Admin control
+router.get("/academics/weekly-tests", schoolAdminGuards, getAdminWeeklyTests);
+router.put("/academics/weekly-tests/:id", schoolAdminGuards, updateAdminWeeklyTest);
+router.patch("/academics/weekly-tests/:id/publish", schoolAdminGuards, publishAdminWeeklyTest);
+router.post("/academics/weekly-tests/:id/publish", schoolAdminGuards, publishAdminWeeklyTest);
+router.get("/academics/weekly-tests/:id/results", schoolAdminGuards, getAdminWeeklyTestResults);
+router.put("/academics/weekly-tests/results/:id", schoolAdminGuards, updateAdminWeeklyTestResult);
+
+// Exams Admin control
+import {
+  createAdminExam,
+  getAdminExams,
+  getAdminExamById,
+  updateAdminExam,
+  deleteAdminExam,
+  publishAdminExam
+} from "./adminExam.controller";
+
+import {
+  getAdminAnalyticsOverview,
+  getAdminAnalyticsAttendance,
+  getAdminAnalyticsAcademic,
+  getAdminAnalyticsExams,
+  getAdminClassPerformance,
+  getAdminStudentPerformance,
+  getAdminAttendanceDetails,
+  getAdminAcademicRisk,
+  getAdminTeacherPerformance,
+  getAdminHomeworkDetails,
+  getAdminExamTermAnalytics,
+  getAdminAnalyticsExport
+} from "./adminAnalytics.controller";
+
+// Admin Analytics Endpoints
+router.get("/analytics/overview", schoolAdminGuards, getAdminAnalyticsOverview);
+router.get("/analytics/students", schoolAdminGuards, getAdminAcademicRisk);
+router.get("/analytics/classes", schoolAdminGuards, getAdminClassPerformance);
+router.get("/analytics/attendance", schoolAdminGuards, getAdminAttendanceDetails);
+router.get("/analytics/homework", schoolAdminGuards, getAdminHomeworkDetails);
+router.get("/analytics/exams", schoolAdminGuards, getAdminExamTermAnalytics);
+router.get("/analytics/teachers", schoolAdminGuards, getAdminTeacherPerformance);
+router.get("/analytics/performance", schoolAdminGuards, getAdminAcademicRisk);
+router.get("/analytics/export", schoolAdminGuards, getAdminAnalyticsExport);
+
+// Legacy/Compatibility Analytics Endpoints
+router.get("/analytics/class-performance", schoolAdminGuards, getAdminClassPerformance);
+router.get("/analytics/attendance-details", schoolAdminGuards, getAdminAttendanceDetails);
+router.get("/analytics/academic-risk", schoolAdminGuards, getAdminAcademicRisk);
+router.get("/analytics/teacher-performance", schoolAdminGuards, getAdminTeacherPerformance);
+router.get("/analytics/homework-details", schoolAdminGuards, getAdminHomeworkDetails);
+router.get("/analytics/exam-term", schoolAdminGuards, getAdminExamTermAnalytics);
+router.get("/students/:id/performance", schoolAdminGuards, getAdminStudentPerformance);
+
+router.post("/exams", schoolAdminGuards, createAdminExam);
+router.get("/exams", schoolAdminGuards, getAdminExams);
+router.get("/exams/:id", schoolAdminGuards, getAdminExamById);
+router.put("/exams/:id", schoolAdminGuards, updateAdminExam);
+router.delete("/exams/:id", schoolAdminGuards, deleteAdminExam);
+router.patch("/exams/:id/publish", schoolAdminGuards, publishAdminExam);
+router.post("/exams/:id/publish", schoolAdminGuards, publishAdminExam);
+
+// API Structure Aliases
+router.post("/exam-schedules", schoolAdminGuards, createAdminExam);
+router.get("/exam-schedules", schoolAdminGuards, getAdminExams);
+router.get("/exam-schedules/:id", schoolAdminGuards, getAdminExamById);
+router.put("/exam-schedules/:id", schoolAdminGuards, updateAdminExam);
+router.delete("/exam-schedules/:id", schoolAdminGuards, deleteAdminExam);
+
+router.get("/exam-results", schoolAdminGuards, getAdminMarksSubmissions);
+router.patch("/exam-results/:id/review", schoolAdminGuards, reviewAdminMarksSubmission);
+router.patch("/exam-results/:id/approve", schoolAdminGuards, approveAdminMarksSubmission);
+router.patch("/exam-results/:id/reject", schoolAdminGuards, rejectAdminMarksSubmission);
+
+router.get("/report-cards", schoolAdminGuards, getAdminReportCards);
+router.post("/report-cards/generate", schoolAdminGuards, generateAdminReportCards);
+router.patch("/report-cards/:id/approve", schoolAdminGuards, approveAdminReportCard);
+router.patch("/report-cards/:id/publish", schoolAdminGuards, publishAdminReportCard);
+
+// Marks submissions approval controls
+import {
+  getAdminMarksSubmissions,
+  reviewAdminMarksSubmission,
+  approveAdminMarksSubmission,
+  rejectAdminMarksSubmission
+} from "./adminAcademic.controller";
+
+router.get("/academics/marks-submissions", schoolAdminGuards, getAdminMarksSubmissions);
+router.patch("/academics/marks-submissions/:id/review", schoolAdminGuards, reviewAdminMarksSubmission);
+router.patch("/academics/marks-submissions/:id/approve", schoolAdminGuards, approveAdminMarksSubmission);
+router.patch("/academics/marks-submissions/:id/reject", schoolAdminGuards, rejectAdminMarksSubmission);
+
+// Configurable grading system settings
+import {
+  getAdminGradingRules,
+  saveAdminGradingRules
+} from "./adminAcademic.controller";
+
+router.get("/academics/grading-rules", schoolAdminGuards, getAdminGradingRules);
+router.post("/academics/grading-rules", schoolAdminGuards, saveAdminGradingRules);
+
+// Report cards workflow controls
+import {
+  getAdminReportCards,
+  generateAdminReportCards,
+  approveAdminReportCard,
+  publishAdminReportCard
+} from "./adminAcademic.controller";
+
+router.get("/academics/report-cards", schoolAdminGuards, getAdminReportCards);
+router.post("/academics/report-cards/generate", schoolAdminGuards, generateAdminReportCards);
+router.patch("/academics/report-cards/:id/approve", schoolAdminGuards, approveAdminReportCard);
+router.patch("/academics/report-cards/:id/publish", schoolAdminGuards, publishAdminReportCard);
+
 // Legacy/System Endpoints
 router.get("/stats", getDashboardStats);
 router.get("/payments", getPaymentsList);
 router.get("/support", getSupportTickets);
 
-
-
-
-
+// ════════════ Teacher CRUD & Permissions Management (Guarded) ════════════
+import adminTeacherRoutes from "./adminTeacher.routes";
+router.use("/", adminTeacherRoutes);
 
 export default router;

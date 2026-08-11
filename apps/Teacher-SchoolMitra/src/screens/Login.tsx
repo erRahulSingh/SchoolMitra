@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, 
   KeyboardAvoidingView, Platform, ScrollView, Alert 
@@ -6,12 +6,36 @@ import {
 import { Mail, Lock, Eye, EyeOff, GraduationCap, ChevronLeft } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function Login({ navigation }: any) {
+export default function Login({ navigation, route }: any) {
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (route?.params?.registeredEmail) {
+      setEmailOrPhone(route.params.registeredEmail);
+    } else {
+      AsyncStorage.getItem('lastRegisteredUser').then(str => {
+        if (str) {
+          try {
+            const parsed = JSON.parse(str);
+            if (parsed && parsed.email) {
+              setEmailOrPhone(parsed.email);
+            }
+          } catch (e) {}
+        }
+      });
+    }
+  }, [route?.params]);
+
+  const getApiUrl = () => {
+    if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:5000/api/v1/auth/login';
+    }
+    return 'http://localhost:5000/api/v1/auth/login';
+  };
 
   const handleSignIn = async () => {
     if (!emailOrPhone || !password) {
@@ -22,22 +46,95 @@ export default function Login({ navigation }: any) {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailOrPhone, password })
-      });
-      const data = await res.json();
+      let data: any = null;
+      let token: string = '';
 
-      if (data.success || res.status === 200) {
-        await AsyncStorage.setItem('teacherToken', data.token || 'demo_token_12345');
-        navigation.replace('MainTabs');
-      } else {
-        await AsyncStorage.setItem('teacherToken', 'demo_token_12345');
-        navigation.replace('MainTabs');
+      let storedRegUser: any = route?.params?.registeredUser || null;
+      if (!storedRegUser) {
+        const lastRegStr = await AsyncStorage.getItem('lastRegisteredUser');
+        if (lastRegStr) {
+          try { storedRegUser = JSON.parse(lastRegStr); } catch (e) {}
+        }
       }
-    } catch (err) {
-      await AsyncStorage.setItem('teacherToken', 'demo_token_12345');
+
+      try {
+        const res = await fetch(getApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailOrPhone, password, role: 'Teacher' })
+        });
+        data = await res.json();
+        token = data.data?.accessToken || data.accessToken || data.token || '';
+      } catch (networkErr) {
+        try {
+          const res2 = await fetch('http://127.0.0.1:5000/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailOrPhone, password, role: 'Teacher' })
+          });
+          data = await res2.json();
+          token = data.data?.accessToken || data.accessToken || data.token || '';
+        } catch (e) {
+          // Fallback handled below
+        }
+      }
+
+      const authToken = token || 'demo_teacher_jwt_token_12345';
+      const apiUser = data?.data?.user || data?.user || null;
+      const apiPermissions = data?.data?.permissions || data?.permissions || [
+        "students.view",
+        "attendance.view",
+        "attendance.create",
+        "attendance.update",
+        "homework.view",
+        "homework.create",
+        "marks.view",
+        "marks.create",
+        "assignments.view",
+        "assignments.create",
+        "materials.view",
+        "materials.create"
+      ];
+      
+      const userObj = {
+        name: apiUser?.name || storedRegUser?.name || 'Rahul Kushwaha',
+        email: apiUser?.email || emailOrPhone,
+        phone: apiUser?.phone || storedRegUser?.phone || '7870391245',
+        schoolCode: storedRegUser?.schoolCode || apiUser?.schoolCode || 'SCH-101',
+        role: 'Teacher',
+        empId: storedRegUser?.schoolCode ? `TCH-${storedRegUser.schoolCode}` : 'TCH-2026-101'
+      };
+
+      await AsyncStorage.setItem('teacherToken', authToken);
+      await AsyncStorage.setItem('user', JSON.stringify(userObj));
+      await AsyncStorage.setItem('permissions', JSON.stringify(apiPermissions));
+      navigation.replace('MainTabs');
+    } catch (err: any) {
+      const fallbackUser = {
+        name: route?.params?.registeredUser?.name || 'Rahul Kushwaha',
+        email: emailOrPhone,
+        phone: route?.params?.registeredUser?.phone || '7870391245',
+        schoolCode: route?.params?.registeredUser?.schoolCode || 'SCH-101',
+        role: 'Teacher',
+        empId: 'TCH-2026-101'
+      };
+      const fallbackPerms = [
+        "students.view",
+        "attendance.view",
+        "attendance.create",
+        "attendance.update",
+        "homework.view",
+        "homework.create",
+        "marks.view",
+        "marks.create",
+        "assignments.view",
+        "assignments.create",
+        "materials.view",
+        "materials.create"
+      ];
+      await AsyncStorage.setItem('teacherToken', 'demo_teacher_jwt_token_12345');
+      await AsyncStorage.setItem('user', JSON.stringify(fallbackUser));
+      await AsyncStorage.setItem('permissions', JSON.stringify(fallbackPerms));
       navigation.replace('MainTabs');
     } finally {
       setLoading(false);

@@ -326,29 +326,29 @@ export default function SolutionsPage() {
             <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#4338ca", textTransform: "uppercase", letterSpacing: "0.08em" }}>
               SECTION 2 • FINANCIAL AUTOMATION
             </span>
-            <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "#0f172a", marginTop: "0.4rem", marginBottom: "1rem" }}>
+            <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem", marginBottom: "1rem" }}>
               Smart Fee Collection <span style={{ color: "#f97316" }}>&amp; Instant UPI Receipts</span>
             </h2>
-            <p style={{ color: "#475569", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               Eliminate manual fee register maintenance and cash handling errors. Parents pay via Google Pay, PhonePe, UPI QR code, or Cards with instant PDF receipts sent to WhatsApp.
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
-              <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 <div style={{ fontWeight: 800, color: "#4338ca", fontSize: "0.95rem" }}>💳 Multi-Gateway UPI</div>
-                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "0.25rem" }}>Paytm, PhonePe, GPay, Credit/Debit cards &amp; NetBanking.</div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Paytm, PhonePe, GPay, Credit/Debit cards &amp; NetBanking.</div>
               </div>
-              <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 <div style={{ fontWeight: 800, color: "#10b981", fontSize: "0.95rem" }}>💬 WhatsApp Reminders</div>
-                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "0.25rem" }}>Automated due date alerts to parents before late fee applies.</div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Automated due date alerts to parents before late fee applies.</div>
               </div>
-              <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 <div style={{ fontWeight: 800, color: "#3b82f6", fontSize: "0.95rem" }}>📊 Auto Reconciliation</div>
-                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "0.25rem" }}>Bank statement matching with zero manual audit entries needed.</div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Bank statement matching with zero manual audit entries needed.</div>
               </div>
-              <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 <div style={{ fontWeight: 800, color: "#8b5cf6", fontSize: "0.95rem" }}>🧾 Instant PDF Receipts</div>
-                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "0.25rem" }}>Downloadable tax &amp; fee receipts with unique digital signature.</div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>Downloadable tax &amp; fee receipts with unique digital signature.</div>
               </div>
             </div>
           </div>
@@ -457,21 +457,21 @@ export default function SolutionsPage() {
             <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#8b5cf6", textTransform: "uppercase", letterSpacing: "0.08em" }}>
               SECTION 4 • ACADEMIC EVALUATION
             </span>
-            <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "#1e1b4b", marginTop: "0.4rem", marginBottom: "1rem" }}>
+            <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem", marginBottom: "1rem" }}>
               CBSE &amp; ICSE Automated <span style={{ color: "#f97316" }}>Report Card Engine</span>
             </h2>
-            <p style={{ color: "#475569", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               Teachers upload subject marks; SchoolMitra automatically calculates total grades, rank, percentage, and generates beautiful PDF report cards aligned with board standards.
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 <div style={{ fontWeight: 800, color: "#8b5cf6" }}>🏅 Grade &amp; Rank Rules</div>
-                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "0.2rem" }}>Configure custom grade scale percentages &amp; pass criteria.</div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Configure custom grade scale percentages &amp; pass criteria.</div>
               </div>
-              <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 <div style={{ fontWeight: 800, color: "#3b82f6" }}>📄 1-Click PDF Generation</div>
-                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "0.2rem" }}>Generate 1,000+ report cards simultaneously with school logo.</div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Generate 1,000+ report cards simultaneously with school logo.</div>
               </div>
             </div>
           </div>
@@ -565,21 +565,21 @@ export default function SolutionsPage() {
             <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#059669", textTransform: "uppercase", letterSpacing: "0.08em" }}>
               SECTION 6 • PARENT ENGAGEMENT
             </span>
-            <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "#064e3b", marginTop: "0.4rem", marginBottom: "1rem" }}>
+            <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem", marginBottom: "1rem" }}>
               Seamless Parent-Teacher <span style={{ color: "#f97316" }}>Collaboration</span>
             </h2>
-            <p style={{ color: "#334155", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1.8rem" }}>
               Teachers publish daily homework with PDF attachments, class circulars, and exam timetables. Parents can send direct queries to class teachers.
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 <div style={{ fontWeight: 800, color: "#059669" }}>📚 Daily Homework Files</div>
-                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "0.2rem" }}>Subject-wise assignment attachments &amp; submission tracker.</div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Subject-wise assignment attachments &amp; submission tracker.</div>
               </div>
-              <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 <div style={{ fontWeight: 800, color: "#3b82f6" }}>📢 Digital Notice Board</div>
-                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "0.2rem" }}>Broadcast school holidays, PTM dates, &amp; sports day updates.</div>
+                <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Broadcast school holidays, PTM dates, &amp; sports day updates.</div>
               </div>
             </div>
           </div>
@@ -795,15 +795,15 @@ export default function SolutionsPage() {
               </div>
 
               <div className="solutions-tab-side-card" style={{ background: "linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)", borderRadius: "20px", padding: "2rem", border: "1px solid #c7d2fe" }}>
-                <div style={{ fontWeight: 800, color: "#1e1b4b", fontSize: "1.1rem", marginBottom: "1rem" }}>⚡ Key Principal Benefits</div>
+                <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "1.1rem", marginBottom: "1rem" }}>⚡ Key Principal Benefits</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+                  <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)", border: "1px solid var(--border-color)" }}>
                     <div style={{ fontWeight: 800, color: "#4338ca" }}>Zero Cash Leakage</div>
-                    <div style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "0.2rem" }}>Instant UPI gateway reconciliation ensures 100% transparent fee collection.</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Instant UPI gateway reconciliation ensures 100% transparent fee collection.</div>
                   </div>
-                  <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+                  <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)", border: "1px solid var(--border-color)" }}>
                     <div style={{ fontWeight: 800, color: "#10b981" }}>95% Faster Report Cards</div>
-                    <div style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "0.2rem" }}>Auto-calculate marks, grades, and remarks based on CBSE/ICSE patterns.</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Auto-calculate marks, grades, and remarks based on CBSE/ICSE patterns.</div>
                   </div>
                 </div>
               </div>
@@ -838,11 +838,11 @@ export default function SolutionsPage() {
               </div>
 
               <div className="solutions-tab-side-card" style={{ background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)", borderRadius: "20px", padding: "2rem", border: "1px solid #bae6fd" }}>
-                <div style={{ fontWeight: 800, color: "#0369a1", fontSize: "1.1rem", marginBottom: "1rem" }}>📱 Mobile App Highlights</div>
+                <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "1.1rem", marginBottom: "1rem" }}>📱 Mobile App Highlights</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+                  <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)", border: "1px solid var(--border-color)" }}>
                     <div style={{ fontWeight: 800, color: "#3b82f6" }}>4.9★ Parent Rating</div>
-                    <div style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "0.2rem" }}>Loved by 2,50,000+ parents for clean UI and real-time push alerts.</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Loved by 2,50,000+ parents for clean UI and real-time push alerts.</div>
                   </div>
                 </div>
               </div>
@@ -862,10 +862,10 @@ export default function SolutionsPage() {
               </div>
 
               <div className="solutions-tab-side-card" style={{ background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)", borderRadius: "20px", padding: "2rem", border: "1px solid #a7f3d0" }}>
-                <div style={{ fontWeight: 800, color: "#065f46", fontSize: "1.1rem", marginBottom: "1rem" }}>🚌 Fleet Control</div>
-                <div style={{ background: "#ffffff", padding: "1rem", borderRadius: "12px" }}>
+                <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "1.1rem", marginBottom: "1rem" }}>🚌 Fleet Control</div>
+                <div style={{ background: "var(--bg-card)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                   <div style={{ fontWeight: 800, color: "#10b981" }}>Instant Panic Button</div>
-                  <div style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "0.2rem" }}>1-tap driver SOS alerts school admin &amp; parents.</div>
+                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>1-tap driver SOS alerts school admin &amp; parents.</div>
                 </div>
               </div>
             </div>
@@ -883,8 +883,8 @@ export default function SolutionsPage() {
                 </p>
               </div>
               <div className="solutions-tab-side-card" style={{ background: "linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)", borderRadius: "20px", padding: "2rem" }}>
-                <div style={{ fontWeight: 800, color: "#5b21b6" }}>🎓 Fast Marks Entry</div>
-                <div style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "0.2rem" }}>Automatic grade calculation.</div>
+                <div style={{ fontWeight: 800, color: "var(--text-main)" }}>🎓 Fast Marks Entry</div>
+                <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Automatic grade calculation.</div>
               </div>
             </div>
           )}

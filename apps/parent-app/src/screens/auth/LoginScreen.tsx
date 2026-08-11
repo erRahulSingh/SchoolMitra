@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar, Platfor
 import { LinearGradient } from 'expo-linear-gradient';
 import { Eye, EyeOff, Lock, Mail, GraduationCap } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ParentAppLogo from '../../components/ParentAppLogo';
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
@@ -18,8 +19,8 @@ export default function LoginScreen({ navigation }: any) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#4f46e5', '#6366f1', '#a855f7']} style={styles.heroGradient}>
-        <View style={styles.logoCircle}>
-          <GraduationCap size={36} color="#4f46e5" />
+        <View style={{ marginBottom: 12 }}>
+          <ParentAppLogo size="medium" />
         </View>
         <Text style={styles.appTitle}>SchoolMitra</Text>
         <Text style={styles.appSub}>Parent Portal</Text>

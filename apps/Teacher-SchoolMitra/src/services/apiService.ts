@@ -70,11 +70,19 @@ export const teacherApi = {
 
   // 9. Exams & Marks API
   getExams: () => apiRequest('/teacher/exams'),
-  saveExamMarks: (examId: string, marks: any) =>
-    apiRequest(`/teacher/exams/${examId}/marks`, { method: 'POST', body: JSON.stringify(marks) }),
+  getExamById: (examId: string) => apiRequest(`/teacher/exams/${examId}`),
+  getExamStudents: (examId: string, classId: string, sectionId: string, subjectId: string) =>
+    apiRequest(`/teacher/exams/${examId}/students?classId=${classId}&sectionId=${sectionId}&subjectId=${subjectId}`),
+  saveExamMarks: (examId: string, payload: { classId: string; sectionId: string; subjectId: string; marksRoster: any[]; status: string }) =>
+    apiRequest(`/teacher/exams/${examId}/marks`, { method: 'POST', body: JSON.stringify(payload) }),
+  updateExamMarks: (examId: string, payload: { classId: string; sectionId: string; subjectId: string; marksRoster: any[] }) =>
+    apiRequest(`/teacher/exams/${examId}/marks`, { method: 'PUT', body: JSON.stringify(payload) }),
 
   // 10. Report Cards API
   getReportCards: () => apiRequest('/teacher/report-cards'),
+  getStudentReportCard: (studentId: string) => apiRequest(`/teacher/report-cards/${studentId}`),
+  submitReportCard: (studentId: string, data: any) =>
+    apiRequest(`/teacher/report-cards/${studentId}/submit`, { method: 'POST', body: JSON.stringify(data) }),
   publishReportCards: (payload: { classId: string; term: string }) =>
     apiRequest('/teacher/report-cards/publish', { method: 'POST', body: JSON.stringify(payload) }),
 
