@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,42 +9,203 @@ import {
   StatusBar,
   TextInput,
   Alert,
-  Platform
+  Platform,
+  ActivityIndicator,
+  RefreshControl,
+  Modal,
+  FlatList
 } from 'react-native';
 import {
   ChevronLeft,
   ChevronDown,
   FileText,
   User,
-  ClipboardList
+  ClipboardList,
+  AlertCircle,
+  X,
+  Check
 } from 'lucide-react-native';
-import { socketService } from '../../services/socketService';
 import { LinearGradient } from 'expo-linear-gradient';
+import { teacherApi } from '../../services/apiService';
+
+interface AssignedClass {
+  id: string;
+  classId: string;
+  className: string;
+  sectionId: string;
+  sectionName: string;
+  subject: string;
+  subjectId: string;
+  totalStudents: number;
+}
+
+interface StudentMark {
+  _id: string;
+  studentId: string;
+  name: string;
+  rollNo: string;
+  marks: string;
+  maxMarks: number;
+  grade?: string;
+  remarks?: string;
+}
 
 export default function ExamMarksEntryScreen({ route, navigation }: any) {
-  const [activeTab, setActiveTab] = useState('Mark Entry');
+  const exam = route?.params?.exam || {};
+  const examId = exam?._id || exam?.id || '';
+  const examName = exam?.examName || 'Exam';
 
-  const [students, setStudents] = useState([
-    { id: '1', name: 'Aarav Sharma', roll: 'Roll No. 01', marks: '42' },
-    { id: '2', name: 'Diya Verma', roll: 'Roll No. 02', marks: '38' },
-    { id: '3', name: 'Rohan Singh', roll: 'Roll No. 03', marks: '45' },
-    { id: '4', name: 'Ananya Gupta', roll: 'Roll No. 04', marks: '40' },
-    { id: '5', name: 'Kunal Patel', roll: 'Roll No. 05', marks: '33' }
-  ]);
+  const [activeTab, setActiveTab] = useState('Mark Entry');
+  const [classes, setClasses] = useState<AssignedClass[]>([]);
+  const [selectedClass, setSelectedClass] = useState<AssignedClass | null>(null);
+  const [students, setStudents] = useState<StudentMark[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingRoster, setLoadingRoster] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  
+  // Dropdown Modal states
+  const [classModalVisible, setClassModalVisible] = useState(false);
+  const [maxMarks, setMaxMarks] = useState(100);
+
+  // Load teacher assigned classes
+  const loadAssignedClasses = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res: any = await teacherApi.getClasses();
+      if (res?.success && res?.data?.classes) {
+        const classesList = res.data.classes || [];
+        setClasses(classesList);
+        if (classesList.length > 0) {
+          setSelectedClass(classesList[0]);
+        }
+      } else {
+        setClasses([]);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load assigned classes');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAssignedClasses();
+  }, [loadAssignedClasses]);
+
+  // Load roster once class selector changes
+  const fetchRoster = useCallback(async () => {
+    if (!examId || !selectedClass) return;
+    setLoadingRoster(true);
+    try {
+      const res: any = await teacherApi.getExamStudents(
+        examId,
+        selectedClass.classId,
+        selectedClass.sectionId,
+        selectedClass.subjectId
+      );
+      if (res?.success && res?.data) {
+        const roster = res.data.studentsMarksRoster || res.data.students || [];
+        setMaxMarks(res.data.maximumMarks || 100);
+        
+        const mapped = roster.map((s: any, idx: number) => ({
+          _id: s.studentId || `st_${idx}`,
+          studentId: s.studentId || `st_${idx}`,
+          name: s.name || `Student ${idx + 1}`,
+          rollNo: s.rollNo || `Roll ${idx + 1}`,
+          marks: s.obtainedMarks !== null && s.obtainedMarks !== undefined ? String(s.obtainedMarks) : '',
+          maxMarks: s.maximumMarks || res.data.maximumMarks || 100,
+          grade: s.grade || '',
+          remarks: s.remarks || ''
+        }));
+        setStudents(mapped);
+      } else {
+        setStudents([]);
+      }
+    } catch (err: any) {
+      Alert.alert('Roster Error', err?.message || 'Failed to load marks roster');
+    } finally {
+      setLoadingRoster(false);
+      setRefreshing(false);
+    }
+  }, [examId, selectedClass]);
+
+  useEffect(() => {
+    if (selectedClass) {
+      fetchRoster();
+    }
+  }, [selectedClass, fetchRoster]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    if (selectedClass) {
+      fetchRoster();
+    } else {
+      loadAssignedClasses();
+    }
+  };
 
   const updateMarks = (id: string, val: string) => {
     setStudents(prev =>
-      prev.map(s => (s.id === id ? { ...s, marks: val } : s))
+      prev.map(s => (s._id === id ? { ...s, marks: val } : s))
     );
   };
 
-  const handleSaveMarks = () => {
-    socketService.syncMarks('Unit Test - 1', 'Class 8-A');
-    Alert.alert(
-      'Exam Marks Saved ✅',
-      'Marks for Class 8-A — Mathematics saved & broadcasted live via Socket.IO to Parent App!'
-    );
-    navigation.goBack();
+  const validateMarks = (): boolean => {
+    for (const s of students) {
+      if (s.marks === '') continue;
+      const numMarks = Number(s.marks);
+      if (isNaN(numMarks) || numMarks < 0 || numMarks > maxMarks) {
+        Alert.alert('Validation Error ❌', `${s.name}: Marks must be between 0 and ${maxMarks}`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleSaveMarks = async (status: 'DRAFT' | 'SUBMITTED') => {
+    if (!selectedClass) return;
+    if (!validateMarks()) return;
+
+    setSaving(true);
+    try {
+      const marksPayload = students
+        .filter(s => s.marks !== '')
+        .map(s => ({
+          studentId: s.studentId,
+          obtainedMarks: Number(s.marks),
+          maxMarks: maxMarks,
+          grade: s.grade || '',
+          remarks: s.remarks || ''
+        }));
+
+      const payload = {
+        classId: selectedClass.classId,
+        sectionId: selectedClass.sectionId,
+        subjectId: selectedClass.subjectId,
+        status: status,
+        marksRoster: marksPayload
+      };
+
+      const res: any = await teacherApi.saveExamMarks(examId, payload);
+      if (res?.success !== false) {
+        Alert.alert(
+          status === 'SUBMITTED' ? 'Marks Submitted 🎉' : 'Draft Saved ✅',
+          status === 'SUBMITTED' 
+            ? `Marks roster for ${selectedClass.className} - ${selectedClass.subject} has been submitted for approval.`
+            : `Marks roster for ${selectedClass.className} - ${selectedClass.subject} saved as draft.`
+        );
+        fetchRoster();
+      } else {
+        throw new Error(res?.message || 'Failed to update marks');
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Server returned an error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -57,12 +218,18 @@ export default function ExamMarksEntryScreen({ route, navigation }: any) {
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Exam & Marks</Text>
-        <TouchableOpacity style={styles.sheetBtn}>
+        <TouchableOpacity style={styles.sheetBtn} onPress={() => {
+          if (examId) navigation.navigate('GradeSheet', { exam });
+        }}>
           <FileText size={18} color="#0f172a" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />}
+      >
         {/* HERO CARD */}
         <LinearGradient
           colors={['#7c3aed', '#6d28d9']}
@@ -86,7 +253,11 @@ export default function ExamMarksEntryScreen({ route, navigation }: any) {
             <TouchableOpacity
               key={tab}
               style={[styles.tabItem, activeTab === tab && styles.tabItemActive]}
-              onPress={() => setActiveTab(tab)}
+              onPress={() => {
+                setActiveTab(tab);
+                if (tab === 'Upcoming Exams') navigation.navigate('ExamSchedule');
+                if (tab === 'Results') navigation.navigate('ExamReport', { exam });
+              }}
             >
               <Text style={[styles.tabItemText, activeTab === tab && styles.tabItemTextActive]}>
                 {tab}
@@ -95,78 +266,147 @@ export default function ExamMarksEntryScreen({ route, navigation }: any) {
           ))}
         </View>
 
-        {/* EXAM SELECTOR DROPDOWN */}
-        <Text style={styles.dropdownLabel}>Select Exam</Text>
-        <TouchableOpacity style={styles.dropdownField} onPress={() => Alert.alert('Exam', 'Select exam...')}>
-          <Text style={styles.dropdownVal}>Unit Test - 1</Text>
+        {/* EXAM FIELD */}
+        <Text style={styles.dropdownLabel}>Selected Exam</Text>
+        <View style={styles.readOnlyField}>
+          <Text style={styles.dropdownVal}>{examName}</Text>
+        </View>
+
+        {/* DYNAMIC CLASS SELECTOR DROPDOWN */}
+        <Text style={styles.dropdownLabel}>Select Assigned Class & Subject</Text>
+        <TouchableOpacity style={styles.dropdownField} onPress={() => setClassModalVisible(true)}>
+          <Text style={styles.dropdownVal}>
+            {selectedClass ? `${selectedClass.className} (${selectedClass.sectionName}) — ${selectedClass.subject}` : 'Select Class...'}
+          </Text>
           <ChevronDown size={18} color="#64748b" />
         </TouchableOpacity>
 
-        {/* ROW OF 2 DROPDOWNS */}
-        <View style={styles.rowDropdowns}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.dropdownLabel}>Class</Text>
-            <TouchableOpacity style={styles.dropdownFieldSmall} onPress={() => Alert.alert('Class', 'Select class...')}>
-              <Text style={styles.dropdownValSmall}>Class 8 - A</Text>
-              <ChevronDown size={16} color="#64748b" />
+        {/* ROSTER HEADER */}
+        {selectedClass && !loadingRoster && (
+          <View style={styles.listHeaderRow}>
+            <Text style={styles.sectionTitle}>Student Marks Roster</Text>
+            <Text style={styles.totalMarksLabel}>Max Marks: {maxMarks}</Text>
+          </View>
+        )}
+
+        {/* ROSTER SECTION */}
+        {loadingRoster ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color="#7c3aed" />
+            <Text style={styles.loadingText}>Fetching roster...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <AlertCircle size={40} color="#dc2626" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={loadAssignedClasses}>
+              <Text style={styles.retryBtnText}>Retry</Text>
             </TouchableOpacity>
           </View>
-
-          <View style={{ flex: 1 }}>
-            <Text style={styles.dropdownLabel}>Subject</Text>
-            <TouchableOpacity style={styles.dropdownFieldSmall} onPress={() => Alert.alert('Subject', 'Select subject...')}>
-              <Text style={styles.dropdownValSmall}>Mathematics</Text>
-              <ChevronDown size={16} color="#64748b" />
-            </TouchableOpacity>
+        ) : students.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <User size={40} color="#94a3b8" />
+            <Text style={styles.emptyText}>No students in this class section</Text>
           </View>
-        </View>
+        ) : (
+          <View style={styles.listContainer}>
+            {students.map((s) => {
+              const numMarks = Number(s.marks);
+              const isInvalid = s.marks !== '' && (isNaN(numMarks) || numMarks < 0 || numMarks > maxMarks);
+              return (
+                <View key={s._id} style={[styles.studentCard, isInvalid && styles.studentCardError]}>
+                  <View style={styles.avatarCircle}>
+                    <User size={18} color="#7c3aed" />
+                  </View>
 
-        {/* LIST HEADER */}
-        <View style={styles.listHeaderRow}>
-          <Text style={styles.sectionTitle}>Student Marks</Text>
-          <Text style={styles.totalMarksLabel}>Total Marks: 50</Text>
-        </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.studentName}>{s.name}</Text>
+                    <Text style={styles.studentRoll}>Roll: {s.rollNo}</Text>
+                    {s.grade ? <Text style={styles.gradeLabel}>Grade: {s.grade}</Text> : null}
+                  </View>
 
-        {/* MARKS ENTRIES LIST */}
-        <View style={styles.listContainer}>
-          {students.map((s) => (
-            <View key={s.id} style={styles.studentCard}>
-              <View style={styles.avatarCircle}>
-                <User size={18} color="#7c3aed" />
-              </View>
-
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.studentName}>{s.name}</Text>
-                <Text style={styles.studentRoll}>{s.roll}</Text>
-              </View>
-
-              <View style={styles.marksInputContainer}>
-                <TextInput
-                  style={styles.marksInput}
-                  keyboardType="numeric"
-                  value={s.marks}
-                  onChangeText={(val) => updateMarks(s.id, val)}
-                />
-                <Text style={styles.outOfLabel}>/ 50</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+                  <View style={styles.marksInputContainer}>
+                    <TextInput
+                      style={[styles.marksInput, isInvalid && styles.marksInputError]}
+                      keyboardType="numeric"
+                      value={s.marks}
+                      onChangeText={(val) => updateMarks(s._id, val)}
+                      placeholder="—"
+                      placeholderTextColor="#94a3b8"
+                      maxLength={4}
+                    />
+                    <Text style={styles.outOfLabel}>/ {maxMarks}</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
 
-      {/* BOTTOM BUTTONS ROW */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.draftBtn}
-          onPress={() => Alert.alert('Saved', 'Marks draft saved locally.')}
-        >
-          <Text style={styles.draftBtnText}>Save as Draft</Text>
-        </TouchableOpacity>
+      {/* BOTTOM ACTION BAR */}
+      {selectedClass && students.length > 0 && !loadingRoster && (
+        <View style={styles.bottomBar}>
+          <TouchableOpacity
+            style={[styles.draftBtn, saving && styles.disabledBtn]}
+            onPress={() => handleSaveMarks('DRAFT')}
+            disabled={saving}
+          >
+            <Text style={styles.draftBtnText}>{saving ? 'Saving...' : 'Save as Draft'}</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.submitBtn} onPress={handleSaveMarks}>
-          <Text style={styles.submitBtnText}>Submit Marks</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.submitBtn, saving && styles.disabledBtn]}
+            onPress={() => handleSaveMarks('SUBMITTED')}
+            disabled={saving}
+          >
+            <Text style={styles.submitBtnText}>{saving ? 'Submitting...' : 'Submit Marks'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* CLASSES SELECTION MODAL */}
+      <Modal visible={classModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Assigned Class</Text>
+              <TouchableOpacity onPress={() => setClassModalVisible(false)}>
+                <X size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={classes}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ padding: 16 }}
+              renderItem={({ item }) => {
+                const isSelected = selectedClass?.id === item.id;
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalItem, isSelected && styles.modalItemActive]}
+                    onPress={() => {
+                      setSelectedClass(item);
+                      setClassModalVisible(false);
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.modalItemTitle, isSelected && styles.modalItemTextActive]}>
+                        {item.className} ({item.sectionName})
+                      </Text>
+                      <Text style={styles.modalItemSub}>{item.subject}</Text>
+                    </View>
+                    {isSelected && <Check size={18} color="#7c3aed" />}
+                  </TouchableOpacity>
+                );
+              }}
+              ListEmptyComponent={() => (
+                <Text style={styles.modalEmptyText}>No assigned classes found</Text>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -235,6 +475,16 @@ const styles = StyleSheet.create({
   tabItemText: { fontSize: 13, fontWeight: '750', color: '#94a3b8' },
   tabItemTextActive: { color: '#7c3aed', fontWeight: '900' },
   dropdownLabel: { fontSize: 11, fontWeight: '800', color: '#94a3b8', marginBottom: 6 },
+  readOnlyField: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 16
+  },
   dropdownField: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -244,8 +494,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 48,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 16
+    borderColor: '#7c3aed',
+    marginBottom: 20
   },
   dropdownVal: { fontSize: 14, fontWeight: '750', color: '#0f172a' },
   rowDropdowns: { flexDirection: 'row', gap: 12, marginBottom: 24 },
@@ -253,17 +503,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f1f5f9',
     borderRadius: 14,
     paddingHorizontal: 12,
     height: 46,
     borderWidth: 1,
     borderColor: '#e2e8f0'
   },
-  dropdownValSmall: { fontSize: 13, fontWeight: '750', color: '#0f172a' },
+  dropdownValSmall: { fontSize: 13, fontWeight: '750', color: '#475569' },
   listHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   sectionTitle: { fontSize: 15, fontWeight: '900', color: '#0f172a' },
-  totalMarksLabel: { fontSize: 12, fontWeight: '800', color: '#64748b' },
+  totalMarksLabel: { fontSize: 12, fontWeight: '800', color: '#7c3aed' },
   listContainer: { gap: 12, marginBottom: 40 },
   studentCard: {
     flexDirection: 'row',
@@ -279,6 +529,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2
   },
+  studentCardError: {
+    borderColor: '#fca5a5',
+    backgroundColor: '#fef2f2'
+  },
   avatarCircle: {
     width: 40,
     height: 40,
@@ -289,9 +543,10 @@ const styles = StyleSheet.create({
   },
   studentName: { fontSize: 14, fontWeight: '900', color: '#0f172a' },
   studentRoll: { fontSize: 11, color: '#94a3b8', fontWeight: '750', marginTop: 2 },
+  gradeLabel: { fontSize: 10, color: '#7c3aed', fontWeight: '800', marginTop: 2 },
   marksInputContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   marksInput: {
-    width: 50,
+    width: 55,
     height: 38,
     borderRadius: 10,
     backgroundColor: '#f8fafc',
@@ -301,6 +556,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     color: '#0f172a'
+  },
+  marksInputError: {
+    borderColor: '#dc2626',
+    backgroundColor: '#fef2f2'
   },
   outOfLabel: { fontSize: 13, color: '#94a3b8', fontWeight: '700' },
   bottomBar: {
@@ -331,5 +590,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  submitBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' }
+  submitBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' },
+  disabledBtn: { opacity: 0.6 },
+  centerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    gap: 12
+  },
+  loadingText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  errorText: { fontSize: 14, fontWeight: '700', color: '#dc2626', textAlign: 'center' },
+  emptyText: { fontSize: 14, fontWeight: '700', color: '#94a3b8' },
+  retryBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#7c3aed'
+  },
+  retryBtnText: { fontSize: 13, fontWeight: '800', color: '#ffffff' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'flex-end' },
+  modalContainer: { backgroundColor: '#ffffff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 18, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  modalTitle: { fontSize: 16, fontWeight: '900', color: '#0f172a' },
+  modalItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  modalItemActive: { backgroundColor: '#f8fafc' },
+  modalItemTitle: { fontSize: 14, fontWeight: '850', color: '#0f172a' },
+  modalItemSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  modalItemTextActive: { color: '#7c3aed', fontWeight: '900' },
+  modalEmptyText: { fontSize: 14, color: '#94a3b8', textAlign: 'center', marginVertical: 30 }
 });

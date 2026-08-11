@@ -119,17 +119,17 @@ export default function LoginPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "2.25rem" }}>
           
           {/* Brand Logo */}
-          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.85rem" }}>
             <div style={{
-              width: 44, height: 44, borderRadius: 12,
+              width: 52, height: 52, borderRadius: 14,
               background: "linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)",
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "#fff", boxShadow: "0 8px 24px rgba(99, 102, 241, 0.4)",
               transform: "rotate(-3deg)"
             }}>
-              <GraduationCap size={24} />
+              <GraduationCap size={28} />
             </div>
-            <span style={{ fontSize: "1.75rem", fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>
+            <span style={{ fontSize: "2.1rem", fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>
               School<span style={{ color: "#3b82f6" }}>Mitra</span>
             </span>
           </Link>

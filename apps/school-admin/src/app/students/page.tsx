@@ -100,6 +100,29 @@ export default function StudentsPage() {
     fetchStudents();
   }, []);
 
+  const [studentPerformance, setStudentPerformance] = useState<any>(null);
+  const [loadingPerformance, setLoadingPerformance] = useState(false);
+
+  React.useEffect(function() {
+    if (selectedStudentDossier?.id) {
+      setLoadingPerformance(true);
+      fetch("http://localhost:5000/api/v1/admin/students/" + selectedStudentDossier.id + "/performance")
+        .then(function(res) { return res.json(); })
+        .then(function(json) {
+          if (json.success && json.data) {
+            setStudentPerformance(json.data);
+          } else {
+            setStudentPerformance(null);
+          }
+          setLoadingPerformance(false);
+        })
+        .catch(function() {
+          setStudentPerformance(null);
+          setLoadingPerformance(false);
+        });
+    }
+  }, [selectedStudentDossier, dossierTab]);
+
   var filteredStudents = students.filter(function(s) {
     var matchesSearch = (s.name || "").toLowerCase().includes(search.toLowerCase()) ||
                         (s.rollNo || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -626,15 +649,77 @@ export default function StudentsPage() {
                 )}
                 {dossierTab === "academic" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                    <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Academic Assessment History</h4>
-                    <table className="custom-table" style={{ marginTop: "0.5rem" }}>
-                      <thead><tr><th>Subject</th><th>Marks</th><th>Grade</th><th>Status</th></tr></thead>
-                      <tbody>
-                        {[{ sub: "Mathematics", marks: "94/100", gr: "A1", st: "Passed" }, { sub: "Physics", marks: "88/100", gr: "A2", st: "Passed" }, { sub: "English Lit", marks: "91/100", gr: "A1", st: "Passed" }].map(function(s, idx) {
-                          return (<tr key={idx}><td style={{ fontWeight: 700 }}>{s.sub}</td><td style={{ color: "var(--primary)", fontWeight: 700 }}>{s.marks}</td><td>{s.gr}</td><td style={{ color: "var(--success)", fontWeight: 700 }}>{s.st}</td></tr>);
-                        })}
-                      </tbody>
-                    </table>
+                    <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>
+                      Academic Performance Dossier — {selectedStudentDossier?.name || "Student"}
+                    </h4>
+                    
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                      {/* Attendance indicator */}
+                      <div style={{ background: "rgba(255,255,255,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Attendance Rate</span>
+                          <strong style={{ fontSize: "0.85rem", color: "#10b981" }}>{studentPerformance?.attendance || "94%"}</strong>
+                        </div>
+                        <div style={{ width: "100%", height: 6, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
+                          <div style={{ width: studentPerformance?.attendance || "94%", height: "100%", background: "#10b981", borderRadius: 99 }} />
+                        </div>
+                      </div>
+
+                      {/* Homework Rate */}
+                      <div style={{ background: "rgba(255,255,255,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Homework Completion</span>
+                          <strong style={{ fontSize: "0.85rem", color: "#8b5cf6" }}>{studentPerformance?.homework || "87%"}</strong>
+                        </div>
+                        <div style={{ width: "100%", height: 6, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
+                          <div style={{ width: studentPerformance?.homework || "87%", height: "100%", background: "#8b5cf6", borderRadius: 99 }} />
+                        </div>
+                      </div>
+
+                      {/* Weekly Tests */}
+                      <div style={{ background: "rgba(255,255,255,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Weekly Tests Avg</span>
+                          <strong style={{ fontSize: "0.85rem", color: "#f59e0b" }}>{studentPerformance?.weeklyTests || "82%"}</strong>
+                        </div>
+                        <div style={{ width: "100%", height: 6, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
+                          <div style={{ width: studentPerformance?.weeklyTests || "82%", height: "100%", background: "#f59e0b", borderRadius: 99 }} />
+                        </div>
+                      </div>
+
+                      {/* Half Yearly */}
+                      <div style={{ background: "rgba(255,255,255,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Half Yearly Evaluation</span>
+                          <strong style={{ fontSize: "0.85rem", color: "var(--primary)" }}>{studentPerformance?.halfYearly || "78%"}</strong>
+                        </div>
+                        <div style={{ width: "100%", height: 6, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
+                          <div style={{ width: studentPerformance?.halfYearly || "78%", height: "100%", background: "var(--primary)", borderRadius: 99 }} />
+                        </div>
+                      </div>
+
+                      {/* Annual */}
+                      <div style={{ background: "rgba(255,255,255,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Annual Exam (Est)</span>
+                          <strong style={{ fontSize: "0.85rem", color: "#f43f5e" }}>{studentPerformance?.annual || "85%"}</strong>
+                        </div>
+                        <div style={{ width: "100%", height: 6, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
+                          <div style={{ width: studentPerformance?.annual || "85%", height: "100%", background: "#f43f5e", borderRadius: 99 }} />
+                        </div>
+                      </div>
+
+                      {/* Overall */}
+                      <div style={{ background: "rgba(67, 56, 202, 0.08)", padding: "1rem", borderRadius: "12px", border: "1px solid rgba(99, 102, 241, 0.3)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#fff" }}>Overall Performance Index</span>
+                          <strong style={{ fontSize: "0.9rem", color: "#fff" }}>{studentPerformance?.overall || "82%"}</strong>
+                        </div>
+                        <div style={{ width: "100%", height: 6, background: "rgba(255,255,255,0.15)", borderRadius: 99, overflow: "hidden" }}>
+                          <div style={{ width: studentPerformance?.overall || "82%", height: "100%", background: "#fff", borderRadius: 99 }} />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
                 {dossierTab === "attendance" && (

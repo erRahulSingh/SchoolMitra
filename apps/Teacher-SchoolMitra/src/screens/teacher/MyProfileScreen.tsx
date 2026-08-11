@@ -8,7 +8,9 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
-  Platform
+  Platform,
+  Modal,
+  TextInput
 } from 'react-native';
 import {
   ChevronLeft,
@@ -23,24 +25,130 @@ import {
   Bell,
   Shield,
   ChevronRight,
-  User
+  User,
+  X,
+  Check
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Header from '../../components/Header';
 
 export default function MyProfileScreen({ navigation }: any) {
-  const teacher = {
-    name: 'Rajesh Sharma',
-    empId: 'TCH-2024-125',
-    role: 'Mathematics Teacher',
-    joined: 'Joined on 15 Aug 2023',
-    email: 'rajesh.sharma@school.com',
-    phone: '+91 98765 43210',
+  const [teacher, setTeacher] = React.useState({
+    name: 'Rahul Kushwaha',
+    empId: 'TCH-2026-101',
+    role: 'Teacher / Educator',
+    joined: 'Joined on 15 Aug 2024',
+    email: 'rahul.kushwaha@example.com',
+    phone: '7870391245',
     qualification: 'M.Sc. Mathematics, B.Ed.',
     experience: '6 Years',
     address: '123, Green Park, New Delhi',
-    subjects: 'Mathematics, Algebra, Trigonometry'
+    subjects: 'Mathematics, Science, English'
+  });
+
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [editForm, setEditForm] = React.useState({
+    name: '',
+    email: '',
+    phone: '',
+    qualification: '',
+    experience: '',
+    address: '',
+    subjects: ''
+  });
+
+  React.useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        let userStr = await AsyncStorage.getItem('user');
+        if (!userStr) {
+          userStr = await AsyncStorage.getItem('lastRegisteredUser');
+        }
+
+        if (userStr) {
+          const u = JSON.parse(userStr);
+          if (u) {
+            setTeacher(prev => ({
+              ...prev,
+              name: u.name || prev.name,
+              email: u.email || prev.email,
+              phone: u.phone || prev.phone,
+              empId: u.schoolCode ? `TCH-${u.schoolCode}` : (u.empId || prev.empId),
+              role: u.role ? `${u.role} Educator` : prev.role,
+              qualification: u.qualification || prev.qualification,
+              experience: u.experience || prev.experience,
+              address: u.address || prev.address,
+              subjects: u.subjects || prev.subjects
+            }));
+          }
+        }
+      } catch (e) {}
+    };
+    loadProfile();
+  }, []);
+
+  const handleOpenEdit = () => {
+    setEditForm({
+      name: teacher.name || '',
+      email: teacher.email || '',
+      phone: teacher.phone || '',
+      qualification: teacher.qualification || '',
+      experience: teacher.experience || '',
+      address: teacher.address || '',
+      subjects: teacher.subjects || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    const name = (editForm.name || '').trim();
+    const email = (editForm.email || '').trim();
+    const phone = (editForm.phone || '').trim();
+    const qualification = (editForm.qualification || '').trim();
+    const experience = (editForm.experience || '').trim();
+    const address = (editForm.address || '').trim();
+    const subjects = (editForm.subjects || '').trim();
+
+    if (!name || !email || !phone) {
+      Alert.alert('Validation Error', 'Full Name, Email, and Phone number are required.');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const updatedObj = {
+        ...teacher,
+        name,
+        email,
+        phone,
+        qualification: qualification || teacher.qualification,
+        experience: experience || teacher.experience,
+        address: address || teacher.address,
+        subjects: subjects || teacher.subjects
+      };
+
+      setTeacher(updatedObj);
+      await AsyncStorage.setItem('user', JSON.stringify(updatedObj));
+      await AsyncStorage.setItem('lastRegisteredUser', JSON.stringify(updatedObj));
+
+      try {
+        const apiUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api/v1/teacher/profile' : 'http://localhost:5000/api/v1/teacher/profile';
+        await fetch(apiUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedObj)
+        });
+      } catch (e) {}
+
+      setIsEditModalOpen(false);
+      Alert.alert('Success! 🎉', 'Your Profile details have been updated successfully.');
+    } catch (err: any) {
+      Alert.alert('Error', 'Failed to save profile changes.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -57,6 +165,7 @@ export default function MyProfileScreen({ navigation }: any) {
   ];
 
   const actions = [
+    { label: 'Edit Educator Profile', icon: Edit2, action: handleOpenEdit },
     { label: 'Change Password', icon: Lock, screen: 'TeacherSettings' },
     { label: 'Notification Preferences', icon: Bell, screen: 'TeacherSettings' },
     { label: 'Privacy Settings', icon: Shield, screen: 'TeacherSettings' }
@@ -76,7 +185,13 @@ export default function MyProfileScreen({ navigation }: any) {
             <User size={38} color="#7c3aed" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.teacherName}>{teacher.name}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={styles.teacherName}>{teacher.name}</Text>
+              <TouchableOpacity style={styles.editBadgeBtn} onPress={handleOpenEdit}>
+                <Edit2 size={14} color="#7c3aed" />
+                <Text style={styles.editBadgeText}>Edit</Text>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.teacherId}>Teacher ID: {teacher.empId}</Text>
             <View style={styles.subjectBadge}>
               <Text style={styles.subjectBadgeText}>{teacher.role}</Text>
@@ -120,7 +235,7 @@ export default function MyProfileScreen({ navigation }: any) {
                   styles.actionRow,
                   idx === actions.length - 1 && { borderBottomWidth: 0 }
                 ]}
-                onPress={() => navigation.navigate(act.screen)}
+                onPress={() => (act.action ? act.action() : navigation.navigate(act.screen))}
               >
                 <View style={styles.actionRowLeft}>
                   <IconComp size={18} color="#7c3aed" />
@@ -137,6 +252,53 @@ export default function MyProfileScreen({ navigation }: any) {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* EDIT PROFILE MODAL */}
+      <Modal visible={isEditModalOpen} animationType="slide" transparent onRequestClose={() => setIsEditModalOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Educator Profile</Text>
+              <TouchableOpacity onPress={() => setIsEditModalOpen(false)} style={styles.modalCloseBtn}>
+                <X size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalFieldLabel}>Full Name</Text>
+              <TextInput style={styles.modalInput} value={editForm.name} onChangeText={(val) => setEditForm(p => ({ ...p, name: val }))} placeholder="Full Name" />
+
+              <Text style={styles.modalFieldLabel}>Email Address</Text>
+              <TextInput style={styles.modalInput} value={editForm.email} onChangeText={(val) => setEditForm(p => ({ ...p, email: val }))} keyboardType="email-address" autoCapitalize="none" placeholder="Email" />
+
+              <Text style={styles.modalFieldLabel}>Phone Number</Text>
+              <TextInput style={styles.modalInput} value={editForm.phone} onChangeText={(val) => setEditForm(p => ({ ...p, phone: val }))} keyboardType="phone-pad" placeholder="Phone" />
+
+              <Text style={styles.modalFieldLabel}>Qualification</Text>
+              <TextInput style={styles.modalInput} value={editForm.qualification} onChangeText={(val) => setEditForm(p => ({ ...p, qualification: val }))} placeholder="Qualification" />
+
+              <Text style={styles.modalFieldLabel}>Teaching Experience</Text>
+              <TextInput style={styles.modalInput} value={editForm.experience} onChangeText={(val) => setEditForm(p => ({ ...p, experience: val }))} placeholder="Experience" />
+
+              <Text style={styles.modalFieldLabel}>Address</Text>
+              <TextInput style={styles.modalInput} value={editForm.address} onChangeText={(val) => setEditForm(p => ({ ...p, address: val }))} placeholder="Address" />
+
+              <Text style={styles.modalFieldLabel}>Subjects Taught</Text>
+              <TextInput style={styles.modalInput} value={editForm.subjects} onChangeText={(val) => setEditForm(p => ({ ...p, subjects: val }))} placeholder="Subjects" />
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setIsEditModalOpen(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalSaveBtn} onPress={handleSaveProfile} disabled={isSaving}>
+                <Check size={18} color="#ffffff" style={{ marginRight: 6 }} />
+                <Text style={styles.modalSaveText}>{isSaving ? 'Saving...' : 'Save Profile'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -276,5 +438,88 @@ const styles = StyleSheet.create({
     borderColor: '#fca5a5',
     marginBottom: 30
   },
-  logoutText: { fontSize: 14, fontWeight: '800', color: '#ef4444' }
+  logoutText: { fontSize: 14, fontWeight: '800', color: '#ef4444' },
+  editBadgeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    backgroundColor: '#f3e8ff',
+    borderWidth: 1,
+    borderColor: '#ddd6fe'
+  },
+  editBadgeText: { fontSize: 11, fontWeight: '800', color: '#7c3aed' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    justifyContent: 'center',
+    paddingHorizontal: 20
+  },
+  modalContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 20,
+    maxHeight: '85%',
+    elevation: 10,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    marginBottom: 12
+  },
+  modalTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a' },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalFieldLabel: { fontSize: 12, fontWeight: '800', color: '#475569', marginTop: 10, marginBottom: 4 },
+  modalInput: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 46,
+    fontSize: 14,
+    color: '#0f172a'
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9'
+  },
+  modalCancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9'
+  },
+  modalCancelText: { fontSize: 13, fontWeight: '800', color: '#64748b' },
+  modalSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#7c3aed'
+  },
+  modalSaveText: { fontSize: 13, fontWeight: '800', color: '#ffffff' }
 });

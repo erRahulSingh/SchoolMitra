@@ -97,6 +97,38 @@ export default function AttendancePage() {
     weekendHoliday: "Sunday Only"
   });
 
+  const [attendanceAnalytics, setAttendanceAnalytics] = useState<any>({
+    overall: { present: 94, absent: 4, leave: 2 },
+    monthly: [
+      { month: "June", rate: 95 },
+      { month: "July", rate: 93 },
+      { month: "August", rate: 94 }
+    ],
+    students: [
+      { name: "Rahul", rate: 96 },
+      { name: "Aman", rate: 91 },
+      { name: "Priya", rate: 98 }
+    ],
+    defaulters: [
+      { name: "Rahul Kumar", rate: 72 },
+      { name: "Amit Singh", rate: 69 },
+      { name: "Neha Kumari", rate: 74 }
+    ]
+  });
+
+  const [academicRiskData, setAcademicRiskData] = useState<any>({
+    students: [
+      { name: "Rahul Kumar", attendance: "68%", averageMarks: "54%", riskLevel: "HIGH" },
+      { name: "Amit Singh", attendance: "69%", averageMarks: "52%", riskLevel: "HIGH" },
+      { name: "Neha Kumari", attendance: "74%", averageMarks: "58%", riskLevel: "MEDIUM" }
+    ]
+  });
+
+  const [alertLogs, setAlertLogs] = useState<any[]>([
+    { id: "alt-1", target: "Rahul Kumar (Parent)", text: "Absent Alert: Rahul was marked absent today.", status: "SENT", time: "09:15 AM" },
+    { id: "alt-2", target: "Amit Singh (Parent)", text: "Late Entry Alert: Amit entered campus at 08:24 AM.", status: "SENT", time: "08:30 AM" }
+  ]);
+
   // Persistent Cache Load
   useEffect(() => {
     try {
@@ -107,6 +139,25 @@ export default function AttendancePage() {
       if (cachedTeachers) setTeachers(JSON.parse(cachedTeachers));
     } catch (e) {}
   }, []);
+
+  // Fetch Attendance & Academic Risk analytics
+  useEffect(() => {
+    if (activeTab === "analytics") {
+      fetch("http://localhost:5000/api/v1/admin/analytics/attendance-details")
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data) setAttendanceAnalytics(json.data);
+        })
+        .catch(err => console.warn("attendance-details fetch failed:", err));
+
+      fetch("http://localhost:5000/api/v1/admin/analytics/academic-risk")
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data) setAcademicRiskData(json.data);
+        })
+        .catch(err => console.warn("academic-risk fetch failed:", err));
+    }
+  }, [activeTab]);
 
   const saveStudents = (list: StudentRecord[]) => {
     setStudents(list);
@@ -175,6 +226,10 @@ export default function AttendancePage() {
     setLeaves([created, ...leaves]);
     setIsLeaveModalOpen(false);
     alert(`Leave application filed for ${leaveForm.name}!`);
+  };
+
+  const handleExportReport = (type: string, format: string) => {
+    window.open(`http://localhost:5000/api/v1/admin/analytics/export?type=${type}&format=${format}`, '_blank');
   };
 
   return (
@@ -503,11 +558,14 @@ export default function AttendancePage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
             <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Attendance Master Reports Generator</h3>
             <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button onClick={() => alert("Downloading Monthly Defaulters CSV...")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+              <button onClick={() => handleExportReport("attendance", "csv")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
                 <Download size={14} /> Export CSV
               </button>
-              <button onClick={() => window.print()} className="btn btn-primary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
-                <FileText size={14} /> Print PDF Ledger
+              <button onClick={() => handleExportReport("attendance", "excel")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                <Download size={14} /> Export Excel
+              </button>
+              <button onClick={() => handleExportReport("attendance", "pdf")} className="btn btn-primary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                <FileText size={14} /> Export PDF
               </button>
             </div>
           </div>
@@ -547,41 +605,156 @@ export default function AttendancePage() {
 
       {/* ════════════ MODULE 6: ANALYTICS CHARTS ════════════ */}
       {activeTab === "analytics" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1.25rem 0", color: "var(--text-heading)" }}>Class-Wise Presence Comparison</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {[
-                { class: "Class 10-A", rate: 96.5 },
-                { class: "Class 9-B", rate: 92.0 },
-                { class: "Class 8-C", rate: 98.2 },
-                { class: "Class 7-A", rate: 94.1 }
-              ].map(c => (
-                <div key={c.class} style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-                    <strong style={{ color: "var(--text-heading)" }}>{c.class}</strong>
-                    <strong style={{ color: "var(--primary)" }}>{c.rate}%</strong>
-                  </div>
-                  <div style={{ width: "100%", height: 10, background: "rgba(255,255,255,0.1)", borderRadius: 5, overflow: "hidden" }}>
-                    <div style={{ width: `${c.rate}%`, height: "100%", background: "var(--primary)", borderRadius: 5 }} />
-                  </div>
+          {/* OVERALL ATTENDANCE RATIOS & MONTHLY TRENDS ROW */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+            {/* Overall Ratios Card */}
+            <div className="glass-card" style={{ padding: "1.50rem" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>
+                School-Wide Attendance Breakup
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "1rem" }}>
+                <div style={{ textAlign: "center", padding: "0.85rem", background: "rgba(16, 185, 129, 0.08)", borderRadius: 10, border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#10b981", display: "block" }}>PRESENT</span>
+                  <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#10b981", display: "block", marginTop: 2 }}>
+                    {attendanceAnalytics?.overall?.present || 94}%
+                  </strong>
                 </div>
-              ))}
+                <div style={{ textAlign: "center", padding: "0.85rem", background: "rgba(244, 63, 94, 0.08)", borderRadius: 10, border: "1px solid rgba(244, 63, 94, 0.2)" }}>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#f43f5e", display: "block" }}>ABSENT</span>
+                  <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#f43f5e", display: "block", marginTop: 2 }}>
+                    {attendanceAnalytics?.overall?.absent || 4}%
+                  </strong>
+                </div>
+                <div style={{ textAlign: "center", padding: "0.85rem", background: "rgba(245, 158, 11, 0.08)", borderRadius: 10, border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#f59e0b", display: "block" }}>ON LEAVE</span>
+                  <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#f59e0b", display: "block", marginTop: 2 }}>
+                    {attendanceAnalytics?.overall?.leave || 2}%
+                  </strong>
+                </div>
+              </div>
+
+              {/* Progress bars showing details */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <div style={{ height: 8, width: "100%", background: "rgba(0,0,0,0.05)", borderRadius: 99, overflow: "hidden", display: "flex" }}>
+                  <div style={{ width: "94%", height: "100%", background: "#10b981" }} />
+                  <div style={{ width: "4%", height: "100%", background: "#f43f5e" }} />
+                  <div style={{ width: "2%", height: "100%", background: "#f59e0b" }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700 }}>
+                  <span>Green: Present</span>
+                  <span>Red: Absent</span>
+                  <span>Orange: Leave</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Monthly trends Card */}
+            <div className="glass-card" style={{ padding: "1.50rem" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>
+                Monthly Attendance Trends
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+                {(attendanceAnalytics?.monthly || [
+                  { month: "June", rate: 95 },
+                  { month: "July", rate: 93 },
+                  { month: "August", rate: 94 }
+                ]).map((m: any) => (
+                  <div key={m.month} style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+                      <strong style={{ color: "var(--text-main)" }}>{m.month}</strong>
+                      <strong style={{ color: "var(--primary)" }}>{m.rate}%</strong>
+                    </div>
+                    <div style={{ width: "100%", height: 6, background: "rgba(0,0,0,0.05)", borderRadius: 99, overflow: "hidden" }}>
+                      <div style={{ width: `${m.rate}%`, height: "100%", background: "var(--primary)", borderRadius: 99 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1.25rem 0", color: "var(--text-heading)" }}>Defaulter Risk Analysis</h3>
-            
-            <div style={{ padding: "1.25rem", background: "rgba(239, 68, 68, 0.1)", borderRadius: 12, border: "1px solid rgba(239, 68, 68, 0.3)", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#ef4444", fontWeight: 800 }}>
-                <AlertTriangle size={20} /> Low Attendance Defaulter Warnings (&lt; 75%)
+          {/* STUDENT LEVEL COMPARISON & LOW ATTENDANCE WARNING ROW */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+            {/* Student Level List Card */}
+            <div className="glass-card" style={{ padding: "1.50rem" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>
+                Student Attendance Levels
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+                {(attendanceAnalytics?.students || [
+                  { name: "Rahul", rate: 96 },
+                  { name: "Aman", rate: 91 },
+                  { name: "Priya", rate: 98 }
+                ]).map((s: any) => (
+                  <div key={s.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0.85rem", background: "rgba(0,0,0,0.015)", borderRadius: 8, border: "1px solid var(--border-color)" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-main)" }}>{s.name}</span>
+                    <strong style={{ fontSize: "0.85rem", fontWeight: 800, color: "#10b981" }}>{s.rate}%</strong>
+                  </div>
+                ))}
               </div>
-              <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: 0 }}>
-                Currently <strong>0 students</strong> are below the mandatory 75% CBSE attendance threshold for Class 10 board exams.
+            </div>
+
+            {/* Low Attendance Warnings container (<75%) */}
+            <div className="glass-card" style={{ padding: "1.50rem", borderLeft: "4px solid #f43f5e" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, margin: "0 0 0.5rem 0", color: "#f43f5e", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <AlertCircle size={18} /> Attendance Below 75%
+              </h3>
+              <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginBottom: "1rem" }}>
+                The following students are failing to meet the mandatory 75% attendance threshold:
               </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {(attendanceAnalytics?.defaulters || [
+                  { name: "Rahul Kumar", rate: 72 },
+                  { name: "Amit Singh", rate: 69 },
+                  { name: "Neha Kumari", rate: 74 }
+                ]).map((d: any) => (
+                  <div key={d.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0.85rem", background: "rgba(244, 63, 94, 0.05)", borderRadius: 8, border: "1px solid rgba(244, 63, 94, 0.15)" }}>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-main)" }}>{d.name}</span>
+                    <strong style={{ fontSize: "0.82rem", fontWeight: 800, color: "#f43f5e" }}>{d.rate}%</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ACADEMIC RISK DETECTION MODULE */}
+          <div className="glass-card" style={{ padding: "1.75rem", borderLeft: "4px solid #f59e0b", background: "linear-gradient(180deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.02) 100%)" }}>
+            <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--text-heading)", margin: "0 0 0.4rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <AlertCircle size={20} color="#f59e0b" /> Academic Risk Detection Dashboard
+            </h3>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "1.25rem" }}>
+              Rule-based flag monitoring student indicators: <strong>Low Attendance (&lt; 75%) + Low Exam Marks (&lt; 60%) + Poor Test Performance.</strong>
+            </p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
+              {(academicRiskData?.students || [
+                { name: "Rahul Kumar", attendance: "68%", averageMarks: "54%", riskLevel: "HIGH" },
+                { name: "Amit Singh", attendance: "69%", averageMarks: "52%", riskLevel: "HIGH" },
+                { name: "Neha Kumari", attendance: "74%", averageMarks: "58%", riskLevel: "MEDIUM" }
+              ]).map((std: any, idx: number) => (
+                <div key={idx} style={{ padding: "1.1rem", background: "rgba(0,0,0,0.02)", borderRadius: 12, border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <strong style={{ fontSize: "0.9rem", color: "var(--text-main)" }}>{std.name}</strong>
+                    <span className={`badge ${std.riskLevel === "HIGH" ? "badge-danger" : "badge-warning"}`} style={{ fontSize: "0.68rem", fontWeight: 900 }}>
+                      {std.riskLevel} RISK
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", fontSize: "0.78rem", color: "var(--text-muted)", fontWeight: 600 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>Attendance:</span>
+                      <span style={{ color: "#f43f5e" }}>{std.attendance}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>Average Score:</span>
+                      <span style={{ color: "#f59e0b" }}>{std.averageMarks}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

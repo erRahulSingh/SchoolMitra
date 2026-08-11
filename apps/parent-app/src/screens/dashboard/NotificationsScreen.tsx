@@ -1,40 +1,128 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
-import { ChevronLeft, Bell, Megaphone, BookOpen, Trophy, FileText, AlertCircle, CheckCircle2 } from 'lucide-react-native';
+import { ChevronLeft, MoreVertical, Bus, Wallet, Calendar, Users, BookOpen } from 'lucide-react-native';
 
 export default function NotificationsScreen({ navigation }: any) {
-  const notifications = [
-    { id: 1, title: 'Attendance Alert', desc: 'Rohan was marked Present today at 08:35 AM', icon: CheckCircle2, color: '#16a34a', bg: '#dcfce7', time: '35 min ago', unread: true },
-    { id: 2, title: 'Holiday Announcement', desc: 'School will remain closed on 15th Aug — Independence Day', icon: Megaphone, color: '#2563eb', bg: '#e0f2fe', time: '2h ago', unread: true },
-    { id: 3, title: 'Homework Assigned', desc: 'Mathematics — Exercise 8.2 Algebraic Expressions due tomorrow', icon: BookOpen, color: '#9333ea', bg: '#f3e8ff', time: '4h ago', unread: false },
-    { id: 4, title: 'Annual Sports Day', desc: 'Annual Sports Day will be held on 25th Aug 2025', icon: Trophy, color: '#d97706', bg: '#fef3c7', time: '1d ago', unread: false },
-    { id: 5, title: 'Fee Payment Reminder', desc: 'Q2 Fee payment of ₹1,250 is due by 15th Aug', icon: AlertCircle, color: '#ef4444', bg: '#fef2f2', time: '1d ago', unread: false },
-    { id: 6, title: 'PTM Schedule', desc: 'Parent Teacher Meeting on 20th Aug at 10:00 AM', icon: FileText, color: '#0284c7', bg: '#e0f2fe', time: '2d ago', unread: false }
+  const [activeFilter, setActiveFilter] = useState('All');
+
+  const filters = ['All', 'Alerts', 'Transport', 'Academics'];
+
+  const notificationsList = [
+    {
+      title: 'Bus Delay Alert',
+      desc: 'Bus No. UP32 AB 1234 is delayed by 10 minutes today.',
+      time: '10:15 AM',
+      category: 'Alerts',
+      icon: Bus,
+      color: '#ef4444',
+      bg: '#fee2e2',
+      unread: true,
+    },
+    {
+      title: 'Fee Reminder',
+      desc: 'Your May month fee is due. Please pay to avoid late fee.',
+      time: 'Yesterday',
+      category: 'Alerts',
+      icon: Wallet,
+      color: '#ea580c',
+      bg: '#ffedd5',
+      unread: true,
+    },
+    {
+      title: 'Holiday Notice',
+      desc: 'School will remain closed on 15th May 2025.',
+      time: '2 May',
+      category: 'Transport',
+      icon: Calendar,
+      color: '#16a34a',
+      bg: '#dcfce7',
+      unread: true,
+    },
+    {
+      title: 'PTM Schedule',
+      desc: 'PTM is scheduled on 20th May 2025.',
+      time: '28 Apr',
+      category: 'Academics',
+      icon: Users,
+      color: '#7c3aed',
+      bg: '#f3e8ff',
+      unread: true,
+    },
+    {
+      title: 'New Assignment',
+      desc: 'New Mathematics assignment has been posted.',
+      time: '25 Apr',
+      category: 'Academics',
+      icon: BookOpen,
+      color: '#0284c7',
+      bg: '#e0f2fe',
+      unread: true,
+    },
   ];
+
+  const filteredNotifications = activeFilter === 'All'
+    ? notificationsList
+    : notificationsList.filter(n => n.category === activeFilter);
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}><ChevronLeft size={22} color="#0f172a" /></TouchableOpacity>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      
+      {/* Header Bar */}
+      <View style={styles.headerBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <ChevronLeft size={22} color="#0f172a" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
-        <Bell size={20} color="#4f46e5" />
+        <TouchableOpacity style={styles.moreBtn}>
+          <MoreVertical size={20} color="#0f172a" />
+        </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {notifications.map((n) => {
-          const IconComp = n.icon;
-          return (
-            <View key={n.id} style={[styles.card, n.unread && styles.unreadCard]}>
-              <View style={[styles.iconCircle, { backgroundColor: n.bg }]}><IconComp size={20} color={n.color} /></View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.title}>{n.title}</Text>
-                <Text style={styles.desc}>{n.desc}</Text>
-                <Text style={styles.time}>{n.time}</Text>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+        {/* Filter Pills Row */}
+        <View style={styles.pillsRow}>
+          {filters.map((filter, idx) => {
+            const isActive = activeFilter === filter;
+            return (
+              <TouchableOpacity
+                key={idx}
+                style={[styles.pillBtn, isActive && styles.pillActive]}
+                onPress={() => setActiveFilter(filter)}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.pillText, isActive && styles.pillTextActive]}>{filter}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Notifications List Card */}
+        <View style={styles.listCard}>
+          {filteredNotifications.map((item, idx) => {
+            const IconComp = item.icon;
+            return (
+              <View
+                key={idx}
+                style={[styles.notifRow, idx < filteredNotifications.length - 1 && styles.rowBorder]}
+              >
+                <View style={[styles.iconCircle, { backgroundColor: item.bg }]}>
+                  <IconComp size={20} color={item.color} strokeWidth={2} />
+                </View>
+
+                <View style={styles.infoCol}>
+                  <Text style={styles.notifTitleText}>{item.title}</Text>
+                  <Text style={styles.notifDescText}>{item.desc}</Text>
+                  <Text style={styles.timeText}>{item.time}</Text>
+                </View>
+
+                {item.unread && <View style={styles.redDot} />}
               </View>
-              {n.unread && <View style={styles.dot} />}
-            </View>
-          );
-        })}
+            );
+          })}
+        </View>
+
       </ScrollView>
     </View>
   );
@@ -42,15 +130,74 @@ export default function NotificationsScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 12 : 56, paddingBottom: 14, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a' },
-  scrollContent: { padding: 16, gap: 10 },
-  card: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: '#ffffff', borderRadius: 18, padding: 16, borderWidth: 1, borderColor: '#e2e8f0' },
-  unreadCard: { borderColor: '#c7d2fe', backgroundColor: '#fefefe' },
-  iconCircle: { width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 14, fontWeight: '800', color: '#0f172a' },
-  desc: { fontSize: 12, color: '#64748b', marginTop: 3, lineHeight: 18 },
-  time: { fontSize: 11, color: '#94a3b8', fontWeight: '600', marginTop: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4f46e5', marginTop: 4 }
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 8 : 48,
+    paddingBottom: 12,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
+  moreBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '900', color: '#0f172a' },
+  scrollContent: { padding: 16, paddingBottom: 100 },
+
+  // Category Pills
+  pillsRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  pillBtn: {
+    flex: 1,
+    paddingVertical: 9,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  pillActive: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
+  pillText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
+  pillTextActive: { color: '#ffffff', fontWeight: '900' },
+
+  // List Card
+  listCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+  },
+  notifRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 16,
+    gap: 14,
+  },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoCol: { flex: 1 },
+  notifTitleText: { fontSize: 14, fontWeight: '900', color: '#0f172a' },
+  notifDescText: { fontSize: 12, color: '#475569', lineHeight: 18, fontWeight: '500', marginTop: 3 },
+  timeText: { fontSize: 11, color: '#94a3b8', fontWeight: '500', marginTop: 6 },
+  redDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ef4444',
+    marginTop: 6,
+  },
 });

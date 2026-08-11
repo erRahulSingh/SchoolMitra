@@ -24,6 +24,10 @@ export const connectDB = async (): Promise<void> => {
   // ──── Connection Event Listeners ────
   mongoose.connection.on("connected", () => {
     logger.info(`[MongoDB Atlas] Connected to cluster: ${mongoose.connection.host} / database: ${mongoose.connection.name}`);
+    // Auto-sync global permission definitions into permissions collection
+    import("../services/permissionSeeder").then(({ seedGlobalPermissions }) => {
+      seedGlobalPermissions().catch(() => {});
+    });
   });
 
   mongoose.connection.on("disconnected", () => {

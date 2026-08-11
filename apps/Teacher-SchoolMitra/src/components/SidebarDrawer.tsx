@@ -48,6 +48,29 @@ interface SidebarProps {
 }
 
 export default function SidebarDrawer({ isVisible, onClose, navigation, currentRoute }: SidebarProps) {
+  const [userName, setUserName] = React.useState('Rahul Sharma');
+  const [userRole, setUserRole] = React.useState('Senior Math Educator');
+  const [initials, setInitials] = React.useState('RS');
+
+  React.useEffect(() => {
+    if (isVisible) {
+      AsyncStorage.getItem('user').then((userStr) => {
+        if (userStr) {
+          try {
+            const u = JSON.parse(userStr);
+            if (u && u.name) {
+              setUserName(u.name);
+              setUserRole(u.role ? `${u.role} Educator` : 'Senior Math Educator');
+              const parts = u.name.trim().split(' ');
+              const init = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : u.name.slice(0, 2).toUpperCase();
+              setInitials(init);
+            }
+          } catch (e) {}
+        }
+      });
+    }
+  }, [isVisible]);
+
   const navigateTo = (screenName: string) => {
     onClose();
     navigation.navigate(screenName);
@@ -133,16 +156,16 @@ export default function SidebarDrawer({ isVisible, onClose, navigation, currentR
 
             <View style={styles.profileRow}>
               <View style={styles.avatarCircle}>
-                <Text style={styles.avatarText}>RS</Text>
+                <Text style={styles.avatarText}>{initials}</Text>
                 <View style={styles.onlineDot} />
               </View>
 
               <View style={{ flex: 1 }}>
-                <Text style={styles.teacherName}>Rahul Sharma</Text>
-                <Text style={styles.teacherRole}>Senior Math Educator</Text>
+                <Text style={styles.teacherName}>{userName}</Text>
+                <Text style={styles.teacherRole}>{userRole}</Text>
                 <View style={styles.idBadge}>
                   <ShieldCheck size={11} color="rgba(255,255,255,0.9)" />
-                  <Text style={styles.teacherId}>ID: TCH-2024-125</Text>
+                  <Text style={styles.teacherId}>ID: TCH-2026-101</Text>
                 </View>
               </View>
             </View>

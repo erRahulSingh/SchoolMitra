@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Driver-SchoolMitra",
+    "slug": "driver-schoolmitra",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "driverschoolmitra",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.schoolmitra.driver"
+    },
+    "android": {
+      "package": "com.schoolmitra.driver"
+    }
+  }
+}

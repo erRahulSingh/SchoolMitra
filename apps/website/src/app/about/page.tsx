@@ -245,7 +245,7 @@ export default function AboutPage() {
           gap: "2rem"
         }}>
           {/* Mission Card */}
-          <div style={{
+          <div className="about-mission-card" style={{
             background: "linear-gradient(135deg, rgba(238, 242, 255, 0.95) 0%, rgba(243, 244, 255, 0.85) 100%)",
             borderRadius: 24,
             padding: "2.5rem 2rem",
@@ -267,16 +267,16 @@ export default function AboutPage() {
               <Target size={26} color="#ffffff" />
             </div>
 
-            <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#1e1b4b", marginBottom: "0.8rem" }}>
+            <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.8rem" }}>
               Our Mission
             </h3>
-            <p style={{ color: "#475569", fontSize: "1rem", lineHeight: 1.65, margin: 0, fontWeight: 500 }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "1rem", lineHeight: 1.65, margin: 0, fontWeight: 500 }}>
               To eliminate paper-based administrative friction and hardware barriers—providing every Indian school, from independent K-12 institutes to multi-branch educational trusts, with bank-grade cloud tools that enhance child safety, financial transparency, and academic excellence.
             </p>
           </div>
 
           {/* Vision Card */}
-          <div style={{
+          <div className="about-vision-card" style={{
             background: "linear-gradient(135deg, rgba(236, 253, 245, 0.95) 0%, rgba(209, 250, 229, 0.85) 100%)",
             borderRadius: 24,
             padding: "2.5rem 2rem",
@@ -298,10 +298,10 @@ export default function AboutPage() {
               <Sparkles size={26} color="#ffffff" />
             </div>
 
-            <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#064e3b", marginBottom: "0.8rem" }}>
+            <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.8rem" }}>
               Our Vision
             </h3>
-            <p style={{ color: "#334155", fontSize: "1rem", lineHeight: 1.65, margin: 0, fontWeight: 500 }}>
+            <p style={{ color: "var(--text-muted)", fontSize: "1rem", lineHeight: 1.65, margin: 0, fontWeight: 500 }}>
               To build the most intuitive, secure, and accessible EdTech operating system in Asia—where principals, teachers, parents, and transport drivers collaborate effortlessly in real-time, empowering students to achieve their highest potential.
             </p>
           </div>

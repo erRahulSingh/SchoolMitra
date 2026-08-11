@@ -108,7 +108,10 @@ const userSchema = new Schema({
   },
   password: {
     type: String,
-    required: function(this: any) { return !this.googleId; },
+    required: function(this: any) { return !this.googleId && !this.passwordHash; },
+  },
+  passwordHash: {
+    type: String,
   },
   googleId: {
     type: String,
@@ -122,6 +125,7 @@ const userSchema = new Schema({
     type: String,
     required: [true, "Role is required"],
     enum: [
+      "SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER", "PARENT", "DRIVER",
       "SuperAdmin", "SchoolAdmin", "Principal", "Teacher",
       "Driver", "Parent", "TransportManager", "Accountant",
       "Receptionist", "Security",
@@ -129,34 +133,68 @@ const userSchema = new Schema({
     index: true,
   },
   schoolId: {
-    type: Schema.Types.ObjectId,
-    ref: "schools",
+    type: Schema.Types.Mixed,
+    default: null,
+    required: function(this: any) {
+      const normalized = String(this.role || "").toUpperCase();
+      return normalized !== "SUPER_ADMIN";
+    },
     index: true,
   },
   branchId: {
-    type: Schema.Types.ObjectId,
-    ref: "branches",
+    type: Schema.Types.Mixed,
+  },
+  status: {
+    type: String,
+    enum: ["ACTIVE", "INACTIVE", "SUSPENDED", "Active", "Inactive", "Suspended"],
+    default: "ACTIVE",
+    index: true,
   },
   isActive: { type: Boolean, default: true },
   isEmailVerified: { type: Boolean, default: false },
+  permissions: {
+    type: Schema.Types.Mixed,
+    default: {
+      attendance: { view: true, create: true, edit: true, delete: false },
+      marks: { view: true, create: true, edit: true, delete: false },
+      homework: { view: true, create: true, edit: true, delete: true },
+      notice: { view: true, create: false, edit: false, delete: false },
+      studyMaterial: { view: true, create: true, edit: true, delete: false },
+      leave: { view: true, create: true, edit: false, delete: false },
+    },
+  },
   lastLoginAt: { type: Date },
   lastLoginIp: { type: String },
+  empId: { type: String, trim: true },
+  gender: { type: String, trim: true },
+  dob: { type: Date },
+  qualification: { type: String, trim: true },
+  joiningDate: { type: Date },
+  designation: { type: String, trim: true },
+  department: { type: String, trim: true },
+  subject: { type: String, trim: true },
+  classTeacher: { type: String, trim: true },
 }, { timestamps: true });
 
 userSchema.index({ schoolId: 1, role: 1 });
 export const UserModel = model("users", userSchema);
 
-// ──────────── 4. ROLES (Custom Per School) ────────────
+// ──────────── 4. ROLES (System & Custom Per School) ────────────
 const roleSchema = new Schema({
   schoolId: {
-    type: Schema.Types.ObjectId,
-    ref: "schools",
+    type: Schema.Types.Mixed,
+    default: null,
     index: true,
   },
   roleName: {
     type: String,
     required: [true, "Role name is required"],
     trim: true,
+  },
+  systemRole: {
+    type: String,
+    trim: true,
+    index: true,
   },
   description: { type: String, trim: true },
   permissions: {
@@ -166,26 +204,91 @@ const roleSchema = new Schema({
   isSystem: { type: Boolean, default: false },
 }, { timestamps: true });
 
-roleSchema.index({ schoolId: 1, roleName: 1 }, { unique: true });
+roleSchema.index({ schoolId: 1, roleName: 1 });
 export const RoleModel = model("roles", roleSchema);
 
-// ──────────── 5. PERMISSIONS (Global Registry) ────────────
+// ──────────── 4.1. ROLE PERMISSIONS ────────────
+const rolePermissionSchema = new Schema({
+  roleId: {
+    type: Schema.Types.ObjectId,
+    ref: "roles",
+    required: true,
+    index: true,
+  },
+  permissionId: {
+    type: Schema.Types.ObjectId,
+    ref: "permissions",
+  },
+  permissionKey: {
+    type: String,
+    required: true,
+    index: true,
+  },
+}, { timestamps: true });
+
+rolePermissionSchema.index({ roleId: 1, permissionKey: 1 }, { unique: true });
+export const RolePermissionModel = model("rolePermissions", rolePermissionSchema);
+
+// ──────────── 4.2. USER PERMISSION OVERRIDES ────────────
+const userPermissionOverrideSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.Mixed,
+    required: true,
+    index: true,
+  },
+  userId: {
+    type: Schema.Types.Mixed,
+    required: true,
+    index: true,
+  },
+  permissionId: {
+    type: Schema.Types.ObjectId,
+    ref: "permissions",
+  },
+  permissionKey: {
+    type: String,
+    required: true,
+    index: true,
+  },
+  effect: {
+    type: String,
+    enum: ["ALLOW", "DENY"],
+    required: true,
+  },
+}, { timestamps: true });
+
+userPermissionOverrideSchema.index({ schoolId: 1, userId: 1, permissionKey: 1 }, { unique: true });
+export const UserPermissionOverrideModel = model("userPermissionOverrides", userPermissionOverrideSchema);
+
+// ──────────── 5. PERMISSIONS (Global & Custom Registry) ────────────
 const permissionSchema = new Schema({
+  key: {
+    type: String,
+    required: [true, "Permission key is required"],
+    unique: true,
+    index: true,
+    trim: true,
+  },
   module: {
     type: String,
     required: true,
     trim: true,
+    index: true,
   },
   action: {
     type: String,
     required: true,
-    enum: ["create", "read", "update", "delete", "export", "import", "approve"],
     trim: true,
   },
   description: { type: String, trim: true },
+  schoolId: {
+    type: Schema.Types.Mixed,
+    default: null, // null for global centrally maintained definitions, ObjectId/String for school custom permissions
+    index: true,
+  },
 }, { timestamps: true });
 
-permissionSchema.index({ module: 1, action: 1 }, { unique: true });
+permissionSchema.index({ module: 1, action: 1 });
 export const PermissionModel = model("permissions", permissionSchema);
 
 // ──────────── 6. SESSIONS ────────────
@@ -234,3 +337,32 @@ const refreshTokenSchema = new Schema({
 }, { timestamps: true });
 
 export const RefreshTokenModel = model("refreshTokens", refreshTokenSchema);
+
+// ──────────── 8. AUDIT LOGS ────────────
+const auditLogSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    index: true,
+  },
+  actorId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+    index: true,
+  },
+  actorRole: { type: String, required: true },
+  action: { type: String, required: true },
+  module: { type: String, required: true },
+  targetId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    index: true,
+  },
+  oldValue: { type: Schema.Types.Mixed },
+  newValue: { type: Schema.Types.Mixed },
+  ipAddress: { type: String },
+}, { timestamps: true });
+
+export const AuditLogModel = model("auditLogs", auditLogSchema);
+

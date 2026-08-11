@@ -197,6 +197,7 @@ export default function Footer() {
                   key={idx}
                   href={soc.href}
                   aria-label={soc.name}
+                  className={`footer-social-icon social-${soc.name.toLowerCase()}`}
                   style={{
                     width: 36,
                     height: 36,
@@ -208,7 +209,7 @@ export default function Footer() {
                     justifyContent: "center",
                     color: "#94a3b8",
                     textDecoration: "none",
-                    transition: "all 0.2s ease"
+                    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
                   }}
                 >
                   {soc.icon}
@@ -223,12 +224,12 @@ export default function Footer() {
               Platform Features
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "0.9rem" }}>
-              <li><Link href="/school-erp" style={{ color: "#94a3b8", textDecoration: "none", transition: "color 0.2s" }}>School ERP Admin</Link></li>
-              <li><Link href="/transport" style={{ color: "#94a3b8", textDecoration: "none", transition: "color 0.2s" }}>GPS Bus Tracking</Link></li>
-              <li><Link href="/parent-app" style={{ color: "#94a3b8", textDecoration: "none", transition: "color 0.2s" }}>Parent Mobile App</Link></li>
-              <li><Link href="/features#fees" style={{ color: "#94a3b8", textDecoration: "none", transition: "color 0.2s" }}>Fee Gateway &amp; UPI</Link></li>
-              <li><Link href="/features#exams" style={{ color: "#94a3b8", textDecoration: "none", transition: "color 0.2s" }}>Report Cards &amp; Marks</Link></li>
-              <li><Link href="/features#attendance" style={{ color: "#94a3b8", textDecoration: "none", transition: "color 0.2s" }}>Digital Attendance &amp; SMS</Link></li>
+              <li><Link href="/school-erp" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>School ERP Admin</Link></li>
+              <li><Link href="/transport" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>GPS Bus Tracking</Link></li>
+              <li><Link href="/parent-app" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Parent Mobile App</Link></li>
+              <li><Link href="/features#fees" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Fee Gateway &amp; UPI</Link></li>
+              <li><Link href="/features#exams" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Report Cards &amp; Marks</Link></li>
+              <li><Link href="/features#attendance" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Digital Attendance &amp; SMS</Link></li>
             </ul>
           </div>
 
@@ -238,12 +239,12 @@ export default function Footer() {
               Solutions
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "0.9rem" }}>
-              <li><Link href="/pricing" style={{ color: "#94a3b8", textDecoration: "none" }}>For School Principals</Link></li>
-              <li><Link href="/features" style={{ color: "#94a3b8", textDecoration: "none" }}>For Teachers &amp; Educators</Link></li>
-              <li><Link href="/parent-app" style={{ color: "#94a3b8", textDecoration: "none" }}>For Parents &amp; Guardians</Link></li>
-              <li><Link href="/transport" style={{ color: "#94a3b8", textDecoration: "none" }}>For Transport Managers</Link></li>
-              <li><Link href="/resources" style={{ color: "#94a3b8", textDecoration: "none" }}>Resources &amp; Guides</Link></li>
-              <li><Link href="/pricing" style={{ color: "#94a3b8", textDecoration: "none" }}>Pricing Plans</Link></li>
+              <li><Link href="/pricing" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>For School Principals</Link></li>
+              <li><Link href="/features" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>For Teachers &amp; Educators</Link></li>
+              <li><Link href="/parent-app" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>For Parents &amp; Guardians</Link></li>
+              <li><Link href="/transport" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>For Transport Managers</Link></li>
+              <li><Link href="/resources" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Resources &amp; Guides</Link></li>
+              <li><Link href="/pricing" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Pricing Plans</Link></li>
             </ul>
           </div>
 
@@ -253,24 +254,24 @@ export default function Footer() {
               Contact &amp; Support
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.9rem", color: "#94a3b8" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
-                <Phone size={18} color="#3b82f6" style={{ marginTop: "2px", flexShrink: 0 }} />
+              <div className="footer-contact-item" style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                <Phone size={18} color="#3b82f6" className="footer-contact-icon" style={{ marginTop: "2px", flexShrink: 0 }} />
                 <div>
                   <div style={{ color: "#ffffff", fontWeight: 700 }}>+91 98765 43210</div>
                   <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Mon-Sat (9:00 AM - 7:00 PM IST)</div>
                 </div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
-                <Mail size={18} color="#3b82f6" style={{ marginTop: "2px", flexShrink: 0 }} />
+              <div className="footer-contact-item" style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                <Mail size={18} color="#3b82f6" className="footer-contact-icon" style={{ marginTop: "2px", flexShrink: 0 }} />
                 <div>
                   <div style={{ color: "#ffffff", fontWeight: 700 }}>support@schoolmitra.com</div>
                   <div style={{ fontSize: "0.78rem", color: "#64748b" }}>24-hour response guarantee</div>
                 </div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
-                <MapPin size={18} color="#3b82f6" style={{ marginTop: "2px", flexShrink: 0 }} />
+              <div className="footer-contact-item" style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                <MapPin size={18} color="#3b82f6" className="footer-contact-icon" style={{ marginTop: "2px", flexShrink: 0 }} />
                 <div>
                   <div style={{ color: "#ffffff", fontWeight: 700 }}>SchoolMitra EdTech HQ</div>
                   <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Cyber City, Sector 24, Gurugram, India</div>

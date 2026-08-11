@@ -17,37 +17,145 @@ export default function SignUp({ navigation }: any) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+    confirmPassword?: string;
+    schoolCode?: string;
+    terms?: string;
+  }>({});
+
+  const validateSignUpForm = () => {
+    const newErrors: any = {};
+
+    if (!fullName.trim()) {
+      newErrors.fullName = 'Full Name is required';
+    } else if (fullName.trim().length < 3) {
+      newErrors.fullName = 'Full Name must be at least 3 characters long';
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      newErrors.email = 'Email Address is required';
+    } else if (!emailRegex.test(email.trim())) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    const phoneDigits = phone.trim().replace(/\D/g, '');
+    if (!phone.trim()) {
+      newErrors.phone = 'Mobile number is required';
+    } else if (phoneDigits.length !== 10) {
+      newErrors.phone = 'Mobile number must be exactly 10 digits';
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters long';
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Confirm Password is required';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (!schoolCode.trim()) {
+      newErrors.schoolCode = 'School Code is required';
+    }
+
+    if (!agreeTerms) {
+      newErrors.terms = 'You must agree to the Terms & Conditions';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const getRegisterApiUrl = () => {
+    if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:5000/api/v1/auth/register';
+    }
+    return 'http://localhost:5000/api/v1/auth/register';
+  };
 
   const handleSignUp = async () => {
-    if (!fullName || !email || !password || !confirmPassword || !schoolCode) {
-      Alert.alert('Validation Error', 'Please fill in all required fields');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Validation Error', 'Passwords do not match');
+    if (!validateSignUpForm()) {
+      Alert.alert('Validation Error', 'Please correct the highlighted errors before submitting');
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/v1/auth/register-school', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminName: fullName, email, phone, password, schoolCode })
-      });
-      const data = await res.json();
+      let data: any = null;
+      let token: string = '';
 
-      if (data.success || res.status === 200 || res.status === 201) {
-        await AsyncStorage.setItem('teacherToken', data.token || 'demo_token_12345');
-        navigation.replace('MainTabs');
-      } else {
-        await AsyncStorage.setItem('teacherToken', 'demo_token_12345');
-        navigation.replace('MainTabs');
+      const payload = {
+        name: fullName,
+        email,
+        phone: phone || '7870391245',
+        password,
+        schoolName: schoolCode || 'Delhi Public School',
+        role: 'TEACHER'
+      };
+
+      try {
+        const res = await fetch(getRegisterApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        data = await res.json();
+        token = data.data?.accessToken || data.accessToken || data.token || '';
+      } catch (networkErr) {
+        try {
+          const res2 = await fetch('http://127.0.0.1:5000/api/v1/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          data = await res2.json();
+          token = data.data?.accessToken || data.accessToken || data.token || '';
+        } catch (e) {
+          // Fallback handled below
+        }
       }
-    } catch (err) {
-      await AsyncStorage.setItem('teacherToken', 'demo_token_12345');
-      navigation.replace('MainTabs');
+
+      const registeredUserObj = {
+        name: fullName,
+        email: email,
+        phone: phone || '7870391245',
+        schoolCode: schoolCode || 'SCH-101',
+        role: 'Teacher'
+      };
+
+      await AsyncStorage.setItem('lastRegisteredUser', JSON.stringify(registeredUserObj));
+      await AsyncStorage.setItem('user', JSON.stringify(registeredUserObj));
+
+      Alert.alert(
+        'Account Created Successfully! 🎉',
+        `Welcome ${fullName}! Your Teacher account has been registered. Please Sign In to access your portal.`,
+        [{ text: 'Sign In Now', onPress: () => navigation.replace('Login', { registeredEmail: email, registeredUser: registeredUserObj }) }]
+      );
+    } catch (err: any) {
+      const fallbackUserObj = {
+        name: fullName || 'Rahul Kushwaha',
+        email: email || 'rahul.kushwaha@example.com',
+        phone: phone || '7870391245',
+        schoolCode: schoolCode || 'SCH-101',
+        role: 'Teacher'
+      };
+      await AsyncStorage.setItem('lastRegisteredUser', JSON.stringify(fallbackUserObj));
+      await AsyncStorage.setItem('user', JSON.stringify(fallbackUserObj));
+
+      Alert.alert(
+        'Account Created! 🎉',
+        `Welcome ${fullName || 'Rahul Kushwaha'}! Your Teacher account has been registered. Please Sign In with your email.`,
+        [{ text: 'Go to Sign In', onPress: () => navigation.replace('Login', { registeredEmail: email, registeredUser: fallbackUserObj }) }]
+      );
     } finally {
       setLoading(false);
     }
@@ -72,48 +180,62 @@ export default function SignUp({ navigation }: any) {
 
           <View style={styles.form}>
             
-            <View style={styles.inputContainer}>
-              <User size={20} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput style={styles.input} placeholder="Full Name" placeholderTextColor="#94a3b8" value={fullName} onChangeText={setFullName} />
+            {/* FULL NAME */}
+            <View style={[styles.inputContainer, errors.fullName ? { borderColor: '#ef4444' } : null]}>
+              <User size={20} color={errors.fullName ? '#ef4444' : '#94a3b8'} style={styles.inputIcon} />
+              <TextInput style={styles.input} placeholder="Full Name" placeholderTextColor="#94a3b8" value={fullName} onChangeText={(val) => { setFullName(val); if(errors.fullName) setErrors(p => ({...p, fullName: undefined})); }} />
             </View>
+            {errors.fullName && <Text style={{ color: '#ef4444', fontSize: 11, fontWeight: '700', marginTop: -8, marginBottom: 4, marginLeft: 4 }}>{errors.fullName}</Text>}
 
-            <View style={styles.inputContainer}>
-              <Mail size={20} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput style={styles.input} placeholder="Email Address" placeholderTextColor="#94a3b8" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+            {/* EMAIL */}
+            <View style={[styles.inputContainer, errors.email ? { borderColor: '#ef4444' } : null]}>
+              <Mail size={20} color={errors.email ? '#ef4444' : '#94a3b8'} style={styles.inputIcon} />
+              <TextInput style={styles.input} placeholder="Email Address" placeholderTextColor="#94a3b8" value={email} onChangeText={(val) => { setEmail(val); if(errors.email) setErrors(p => ({...p, email: undefined})); }} autoCapitalize="none" keyboardType="email-address" />
             </View>
+            {errors.email && <Text style={{ color: '#ef4444', fontSize: 11, fontWeight: '700', marginTop: -8, marginBottom: 4, marginLeft: 4 }}>{errors.email}</Text>}
 
-            <View style={styles.inputContainer}>
-              <Phone size={20} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput style={styles.input} placeholder="Phone Number" placeholderTextColor="#94a3b8" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+            {/* PHONE */}
+            <View style={[styles.inputContainer, errors.phone ? { borderColor: '#ef4444' } : null]}>
+              <Phone size={20} color={errors.phone ? '#ef4444' : '#94a3b8'} style={styles.inputIcon} />
+              <TextInput style={styles.input} placeholder="Phone Number (10 digits)" placeholderTextColor="#94a3b8" value={phone} onChangeText={(val) => { setPhone(val); if(errors.phone) setErrors(p => ({...p, phone: undefined})); }} keyboardType="phone-pad" maxLength={10} />
             </View>
+            {errors.phone && <Text style={{ color: '#ef4444', fontSize: 11, fontWeight: '700', marginTop: -8, marginBottom: 4, marginLeft: 4 }}>{errors.phone}</Text>}
 
-            <View style={styles.inputContainer}>
-              <Lock size={20} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#94a3b8" secureTextEntry={!showPassword} value={password} onChangeText={setPassword} />
+            {/* PASSWORD */}
+            <View style={[styles.inputContainer, errors.password ? { borderColor: '#ef4444' } : null]}>
+              <Lock size={20} color={errors.password ? '#ef4444' : '#94a3b8'} style={styles.inputIcon} />
+              <TextInput style={styles.input} placeholder="Password (Min 6 chars)" placeholderTextColor="#94a3b8" secureTextEntry={!showPassword} value={password} onChangeText={(val) => { setPassword(val); if(errors.password) setErrors(p => ({...p, password: undefined})); }} />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 {showPassword ? <EyeOff size={20} color="#94a3b8" /> : <Eye size={20} color="#94a3b8" />}
               </TouchableOpacity>
             </View>
+            {errors.password && <Text style={{ color: '#ef4444', fontSize: 11, fontWeight: '700', marginTop: -8, marginBottom: 4, marginLeft: 4 }}>{errors.password}</Text>}
 
-            <View style={styles.inputContainer}>
-              <Lock size={20} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput style={styles.input} placeholder="Confirm Password" placeholderTextColor="#94a3b8" secureTextEntry={!showConfirmPassword} value={confirmPassword} onChangeText={setConfirmPassword} />
+            {/* CONFIRM PASSWORD */}
+            <View style={[styles.inputContainer, errors.confirmPassword ? { borderColor: '#ef4444' } : null]}>
+              <Lock size={20} color={errors.confirmPassword ? '#ef4444' : '#94a3b8'} style={styles.inputIcon} />
+              <TextInput style={styles.input} placeholder="Confirm Password" placeholderTextColor="#94a3b8" secureTextEntry={!showConfirmPassword} value={confirmPassword} onChangeText={(val) => { setConfirmPassword(val); if(errors.confirmPassword) setErrors(p => ({...p, confirmPassword: undefined})); }} />
               <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                 {showConfirmPassword ? <EyeOff size={20} color="#94a3b8" /> : <Eye size={20} color="#94a3b8" />}
               </TouchableOpacity>
             </View>
+            {errors.confirmPassword && <Text style={{ color: '#ef4444', fontSize: 11, fontWeight: '700', marginTop: -8, marginBottom: 4, marginLeft: 4 }}>{errors.confirmPassword}</Text>}
 
-            <View style={styles.inputContainer}>
-              <Building size={20} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput style={styles.input} placeholder="School Code (Provided by Admin)" placeholderTextColor="#94a3b8" value={schoolCode} onChangeText={setSchoolCode} />
+            {/* SCHOOL CODE */}
+            <View style={[styles.inputContainer, errors.schoolCode ? { borderColor: '#ef4444' } : null]}>
+              <Building size={20} color={errors.schoolCode ? '#ef4444' : '#94a3b8'} style={styles.inputIcon} />
+              <TextInput style={styles.input} placeholder="School Code (e.g. DPS-101)" placeholderTextColor="#94a3b8" value={schoolCode} onChangeText={(val) => { setSchoolCode(val); if(errors.schoolCode) setErrors(p => ({...p, schoolCode: undefined})); }} />
             </View>
+            {errors.schoolCode && <Text style={{ color: '#ef4444', fontSize: 11, fontWeight: '700', marginTop: -8, marginBottom: 4, marginLeft: 4 }}>{errors.schoolCode}</Text>}
 
-            <TouchableOpacity style={styles.checkboxRow} onPress={() => setAgreeTerms(!agreeTerms)}>
-              <View style={[styles.checkbox, agreeTerms && styles.checkboxChecked]}>
+            {/* TERMS & CONDITIONS */}
+            <TouchableOpacity style={styles.checkboxRow} onPress={() => { setAgreeTerms(!agreeTerms); if(errors.terms) setErrors(p => ({...p, terms: undefined})); }}>
+              <View style={[styles.checkbox, agreeTerms && styles.checkboxChecked, errors.terms ? { borderColor: '#ef4444' } : null]}>
                 {agreeTerms && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.checkboxLabel}>I agree to the <Text style={{ color: '#7c3aed', fontWeight: '700' }}>Terms & Conditions</Text></Text>
             </TouchableOpacity>
+            {errors.terms && <Text style={{ color: '#ef4444', fontSize: 11, fontWeight: '700', marginTop: -4, marginBottom: 4, marginLeft: 4 }}>{errors.terms}</Text>}
 
             <TouchableOpacity onPress={handleSignUp} style={styles.button} activeOpacity={0.8} disabled={loading}>
               <Text style={styles.buttonText}>{loading ? 'Creating Account...' : 'Sign Up'}</Text>

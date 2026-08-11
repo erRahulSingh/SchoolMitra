@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   StatusBar
 } from 'react-native';
 import { Menu, Bell, Sparkles } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import SidebarDrawer from './SidebarDrawer';
 
 interface HeaderProps {
@@ -19,6 +20,22 @@ interface HeaderProps {
 
 export default function Header({ navigation, title, subtitle, currentRoute }: HeaderProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [initials, setInitials] = useState('RS');
+
+  useEffect(() => {
+    AsyncStorage.getItem('user').then((userStr) => {
+      if (userStr) {
+        try {
+          const u = JSON.parse(userStr);
+          if (u && u.name) {
+            const parts = u.name.trim().split(' ');
+            const init = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : u.name.slice(0, 2).toUpperCase();
+            setInitials(init);
+          }
+        } catch (e) {}
+      }
+    });
+  }, []);
 
   return (
     <>
@@ -59,7 +76,7 @@ export default function Header({ navigation, title, subtitle, currentRoute }: He
             style={styles.avatarCircle}
             onPress={() => navigation.navigate('MyProfile')}
           >
-            <Text style={styles.avatarText}>RS</Text>
+            <Text style={styles.avatarText}>{initials}</Text>
             <View style={styles.activeDot} />
           </TouchableOpacity>
         </View>

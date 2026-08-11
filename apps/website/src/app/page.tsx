@@ -43,8 +43,8 @@ export default function LandingPage() {
 
       {/* ========== HERO SECTION ========== */}
       <section className="hero-wrapper" style={{
-        paddingTop: "140px",
-        paddingBottom: "80px",
+        paddingTop: "100px",
+        paddingBottom: "40px",
         paddingLeft: "5%",
         paddingRight: "5%",
         position: "relative",
@@ -82,7 +82,11 @@ export default function LandingPage() {
               letterSpacing: "-0.03em",
               marginBottom: "1.5rem"
             }}>
-              Simplify School Management <span style={{ color: "#f97316" }}>&amp; Enhance Parent Connection</span>
+              Simplify School Management <span style={{
+                background: "linear-gradient(135deg, #f97316 0%, #ef4444 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent"
+              }}>&amp; Enhance Parent Connection</span>
             </h1>
 
             <p className="hero-subtitle" style={{
@@ -168,15 +172,15 @@ export default function LandingPage() {
               />
             </div>
 
-            {/* Floating Live Status Badge - Top Right */}
-            <div style={{
+            {/* Floating Badge - Top Right */}
+            <div className="floating-badge-anim" style={{
               position: "absolute",
               top: "-15px",
               right: "-15px",
-              background: "rgba(15, 23, 42, 0.85)",
+              background: "rgba(15, 23, 42, 0.88)",
               backdropFilter: "blur(12px)",
               borderRadius: "14px",
-              padding: "0.65rem 1rem",
+              padding: "0.6rem 1rem",
               boxShadow: "0 15px 35px rgba(0, 0, 0, 0.3)",
               border: "1px solid rgba(255, 255, 255, 0.15)",
               display: "flex",
@@ -193,7 +197,7 @@ export default function LandingPage() {
             </div>
 
             {/* Floating Badge - Bottom Left */}
-            <div style={{
+            <div className="floating-badge-anim" style={{
               position: "absolute",
               bottom: "-15px",
               left: "-15px",
@@ -230,7 +234,7 @@ export default function LandingPage() {
 
       {/* ========== TRUSTED BY SCHOOLS SECTION ========== */}
       <section style={{
-        padding: "85px 4%",
+        padding: "45px 4%",
         textAlign: "center",
         borderTop: "1px solid var(--border-color)",
         borderBottom: "1px solid var(--border-color)",
@@ -238,7 +242,7 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
           {/* Top Badge & Header */}
-          <div style={{ marginBottom: "3rem" }}>
+          <div style={{ marginBottom: "2rem" }}>
             <span style={{
               display: "inline-flex",
               alignItems: "center",
@@ -261,7 +265,11 @@ export default function LandingPage() {
               letterSpacing: "-0.02em",
               marginBottom: "0.75rem"
             }}>
-              Empowering India&apos;s <span style={{ color: "#f97316" }}>Most Prestigious Schools</span>
+              Empowering India&apos;s <span style={{
+                background: "linear-gradient(135deg, #f97316 0%, #ef4444 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent"
+              }}>Most Prestigious Schools</span>
             </h2>
             <p style={{
               color: "var(--text-muted)",
@@ -279,7 +287,7 @@ export default function LandingPage() {
             display: "grid",
             gridTemplateColumns: "repeat(4, 1fr)",
             gap: "1.5rem",
-            marginBottom: "3.5rem"
+            marginBottom: "2rem"
           }}>
             {[
               { val: "500+", lbl: "Partner Schools", icon: <Building2 size={22} color="#4338ca" /> },
@@ -470,9 +478,9 @@ export default function LandingPage() {
       </section>
 
       {/* ========== FEATURE GRID SECTION (POWERFUL FEATURES FOR EVERY ROLE) ========== */}
-      <section id="features" style={{ padding: "90px 4%", maxWidth: "1320px", margin: "0 auto" }}>
+      <section id="features" style={{ padding: "50px 4%", maxWidth: "1320px", margin: "0 auto" }}>
         {/* Top Header Badge & Title */}
-        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 3rem auto" }}>
+        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 1.8rem auto" }}>
           <span style={{
             display: "inline-flex",
             alignItems: "center",
@@ -513,7 +521,7 @@ export default function LandingPage() {
           justifyContent: "center",
           alignItems: "center",
           gap: "0.75rem",
-          marginBottom: "3.5rem",
+          marginBottom: "2rem",
           flexWrap: "wrap"
         }}>
           {[
@@ -716,8 +724,8 @@ export default function LandingPage() {
       </section>
 
       {/* ========== FULL-SIZE DASHBOARD SHOWCASE SECTION ========== */}
-      <section style={{ padding: "90px 4%", background: "linear-gradient(180deg, var(--bg-page) 0%, var(--bg-subtle) 100%)", borderTop: "1px solid var(--border-color)" }}>
-        <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto 3.5rem auto" }}>
+      <section style={{ padding: "50px 4%", background: "linear-gradient(180deg, var(--bg-page) 0%, var(--bg-subtle) 100%)", borderTop: "1px solid var(--border-color)" }}>
+        <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto 2rem auto" }}>
           <span style={{
             fontSize: "0.85rem",
             fontWeight: 800,
@@ -1011,9 +1019,9 @@ export default function LandingPage() {
       </section>
 
       {/* ========== PRICING SECTION ========== */}
-      <section id="pricing" style={{ padding: "90px 4%", background: "var(--bg-page)" }}>
+      <section id="pricing" style={{ padding: "50px 4%", background: "var(--bg-page)" }}>
         {/* Header Badge & Title */}
-        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 3rem auto" }}>
+        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 1.8rem auto" }}>
           <span style={{
             display: "inline-flex",
             alignItems: "center",
@@ -1049,7 +1057,7 @@ export default function LandingPage() {
         </div>
 
         {/* Monthly vs Yearly Toggle Switch */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "3.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "2rem" }}>
           <div style={{
             background: "var(--bg-subtle)",
             padding: "0.35rem",
@@ -1354,8 +1362,8 @@ export default function LandingPage() {
       </section>
 
       {/* ========== SLIDING TESTIMONIALS SECTION (4 CARDS PER ROW) ========== */}
-      <section style={{ padding: "90px 4%", background: "var(--bg-subtle)", borderTop: "1px solid var(--border-color)", borderBottom: "1px solid var(--border-color)" }}>
-        <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 3.5rem auto" }}>
+      <section style={{ padding: "50px 4%", background: "var(--bg-subtle)", borderTop: "1px solid var(--border-color)", borderBottom: "1px solid var(--border-color)" }}>
+        <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 2rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
             Testimonials <span style={{ color: "#f97316" }}>cards</span>
           </h2>
@@ -1568,8 +1576,8 @@ export default function LandingPage() {
       </section>
 
       {/* ========== HOW IT WORKS SECTION (MATCHING UI REFERENCE) ========== */}
-      <section style={{ padding: "90px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
-        <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 4rem auto" }}>
+      <section style={{ padding: "50px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
+        <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 2rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
             How It <span style={{ color: "#f97316" }}>Works</span>
           </h2>
@@ -1665,8 +1673,8 @@ export default function LandingPage() {
       </section>
 
       {/* ========== LIVE GPS TRACKING SHOWCASE SECTION (3D IMAGE DUAL PANEL) ========== */}
-      <section style={{ padding: "90px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
-        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 3.5rem auto" }}>
+      <section style={{ padding: "50px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
+        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 2rem auto" }}>
           <span style={{
             display: "inline-flex",
             alignItems: "center",
@@ -1888,8 +1896,8 @@ export default function LandingPage() {
       </section>
 
       {/* ========== PARENT MOBILE APP SHOWCASE SECTION ========== */}
-      <section style={{ padding: "90px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
-        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 4rem auto" }}>
+      <section style={{ padding: "50px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
+        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 2rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
             Parent <span style={{ color: "#f97316" }}>Mobile App</span>
           </h2>
@@ -2129,8 +2137,8 @@ export default function LandingPage() {
       </section>
 
       {/* ========== TEACHER & DRIVER APP SHOWCASE SECTION ========== */}
-      <section style={{ padding: "90px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
-        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 4rem auto" }}>
+      <section style={{ padding: "50px 4%", background: "var(--bg-page)", borderBottom: "1px solid var(--border-color)" }}>
+        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 2rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
             Teacher &amp; <span style={{ color: "#f97316" }}>Driver App</span>
           </h2>
@@ -2285,8 +2293,8 @@ export default function LandingPage() {
       </section>
 
       {/* ========== FAQ SECTION WITH 3D ILLUSTRATION ========== */}
-      <section id="faq" style={{ padding: "90px 4%", background: "var(--bg-page)", borderTop: "1px solid var(--border-color)" }}>
-        <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 3.5rem auto" }}>
+      <section id="faq" style={{ padding: "50px 4%", background: "var(--bg-page)", borderTop: "1px solid var(--border-color)" }}>
+        <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 2rem auto" }}>
           <h2 style={{ fontSize: "2.8rem", fontWeight: 800, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
             F<span style={{ color: "#f97316" }}>AQ</span>
           </h2>
@@ -2406,79 +2414,90 @@ export default function LandingPage() {
       </section>
 
       {/* ========== FINAL CTA BANNER SECTION ========== */}
-      <section style={{ padding: "60px 4% 90px 4%", background: "var(--bg-page)" }}>
+      <section style={{ padding: "50px 4% 70px 4%", background: "var(--bg-page)" }}>
         <div className="cta-banner-container" style={{
           maxWidth: "1150px",
           margin: "0 auto",
-          background: "linear-gradient(135deg, rgba(238, 242, 255, 0.95) 0%, rgba(224, 231, 255, 0.85) 50%, rgba(243, 232, 255, 0.9) 100%)",
-          borderRadius: "28px",
-          padding: "4.5rem 2rem",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e293b 100%)",
+          borderRadius: "32px",
+          padding: "5rem 2rem",
           textAlign: "center",
-          border: "1px solid rgba(199, 210, 254, 0.6)",
-          boxShadow: "0 20px 50px rgba(99, 102, 241, 0.12)",
+          border: "1px solid rgba(99, 102, 241, 0.2)",
+          boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.5)",
           position: "relative",
           overflow: "hidden"
         }}>
-          {/* Subtle Sparkle Shapes */}
+          {/* Subtle Radial Glow Spot */}
           <div style={{
             position: "absolute",
-            bottom: "-30px",
-            right: "15%",
-            width: "120px",
-            height: "120px",
-            opacity: 0.15,
-            border: "2px dashed #4338ca",
-            transform: "rotate(45deg)",
-            pointerEvents: "none"
+            top: "-50%",
+            left: "-50%",
+            width: "200%",
+            height: "200%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 60%)",
+            pointerEvents: "none",
+            zIndex: 0
           }}></div>
 
           <span style={{
-            fontSize: "0.9rem",
+            fontSize: "0.85rem",
             fontWeight: 800,
-            color: "#4338ca",
+            color: "#818cf8",
             textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: "0.8rem",
-            display: "block"
+            letterSpacing: "0.15em",
+            marginBottom: "1rem",
+            display: "block",
+            position: "relative",
+            zIndex: 1
           }}>
-            Final CTA banner
+            READY TO LEVEL UP?
           </span>
 
           <h2 style={{
-            fontSize: "clamp(2.2rem, 3.5vw, 3.2rem)",
+            fontSize: "clamp(2.2rem, 3.8vw, 3.4rem)",
             fontWeight: 800,
-            color: "var(--text-main)",
+            color: "#ffffff",
             letterSpacing: "-0.03em",
             marginBottom: "1.2rem",
-            lineHeight: 1.2
+            lineHeight: 1.2,
+            position: "relative",
+            zIndex: 1
           }}>
-            Elevate Your School&apos;s <span style={{ color: "#f97316" }}>Experience Today</span>
+            Elevate Your School&apos;s <span style={{
+              background: "linear-gradient(135deg, #f97316 0%, #ef4444 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent"
+            }}>Experience Today</span>
           </h2>
 
           <p style={{
-            fontSize: "1.1rem",
-            color: "var(--text-muted)",
+            fontSize: "1.12rem",
+            color: "#cbd5e1",
             maxWidth: "600px",
-            margin: "0 auto 2.5rem auto",
+            margin: "0 auto 2.8rem auto",
             lineHeight: 1.6,
-            fontWeight: 500
+            fontWeight: 500,
+            position: "relative",
+            zIndex: 1
           }}>
             Elevate your school&apos;s experience today with real-time bus tracking, automated fee collection, and seamless parent engagement.
           </p>
 
           <Link href="/login" className="btn-interactive-glow" style={{
-            padding: "0.95rem 2.5rem",
-            borderRadius: "14px",
-            background: "#4338ca",
+            padding: "1rem 2.8rem",
+            borderRadius: "16px",
+            background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
             color: "#ffffff",
             border: "none",
             fontWeight: 800,
-            fontSize: "1.05rem",
+            fontSize: "1.08rem",
             cursor: "pointer",
-            boxShadow: "0 10px 30px rgba(67, 56, 202, 0.35)",
-            transition: "transform 0.2s ease",
+            boxShadow: "0 12px 35px rgba(99, 102, 241, 0.45)",
+            transition: "all 0.3s ease",
             textDecoration: "none",
-            display: "inline-block"
+            display: "inline-block",
+            position: "relative",
+            zIndex: 1
           }}>
             Signup Now
           </Link>

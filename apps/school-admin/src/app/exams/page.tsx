@@ -92,6 +92,27 @@ export default function ExamsPage() {
   // ════════════ 5. PUBLISHED STATE ════════════
   const [publishedExams, setPublishedExams] = useState<Record<string, boolean>>({ "SCH-01": true });
 
+  // ════════════ 6. ANALYTICS OVERVIEW STATE ════════════
+  const [analyticsOverview, setAnalyticsOverview] = useState<any>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  const [selectedClassId, setSelectedClassId] = useState("class8");
+  const [selectedSectionId, setSelectedSectionId] = useState("sectionA");
+  const [classPerformance, setClassPerformance] = useState<any>({
+    students: 42,
+    attendance: "95%",
+    averageMarks: "78%",
+    highest: "96%",
+    lowest: "42%",
+    passPercentage: "92%",
+    subjectWise: [
+      { subject: "Mathematics", score: "81%" },
+      { subject: "Science", score: "76%" },
+      { subject: "English", score: "84%" },
+      { subject: "Hindi", score: "79%" }
+    ]
+  });
+
   // Persistent Cache Load
   useEffect(() => {
     try {
@@ -105,6 +126,69 @@ export default function ExamsPage() {
       if (cachedMarks) setMarksData(JSON.parse(cachedMarks));
     } catch (e) {}
   }, []);
+
+  const [selectedExamTermId, setSelectedExamTermId] = useState("annual");
+  const [examTermAnalytics, setExamTermAnalytics] = useState<any>({
+    term: "Annual Examination",
+    students: 240,
+    appeared: 236,
+    passed: 218,
+    failed: 18,
+    passPercentage: "92.37%",
+    average: "76.4%",
+    subjectAnalysis: [
+      { subject: "Mathematics", score: "72%" },
+      { subject: "Science", score: "79%" },
+      { subject: "English", score: "84%" },
+      { subject: "Hindi", score: "88%" }
+    ]
+  });
+
+  useEffect(() => {
+    if (activeTab === "analytics") {
+      fetch(`http://localhost:5000/api/v1/admin/analytics/exam-term?examId=${selectedExamTermId}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data) {
+            setExamTermAnalytics(json.data);
+          }
+        })
+        .catch(err => console.warn("Exam Term Analytics fetch error:", err));
+    }
+  }, [activeTab, selectedExamTermId]);
+
+  // Fetch live Admin Analytics
+  useEffect(() => {
+    if (activeTab === "analytics") {
+      setLoadingAnalytics(true);
+      fetch("http://localhost:5000/api/v1/admin/analytics/overview")
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data) {
+            setAnalyticsOverview(json.data);
+          }
+          setLoadingAnalytics(false);
+        })
+        .catch(err => {
+          console.warn("Analytics API call error:", err);
+          setLoadingAnalytics(false);
+        });
+    }
+  }, [activeTab]);
+
+  // Fetch Class Performance Analytics
+  useEffect(() => {
+    if (activeTab === "analytics") {
+      fetch(`http://localhost:5000/api/v1/admin/analytics/class-performance?classId=${selectedClassId}&sectionId=${selectedSectionId}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data) {
+            setClassPerformance(json.data);
+          }
+        })
+        .catch(err => console.warn("Class Performance API call error:", err));
+    }
+  }, [activeTab, selectedClassId, selectedSectionId]);
 
   const saveTypes = (list: ExamType[]) => {
     setExamTypes(list);
@@ -225,6 +309,10 @@ export default function ExamsPage() {
   });
 
   const selectedDossierStudent = marksData.find(m => m.id === selectedMarkStudentId) || marksData[0];
+
+  const handleExportReport = (type: string, format: string) => {
+    window.open(`http://localhost:5000/api/v1/admin/analytics/export?type=${type}&format=${format}`, '_blank');
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -639,6 +727,414 @@ export default function ExamsPage() {
                   </tr>
                 );
               })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ════════════ 9. RESULT ANALYTICS DASHBOARD ════════════ */}
+      {activeTab === "analytics" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          {/* EXPORTS CONTROL BAR */}
+          <div className="glass-card" style={{ padding: "1.25rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <div>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-heading)", margin: 0 }}>Results Analytics &amp; Reports Exporter</h3>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>Download consolidated scholastic grades ledger in enterprise spreadsheet formats.</p>
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button onClick={() => handleExportReport("exams", "csv")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                <Download size={14} /> Export CSV
+              </button>
+              <button onClick={() => handleExportReport("exams", "excel")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                <Download size={14} /> Export Excel
+              </button>
+              <button onClick={() => handleExportReport("exams", "pdf")} className="btn btn-primary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                <FileText size={14} /> Export PDF
+              </button>
+            </div>
+          </div>
+
+          {/* KPI METRICS ROW */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" }}>
+            <div className="glass-card" style={{ padding: "1.5rem", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 120, borderLeft: "4px solid var(--primary)" }}>
+              <div>
+                <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Total Students</span>
+                <strong style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--text-heading)", display: "block", marginTop: 4 }}>
+                  {analyticsOverview?.students || "1,250"}
+                </strong>
+              </div>
+              <span style={{ fontSize: "0.75rem", color: "var(--success)", fontWeight: 700 }}>Active Enrollment</span>
+            </div>
+
+            <div className="glass-card" style={{ padding: "1.5rem", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 120, borderLeft: "4px solid #10b981" }}>
+              <div>
+                <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Active Teachers</span>
+                <strong style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--text-heading)", display: "block", marginTop: 4 }}>
+                  {analyticsOverview?.teachers || "68"}
+                </strong>
+              </div>
+              <span style={{ fontSize: "0.75rem", color: "var(--success)", fontWeight: 700 }}>Staff Assigned</span>
+            </div>
+
+            <div className="glass-card" style={{ padding: "1.5rem", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 120, borderLeft: "4px solid #f59e0b" }}>
+              <div>
+                <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Today's Attendance</span>
+                <strong style={{ fontSize: "1.8rem", fontWeight: 900, color: "#f59e0b", display: "block", marginTop: 4 }}>
+                  {analyticsOverview?.todayAttendance || "94.2%"}
+                </strong>
+              </div>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Daily Live Ratio</span>
+            </div>
+
+            <div className="glass-card" style={{ padding: "1.5rem", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 120, borderLeft: "4px solid #f43f5e" }}>
+              <div>
+                <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Average Result</span>
+                <strong style={{ fontSize: "1.8rem", fontWeight: 900, color: "#f43f5e", display: "block", marginTop: 4 }}>
+                  {analyticsOverview?.averageResult || "78.6%"}
+                </strong>
+              </div>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Scholastic Aggregate</span>
+            </div>
+          </div>
+
+          {/* WORKFLOW PENDING ACTIONS LIST & DOUBLE CHARTS ROW */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "1.5rem" }}>
+            {/* PENDING STATS CHECKLIST */}
+            <div className="glass-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-heading)", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.6rem" }}>
+                Academic Workflow Checklist
+              </h3>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted)" }}>Homework Pending</span>
+                <span className="badge badge-warning" style={{ fontSize: "0.78rem" }}>{analyticsOverview?.homeworkPending || 42} Active</span>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted)" }}>Exams Completed</span>
+                <span className="badge badge-success" style={{ fontSize: "0.78rem" }}>{analyticsOverview?.examsCompleted || 8} Term(s)</span>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted)" }}>Results Pending</span>
+                <span className="badge badge-danger" style={{ fontSize: "0.78rem" }}>{analyticsOverview?.resultsPending || 6} Class Roster</span>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted)" }}>Report Cards Pending</span>
+                <span className="badge badge-secondary" style={{ fontSize: "0.78rem" }}>{analyticsOverview?.reportCardsPending || 18} Student(s)</span>
+              </div>
+            </div>
+
+            {/* PRESET SVG ATTENDANCE GRAPH CARD */}
+            <div className="glass-card" style={{ padding: "1.5rem" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-heading)", marginBottom: "1rem" }}>
+                Weekly School Attendance Analytics & Trends
+              </h3>
+              <div style={{ padding: "0.5rem", borderRadius: "12px", border: "1px solid var(--border-color)", background: "rgba(0,0,0,0.02)" }}>
+                <svg viewBox="0 0 500 180" style={{ width: "100%", height: "auto", display: "block" }}>
+                  {/* Grid Lines */}
+                  <line x1="40" y1="20" x2="480" y2="20" stroke="rgba(0,0,0,0.05)" />
+                  <line x1="40" y1="60" x2="480" y2="60" stroke="rgba(0,0,0,0.05)" />
+                  <line x1="40" y1="100" x2="480" y2="100" stroke="rgba(0,0,0,0.05)" />
+                  <line x1="40" y1="140" x2="480" y2="140" stroke="rgba(0,0,0,0.15)" strokeWidth="1.5" />
+
+                  {/* Bezier Curve Trend Line */}
+                  <path
+                    d="M 60 110 C 130 90, 200 40, 270 55 S 390 100, 460 70"
+                    fill="none"
+                    stroke="var(--primary)"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Data Point Dots */}
+                  <circle cx="60" cy="110" r="5" fill="var(--primary)" stroke="#fff" strokeWidth="2" />
+                  <circle cx="160" cy="80" r="5" fill="var(--primary)" stroke="#fff" strokeWidth="2" />
+                  <circle cx="260" cy="50" r="5" fill="var(--primary)" stroke="#fff" strokeWidth="2" />
+                  <circle cx="360" cy="95" r="5" fill="var(--primary)" stroke="#fff" strokeWidth="2" />
+                  <circle cx="460" cy="70" r="5" fill="var(--primary)" stroke="#fff" strokeWidth="2" />
+
+                  {/* Labels */}
+                  <text x="60" y="160" fill="var(--text-muted)" fontSize="9" textAnchor="middle">Monday</text>
+                  <text x="160" y="160" fill="var(--text-muted)" fontSize="9" textAnchor="middle">Tuesday</text>
+                  <text x="260" y="160" fill="var(--text-muted)" fontSize="9" textAnchor="middle">Wednesday</text>
+                  <text x="360" y="160" fill="var(--text-muted)" fontSize="9" textAnchor="middle">Thursday</text>
+                  <text x="460" y="160" fill="var(--text-muted)" fontSize="9" textAnchor="middle">Friday</text>
+
+                  <text x="30" y="24" fill="var(--text-muted)" fontSize="9" textAnchor="end">100%</text>
+                  <text x="30" y="84" fill="var(--text-muted)" fontSize="9" textAnchor="end">95%</text>
+                  <text x="30" y="144" fill="var(--text-muted)" fontSize="9" textAnchor="end">90%</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* DYNAMIC ACADEMIC SUBJECT AVERAGE BAR CHART */}
+          <div className="glass-card" style={{ padding: "1.5rem" }}>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-heading)", marginBottom: "1rem" }}>
+              Scholastic Performance — Class Subject Averages
+            </h3>
+            <div style={{ padding: "0.5rem", borderRadius: "12px", border: "1px solid var(--border-color)", background: "rgba(0,0,0,0.02)" }}>
+              <svg viewBox="0 0 500 180" style={{ width: "100%", height: "auto", display: "block" }}>
+                {/* Y grids */}
+                <line x1="50" y1="20" x2="480" y2="20" stroke="rgba(0,0,0,0.05)" />
+                <line x1="50" y1="70" x2="480" y2="70" stroke="rgba(0,0,0,0.05)" />
+                <line x1="50" y1="120" x2="480" y2="120" stroke="rgba(0,0,0,0.05)" />
+                <line x1="50" y1="150" x2="480" y2="150" stroke="rgba(0,0,0,0.15)" strokeWidth="1.5" />
+
+                {/* Bars */}
+                {/* Mathematics (76%) */}
+                <rect x="75" y="50" width="30" height="100" fill="var(--primary)" rx="4" />
+                {/* Science (81%) */}
+                <rect x="155" y="42" width="30" height="108" fill="#10b981" rx="4" />
+                {/* English (84%) */}
+                <rect x="235" y="38" width="30" height="112" fill="#7c3aed" rx="4" />
+                {/* Social Sci (74%) */}
+                <rect x="315" y="55" width="30" height="95" fill="#f59e0b" rx="4" />
+                {/* Hindi (76%) */}
+                <rect x="395" y="50" width="30" height="100" fill="#f43f5e" rx="4" />
+
+                {/* Labels */}
+                <text x="90" y="165" fill="var(--text-muted)" fontSize="8.5" textAnchor="middle">Mathematics</text>
+                <text x="170" y="165" fill="var(--text-muted)" fontSize="8.5" textAnchor="middle">Science</text>
+                <text x="250" y="165" fill="var(--text-muted)" fontSize="8.5" textAnchor="middle">English</text>
+                <text x="330" y="165" fill="var(--text-muted)" fontSize="8.5" textAnchor="middle">Social Sci</text>
+                <text x="410" y="165" fill="var(--text-muted)" fontSize="8.5" textAnchor="middle">Hindi</text>
+
+                <text x="40" y="24" fill="var(--text-muted)" fontSize="9" textAnchor="end">100</text>
+                <text x="40" y="74" fill="var(--text-muted)" fontSize="9" textAnchor="end">75</text>
+                <text x="40" y="124" fill="var(--text-muted)" fontSize="9" textAnchor="end">50</text>
+              </svg>
+            </div>
+          </div>
+
+          {/* CLASS PERFORMANCE ANALYTICS SECTION */}
+          <div className="glass-card" style={{ padding: "1.75rem", borderLeft: "4px solid #8b5cf6" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
+              <div>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--text-heading)", margin: 0 }}>Class Section Performance</h3>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>Select academic division to view specific grades distribution and performance metrics.</p>
+              </div>
+
+              {/* Class & Section dropdown selectors */}
+              <div style={{ display: "flex", gap: "0.75rem" }}>
+                <select
+                  value={selectedClassId}
+                  onChange={(e) => setSelectedClassId(e.target.value)}
+                  style={{ padding: "0.5rem 1rem", borderRadius: "10px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-main)", fontWeight: 700, fontSize: "0.85rem" }}
+                >
+                  <option value="class8">Class 8</option>
+                  <option value="class9">Class 9</option>
+                  <option value="class10">Class 10</option>
+                </select>
+
+                <select
+                  value={selectedSectionId}
+                  onChange={(e) => setSelectedSectionId(e.target.value)}
+                  style={{ padding: "0.5rem 1rem", borderRadius: "10px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-main)", fontWeight: 700, fontSize: "0.85rem" }}
+                >
+                  <option value="sectionA">Section A</option>
+                  <option value="sectionB">Section B</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Metrics Dashboard */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Students</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "var(--text-heading)", display: "block", marginTop: 4 }}>
+                  {classPerformance?.students || 42}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Attendance</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "var(--primary)", display: "block", marginTop: 4 }}>
+                  {classPerformance?.attendance || "95%"}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Average Marks</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#10b981", display: "block", marginTop: 4 }}>
+                  {classPerformance?.averageMarks || "78%"}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Highest</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#8b5cf6", display: "block", marginTop: 4 }}>
+                  {classPerformance?.highest || "96%"}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Lowest</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#f43f5e", display: "block", marginTop: 4 }}>
+                  {classPerformance?.lowest || "42%"}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Pass Percentage</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#10b981", display: "block", marginTop: 4 }}>
+                  {classPerformance?.passPercentage || "92%"}
+                </strong>
+              </div>
+            </div>
+
+            {/* Subject-wise averages progress indicators */}
+            <h4 style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--text-heading)", marginBottom: "0.75rem" }}>Subject-wise Averages</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+              {(classPerformance?.subjectWise || [
+                { subject: "Mathematics", score: "81%" },
+                { subject: "Science", score: "76%" },
+                { subject: "English", score: "84%" },
+                { subject: "Hindi", score: "79%" }
+              ]).map((subObj: any, index: number) => {
+                const percentVal = parseInt(subObj.score) || 80;
+                return (
+                  <div key={index} style={{ background: "rgba(0,0,0,0.015)", padding: "0.85rem 1.1rem", borderRadius: "10px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-main)" }}>{subObj.subject}</span>
+                      <strong style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--primary)" }}>{subObj.score}</strong>
+                    </div>
+                    {/* Progress Bar Track */}
+                    <div style={{ width: "100%", height: 6, background: "rgba(0,0,0,0.05)", borderRadius: "99px", overflow: "hidden" }}>
+                      <div style={{ width: `${percentVal}%`, height: "100%", background: "linear-gradient(90deg, var(--primary) 0%, #8b5cf6 100%)", borderRadius: "99px" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* TERM EXAM ANALYTICS SECTION */}
+          <div className="glass-card" style={{ padding: "1.75rem", borderLeft: "4px solid #f43f5e" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
+              <div>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--text-heading)", margin: 0 }}>Term Exam Analytics</h3>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>Overview of participation rates, promotion percentages, and grades per exam session.</p>
+              </div>
+
+              {/* Term selector dropdown */}
+              <div>
+                <select
+                  value={selectedExamTermId}
+                  onChange={(e) => setSelectedExamTermId(e.target.value)}
+                  style={{ padding: "0.5rem 1rem", borderRadius: "10px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-main)", fontWeight: 700, fontSize: "0.85rem" }}
+                >
+                  <option value="annual">Annual Examination</option>
+                  <option value="midterm">Mid-Term Examination</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Exam metrics cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "1rem", marginBottom: "1.5rem" }}>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Students</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "var(--text-heading)", display: "block", marginTop: 4 }}>
+                  {examTermAnalytics?.students || 240}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Appeared</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "var(--primary)", display: "block", marginTop: 4 }}>
+                  {examTermAnalytics?.appeared || 236}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Passed</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#10b981", display: "block", marginTop: 4 }}>
+                  {examTermAnalytics?.passed || 218}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Failed</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#f43f5e", display: "block", marginTop: 4 }}>
+                  {examTermAnalytics?.failed || 18}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Pass %</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "#10b981", display: "block", marginTop: 4 }}>
+                  {examTermAnalytics?.passPercentage || "92.37%"}
+                </strong>
+              </div>
+              <div style={{ background: "rgba(0,0,0,0.02)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block" }}>Average Score</span>
+                <strong style={{ fontSize: "1.35rem", fontWeight: 900, color: "var(--primary)", display: "block", marginTop: 4 }}>
+                  {examTermAnalytics?.average || "76.4%"}
+                </strong>
+              </div>
+            </div>
+
+            {/* Subject performance averages */}
+            <h4 style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--text-heading)", marginBottom: "0.75rem" }}>Subject-wise Analysis</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+              {(examTermAnalytics?.subjectAnalysis || [
+                { subject: "Mathematics", score: "72%" },
+                { subject: "Science", score: "79%" },
+                { subject: "English", score: "84%" },
+                { subject: "Hindi", score: "88%" }
+              ]).map((subObj: any, index: number) => {
+                const percentVal = parseInt(subObj.score) || 75;
+                return (
+                  <div key={index} style={{ background: "rgba(0,0,0,0.015)", padding: "0.85rem 1.1rem", borderRadius: "10px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-main)" }}>{subObj.subject}</span>
+                      <strong style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--primary)" }}>{subObj.score}</strong>
+                    </div>
+                    {/* Progress Bar Track */}
+                    <div style={{ width: "100%", height: 6, background: "rgba(0,0,0,0.05)", borderRadius: "99px", overflow: "hidden" }}>
+                      <div style={{ width: `${percentVal}%`, height: "100%", background: "linear-gradient(90deg, #f43f5e 0%, #ef4444 100%)", borderRadius: "99px" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ 10. ADMISSION HALL TICKETS ════════════ */}
+      {activeTab === "hall_tickets" && (
+        <div className="glass-card" style={{ padding: "1.5rem" }}>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>
+            Admission Hall Ticket Generation Console
+          </h3>
+
+          <table className="custom-table">
+            <thead>
+              <tr>
+                <th>Registration No</th>
+                <th>Candidate Name</th>
+                <th>Target Class</th>
+                <th>Center Room</th>
+                <th style={{ textAlign: "right" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ fontWeight: 800 }}>REG-2026-081</td>
+                <td>Abhinav Swamy</td>
+                <td>Class 8 - Section A</td>
+                <td>Room 301</td>
+                <td style={{ textAlign: "right" }}>
+                  <button onClick={() => alert("Printing Hall Ticket PDF...")} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem" }}>
+                    Print Admit Card
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: 800 }}>REG-2026-092</td>
+                <td>Gautami Joshi</td>
+                <td>Class 9 - Section B</td>
+                <td>Room 302</td>
+                <td style={{ textAlign: "right" }}>
+                  <button onClick={() => alert("Printing Hall Ticket PDF...")} className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.72rem" }}>
+                    Print Admit Card
+                  </button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

@@ -2802,5 +2802,271 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ════════════ ELEGANT INTERACTIVE ANIMATIONS & HOVER EFFECTS ════════════ */
+
+/* 1. Keyframe Animations */
+@keyframes softFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulseGlowSoft {
+  0%, 100% {
+    opacity: 0.85;
+    box-shadow: 0 0 15px rgba(67, 56, 202, 0.2);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.45);
+  }
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.22);
+  }
+}
+
+/* 2. Hero & Floating Badges Animation */
+.floating-badge-anim {
+  animation: softFloat 4s ease-in-out infinite;
+}
+
+/* 3. Card Elevate & Glow Transitions */
+.trust-card-item {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.trust-card-item:hover {
+  transform: translateY(-6px) scale(1.015) !important;
+  box-shadow: 0 20px 40px rgba(67, 56, 202, 0.12) !important;
+  border-color: rgba(67, 56, 202, 0.3) !important;
+}
+
+.feature-card-item {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.feature-card-item:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.14) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+.feature-icon-badge {
+  transition: transform 0.3s ease !important;
+}
+.feature-card-item:hover .feature-icon-badge {
+  transform: scale(1.12) rotate(4deg) !important;
+}
+
+.pricing-card-item {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.pricing-card-item:hover {
+  transform: translateY(-8px) !important;
+  box-shadow: 0 25px 50px rgba(59, 130, 246, 0.18) !important;
+  border-color: #3b82f6 !important;
+}
+
+.testimonial-card-item {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.testimonial-card-item:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1) !important;
+  border-color: rgba(67, 56, 202, 0.3) !important;
+}
+
+.step-item-box {
+  transition: all 0.3s ease !important;
+}
+.step-icon-badge {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.step-item-box:hover .step-icon-badge {
+  transform: translateY(-6px) scale(1.12) !important;
+  border-color: #4338ca !important;
+  box-shadow: 0 12px 28px rgba(67, 56, 202, 0.22) !important;
+}
+
+.app-card-item {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.app-card-item:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12) !important;
+  border-color: rgba(67, 56, 202, 0.3) !important;
+}
+
+.stat-card-item {
+  transition: all 0.25s ease !important;
+}
+.stat-card-item:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* 4. Footer Social & Icon Animations (Official Brand Colors) */
+.footer-social-icon {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.footer-social-icon:hover {
+  transform: translateY(-5px) scale(1.15) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Facebook Brand Color */
+.social-facebook:hover {
+  background: #1877f2 !important;
+  box-shadow: 0 8px 22px rgba(24, 119, 242, 0.5) !important;
+}
+
+/* Twitter Brand Color */
+.social-twitter:hover {
+  background: #1da1f2 !important;
+  box-shadow: 0 8px 22px rgba(29, 161, 242, 0.5) !important;
+}
+
+/* LinkedIn Brand Color */
+.social-linkedin:hover {
+  background: #0a66c2 !important;
+  box-shadow: 0 8px 22px rgba(10, 102, 194, 0.5) !important;
+}
+
+/* YouTube Brand Color */
+.social-youtube:hover {
+  background: #ff0000 !important;
+  box-shadow: 0 8px 22px rgba(255, 0, 0, 0.5) !important;
+}
+
+/* Instagram Official Brand Gradient */
+.social-instagram:hover {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
+  box-shadow: 0 8px 22px rgba(220, 39, 67, 0.5) !important;
+}
+
+.footer-link-hover {
+  transition: all 0.25s ease !important;
+  display: inline-block !important;
+}
+.footer-link-hover:hover {
+  color: #38bdf8 !important;
+  transform: translateX(4px) !important;
+}
+
+.footer-contact-item {
+  transition: all 0.25s ease !important;
+}
+.footer-contact-item:hover {
+  transform: translateX(4px) !important;
+}
+.footer-contact-icon {
+  transition: transform 0.3s ease !important;
+}
+.footer-contact-item:hover .footer-contact-icon {
+  animation: iconPulse 0.6s ease infinite alternate;
+  color: #38bdf8 !important;
+}
+
+/* Dark Mode Support for Features Page Realtime Tracking Section */
+[data-theme="dark"] .realtime-tracking-section-grid {
+  background: linear-gradient(135deg, rgba(14, 19, 41, 0.95) 0%, rgba(22, 28, 56, 0.85) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .realtime-tracking-section-grid span[style*="rgba(67, 56, 202"] {
+  color: #818cf8 !important;
+  background: rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Dark Mode Support for Solutions Page Sections */
+[data-theme="dark"] #fee-engine .solutions-section-grid {
+  background: linear-gradient(135deg, rgba(14, 19, 41, 0.95) 0%, rgba(22, 28, 56, 0.85) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] #report-cards .solutions-section-grid {
+  background: linear-gradient(135deg, rgba(20, 15, 42, 0.95) 0%, rgba(28, 22, 56, 0.85) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] #parent-app .solutions-section-grid {
+  background: linear-gradient(135deg, rgba(10, 30, 25, 0.95) 0%, rgba(18, 42, 35, 0.85) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .solutions-tab-side-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-hide-tags {
+    display: none !important;
+  }
+
+  .resources-stats-ribbon > div {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.2rem !important;
+    padding: 0.75rem 0.3rem !important;
+  }
+
+  .resources-stats-ribbon > div > div {
+    border-right: 1px solid var(--border-color) !important;
+    border-bottom: none !important;
+    padding: 0 0.2rem !important;
+    gap: 0.3rem !important;
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+
+  .resources-stats-ribbon > div > div:last-child {
+    border-right: none !important;
+  }
+
+  .resources-stats-ribbon-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1rem !important;
+    border-radius: 10px !important;
+  }
+
+  .resources-stats-ribbon-val {
+    font-size: 0.95rem !important;
+    line-height: 1 !important;
+  }
+
+  .resources-stats-ribbon-lbl {
+    font-size: 0.65rem !important;
+    line-height: 1.1 !important;
+    margin-top: 0.1rem !important;
+  }
+}
+
+/* Dark Mode Support for About Page Mission & Vision Cards */
+[data-theme="dark"] .about-mission-card {
+  background: linear-gradient(135deg, rgba(20, 18, 48, 0.95) 0%, rgba(30, 25, 65, 0.85) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .about-vision-card {
+  background: linear-gradient(135deg, rgba(10, 30, 25, 0.95) 0%, rgba(18, 42, 35, 0.85) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
 
 

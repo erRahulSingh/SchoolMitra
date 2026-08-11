@@ -29,6 +29,8 @@ import settingsRoutes from "../modules/settings/settings.routes";
 import hrRoutes from "../modules/hr/hr.routes";
 import libraryRoutes from "../modules/library/library.routes";
 import inventoryRoutes from "../modules/inventory/inventory.routes";
+import permissionsRoutes from "../modules/permissions/permissions.routes";
+import academicRoutes from "../modules/academic/academic.routes";
 
 import uploadRoutes from "../modules/upload/upload.routes";
 
@@ -43,9 +45,11 @@ router.use("/academics", academicsRoutes);
 router.use("/driver", driverRoutes);
 router.use("/tenant", tenantRoutes);
 router.use("/admin", adminRoutes);
+router.use("/admin", academicRoutes);
 router.use("/schools", schoolRoutes);
 router.use("/students", studentRoutes);
 router.use("/parents", parentRoutes);
+router.use("/parent", parentRoutes);
 router.use("/teachers", teacherRoutes);
 router.use("/teacher", teacherRoutes);
 router.use("/attendance", attendanceRoutes);
@@ -67,6 +71,7 @@ router.use("/support", supportRoutes);
 router.use("/hr", hrRoutes);
 router.use("/library", libraryRoutes);
 router.use("/inventory", inventoryRoutes);
+router.use("/permissions", permissionsRoutes);
 
 // Health Check
 router.get("/health", (req, res) => {

@@ -13,6 +13,7 @@ import SchoolRegistrationModal from "@/components/SchoolRegistrationModal";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { usePathname } from "next/navigation";
+import hero3dNew from "C:/Users/rahul/.gemini/antigravity-ide/brain/b97491cc-454c-4cff-8d67-66526ab16c74/resources_hero_3d_cropped_1786431535176.png";
 
 /* ── Category filter data ── */
 const CATEGORIES = [
@@ -176,25 +177,26 @@ export default function ResourcesPage() {
             {/* Badge pill */}
             <div className="resources-badge" style={{
               display: "inline-flex", alignItems: "center", gap: "0.45rem",
-              padding: "0.35rem 0.95rem", borderRadius: 9999,
-              fontSize: "0.85rem", fontWeight: 600, marginBottom: "1.25rem"
+              padding: "0.45rem 1rem", borderRadius: 9999,
+              fontSize: "0.85rem", fontWeight: 700, marginBottom: "1.25rem",
+              background: "rgba(67, 56, 202, 0.08)", color: "#4338ca",
+              border: "1px solid rgba(67, 56, 202, 0.2)"
             }}>
-              <BookOpen size={15} color="var(--primary)" /> Resources
+              <BookOpen size={15} color="#4338ca" /> Free EdTech Knowledge Base &amp; Growth Hub
             </div>
 
             {/* Headline */}
             <h1 style={{
-              fontSize: "clamp(2.2rem,3.8vw,3.2rem)", fontWeight: 800,
+              fontSize: "clamp(2.2rem, 3.8vw, 3.2rem)", fontWeight: 800,
               lineHeight: 1.15, letterSpacing: "-0.03em", marginBottom: "1rem"
             }}>
               Learning Center<br />
-              for{" "}
-              <span style={{ color: "#f97316" }}>Modern Schools</span>
+              for <span style={{ color: "#f97316" }}>Modern Schools</span>
             </h1>
 
             {/* Sub-text */}
-            <p style={{ fontSize: "0.98rem", color: "var(--text-muted)", lineHeight: 1.65, maxWidth: 460, marginBottom: "1.5rem" }}>
-              Explore guides, articles, case studies, and helpful resources to make your school smarter, safer and more efficient.
+            <p style={{ fontSize: "1.02rem", color: "var(--text-muted)", lineHeight: 1.65, maxWidth: 500, marginBottom: "1.6rem" }}>
+              Access expert-written guides, CBSE/ICSE compliance templates, video tutorials, and battle-tested ERP case studies designed to help Indian school principals &amp; administrators grow.
             </p>
 
             {/* Search bar */}
@@ -202,10 +204,11 @@ export default function ResourcesPage() {
               display: "flex", alignItems: "center",
               background: "var(--bg-card)", border: "1px solid var(--border-color)",
               borderRadius: 14, padding: "0.3rem 0.3rem 0.3rem 1.1rem",
-              maxWidth: 480, boxShadow: "0 8px 24px rgba(15,23,42,0.06)"
+              maxWidth: 500, boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
+              marginBottom: "1rem"
             }}>
               <input
-                type="text" placeholder="Search articles, guides, videos..."
+                type="text" placeholder="Search articles, guides, CBSE templates, videos..."
                 value={search} onChange={e => setSearch(e.target.value)}
                 style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: "0.92rem", color: "var(--text-main)", fontFamily: "inherit" }}
               />
@@ -216,51 +219,113 @@ export default function ResourcesPage() {
                 cursor: "pointer", boxShadow: "0 4px 12px rgba(67,56,202,0.3)"
               }}><Search size={20} /></button>
             </div>
+
+            {/* Popular Searches Quick Tags (Hidden on mobile) */}
+            <div className="resources-popular-topics mobile-hide-tags" style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.8rem" }}>
+              <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)" }}>Popular Topics:</span>
+              {["CBSE Guidelines", "Fee Automation", "GPS Safety", "Parent Engagement"].map((tag, tIdx) => (
+                <button
+                  key={tIdx}
+                  onClick={() => setSearch(tag)}
+                  style={{
+                    fontSize: "0.76rem",
+                    fontWeight: 700,
+                    padding: "0.25rem 0.65rem",
+                    borderRadius: "8px",
+                    background: "var(--bg-subtle)",
+                    color: "var(--text-main)",
+                    border: "1px solid var(--border-color)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+
+            {/* Key Resource Highlights Badges (Hidden on mobile) */}
+            <div className="resources-highlights mobile-hide-tags" style={{ display: "flex", gap: "1.2rem", flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", fontSize: "0.85rem", fontWeight: 700, color: "var(--text-main)" }}>
+                <CheckCircle2 size={16} color="#10b981" /> 100% Free Guides
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", fontSize: "0.85rem", fontWeight: 700, color: "var(--text-main)" }}>
+                <CheckCircle2 size={16} color="#10b981" /> CBSE &amp; ICSE Templates
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", fontSize: "0.85rem", fontWeight: 700, color: "var(--text-main)" }}>
+                <CheckCircle2 size={16} color="#10b981" /> HD Video Tutorials
+              </div>
+            </div>
           </div>
 
-          {/* Right: 3D illustration */}
+          {/* Right: Tightly framed 3D illustration */}
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", position: "relative" }}>
-            <img
-              src="/images/resources/hero-3d.png"
-              alt="Learning center illustration"
-              style={{ width: "100%", maxWidth: 560, maxHeight: 380, height: "auto", objectFit: "contain", filter: "drop-shadow(0 16px 32px rgba(67,56,202,0.15))" }}
-            />
+            <div style={{
+              width: "100%",
+              maxWidth: 540,
+              borderRadius: "24px",
+              overflow: "hidden",
+              border: "1px solid var(--border-color)",
+              boxShadow: "0 20px 45px rgba(15, 23, 42, 0.12)",
+              background: "var(--bg-card)"
+            }}>
+              <img
+                src={typeof hero3dNew === "string" ? hero3dNew : hero3dNew.src}
+                alt="Learning center 3D illustration"
+                style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }}
+              />
+            </div>
           </div>
         </div>
 
-        {/* ── Stats Ribbon Section (Placed at Bottom of Hero Section) ── */}
+        {/* ── Stats Ribbon Section (Placed at Bottom of Hero Section - Full Container Width) ── */}
         <div className="resources-stats-ribbon" style={{
           maxWidth: 1280,
-          margin: "2.5rem auto 0 auto",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center"
+          width: "100%",
+          margin: "2.5rem auto 0 auto"
         }}>
           <div style={{
-            display: "inline-flex",
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
             alignItems: "center",
-            gap: "2.5rem",
+            width: "100%",
             background: "var(--bg-card)",
             border: "1px solid var(--border-color)",
             borderRadius: 20,
-            padding: "0.9rem 2.5rem",
+            padding: "1.4rem 2rem",
             boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)"
           }}>
             {[
-              { v: "500+", l: "Resources", icon: "📚" },
-              { v: "50K+", l: "Schools Learn", icon: "🏫" },
-              { v: "24/7", l: "Help Center", icon: "💬" },
+              { v: "500+", l: "Resources Available", icon: "📚" },
+              { v: "50,000+", l: "Schools Learning Daily", icon: "🏫" },
+              { v: "24/7", l: "Dedicated Help Center", icon: "💬" },
             ].map((s, i) => (
-              <React.Fragment key={i}>
-                {i > 0 && <div style={{ width: 1, height: 36, background: "var(--border-color)" }} />}
-                <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-                  <div style={{ fontSize: "1.4rem" }}>{s.icon}</div>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--primary)", fontFamily: "'Outfit',sans-serif", lineHeight: 1.1 }}>{s.v}</span>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginTop: "0.15rem" }}>{s.l}</span>
-                  </div>
+              <div key={i} style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "1.2rem",
+                borderRight: i < 2 ? "1px solid var(--border-color)" : "none",
+                padding: "0 1rem"
+              }}>
+                <div className="resources-stats-ribbon-icon" style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "14px",
+                  background: "var(--bg-subtle)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.5rem",
+                  flexShrink: 0
+                }}>
+                  {s.icon}
                 </div>
-              </React.Fragment>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span className="resources-stats-ribbon-val" style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--primary)", fontFamily: "'Outfit',sans-serif", lineHeight: 1.1 }}>{s.v}</span>
+                  <span className="resources-stats-ribbon-lbl" style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-muted)", marginTop: "0.2rem" }}>{s.l}</span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -491,36 +556,41 @@ export default function ResourcesPage() {
         </div>
       </section>
 
-      {/* ═══════════ HELPFUL GUIDES & DOWNLOADS ═══════════ */}
+      {/* ═══════════ HELPFUL GUIDES & RESOURCES ═══════════ */}
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "0 5% 4rem" }}>
         <div className="resources-guides-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem" }}>
           <div>
-            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Helpful Guides <span style={{ color: "#f97316" }}>& Downloads</span></h2>
-            <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Free resources to get you started</p>
+            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Helpful Guides <span style={{ color: "#f97316" }}>&amp; Resources</span></h2>
+            <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Free resources to get your school started</p>
           </div>
-          <button style={{
-            display: "inline-flex", alignItems: "center", gap: "0.35rem",
-            padding: "0.5rem 1.1rem", borderRadius: 10,
-            border: "1px solid var(--border-color)", background: "var(--bg-card)",
-            color: "var(--primary)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer"
-          }}>View All <ArrowRight size={14} /></button>
+          <button
+            onClick={() => setSelectedCat("guides")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.35rem",
+              padding: "0.5rem 1.1rem", borderRadius: 10,
+              border: "1px solid var(--border-color)", background: "var(--bg-card)",
+              color: "var(--primary)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer"
+            }}
+          >View All <ArrowRight size={14} /></button>
         </div>
 
         <div className="resources-guides-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: "1.25rem" }}>
           {[
-            { icon: "📋", iconBg: "#fee2e2", iconColor: "#dc2626", title: "School ERP\nSetup Checklist", size: "2.4 MB" },
-            { icon: "📱", iconBg: "#fef3c7", iconColor: "#b45309", title: "Parent App\nUser Manual", size: "3.2 MB" },
-            { icon: "🚌", iconBg: "#dcfce7", iconColor: "#15803d", title: "Bus Tracking\nImplementation Guide", size: "4.1 MB" },
-            { icon: "🛡️", iconBg: "#e0f2fe", iconColor: "#0284c7", title: "Data Security &\nPrivacy Policy", size: "4.1 MB" },
-            { icon: "💻", iconBg: "#e0e7ff", iconColor: "#4338ca", title: "API Documentation\n", size: "2.6 MB" },
+            { icon: "📋", iconBg: "#fee2e2", iconColor: "#dc2626", title: "School ERP\nSetup Checklist", size: "10 Min Read" },
+            { icon: "📱", iconBg: "#fef3c7", iconColor: "#b45309", title: "Parent App\nUser Manual", size: "8 Min Read" },
+            { icon: "🚌", iconBg: "#dcfce7", iconColor: "#15803d", title: "Bus Tracking\nImplementation Guide", size: "12 Min Read" },
+            { icon: "🛡️", iconBg: "#e0f2fe", iconColor: "#0284c7", title: "Data Security &\nPrivacy Policy", size: "6 Min Read" },
+            { icon: "💻", iconBg: "#e0e7ff", iconColor: "#4338ca", title: "API Documentation\n& Integration", size: "15 Min Read" },
           ].map((g, i) => (
             <div key={i} style={{
               background: "var(--bg-card)", border: "1px solid var(--border-color)",
               borderRadius: 16, padding: "1.25rem 1rem",
               display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.6rem",
               boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
-              transition: "all 0.25s ease"
+              transition: "all 0.25s ease",
+              cursor: "pointer"
             }}
+              onClick={() => setReader(ALL[i % ALL.length])}
               onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 10px rgba(0,0,0,0.03)"; }}
             >
@@ -529,14 +599,20 @@ export default function ResourcesPage() {
               </div>
               <div>
                 <h4 style={{ fontSize: "0.9rem", fontWeight: 700, lineHeight: 1.35, whiteSpace: "pre-line", color: "var(--text-main)" }}>{g.title}</h4>
-                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600 }}>PDF  {g.size}</span>
+                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600 }}>📖 {g.size}</span>
               </div>
-              <button style={{
-                padding: "0.4rem 1rem", borderRadius: 10,
-                border: "1px solid var(--primary)", background: "transparent",
-                color: "var(--primary)", fontWeight: 700, fontSize: "0.8rem",
-                cursor: "pointer", transition: "all 0.2s", marginTop: "auto"
-              }}>Download</button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setReader(ALL[i % ALL.length]); }}
+                style={{
+                  padding: "0.45rem 1rem", borderRadius: 10,
+                  border: "1px solid var(--primary)", background: "rgba(67, 56, 202, 0.06)",
+                  color: "var(--primary)", fontWeight: 700, fontSize: "0.82rem",
+                  cursor: "pointer", transition: "all 0.2s", marginTop: "auto",
+                  display: "inline-flex", alignItems: "center", gap: "0.35rem"
+                }}
+              >
+                Learn More <ArrowRight size={13} />
+              </button>
             </div>
           ))}
         </div>

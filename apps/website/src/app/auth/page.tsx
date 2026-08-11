@@ -281,8 +281,11 @@ export default function AuthPage() {
         }
 
         .auth-logo {
-          height: 28px;
-          margin-bottom: 1rem;
+          height: 48px;
+          width: auto;
+          max-width: 220px;
+          object-fit: contain;
+          margin-bottom: 1.25rem;
         }
 
         .auth-title {
@@ -397,14 +400,19 @@ export default function AuthPage() {
 
         .auth-social-group {
           display: flex;
-          gap: 1rem;
+          flex-direction: row !important;
+          gap: 0.85rem;
           width: 100%;
         }
 
         @media (max-width: 600px) {
           .auth-social-group {
-            flex-direction: column;
-            gap: 0.75rem;
+            flex-direction: row !important;
+            gap: 0.5rem;
+          }
+          .auth-social-btn {
+            padding: 0.65rem 0.4rem !important;
+            font-size: 0.82rem !important;
           }
         }
 

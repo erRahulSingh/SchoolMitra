@@ -1,6 +1,14 @@
+// ═══════════════════════════════════════════════════════════
+// SchoolMitra Backend — Teacher Homework Controller (Dynamic DB Bound)
+// ═══════════════════════════════════════════════════════════
+
 import { Request, Response } from "express";
 import { ApiResponse } from "../../../utils/ApiResponse";
 import { asyncHandler } from "../../../utils/asyncHandler";
+import { notifyParent } from "../../../services/pushNotificationService";
+import { HomeworkModel } from "../../../models/AcademicSchemas";
+import { StudentModel, TeacherAssignmentModel } from "../../../models/SchoolSchemas";
+import mongoose from "mongoose";
 
 function emitParentSyncEvent(eventName: string, payload: any) {
   try {
@@ -13,135 +21,321 @@ function emitParentSyncEvent(eventName: string, payload: any) {
   } catch (err) {}
 }
 
+// ════════════ 1. GET /api/v1/teacher/homework — List Homework Assignments ════════════
 export const getTeacherHomework = asyncHandler(async (req: Request, res: Response) => {
-  const { classId = "class_8", sectionId = "sec_a" } = req.query;
+  const user = (req as any).user;
+  const teacherId = user?.id || user?._id;
+  const schoolId = user?.schoolId || "sch_default";
 
-  return ApiResponse.success(res, 200, "Homework assignments roster retrieved", {
-    classId,
-    sectionId,
-    totalCount: 2,
-    homeworkList: [
-      {
-        id: "hw_101",
-        schoolId: "sch_101",
-        teacherId: "tch_65a88203921",
-        classId: "class_8",
-        sectionId: "sec_a",
-        subjectId: "sub_math",
-        subjectName: "Mathematics",
-        title: "Linear Equations Exercise 3.2",
-        description: "Solve problems 1 to 10 from NCERT textbook Chapter 3.",
-        attachments: [
-          { fileName: "Math_Worksheet_Ch3.pdf", fileUrl: "https://schoolmitra.s3.amazonaws.com/docs/Math_Worksheet.pdf", fileSize: "2.4 MB" }
-        ],
-        dueDate: "2024-05-25",
-        status: "Published",
-        publishedAt: "2024-05-20T10:00:00.000Z",
-        submittedCount: 28,
-        totalStudents: 36
-      }
-    ]
-  });
-});
+  const { classId, sectionId, status } = req.query;
 
-export const createTeacherHomework = asyncHandler(async (req: Request, res: Response) => {
-  const { classId = "class_8", sectionId = "sec_a", subjectId = "sub_math", title, description, dueDate, attachments = [] } = req.body;
-
-  if (!title || !dueDate) {
-    return ApiResponse.error(res, 400, "Title and due date are required for homework");
-  }
-
-  const newHomework = {
-    id: `hw_${Date.now()}`,
-    schoolId: "sch_101",
-    teacherId: "tch_65a88203921",
-    classId,
-    sectionId,
-    subjectId,
-    title,
-    description: description || "",
-    attachments,
-    dueDate,
-    status: "Draft",
-    publishedAt: null,
-    createdAt: new Date().toISOString()
+  const query: any = {
+    schoolId,
+    teacherId: new mongoose.Types.ObjectId(teacherId)
   };
 
-  return ApiResponse.created(res, "Homework created as draft successfully!", { homework: newHomework });
+  if (classId) query.classId = new mongoose.Types.ObjectId(classId as string);
+  if (sectionId) query.sectionId = new mongoose.Types.ObjectId(sectionId as string);
+  if (status) {
+    query.status = (status as string).toUpperCase();
+  }
+
+  const list = await HomeworkModel.find(query)
+    .populate("classId", "className")
+    .populate("sectionId", "sectionName")
+    .populate("subjectId", "subjectName code")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const formattedList = [];
+  for (const hw of list) {
+    const totalStudents = await StudentModel.countDocuments({
+      schoolId,
+      classId: hw.classId?._id || hw.classId,
+      sectionId: hw.sectionId?._id || hw.sectionId,
+      status: "Active"
+    });
+
+    formattedList.push({
+      id: String(hw._id),
+      schoolId: String(hw.schoolId),
+      teacherId: String(hw.teacherId),
+      classId: String(hw.classId?._id || hw.classId),
+      className: (hw.classId as any)?.className || "Class",
+      sectionId: String(hw.sectionId?._id || hw.sectionId),
+      sectionName: (hw.sectionId as any)?.sectionName || "A",
+      subjectId: String(hw.subjectId?._id || hw.subjectId),
+      subjectName: (hw.subjectId as any)?.subjectName || "Subject",
+      title: hw.title,
+      description: hw.description || "",
+      attachments: hw.attachments || [],
+      assignedDate: hw.assignedDate,
+      dueDate: hw.dueDate,
+      status: hw.status,
+      totalStudents
+    });
+  }
+
+  return ApiResponse.success(res, 200, "Homework assignments roster retrieved successfully", {
+    totalCount: formattedList.length,
+    homeworkList: formattedList
+  });
 });
 
+// ════════════ 2. POST /api/v1/teacher/homework — Create Homework (DRAFT / PUBLISHED) ════════════
+export const createTeacherHomework = asyncHandler(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const teacherId = user?.id || user?._id;
+  const schoolId = user?.schoolId || "sch_default";
+
+  const { classId, sectionId, subjectId, title, description, assignedDate, dueDate, attachments = [], status = "DRAFT", academicYearId } = req.body;
+
+  if (!classId || !sectionId || !subjectId || !title || !dueDate) {
+    return ApiResponse.error(res, 400, "classId, sectionId, subjectId, title, and dueDate are required.", "VALIDATION_ERROR");
+  }
+
+  const normalizedStatus = status.toUpperCase() as "DRAFT" | "PUBLISHED" | "CLOSED";
+  if (!["DRAFT", "PUBLISHED", "CLOSED"].includes(normalizedStatus)) {
+    return ApiResponse.error(res, 400, "Invalid status. Supported: DRAFT, PUBLISHED, CLOSED", "VALIDATION_ERROR");
+  }
+
+  // 1. Verify Teacher is assigned to this Class Section & Subject
+  const assignment = await TeacherAssignmentModel.findOne({
+    schoolId,
+    teacherId,
+    classId: new mongoose.Types.ObjectId(classId),
+    sectionId: new mongoose.Types.ObjectId(sectionId),
+    subjectId: new mongoose.Types.ObjectId(subjectId),
+    status: "Active"
+  }).lean();
+
+  if (!assignment) {
+    return ApiResponse.error(res, 403, "Access Denied: You are not assigned to teach this subject in this class section.", "FORBIDDEN");
+  }
+
+  // 2. Create the homework record
+  const homework = await HomeworkModel.create({
+    schoolId,
+    teacherId: new mongoose.Types.ObjectId(teacherId),
+    classId: new mongoose.Types.ObjectId(classId),
+    sectionId: new mongoose.Types.ObjectId(sectionId),
+    subjectId: new mongoose.Types.ObjectId(subjectId),
+    academicYearId: academicYearId ? new mongoose.Types.ObjectId(academicYearId) : (assignment.academicYearId || undefined),
+    title,
+    description: description || "",
+    assignedDate: assignedDate ? new Date(assignedDate) : new Date(),
+    dueDate: new Date(dueDate),
+    attachments: attachments.map((a: any) => ({
+      fileName: a.fileName || "file",
+      fileUrl: a.fileUrl || "",
+      fileType: a.fileType || ""
+    })),
+    status: normalizedStatus
+  });
+
+  // 3. Send Notification if Published immediately
+  if (normalizedStatus === "PUBLISHED") {
+    try {
+      notifyParent(
+        "ExponentPushToken[SampleParentToken]",
+        "HOMEWORK_PUBLISHED",
+        "New Homework Published 📚",
+        `New Homework assigned: "${title}". Due Date: ${new Date(dueDate).toDateString()}`,
+        { homeworkId: String(homework._id) }
+      );
+    } catch (e) {}
+
+    emitParentSyncEvent("PARENT_HOMEWORK_CREATED", {
+      title: "New Homework Available 📚",
+      message: `New homework has been published. Title: ${title}. Due Date: ${new Date(dueDate).toDateString()}`,
+      homeworkId: String(homework._id)
+    });
+  }
+
+  return ApiResponse.created(res, `Homework created successfully as ${normalizedStatus}`, { homework });
+});
+
+// ════════════ 3. GET /api/v1/teacher/homework/:id — Retrieve Specific Homework Details ════════════
 export const getTeacherHomeworkById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || "sch_default";
 
-  return ApiResponse.success(res, 200, `Homework ${id} details retrieved`, {
+  const hw = await HomeworkModel.findById(id)
+    .populate("classId", "className")
+    .populate("sectionId", "sectionName")
+    .populate("subjectId", "subjectName code")
+    .lean();
+
+  if (!hw) {
+    return ApiResponse.error(res, 404, "Homework assignment not found.", "NOT_FOUND");
+  }
+
+  if (String(hw.schoolId) !== String(schoolId)) {
+    return ApiResponse.error(res, 403, "Access Denied: Cross-tenant query blocked.", "FORBIDDEN");
+  }
+
+  const totalStudents = await StudentModel.countDocuments({
+    schoolId,
+    classId: hw.classId?._id || hw.classId,
+    sectionId: hw.sectionId?._id || hw.sectionId,
+    status: "Active"
+  });
+
+  return ApiResponse.success(res, 200, "Homework details retrieved", {
     homework: {
-      id: id || "hw_101",
-      schoolId: "sch_101",
-      teacherId: "tch_65a88203921",
-      classId: "class_8",
-      className: "Class 8 - Section A",
-      subjectId: "sub_math",
-      subjectName: "Mathematics",
-      title: "Linear Equations Exercise 3.2",
-      description: "Solve problems 1 to 10 from NCERT textbook Chapter 3.",
-      attachments: [
-        { fileName: "Math_Worksheet_Ch3.pdf", fileUrl: "https://schoolmitra.s3.amazonaws.com/docs/Math_Worksheet.pdf", fileSize: "2.4 MB" }
-      ],
-      dueDate: "2024-05-25",
-      status: "Published",
-      publishedAt: "2024-05-20T10:00:00.000Z",
-      submissionStats: { total: 36, submitted: 28, pending: 8, graded: 25 }
+      id: String(hw._id),
+      schoolId: String(hw.schoolId),
+      teacherId: String(hw.teacherId),
+      classId: String(hw.classId?._id || hw.classId),
+      className: `${(hw.classId as any)?.className || "Class"} - Section ${(hw.sectionId as any)?.sectionName || "A"}`,
+      subjectId: String(hw.subjectId?._id || hw.subjectId),
+      subjectName: (hw.subjectId as any)?.subjectName || "Subject",
+      title: hw.title,
+      description: hw.description || "",
+      attachments: hw.attachments || [],
+      assignedDate: hw.assignedDate,
+      dueDate: hw.dueDate,
+      status: hw.status,
+      submissionStats: { total: totalStudents, submitted: 0, pending: totalStudents, graded: 0 }
     }
   });
 });
 
+// ════════════ 4. PUT /api/v1/teacher/homework/:id — Update Homework ════════════
 export const updateTeacherHomeworkById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { title, description, dueDate, attachments } = req.body;
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || "sch_default";
+  const teacherId = user?.id || user?._id;
 
-  return ApiResponse.success(res, 200, `Homework ${id} updated successfully!`, {
-    homework: {
-      id,
-      title: title || "Updated Homework Title",
-      description: description || "Updated instructions",
-      dueDate: dueDate || "2024-05-30",
-      attachments: attachments || [],
-      updatedAt: new Date().toISOString()
+  const { title, description, assignedDate, dueDate, attachments, status } = req.body;
+
+  const hw = await HomeworkModel.findById(id);
+  if (!hw) {
+    return ApiResponse.error(res, 404, "Homework assignment not found.", "NOT_FOUND");
+  }
+
+  if (String(hw.schoolId) !== String(schoolId)) {
+    return ApiResponse.error(res, 403, "Access Denied: Cross-tenant modification blocked.", "FORBIDDEN");
+  }
+
+  if (String(hw.teacherId) !== String(teacherId)) {
+    return ApiResponse.error(res, 403, "Access Denied: You do not own this homework record.", "FORBIDDEN");
+  }
+
+  const oldStatus = hw.status;
+
+  if (title !== undefined) hw.title = title;
+  if (description !== undefined) hw.description = description;
+  if (assignedDate !== undefined) hw.assignedDate = new Date(assignedDate);
+  if (dueDate !== undefined) hw.dueDate = new Date(dueDate);
+  if (attachments !== undefined) {
+    hw.attachments = attachments.map((a: any) => ({
+      fileName: a.fileName || "file",
+      fileUrl: a.fileUrl || "",
+      fileType: a.fileType || ""
+    }));
+  }
+  
+  if (status !== undefined) {
+    const normalizedStatus = status.toUpperCase();
+    if (["DRAFT", "PUBLISHED", "CLOSED"].includes(normalizedStatus)) {
+      hw.status = normalizedStatus;
     }
-  });
+  }
+
+  await hw.save();
+
+  // Send Notification if status changed from DRAFT to PUBLISHED
+  if (hw.status === "PUBLISHED" && oldStatus !== "PUBLISHED") {
+    try {
+      notifyParent(
+        "ExponentPushToken[SampleParentToken]",
+        "HOMEWORK_PUBLISHED",
+        "New Homework Published 📚",
+        `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,
+        { homeworkId: String(hw._id) }
+      );
+    } catch (e) {}
+
+    emitParentSyncEvent("PARENT_HOMEWORK_CREATED", {
+      title: "New Homework Available 📚",
+      message: `New homework has been published. Title: ${hw.title}. Due Date: ${new Date(hw.dueDate).toDateString()}`,
+      homeworkId: String(hw._id)
+    });
+  }
+
+  return ApiResponse.success(res, 200, "Homework updated successfully", { homework: hw });
 });
 
+// ════════════ 5. DELETE /api/v1/teacher/homework/:id — Delete Homework ════════════
 export const deleteTeacherHomeworkById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  return ApiResponse.success(res, 200, `Homework ${id} deleted successfully.`);
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || "sch_default";
+  const teacherId = user?.id || user?._id;
+
+  const hw = await HomeworkModel.findById(id);
+  if (!hw) {
+    return ApiResponse.error(res, 404, "Homework assignment not found.", "NOT_FOUND");
+  }
+
+  if (String(hw.schoolId) !== String(schoolId)) {
+    return ApiResponse.error(res, 403, "Access Denied: Cross-tenant operation blocked.", "FORBIDDEN");
+  }
+
+  if (String(hw.teacherId) !== String(teacherId)) {
+    return ApiResponse.error(res, 403, "Access Denied: You do not own this homework record.", "FORBIDDEN");
+  }
+
+  await HomeworkModel.findByIdAndDelete(id);
+
+  return ApiResponse.success(res, 200, "Homework deleted successfully.");
 });
 
-import { notifyParent } from "../../../services/pushNotificationService";
-
+// ════════════ 6. PATCH/POST /api/v1/teacher/homework/:id/publish — Publish Draft Homework ════════════
 export const publishTeacherHomeworkById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || "sch_default";
+  const teacherId = user?.id || user?._id;
 
-  // Dispatch Expo Mobile Push Notification to Parent App
-  notifyParent(
-    "ExponentPushToken[SampleParentToken]",
-    "HOMEWORK_PUBLISHED",
-    "New Homework Published 📚",
-    "New Mathematics homework assigned for Class 8 - Section A. Due Date: 25 May 2024. Tap to open worksheet.",
-    { homeworkId: id, subject: "Mathematics" }
-  );
+  const hw = await HomeworkModel.findById(id);
+  if (!hw) {
+    return ApiResponse.error(res, 404, "Homework assignment not found.", "NOT_FOUND");
+  }
+
+  if (String(hw.schoolId) !== String(schoolId)) {
+    return ApiResponse.error(res, 403, "Access Denied: Cross-tenant operation blocked.", "FORBIDDEN");
+  }
+
+  if (String(hw.teacherId) !== String(teacherId)) {
+    return ApiResponse.error(res, 403, "Access Denied: You do not own this homework record.", "FORBIDDEN");
+  }
+
+  hw.status = "PUBLISHED";
+  await hw.save();
+
+  try {
+    notifyParent(
+      "ExponentPushToken[SampleParentToken]",
+      "HOMEWORK_PUBLISHED",
+      "New Homework Published 📚",
+      `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,
+      { homeworkId: String(hw._id) }
+    );
+  } catch (e) {}
 
   emitParentSyncEvent("PARENT_HOMEWORK_CREATED", {
     title: "New Homework Available 📚",
-    message: `New Mathematics homework has been published for Class 8 - Section A. Due Date: 25 May 2024. Check Parent App now.`,
-    homeworkId: id,
-    publishedAt: new Date().toISOString()
+    message: `New homework has been published. Title: ${hw.title}. Due Date: ${new Date(hw.dueDate).toDateString()}`,
+    homeworkId: String(hw._id)
   });
 
-  return ApiResponse.success(res, 200, `Homework ${id} published and broadcasted to Parent App in real-time!`, {
-    homeworkId: id,
-    status: "Published",
-    publishedAt: new Date().toISOString(),
-    parentNotificationSent: true
+  return ApiResponse.success(res, 200, `Homework published and broadcasted to Parent App!`, {
+    homeworkId: String(hw._id),
+    status: "PUBLISHED",
+    publishedAt: new Date()
   });
 });
-
