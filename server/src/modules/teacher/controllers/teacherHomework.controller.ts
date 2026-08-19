@@ -6,6 +6,7 @@ import { Request, Response } from "express";
 import { ApiResponse } from "../../../utils/ApiResponse";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import { notifyParent } from "../../../services/pushNotificationService";
+import { sendClassNotification } from "../../../services/notificationService";
 import { HomeworkModel } from "../../../models/AcademicSchemas";
 import { StudentModel, TeacherAssignmentModel } from "../../../models/SchoolSchemas";
 import mongoose from "mongoose";
@@ -249,21 +250,17 @@ export const updateTeacherHomeworkById = asyncHandler(async (req: Request, res: 
 
   // Send Notification if status changed from DRAFT to PUBLISHED
   if (hw.status === "PUBLISHED" && oldStatus !== "PUBLISHED") {
-    try {
-      notifyParent(
-        "ExponentPushToken[SampleParentToken]",
-        "HOMEWORK_PUBLISHED",
-        "New Homework Published 📚",
-        `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,
-        { homeworkId: String(hw._id) }
-      );
-    } catch (e) {}
-
-    emitParentSyncEvent("PARENT_HOMEWORK_CREATED", {
-      title: "New Homework Available 📚",
-      message: `New homework has been published. Title: ${hw.title}. Due Date: ${new Date(hw.dueDate).toDateString()}`,
-      homeworkId: String(hw._id)
-    });
+    sendClassNotification(
+      schoolId,
+      teacherId,
+      hw.classId,
+      hw.sectionId,
+      "HOMEWORK",
+      "New Homework Published 📚",
+      `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,
+      "homeworks",
+      hw._id
+    );
   }
 
   return ApiResponse.success(res, 200, "Homework updated successfully", { homework: hw });
@@ -317,21 +314,17 @@ export const publishTeacherHomeworkById = asyncHandler(async (req: Request, res:
   hw.status = "PUBLISHED";
   await hw.save();
 
-  try {
-    notifyParent(
-      "ExponentPushToken[SampleParentToken]",
-      "HOMEWORK_PUBLISHED",
-      "New Homework Published 📚",
-      `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,
-      { homeworkId: String(hw._id) }
-    );
-  } catch (e) {}
-
-  emitParentSyncEvent("PARENT_HOMEWORK_CREATED", {
-    title: "New Homework Available 📚",
-    message: `New homework has been published. Title: ${hw.title}. Due Date: ${new Date(hw.dueDate).toDateString()}`,
-    homeworkId: String(hw._id)
-  });
+  sendClassNotification(
+    schoolId,
+    teacherId,
+    hw.classId,
+    hw.sectionId,
+    "HOMEWORK",
+    "New Homework Published 📚",
+    `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,
+    "homeworks",
+    hw._id
+  );
 
   return ApiResponse.success(res, 200, `Homework published and broadcasted to Parent App!`, {
     homeworkId: String(hw._id),

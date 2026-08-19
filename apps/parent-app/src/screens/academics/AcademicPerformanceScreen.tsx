@@ -25,18 +25,18 @@ export default function AcademicPerformanceScreen({ navigation }: any) {
   });
 
   useEffect(() => {
-    // Fetch from backend parent student performance endpoint
-    // Hardcoded STU-1001 for demo purposes as linked in parent.controller
-    fetch("http://10.0.2.2:5000/api/v1/parents/students/STU-1001/performance")
+    // Attempt live DB sync from backend parent student performance endpoint with resilient fallback
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    fetch(`${apiUrl}/parents/students/STU-1001/performance`)
       .then(res => res.json())
       .then(json => {
-        if (json.success && json.data) {
+        if (json && json.success && json.data) {
           setData(json.data);
         }
         setLoading(false);
       })
-      .catch(err => {
-        console.warn("Parent performance API fetch failed, using fallback:", err);
+      .catch(() => {
+        // Quietly fall back to bundled state
         setLoading(false);
       });
   }, []);

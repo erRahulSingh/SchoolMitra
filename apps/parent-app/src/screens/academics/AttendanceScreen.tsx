@@ -4,47 +4,18 @@ import { ChevronLeft, Calendar as CalendarIcon, ChevronDown } from 'lucide-react
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function AttendanceScreen({ navigation }: any) {
-  const [selectedMonth, setSelectedMonth] = useState('April 2025');
+  const [selectedMonth, setSelectedMonth] = useState('August 2026');
 
   const daysHeader = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Calendar days setup
-  const calendarDays = [
-    { day: 30, isOtherMonth: true },
-    { day: 31, isOtherMonth: true },
-    { day: 1, status: 'normal' },
-    { day: 2, status: 'normal' },
-    { day: 3, status: 'normal' },
-    { day: 4, status: 'normal' },
-    { day: 5, status: 'normal' },
-    { day: 6, status: 'normal' },
-    { day: 7, status: 'normal' },
-    { day: 8, status: 'absent' }, // Red 🔴
-    { day: 9, status: 'normal' },
-    { day: 10, status: 'normal' },
-    { day: 11, status: 'normal' },
-    { day: 12, status: 'normal' },
-    { day: 13, status: 'normal' },
-    { day: 14, status: 'normal' },
-    { day: 15, status: 'normal' },
-    { day: 16, status: 'normal' },
-    { day: 17, status: 'normal' },
-    { day: 18, status: 'leave' }, // Yellow 🟡
-    { day: 19, status: 'normal' },
-    { day: 20, status: 'normal' },
-    { day: 21, status: 'present' }, // Green 🟢
-    { day: 22, status: 'present' }, // Green 🟢
-    { day: 23, status: 'normal' },
-    { day: 24, status: 'normal' },
-    { day: 25, status: 'normal' },
-    { day: 26, status: 'normal' },
-    { day: 27, status: 'normal' },
-    { day: 28, status: 'normal' },
-    { day: 29, status: 'normal' },
-    { day: 30, status: 'normal' },
-    { day: 1, isOtherMonth: true },
-    { day: 2, isOtherMonth: true },
-    { day: 3, isOtherMonth: true },
+  // Daily History Roster
+  const dailyHistory = [
+    { date: '12 Aug 2026', day: 'Wednesday', status: 'Present', color: '#16a34a', bg: '#dcfce7' },
+    { date: '11 Aug 2026', day: 'Tuesday', status: 'Present', color: '#16a34a', bg: '#dcfce7' },
+    { date: '10 Aug 2026', day: 'Monday', status: 'Absent', color: '#dc2626', bg: '#fee2e2' },
+    { date: '09 Aug 2026', day: 'Sunday', status: 'Present', color: '#16a34a', bg: '#dcfce7' },
+    { date: '08 Aug 2026', day: 'Saturday', status: 'Late', color: '#ca8a04', bg: '#fef9c3' },
+    { date: '07 Aug 2026', day: 'Friday', status: 'Leave', color: '#9333ea', bg: '#f3e8ff' },
   ];
 
   return (
@@ -56,7 +27,7 @@ export default function AttendanceScreen({ navigation }: any) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Attendance</Text>
+        <Text style={styles.headerTitle}>Attendance — August 2026</Text>
         <TouchableOpacity style={styles.calBtn}>
           <CalendarIcon size={20} color="#0f172a" />
         </TouchableOpacity>
@@ -78,107 +49,61 @@ export default function AttendanceScreen({ navigation }: any) {
           </TouchableOpacity>
 
           <View style={styles.bannerBody}>
-            {/* Circular Progress Ring 92% */}
+            {/* Circular Progress Ring 83.3% */}
             <View style={styles.progressCircleContainer}>
               <View style={styles.progressRingOuter}>
-                <Text style={styles.percentageText}>92%</Text>
+                <Text style={styles.percentageText}>83.3%</Text>
               </View>
             </View>
 
             {/* Right Stats */}
             <View style={styles.bannerStats}>
               <Text style={styles.presentLabel}>Present Days</Text>
-              <Text style={styles.presentVal}>22 / 24</Text>
-              <Text style={styles.workingDaysSub}>Total Working Days</Text>
+              <Text style={styles.presentVal}>20 / 24</Text>
+              <Text style={styles.workingDaysSub}>Overall Attendance Rate: 83.3%</Text>
             </View>
           </View>
         </LinearGradient>
 
-        {/* Calendar Grid Card */}
-        <View style={styles.calendarCard}>
-          {/* Days Header Row */}
-          <View style={styles.daysHeaderRow}>
-            {daysHeader.map((d, i) => (
-              <Text key={i} style={styles.dayHeaderText}>{d}</Text>
-            ))}
-          </View>
-
-          {/* Dates Grid */}
-          <View style={styles.datesGrid}>
-            {calendarDays.map((item, idx) => {
-              let circleStyle = styles.dateTextNormal;
-              let bgStyle = null;
-
-              if (item.status === 'absent') {
-                circleStyle = styles.dateTextWhite;
-                bgStyle = styles.bgAbsent;
-              } else if (item.status === 'leave') {
-                circleStyle = styles.dateTextWhite;
-                bgStyle = styles.bgLeave;
-              } else if (item.status === 'present') {
-                circleStyle = styles.dateTextWhite;
-                bgStyle = styles.bgPresent;
-              }
-
-              return (
-                <View key={idx} style={styles.dateCell}>
-                  {bgStyle ? (
-                    <View style={[styles.statusCircle, bgStyle]}>
-                      <Text style={circleStyle}>{item.day}</Text>
-                    </View>
-                  ) : (
-                    <Text style={[
-                      styles.dateTextNormal, 
-                      item.isOtherMonth && styles.dateTextOtherMonth
-                    ]}>
-                      {item.day}
-                    </Text>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-
-          {/* Legend */}
-          <View style={styles.legendRow}>
-            <View style={styles.legendItem}>
-              <View style={[styles.dot, styles.bgPresent]} />
-              <Text style={styles.legendText}>Present</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.dot, styles.bgAbsent]} />
-              <Text style={styles.legendText}>Absent</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.dot, styles.bgLeave]} />
-              <Text style={styles.legendText}>Leave</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.dot, styles.bgHoliday]} />
-              <Text style={styles.legendText}>Holiday</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Attendance Summary (4-Column Cards) */}
-        <Text style={styles.sectionTitle}>Attendance Summary</Text>
+        {/* Attendance Summary (4 Breakdown Cards: Present 20, Absent 2, Late 1, Leave 1) */}
+        <Text style={styles.sectionTitle}>August 2026 Summary</Text>
         <View style={styles.summaryGrid}>
           <View style={[styles.summaryCard, { backgroundColor: '#f0fdf4' }]}>
-            <Text style={[styles.summaryNum, { color: '#16a34a' }]}>22</Text>
+            <Text style={[styles.summaryNum, { color: '#16a34a' }]}>20</Text>
             <Text style={styles.summarySub}>Present</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: '#fef2f2' }]}>
-            <Text style={[styles.summaryNum, { color: '#ef4444' }]}>1</Text>
+            <Text style={[styles.summaryNum, { color: '#ef4444' }]}>2</Text>
             <Text style={styles.summarySub}>Absent</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: '#fffbeb' }]}>
             <Text style={[styles.summaryNum, { color: '#d97706' }]}>1</Text>
+            <Text style={styles.summarySub}>Late</Text>
+          </View>
+          <View style={[styles.summaryCard, { backgroundColor: '#faf5ff' }]}>
+            <Text style={[styles.summaryNum, { color: '#9333ea' }]}>1</Text>
             <Text style={styles.summarySub}>Leave</Text>
           </View>
-          <View style={[styles.summaryCard, { backgroundColor: '#f1f5f9' }]}>
-            <Text style={[styles.summaryNum, { color: '#475569' }]}>2</Text>
-            <Text style={styles.summarySub}>Holiday</Text>
-          </View>
+        </View>
+
+        {/* Daily Attendance History Timeline List */}
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Daily Attendance History</Text>
+        <View style={styles.historyContainer}>
+          {dailyHistory.map((item, idx) => (
+            <View key={idx} style={styles.historyRow}>
+              <View style={styles.historyLeft}>
+                <CalendarIcon size={16} color="#64748b" />
+                <View style={{ marginLeft: 10 }}>
+                  <Text style={styles.historyDate}>{item.date}</Text>
+                  <Text style={styles.historyDay}>{item.day}</Text>
+                </View>
+              </View>
+
+              <View style={[styles.historyBadge, { backgroundColor: item.bg }]}>
+                <Text style={[styles.historyStatusText, { color: item.color }]}>{item.status}</Text>
+              </View>
+            </View>
+          ))}
         </View>
 
       </ScrollView>
@@ -318,4 +243,22 @@ const styles = StyleSheet.create({
   },
   summaryNum: { fontSize: 18, fontWeight: '900' },
   summarySub: { fontSize: 10, fontWeight: '700', color: '#64748b', marginTop: 2 },
+
+  // Daily History Timeline
+  historyContainer: { gap: 10, marginTop: 4 },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  historyLeft: { flexDirection: 'row', alignItems: 'center' },
+  historyDate: { fontSize: 13, fontWeight: '800', color: '#0f172a' },
+  historyDay: { fontSize: 11, color: '#94a3b8', fontWeight: '600', marginTop: 1 },
+  historyBadge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10 },
+  historyStatusText: { fontSize: 12, fontWeight: '800' }
 });

@@ -495,7 +495,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Target gauges */}
-            <div className="glass-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", justify: "space-between" }}>
+            <div className="glass-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-heading)", marginBottom: "1rem" }}>Performance Goals</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
@@ -668,7 +668,7 @@ export default function DashboardPage() {
                   { name: "Physical Ed & Fine Arts", count: Math.max(0, teachersList.length - (teachersList.filter((t: any) => (t.department || t.subject || "").toLowerCase().match(/sci|chem|phy|math|eng|hin/)).length)), color: "var(--warning)" }
                 ].map((dept, idx) => (
                   <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                    <div style={{ display: "flex", justify: "space-between", fontSize: "0.8rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
                       <span style={{ fontWeight: 650 }}>{dept.name}</span>
                       <span style={{ fontWeight: 800 }}>{dept.count} Members</span>
                     </div>
@@ -767,7 +767,7 @@ export default function DashboardPage() {
                   { name: "Class 1-A", rate: 97.4, status: "GOOD", color: "var(--primary)" },
                   { name: "Class 5-B", rate: 95.8, status: "CHECK NEEDED", color: "var(--warning)" }
                 ].map((cls, idx) => (
-                  <div key={idx} style={{ display: "flex", justify: "space-between", alignItems: "center", padding: "0.5rem", background: "rgba(255,255,255,0.02)", borderRadius: 8 }}>
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem", background: "rgba(255,255,255,0.02)", borderRadius: 8 }}>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{cls.name}</div>
                       <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Status: <strong style={{ color: cls.color }}>{cls.status}</strong></div>
@@ -949,7 +949,7 @@ export default function DashboardPage() {
                     background: "rgba(255,255,255,0.02)",
                     border: "1px solid var(--border-color)",
                   }}>
-                    <div style={{ display: "flex", justify: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--text-heading)" }}>{alertItem.title}</span>
                       <span style={{ fontSize: "0.7rem", color: "var(--success)", background: "var(--success-bg)", padding: "0.15rem 0.45rem", borderRadius: 4, fontWeight: 700 }}>
                         {alertItem.status}
@@ -970,7 +970,7 @@ export default function DashboardPage() {
                 border: "1px solid var(--border-color)",
                 opacity: 0.7
               }}>
-                <div style={{ display: "flex", justify: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontWeight: 700, fontSize: "0.88rem", color: "var(--text-heading)" }}>CBSE Mid-Term Schedules Released</span>
                   <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", background: "rgba(255,255,255,0.05)", padding: "0.15rem 0.45rem", borderRadius: 4, fontWeight: 700 }}>
                     Archived 📦
@@ -1034,7 +1034,7 @@ export default function DashboardPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: "1.5rem" }}>
           {/* Calendar Grid Mockup */}
           <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <div style={{ display: "flex", justify: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-heading)" }}>CBSE Calendar Plan (May 2025)</h3>
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <button className="btn btn-secondary" style={{ padding: "0.35rem 0.65rem", fontSize: "0.75rem" }}>Prev</button>

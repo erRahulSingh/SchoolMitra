@@ -1,0 +1,12 @@
+# EAS Ignore
+.expo/
+.next/
+dist/
+web-build/
+node_modules/
+android/
+ios/
+.git/
+*.log
+src/old_next_web_app/
+package-lock.json

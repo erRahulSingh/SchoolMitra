@@ -1,8 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Alert } from 'react-native';
 import { ChevronLeft, Phone, Building, ShieldAlert, UserCheck, HeartPulse } from 'lucide-react-native';
+import { useTheme } from '../../context/ThemeContext';
+import { createSocketConnection } from '../../lib/socketClient';
 
 export default function SosScreen({ navigation }: any) {
+  const { colors, isDark } = useTheme();
+  
   const contacts = [
     { title: 'School Control Room', phone: '+91 98765 43210', icon: Building, color: '#2563eb', bg: '#eff6ff' },
     { title: 'Police Control Room', phone: '100', icon: ShieldAlert, color: '#ea580c', bg: '#ffedd5' },
@@ -11,26 +15,39 @@ export default function SosScreen({ navigation }: any) {
   ];
 
   const handleTriggerSOS = () => {
+    const socket = createSocketConnection("http://localhost:5000");
+    if (socket && typeof socket.emit === 'function') {
+      socket.emit("driver:sos_alert", {
+        schoolId: "650000000000000000000001",
+        driverId: "DRV-101",
+        busId: "BUS-01",
+        tripId: "TRIP-101",
+        latitude: 28.5833,
+        longitude: 77.0667,
+        timestamp: new Date().toISOString(),
+        status: "CRITICAL"
+      });
+    }
     Alert.alert('SOS Emergency Alert Sent! 🚨', 'GPS location broadcasted to Control Room & Police.');
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
       
       {/* Header Bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ChevronLeft size={22} color="#0f172a" />
+          <ChevronLeft size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>SOS Emergency</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>SOS Emergency</Text>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* SOS Emergency Panic Card */}
-        <View style={styles.sosCard}>
+        <View style={[styles.sosCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <TouchableOpacity
             style={styles.sosCircleOuter}
             onLongPress={handleTriggerSOS}
@@ -41,13 +58,13 @@ export default function SosScreen({ navigation }: any) {
             </View>
           </TouchableOpacity>
 
-          <Text style={styles.alertTitleText}>Emergency Alert</Text>
+          <Text style={[styles.alertTitleText, { color: colors.text }]}>Emergency Alert</Text>
           <Text style={styles.alertSubText}>Press and hold to send alert</Text>
         </View>
 
         {/* Quick Contacts Section */}
-        <Text style={styles.sectionTitle}>Quick Contacts</Text>
-        <View style={styles.contactsCardList}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Contacts</Text>
+        <View style={[styles.contactsCardList, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {contacts.map((contact, idx) => {
             const IconComp = contact.icon;
             return (
@@ -57,8 +74,8 @@ export default function SosScreen({ navigation }: any) {
                 </View>
 
                 <View style={styles.contactInfoCol}>
-                  <Text style={styles.contactTitleText}>{contact.title}</Text>
-                  <Text style={styles.contactPhoneText}>{contact.phone}</Text>
+                   <Text style={[styles.contactTitleText, { color: colors.text }]}>{contact.title}</Text>
+                   <Text style={[styles.contactPhoneText, { color: colors.textSecondary }]}>{contact.phone}</Text>
                 </View>
 
                 <TouchableOpacity style={styles.callCircleBtn} activeOpacity={0.8}>
@@ -70,9 +87,9 @@ export default function SosScreen({ navigation }: any) {
         </View>
 
         {/* How SOS Works? Info Banner */}
-        <View style={styles.howItWorksBanner}>
-          <Text style={styles.howTitleText}>How SOS Works?</Text>
-          <Text style={styles.howDescText}>
+        <View style={[styles.howItWorksBanner, { backgroundColor: colors.accentSoft, borderColor: colors.border }]}>
+          <Text style={[styles.howTitleText, { color: colors.accent }]}>How SOS Works?</Text>
+          <Text style={[styles.howDescText, { color: colors.textSecondary }]}>
             Your location will be shared with selected contacts and school admin immediately.
           </Text>
         </View>

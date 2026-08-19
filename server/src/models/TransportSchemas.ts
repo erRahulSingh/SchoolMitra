@@ -1,8 +1,4 @@
-// ═══════════════════════════════════════════════════════════
-// SchoolMitra — Module 6: Transport Collections (13)
-// ═══════════════════════════════════════════════════════════
-
-import { Schema, model } from "mongoose";
+import { Schema, model, models } from "mongoose";
 
 // ──────────── 31. BUSES ────────────
 const busSchema = new Schema({
@@ -18,7 +14,18 @@ const busSchema = new Schema({
     trim: true,
   },
   registrationNo: { type: String, trim: true, uppercase: true },
+  busType: {
+    type: String,
+    enum: ["School Bus", "Mini Bus", "Van", "SUV", "Other"],
+    default: "School Bus",
+  },
   capacity: { type: Number, required: true, default: 30 },
+  gpsDeviceId: { type: String, trim: true, index: true },
+  driverId: {
+    type: Schema.Types.ObjectId,
+    ref: "drivers",
+    index: true,
+  },
   driverName: { type: String, trim: true },
   routeName: { type: String, trim: true },
   model: { type: String, trim: true },
@@ -34,13 +41,13 @@ const busSchema = new Schema({
   permitExpiry: { type: Date },
   status: {
     type: String,
-    enum: ["Active", "Maintenance", "Inactive", "Decommissioned"],
-    default: "Active",
+    enum: ["ACTIVE", "INACTIVE", "MAINTENANCE", "Active", "Maintenance", "Inactive", "Decommissioned"],
+    default: "ACTIVE",
   },
 }, { timestamps: true });
 
 busSchema.index({ schoolId: 1, busNumber: 1 }, { unique: true });
-export const BusModel = model("buses", busSchema);
+export const BusModel = models.buses || model("buses", busSchema);
 
 // ──────────── 32. DRIVERS ────────────
 const driverSchema = new Schema({
@@ -50,42 +57,36 @@ const driverSchema = new Schema({
     required: true,
     index: true,
   },
-  name: {
-    type: String,
-    required: [true, "Driver name is required"],
-    trim: true,
-  },
-  phone: {
-    type: String,
-    required: [true, "Phone is required"],
-    trim: true,
-  },
-  alternatePhone: { type: String, trim: true },
-  licenseNo: {
-    type: String,
-    required: [true, "License number is required"],
-    trim: true,
-  },
-  licenseExpiry: { type: Date, required: true },
-  address: { type: String, trim: true },
-  experienceYears: { type: Number, default: 0 },
-  assignedBusId: {
-    type: Schema.Types.ObjectId,
-    ref: "buses",
-  },
   userId: {
     type: Schema.Types.ObjectId,
     ref: "users",
+    index: true,
   },
+  name: { type: String, required: true, trim: true },
+  empId: { type: String, trim: true, index: true },
+  phone: { type: String, required: true, trim: true },
+  licenseNo: { type: String, required: true, trim: true, uppercase: true },
+  licenseExpiry: { type: Date },
+  assignedBusId: {
+    type: Schema.Types.ObjectId,
+    ref: "buses",
+    index: true,
+  },
+  address: { type: String, trim: true },
+  emergencyContact: { type: String, trim: true },
+  bloodGroup: { type: String, trim: true },
+  photoUrl: { type: String },
   status: {
     type: String,
-    enum: ["Active", "OnLeave", "Suspended", "Resigned"],
-    default: "Active",
+    enum: ["ACTIVE", "ON_DUTY", "OFF_DUTY", "LEAVE", "SUSPENDED", "Active", "On Duty", "Off Duty", "On Leave", "Inactive"],
+    default: "ACTIVE",
+    index: true,
   },
 }, { timestamps: true });
 
-driverSchema.index({ schoolId: 1, phone: 1 }, { unique: true });
-export const DriverModel = model("drivers", driverSchema);
+driverSchema.index({ schoolId: 1, phone: 1 });
+driverSchema.index({ schoolId: 1, licenseNo: 1 });
+export const DriverModel = models.drivers || model("drivers", driverSchema);
 
 // ──────────── 33. BUS ATTENDANTS ────────────
 const busAttendantSchema = new Schema({
@@ -95,29 +96,20 @@ const busAttendantSchema = new Schema({
     required: true,
     index: true,
   },
-  name: {
-    type: String,
-    required: [true, "Attendant name is required"],
-    trim: true,
-  },
-  phone: {
-    type: String,
-    required: [true, "Phone is required"],
-    trim: true,
-  },
-  assignedBusId: {
-    type: Schema.Types.ObjectId,
-    ref: "buses",
-  },
+  userId: { type: Schema.Types.ObjectId, ref: "users" },
+  name: { type: String, required: true, trim: true },
+  phone: { type: String, required: true, trim: true },
+  aadharNo: { type: String, trim: true },
+  assignedBusId: { type: Schema.Types.ObjectId, ref: "buses" },
   status: {
     type: String,
-    enum: ["Active", "Inactive"],
+    enum: ["Active", "Inactive", "On Duty"],
     default: "Active",
   },
 }, { timestamps: true });
 
-busAttendantSchema.index({ schoolId: 1 });
-export const BusAttendantModel = model("busAttendants", busAttendantSchema);
+busAttendantSchema.index({ schoolId: 1, phone: 1 });
+export const BusAttendantModel = models.busAttendants || model("busAttendants", busAttendantSchema);
 
 // ──────────── 34. ROUTES ────────────
 const routeSchema = new Schema({
@@ -133,14 +125,12 @@ const routeSchema = new Schema({
     trim: true,
   },
   routeCode: { type: String, trim: true, uppercase: true },
-  startPoint: { type: String, required: true, trim: true },
-  endPoint: { type: String, required: true, trim: true },
-  distanceKm: { type: Number, default: 0 },
-  estimatedTimeMins: { type: Number, default: 0 },
-  assignedBusId: {
-    type: Schema.Types.ObjectId,
-    ref: "buses",
-  },
+  startLocation: { type: String, required: true, trim: true },
+  endLocation: { type: String, required: true, trim: true },
+  totalDistanceKm: { type: Number, default: 0 },
+  estimatedDurationMins: { type: Number, default: 0 },
+  pickupTime: { type: String, trim: true },
+  dropTime: { type: String, trim: true },
   status: {
     type: String,
     enum: ["Active", "Inactive"],
@@ -148,8 +138,8 @@ const routeSchema = new Schema({
   },
 }, { timestamps: true });
 
-routeSchema.index({ schoolId: 1, routeName: 1 }, { unique: true });
-export const RouteModel = model("routes", routeSchema);
+routeSchema.index({ schoolId: 1, routeName: 1 });
+export const RouteModel = models.routes || model("routes", routeSchema);
 
 // ──────────── 35. STOPS ────────────
 const stopSchema = new Schema({
@@ -159,29 +149,26 @@ const stopSchema = new Schema({
     required: true,
     index: true,
   },
-  stopName: {
-    type: String,
-    required: [true, "Stop name is required"],
-    trim: true,
-  },
   routeId: {
     type: Schema.Types.ObjectId,
     ref: "routes",
     required: true,
     index: true,
   },
-  order: { type: Number, required: true },
+  stopName: { type: String, required: true, trim: true },
+  stopSequence: { type: Number, required: true },
+  landmark: { type: String, trim: true },
   latitude: { type: Number },
   longitude: { type: Number },
-  scheduledTimeMorning: { type: String },
-  scheduledTimeEvening: { type: String },
+  pickupTime: { type: String, trim: true },
+  dropTime: { type: String, trim: true },
   monthlyFare: { type: Number, default: 0 },
 }, { timestamps: true });
 
-stopSchema.index({ schoolId: 1, routeId: 1, order: 1 });
-export const StopModel = model("stops", stopSchema);
+stopSchema.index({ routeId: 1, stopSequence: 1 });
+export const StopModel = models.stops || model("stops", stopSchema);
 
-// ──────────── 36. STUDENT BUS ASSIGNMENTS ────────────
+// ──────────── 36. STUDENT ROUTE ASSIGNMENTS ────────────
 const studentRouteSchema = new Schema({
   schoolId: {
     type: Schema.Types.ObjectId,
@@ -195,18 +182,12 @@ const studentRouteSchema = new Schema({
     required: true,
     index: true,
   },
-  routeId: {
-    type: Schema.Types.ObjectId,
-    ref: "routes",
-    required: true,
-  },
-  stopId: {
-    type: Schema.Types.ObjectId,
-    ref: "stops",
-    required: true,
-  },
   pickupTime: { type: String },
   dropTime: { type: String },
+  academicYearId: {
+    type: Schema.Types.ObjectId,
+    ref: "academicYears",
+  },
   status: {
     type: String,
     enum: ["Active", "Suspended", "Cancelled"],
@@ -215,7 +196,46 @@ const studentRouteSchema = new Schema({
 }, { timestamps: true });
 
 studentRouteSchema.index({ schoolId: 1, studentId: 1 }, { unique: true });
-export const StudentRouteModel = model("studentRoutes", studentRouteSchema);
+export const StudentRouteModel = models.studentRoutes || model("studentRoutes", studentRouteSchema);
+
+// ──────────── 36B. BUS ROUTE ASSIGNMENTS ────────────
+const busRouteAssignmentSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  busId: {
+    type: Schema.Types.ObjectId,
+    ref: "buses",
+    required: true,
+    index: true,
+  },
+  routeId: {
+    type: Schema.Types.ObjectId,
+    ref: "routes",
+    required: true,
+    index: true,
+  },
+  driverId: {
+    type: Schema.Types.ObjectId,
+    ref: "drivers",
+    required: true,
+  },
+  academicYearId: {
+    type: Schema.Types.ObjectId,
+    ref: "academicYears",
+  },
+  status: {
+    type: String,
+    enum: ["Active", "Inactive"],
+    default: "Active",
+  },
+}, { timestamps: true });
+
+busRouteAssignmentSchema.index({ schoolId: 1, busId: 1, routeId: 1, academicYearId: 1 }, { unique: true });
+export const BusRouteAssignmentModel = model("busRouteAssignments", busRouteAssignmentSchema);
 
 // ──────────── 37. REAL-TIME GPS TELEMETRY ────────────
 const gpsLocationSchema = new Schema({

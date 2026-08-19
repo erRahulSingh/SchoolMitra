@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch, Platform } from 'react-native';
 import { 
   User, Bus, Phone, ShieldCheck, Settings, Globe, LogOut, 
@@ -10,6 +10,23 @@ import { useTheme } from '../../context/ThemeContext';
 
 export default function DriverProfileScreen({ navigation }: any) {
   const { colors, isDark, toggleTheme } = useTheme();
+  const [driverUser, setDriverUser] = useState<any>({
+    name: 'Rajesh Kumar',
+    email: 'driver@schoolmitra.com',
+    empId: 'EMP-DRV-101',
+    licenseNo: 'DL142021008765',
+    busNo: 'BUS-01'
+  });
+
+  useEffect(() => {
+    AsyncStorage.getItem('driverUser').then(res => {
+      if (res) {
+        try {
+          setDriverUser(JSON.parse(res));
+        } catch (e) {}
+      }
+    });
+  }, []);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -31,17 +48,17 @@ export default function DriverProfileScreen({ navigation }: any) {
   };
 
   const personalInfo = [
-    { icon: User, label: 'Full Name', value: 'Rajesh Kumar' },
-    { icon: Phone, label: 'Mobile Number', value: '+91 98765 43210' },
-    { icon: Mail, label: 'Email', value: 'rajesh.driver@schoolmitra.com' },
-    { icon: Hash, label: 'Employee ID', value: 'DRV-2024-0042' },
-    { icon: Calendar, label: 'Joining Date', value: '15 March 2023' },
+    { icon: User, label: 'Full Name', value: driverUser.name || 'Rajesh Kumar' },
+    { icon: Phone, label: 'Mobile Number', value: driverUser.phone || '+91 98765 43210' },
+    { icon: Mail, label: 'Email', value: driverUser.email || 'driver@schoolmitra.com' },
+    { icon: Hash, label: 'Employee ID', value: driverUser.empId || 'EMP-DRV-101' },
+    { icon: ShieldCheck, label: 'License Number', value: driverUser.licenseNo || 'DL142021008765' },
     { icon: Briefcase, label: 'Experience', value: '8+ Years Commercial' },
   ];
 
   const vehicleInfo = [
-    { icon: Bus, label: 'Bus Number', value: 'UP-32-SM-9942' },
-    { icon: MapPin, label: 'Assigned Route', value: 'Route #4 — Sector 14' },
+    { icon: Bus, label: 'Bus Number', value: driverUser.busNo || 'BUS-01' },
+    { icon: MapPin, label: 'Assigned Route', value: 'Route #1 — Express' },
     { icon: User, label: 'Capacity', value: '42 Seats' },
     { icon: ShieldCheck, label: 'RTO Fitness', value: 'Valid till Dec 2026' },
   ];
@@ -73,8 +90,8 @@ export default function DriverProfileScreen({ navigation }: any) {
             <ShieldCheck size={12} color="#ffffff" />
           </View>
         </View>
-        <Text style={styles.name}>Rajesh Kumar</Text>
-        <Text style={styles.role}>Senior School Bus Captain</Text>
+        <Text style={styles.name}>{driverUser.name || 'Rajesh Kumar'}</Text>
+        <Text style={styles.role}>{driverUser.role || 'Senior School Bus Captain'}</Text>
         
         <View style={styles.profileBadges}>
           <View style={styles.profileBadge}>

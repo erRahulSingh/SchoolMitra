@@ -12,6 +12,11 @@ const notificationSchema = new Schema({
     required: true,
     index: true,
   },
+  senderId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    index: true,
+  },
   recipientId: {
     type: Schema.Types.ObjectId,
     ref: "users",
@@ -31,17 +36,30 @@ const notificationSchema = new Schema({
     type: String,
     required: [true, "Notification body is required"],
     trim: true,
+    alias: "message",
   },
   type: {
     type: String,
-    enum: ["Attendance", "Fee", "Transport", "Academic", "Announcement", "Emergency", "System"],
+    enum: [
+      "Attendance", "Fee", "Transport", "Academic", "Announcement", "Emergency", "System",
+      "HOMEWORK", "EXAM", "RESULT", "REPORT_CARD", "FEE", "TRANSPORT", "ANNOUNCEMENT", "MESSAGE"
+    ],
     default: "System",
+    index: true,
   },
+  referenceType: { type: String, trim: true },
+  referenceId: { type: Schema.Types.ObjectId, index: true },
   actionUrl: { type: String, trim: true },
-  read: { type: Boolean, default: false, index: true },
+  priority: {
+    type: String,
+    enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
+    default: "NORMAL"
+  },
+  read: { type: Boolean, default: false, index: true, alias: "isRead" },
   readAt: { type: Date },
 }, { timestamps: true });
 
+notificationSchema.index({ schoolId: 1, recipientId: 1, createdAt: -1 });
 notificationSchema.index({ schoolId: 1, recipientId: 1, read: 1 });
 export const NotificationModel = model("notifications", notificationSchema);
 
@@ -62,21 +80,40 @@ const announcementSchema = new Schema({
     type: String,
     required: [true, "Announcement content is required"],
     trim: true,
+    alias: "description",
   },
   targetAudience: {
     type: String,
-    enum: ["All", "Parents", "Teachers", "Students", "Staff"],
+    enum: ["All", "Parents", "Teachers", "Students", "Staff", "All Parents", "All Teachers", "Specific Class", "Specific Section", "Specific Teacher", "ALL_TEACHERS", "ALL_PARENTS", "ALL_USERS", "CLASS", "SECTION", "SPECIFIC_TEACHERS"],
     default: "All",
     index: true,
+    alias: "audienceType",
   },
   targetClasses: [{
     type: Schema.Types.ObjectId,
     ref: "classes",
+    alias: "targetClassIds",
   }],
+  targetSections: [{
+    type: Schema.Types.ObjectId,
+    ref: "sections",
+    alias: "targetSectionIds",
+  }],
+  targetUserIds: [{
+    type: Schema.Types.ObjectId,
+    ref: "users",
+  }],
+  targetTeacher: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+  },
   priority: {
     type: String,
-    enum: ["Low", "Normal", "High", "Urgent"],
+    enum: ["Low", "Normal", "High", "Urgent", "LOW", "NORMAL", "HIGH", "URGENT"],
     default: "Normal",
+  },
+  attachment: {
+    type: String,
   },
   attachments: [{
     fileName: { type: String },
@@ -85,10 +122,20 @@ const announcementSchema = new Schema({
   publishedBy: {
     type: Schema.Types.ObjectId,
     ref: "users",
+    alias: "createdBy",
+  },
+  publishDate: {
+    type: Date,
+    default: Date.now,
+    alias: "publishAt",
+  },
+  expiryDate: {
+    type: Date,
+    alias: "expiresAt",
   },
   status: {
     type: String,
-    enum: ["Draft", "Published", "Archived"],
+    enum: ["Draft", "Published", "Archived", "Scheduled"],
     default: "Published",
   },
 }, { timestamps: true });
@@ -115,9 +162,18 @@ const chatRoomSchema = new Schema({
     ref: "users",
     required: true,
   }],
+  studentId: {
+    type: Schema.Types.ObjectId,
+    ref: "students",
+  },
   isGroup: { type: Boolean, default: false },
   lastMessage: { type: String, trim: true },
   lastMessageAt: { type: Date, default: Date.now },
+  status: {
+    type: String,
+    enum: ["Active", "Archived"],
+    default: "Active",
+  },
 }, { timestamps: true });
 
 chatRoomSchema.index({ schoolId: 1, participants: 1 });
@@ -125,23 +181,35 @@ export const ChatRoomModel = model("chatRooms", chatRoomSchema);
 
 // ──────────── 47. MESSAGES ────────────
 const messageSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    index: true,
+  },
   roomId: {
     type: Schema.Types.ObjectId,
     ref: "chatRooms",
     required: true,
     index: true,
+    alias: "conversationId",
   },
   senderId: {
     type: Schema.Types.ObjectId,
     ref: "users",
     required: true,
   },
-  text: { type: String, trim: true },
+  receiverId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+  },
+  text: { type: String, trim: true, alias: "message" },
   attachments: [{
     fileName: { type: String },
     fileUrl: { type: String },
     fileType: { type: String },
   }],
+  read: { type: Boolean, default: false, alias: "isRead" },
+  readAt: { type: Date },
   readBy: [{
     userId: { type: Schema.Types.ObjectId, ref: "users" },
     readAt: { type: Date, default: Date.now },
@@ -309,4 +377,142 @@ const requestMessageSchema = new Schema({
 
 requestMessageSchema.index({ requestId: 1, createdAt: 1 });
 export const RequestMessageModel = model("request_messages", requestMessageSchema);
+
+// ──────────── 52. DEVICE TOKENS ────────────
+const deviceTokenSchema = new Schema({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+    index: true,
+  },
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+  },
+  deviceId: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  platform: {
+    type: String,
+    enum: ["android", "ios", "web"],
+    default: "android",
+  },
+  pushToken: {
+    type: String,
+    required: true,
+    trim: true,
+    alias: "token",
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
+    index: true,
+  },
+  lastUsedAt: {
+    type: Date,
+    default: Date.now,
+  },
+}, { timestamps: true });
+
+deviceTokenSchema.index({ userId: 1, deviceId: 1 }, { unique: true });
+export const DeviceTokenModel = model("deviceTokens", deviceTokenSchema);
+
+// ──────────── 53. CIRCULARS ────────────
+const circularSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  title: { type: String, required: true, trim: true },
+  date: { type: Date, default: Date.now },
+  content: { type: String, required: true },
+  attachments: [{
+    fileName: { type: String, trim: true },
+    fileUrl: { type: String, trim: true },
+    fileType: { type: String, trim: true },
+    fileSize: { type: String, trim: true }
+  }],
+  targetAudience: {
+    type: String,
+    enum: ["All Parents", "All Teachers", "Specific Class"],
+    default: "All Parents"
+  },
+  targetClassId: {
+    type: Schema.Types.ObjectId,
+    ref: "classes"
+  },
+  status: {
+    type: String,
+    enum: ["Published", "Draft", "Archived"],
+    default: "Published"
+  },
+  readBy: [{
+    userId: { type: Schema.Types.ObjectId, ref: "users" },
+    readAt: { type: Date, default: Date.now }
+  }]
+}, { timestamps: true });
+
+circularSchema.index({ schoolId: 1, targetAudience: 1, createdAt: -1 });
+export const CircularModel = model("circulars", circularSchema);
+
+// ──────────── 54. EMERGENCY BROADCASTS ────────────
+const emergencyBroadcastSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  senderId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+  },
+  emergencyType: {
+    type: String,
+    enum: ["School Closure", "Bus Emergency", "Weather Warning", "Urgent Notice"],
+    required: true,
+  },
+  title: { type: String, required: true, trim: true },
+  message: { type: String, required: true, trim: true },
+  targetAudience: {
+    type: String,
+    enum: ["All", "Parents", "Teachers", "Drivers"],
+    default: "All"
+  },
+  dispatchedCount: { type: Number, default: 0 },
+}, { timestamps: true });
+
+emergencyBroadcastSchema.index({ schoolId: 1, createdAt: -1 });
+export const EmergencyBroadcastModel = model("emergency_broadcasts", emergencyBroadcastSchema);
+
+// ──────────── 55. NOTIFICATION PREFERENCES ────────────
+const notificationPreferenceSchema = new Schema({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+    index: true,
+    unique: true,
+  },
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+  },
+  homework: { type: Boolean, default: true },
+  assignments: { type: Boolean, default: true },
+  exam: { type: Boolean, default: true, alias: "exams" },
+  results: { type: Boolean, default: true },
+  announcements: { type: Boolean, default: true },
+  fees: { type: Boolean, default: true },
+  busTracking: { type: Boolean, default: true, alias: "bus" },
+  teacherMessages: { type: Boolean, default: true, alias: "messages" },
+}, { timestamps: true });
+
+export const NotificationPreferenceModel = model("notification_preferences", notificationPreferenceSchema);
 

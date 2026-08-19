@@ -31,7 +31,7 @@ export const Card: React.FC<CardProps> = ({
         <div
           style={{
             display: "flex",
-            justify: "space-between",
+            justifyContent: "space-between",
             alignItems: "center",
             marginBottom: "1.25rem"
           }}

@@ -1,30 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
   Bus, Play, MapPin, AlertCircle, MessageSquare, 
   ShieldCheck, Bell, ChevronRight, Clock
 } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../../context/ThemeContext';
 
-export default function MainDashboard({ navigation }: any) {
+export default function MainDashboard({ navigation, route }: any) {
+  const { colors, isDark } = useTheme();
+  const openDrawer = route?.params?.openDrawer;
+  const [driverUser, setDriverUser] = useState<any>({ name: 'Rajesh Kumar' });
+
+  useEffect(() => {
+    AsyncStorage.getItem('driverUser').then(res => {
+      if (res) {
+        try {
+          setDriverUser(JSON.parse(res));
+        } catch (e) {}
+      }
+    });
+  }, []);
+
+  const getInitials = (nameStr: string) => {
+    if (!nameStr) return 'RK';
+    const parts = nameStr.split(' ');
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return nameStr.substring(0, 2).toUpperCase();
+  };
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
 
       {/* Top Header Bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={styles.headerLeftRow}>
-          <TouchableOpacity onPress={() => {}} style={styles.menuBtn}>
-            <View style={styles.menuLine} />
-            <View style={styles.menuLine} />
-            <View style={styles.menuLine} />
+          <TouchableOpacity onPress={openDrawer} style={styles.menuBtn} activeOpacity={0.7}>
+            <View style={[styles.menuLine, { backgroundColor: colors.text }]} />
+            <View style={[styles.menuLine, { backgroundColor: colors.text }]} />
+            <View style={[styles.menuLine, { backgroundColor: colors.text }]} />
           </TouchableOpacity>
-          <Text style={styles.headerLogoText}>SchoolMitra</Text>
-          <Text style={styles.headerSubBadge}>Driver</Text>
+          <Text style={[styles.headerLogoText, { color: colors.text }]}>SchoolMitra</Text>
+          <Text style={[styles.headerSubBadge, { color: colors.textSecondary }]}>Driver</Text>
         </View>
 
-        <TouchableOpacity style={styles.bellBtn} onPress={() => {}}>
-          <Bell size={20} color="#0f172a" />
+        <TouchableOpacity style={[styles.bellBtn, { backgroundColor: colors.background }]} onPress={() => navigation.navigate('DriverNotifications')}>
+          <Bell size={20} color={colors.text} />
           <View style={styles.bellBadge} />
         </TouchableOpacity>
       </View>
@@ -40,7 +63,7 @@ export default function MainDashboard({ navigation }: any) {
         >
           <View style={styles.greetingLeft}>
             <Text style={styles.greetingText}>Good Morning,</Text>
-            <Text style={styles.driverNameText}>Rajesh Kumar 👋</Text>
+            <Text style={styles.driverNameText}>{driverUser.name || 'Rajesh Kumar'} 👋</Text>
             <Text style={styles.greetingSubText}>
               Drive Safe, Students are waiting for you.
             </Text>
@@ -49,20 +72,20 @@ export default function MainDashboard({ navigation }: any) {
           {/* Avatar Graphic Circle */}
           <View style={styles.avatarCircleBox}>
             <View style={styles.avatarInner}>
-              <Text style={styles.avatarText}>RK</Text>
+              <Text style={styles.avatarText}>{getInitials(driverUser.name)}</Text>
             </View>
           </View>
         </LinearGradient>
 
         {/* Assigned Vehicle Card */}
-        <View style={styles.assignedVehicleCard}>
+        <View style={[styles.assignedVehicleCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.busIconSquare}>
             <Bus size={22} color="#f59e0b" fill="#fef08a" strokeWidth={1.8} />
           </View>
 
           <View style={styles.vehicleInfoCol}>
-            <Text style={styles.busPlateText}>UP32 AB 1234</Text>
-            <Text style={styles.busModelText}>Green Valley School Bus</Text>
+            <Text style={[styles.busPlateText, { color: colors.text }]}>UP32 AB 1234</Text>
+            <Text style={[styles.busModelText, { color: colors.textSecondary }]}>Green Valley School Bus</Text>
           </View>
 
           <View style={styles.activeBadge}>
@@ -73,109 +96,109 @@ export default function MainDashboard({ navigation }: any) {
 
         {/* Today's Overview Section */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Today's Overview</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Today's Overview</Text>
           <TouchableOpacity><Text style={styles.viewAllText}>View All</Text></TouchableOpacity>
         </View>
 
         <View style={styles.overviewGrid}>
-          <View style={styles.overviewBox}>
-            <Text style={styles.overviewLabelText}>Today's Trips</Text>
-            <Text style={styles.overviewValText}>2 <Text style={styles.unitText}>Trips</Text></Text>
+          <View style={[styles.overviewBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.overviewLabelText, { color: colors.textSecondary }]}>Today's Trips</Text>
+            <Text style={[styles.overviewValText, { color: colors.text }]}>2 <Text style={[styles.unitText, { color: colors.textSecondary }]}>Trips</Text></Text>
           </View>
 
-          <View style={styles.overviewBox}>
-            <Text style={styles.overviewLabelText}>Total Students</Text>
-            <Text style={styles.overviewValText}>42 <Text style={styles.unitText}>Students</Text></Text>
+          <View style={[styles.overviewBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.overviewLabelText, { color: colors.textSecondary }]}>Total Students</Text>
+            <Text style={[styles.overviewValText, { color: colors.text }]}>42 <Text style={[styles.unitText, { color: colors.textSecondary }]}>Students</Text></Text>
           </View>
 
-          <View style={styles.overviewBox}>
-            <Text style={styles.overviewLabelText}>Upcoming Stops</Text>
-            <Text style={styles.overviewValText}>12 <Text style={styles.unitText}>Stops</Text></Text>
+          <View style={[styles.overviewBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.overviewLabelText, { color: colors.textSecondary }]}>Upcoming Stops</Text>
+            <Text style={[styles.overviewValText, { color: colors.text }]}>12 <Text style={[styles.unitText, { color: colors.textSecondary }]}>Stops</Text></Text>
           </View>
 
-          <View style={styles.overviewBox}>
-            <Text style={styles.overviewLabelText}>Distance to Cover</Text>
-            <Text style={styles.overviewValText}>28.6 <Text style={styles.unitText}>km</Text></Text>
+          <View style={[styles.overviewBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.overviewLabelText, { color: colors.textSecondary }]}>Distance to Cover</Text>
+            <Text style={[styles.overviewValText, { color: colors.text }]}>28.6 <Text style={[styles.unitText, { color: colors.textSecondary }]}>km</Text></Text>
           </View>
         </View>
 
         {/* Today's First Trip Card */}
-        <Text style={styles.sectionTitle}>Today's First Trip</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Today's First Trip</Text>
         <TouchableOpacity 
-          style={styles.firstTripCard}
+          style={[styles.firstTripCard, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={() => navigation.navigate('StartTrip')}
           activeOpacity={0.85}
         >
           <View style={styles.tripHeaderRow}>
             <View>
-              <Text style={styles.routeTitleText}>Route 01 - Morning</Text>
-              <Text style={styles.routeNameText}>Green Valley Route</Text>
+              <Text style={[styles.routeTitleText, { color: colors.text }]}>Route 01 - Morning</Text>
+              <Text style={[styles.routeNameText, { color: colors.textSecondary }]}>Green Valley Route</Text>
             </View>
             <View style={styles.upcomingBadge}>
               <Text style={styles.upcomingBadgeText}>Upcoming</Text>
             </View>
           </View>
 
-          <View style={styles.tripDivider} />
+          <View style={[styles.tripDivider, { backgroundColor: colors.border }]} />
 
           <View style={styles.tripMetaRow}>
             <View style={styles.metaCol}>
               <Text style={styles.metaLabelText}>Start Time</Text>
-              <Text style={styles.metaValText}>07:00 AM</Text>
+              <Text style={[styles.metaValText, { color: colors.text }]}>07:00 AM</Text>
             </View>
 
             <View style={styles.metaCol}>
               <Text style={styles.metaLabelText}>First Stop</Text>
-              <Text style={styles.metaValText}>Maple Park</Text>
+              <Text style={[styles.metaValText, { color: colors.text }]}>Maple Park</Text>
             </View>
           </View>
         </TouchableOpacity>
 
         {/* Quick Actions Row */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
         <View style={styles.quickActionsRow}>
           <TouchableOpacity 
-            style={styles.actionSquare} 
+            style={[styles.actionSquare, { backgroundColor: colors.card, borderColor: colors.border }]} 
             onPress={() => navigation.navigate('StartTrip')}
             activeOpacity={0.8}
           >
             <View style={[styles.actionIconCircle, { backgroundColor: '#dcfce7' }]}>
               <Play size={20} color="#16a34a" fill="#16a34a" />
             </View>
-            <Text style={styles.actionLabelText}>Start Trip</Text>
+            <Text style={[styles.actionLabelText, { color: colors.text }]}>Start Trip</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.actionSquare} 
+            style={[styles.actionSquare, { backgroundColor: colors.card, borderColor: colors.border }]} 
             onPress={() => navigation.navigate('RouteDetails')}
             activeOpacity={0.8}
           >
             <View style={[styles.actionIconCircle, { backgroundColor: '#e0f2fe' }]}>
               <MapPin size={20} color="#2563eb" />
             </View>
-            <Text style={styles.actionLabelText}>Route Details</Text>
+            <Text style={[styles.actionLabelText, { color: colors.text }]}>Route Details</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.actionSquare} 
+            style={[styles.actionSquare, { backgroundColor: colors.card, borderColor: colors.border }]} 
             onPress={() => navigation.navigate('Sos')}
             activeOpacity={0.8}
           >
             <View style={[styles.actionIconCircle, { backgroundColor: '#fee2e2' }]}>
               <AlertCircle size={20} color="#ef4444" />
             </View>
-            <Text style={styles.actionLabelText}>SOS</Text>
+            <Text style={[styles.actionLabelText, { color: colors.text }]}>SOS</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.actionSquare} 
+            style={[styles.actionSquare, { backgroundColor: colors.card, borderColor: colors.border }]} 
             onPress={() => navigation.navigate('Messages')}
             activeOpacity={0.8}
           >
             <View style={[styles.actionIconCircle, { backgroundColor: '#f3e8ff' }]}>
               <MessageSquare size={20} color="#7c3aed" />
             </View>
-            <Text style={styles.actionLabelText}>Messages</Text>
+            <Text style={[styles.actionLabelText, { color: colors.text }]}>Messages</Text>
           </TouchableOpacity>
         </View>
 

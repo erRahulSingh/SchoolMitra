@@ -129,8 +129,73 @@ export default function AttendancePage() {
     { id: "alt-2", target: "Amit Singh (Parent)", text: "Late Entry Alert: Amit entered campus at 08:24 AM.", status: "SENT", time: "08:30 AM" }
   ]);
 
+  // Attendance Lock Window & Correction Requests State
+  const [lockSettings, setLockSettings] = useState({
+    attendanceOpenTime: "08:00 AM",
+    attendanceCloseTime: "10:00 AM",
+    allowEdit: true,
+    editApprovalRequired: true
+  });
+  const [correctionRequests, setCorrectionRequests] = useState<any[]>([
+    {
+      id: "ACR-2026-001",
+      teacherName: "Sunita Rao (Class Teacher 8-A)",
+      studentName: "Rahul Kumar",
+      class: "Class 8-A",
+      currentStatus: "Absent",
+      requestedStatus: "Present",
+      reason: "Student arrived late at 8:45 AM due to verified school bus route #04 breakdown.",
+      status: "PendingAdminApproval"
+    },
+    {
+      id: "ACR-2026-002",
+      teacherName: "Sunita Rao (Class Teacher 8-A)",
+      studentName: "Aman Kumar",
+      class: "Class 8-A",
+      currentStatus: "Present",
+      requestedStatus: "Half Day",
+      reason: "Parent picked up student at 11:30 AM for dentist appointment.",
+      status: "PendingAdminApproval"
+    }
+  ]);
+
+  const fetchCorrectionRequestsAndSettings = async () => {
+    try {
+      const setRes = await fetch("http://localhost:5000/api/v1/attendance/settings");
+      const setJson = await setRes.json();
+      if (setJson.success && setJson.settings) {
+        setLockSettings(setJson.settings);
+      }
+
+      const reqRes = await fetch("http://localhost:5000/api/v1/attendance/correction-requests");
+      const reqJson = await reqRes.json();
+      if (reqJson.success && reqJson.requests) {
+        setCorrectionRequests(reqJson.requests);
+      }
+    } catch (e) {}
+  };
+
+  const handleApproveCorrection = async (id: string) => {
+    try {
+      await fetch(`http://localhost:5000/api/v1/attendance/correction-requests/${id}/approve`, { method: "POST" });
+      setCorrectionRequests(prev => prev.map(c => (c.id === id ? { ...c, status: "Approved" } : c)));
+    } catch (e) {
+      setCorrectionRequests(prev => prev.map(c => (c.id === id ? { ...c, status: "Approved" } : c)));
+    }
+  };
+
+  const handleRejectCorrection = async (id: string) => {
+    try {
+      await fetch(`http://localhost:5000/api/v1/attendance/correction-requests/${id}/reject`, { method: "POST" });
+      setCorrectionRequests(prev => prev.map(c => (c.id === id ? { ...c, status: "Rejected" } : c)));
+    } catch (e) {
+      setCorrectionRequests(prev => prev.map(c => (c.id === id ? { ...c, status: "Rejected" } : c)));
+    }
+  };
+
   // Persistent Cache Load
   useEffect(() => {
+    fetchCorrectionRequestsAndSettings();
     try {
       const cached = localStorage.getItem("sm_attendance_students");
       if (cached) setStudents(JSON.parse(cached));
@@ -469,54 +534,134 @@ export default function AttendancePage() {
         </div>
       )}
 
-      {/* ════════════ MODULE 3: LEAVE REQUESTS HUB ════════════ */}
+      {/* ════════════ MODULE 3: LEAVES & CORRECTION REQUESTS QUEUE ════════════ */}
       {activeTab === "leaves" && (
-        <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Leave Applications &amp; Approval Desk</h3>
-            <button onClick={() => setIsLeaveModalOpen(true)} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem", gap: "0.35rem" }}>
-              <Plus size={15} /> Apply Leave Request
-            </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          
+          {/* TEACHER ATTENDANCE CORRECTION REQUESTS QUEUE CARD */}
+          <div className="glass-card" style={{ padding: "1.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <div>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "#fff" }}>
+                  Teacher Attendance Correction Requests Queue 🔒
+                </h3>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: 2 }}>
+                  Correction requests submitted by teachers after the 10:00 AM lock window for Admin approval
+                </div>
+              </div>
+
+              <span className="badge badge-warning" style={{ padding: "0.4rem 0.8rem", fontWeight: 800 }}>
+                PENDING: {correctionRequests.filter(c => c.status === "PendingAdminApproval").length}
+              </span>
+            </div>
+
+            <div className="table-container">
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>TEACHER NAME</th>
+                    <th>STUDENT NAME</th>
+                    <th>CLASS</th>
+                    <th>STATUS CHANGE</th>
+                    <th>REASON FOR CORRECTION</th>
+                    <th>ADMIN DECISION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {correctionRequests.map(cr => (
+                    <tr key={cr.id}>
+                      <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{cr.teacherName}</td>
+                      <td style={{ fontWeight: 700, color: "var(--primary)" }}>{cr.studentName}</td>
+                      <td>{cr.class}</td>
+                      <td>
+                        <span className="badge badge-danger">{cr.currentStatus}</span>
+                        <span style={{ margin: "0 6px", color: "var(--text-muted)" }}>➔</span>
+                        <span className="badge badge-success">{cr.requestedStatus}</span>
+                      </td>
+                      <td style={{ fontSize: "0.82rem", maxWidth: 280 }}>{cr.reason}</td>
+                      <td>
+                        {cr.status === "PendingAdminApproval" ? (
+                          <div style={{ display: "inline-flex", gap: "0.35rem" }}>
+                            <button onClick={() => handleApproveCorrection(cr.id)} className="btn btn-primary" style={{ padding: "0.3rem 0.75rem", fontSize: "0.72rem", background: "#22c55e", border: "none" }}>
+                              Approve
+                            </button>
+                            <button onClick={() => handleRejectCorrection(cr.id)} className="btn btn-secondary" style={{ padding: "0.3rem 0.75rem", fontSize: "0.72rem", color: "#ef4444" }}>
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span className={`badge ${cr.status === "Approved" ? "badge-success" : "badge-danger"}`}>
+                            {cr.status} {cr.status === "Approved" ? "✅" : "❌"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="table-container">
-            <table className="custom-table">
-              <thead>
-                <tr>
-                  <th>APPLICANT NAME</th>
-                  <th>TARGET TYPE</th>
-                  <th>CLASS / DEPT</th>
-                  <th>LEAVE DATES</th>
-                  <th>REASON FOR ABSENCE</th>
-                  <th>PROCESS REQUEST</th>
-                  <th style={{ textAlign: "right" }}>ACTIONS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaves.map(l => (
-                  <tr key={l.id}>
-                    <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{l.name}</td>
-                    <td><span className="badge badge-info">{l.targetType}</span></td>
-                    <td style={{ fontWeight: 700, color: "var(--primary)" }}>{l.classOrDept}</td>
-                    <td style={{ fontSize: "0.82rem" }}>{l.dates}</td>
-                    <td style={{ fontSize: "0.82rem" }}>{l.reason}</td>
-                    <td>
-                      {l.status === "PENDING" ? (
-                        <div style={{ display: "inline-flex", gap: "0.35rem" }}>
-                          <button onClick={() => handleProcessLeave(l.id, "APPROVED")} className="btn btn-primary" style={{ padding: "0.3rem 0.75rem", fontSize: "0.72rem", background: "#22c55e", border: "none" }}>Approve</button>
-                          <button onClick={() => handleProcessLeave(l.id, "REJECTED")} className="btn btn-secondary" style={{ padding: "0.3rem 0.75rem", fontSize: "0.72rem", color: "#ef4444" }}>Reject</button>
-                        </div>
-                      ) : (
-                        <span className={`badge ${l.status === "APPROVED" ? "badge-success" : "badge-danger"}`}>{l.status} ✅</span>
-                      )}
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      <button onClick={() => setLeaves(leaves.filter(x => x.id !== l.id))} className="btn btn-secondary" style={{ padding: "0.35rem 0.5rem", color: "#ef4444" }}><Trash2 size={13} /></button>
-                    </td>
+          {/* LEAVE APPLICATIONS QUEUE WITH TEACHER RECOMMENDATION & ADMIN FINAL APPROVAL */}
+          <div className="glass-card" style={{ padding: "1.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+              <div>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "#fff" }}>Leave Applications &amp; Multi-Tier Approval Desk</h3>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: 2 }}>
+                  Student leaves recommended by Class Teachers for School Admin Final Approval &amp; Faculty Leave Queue
+                </div>
+              </div>
+              <button onClick={() => setIsLeaveModalOpen(true)} className="btn btn-primary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem" }}>
+                <Plus size={14} /> Apply Manual Leave
+              </button>
+            </div>
+
+            <div className="table-container">
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>APPLICANT NAME</th>
+                    <th>TARGET TYPE</th>
+                    <th>CLASS / DEPT</th>
+                    <th>LEAVE DATES</th>
+                    <th>TEACHER RECOMMENDATION</th>
+                    <th>REASON &amp; ATTACHMENT</th>
+                    <th>FINAL ADMIN APPROVAL</th>
+                    <th style={{ textAlign: "right" }}>ACTIONS</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {leaves.map(l => (
+                    <tr key={l.id}>
+                      <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{l.name}</td>
+                      <td><span className={`badge ${l.targetType === "Teacher" ? "badge-warning" : "badge-info"}`}>{l.targetType}</span></td>
+                      <td style={{ fontWeight: 700, color: "var(--primary)" }}>{l.classOrDept}</td>
+                      <td style={{ fontSize: "0.82rem" }}>{l.dates}</td>
+                      <td>
+                        <span className="badge badge-success" style={{ fontSize: "0.72rem" }}>Recommended ✅</span>
+                      </td>
+                      <td style={{ fontSize: "0.82rem" }}>
+                        {l.reason}
+                        <div style={{ fontSize: "0.72rem", color: "#ec4899", fontWeight: 700, marginTop: 2 }}>📎 Attachment Attached</div>
+                      </td>
+                      <td>
+                        {l.status === "PENDING" ? (
+                          <div style={{ display: "inline-flex", gap: "0.35rem" }}>
+                            <button onClick={() => handleProcessLeave(l.id, "APPROVED")} className="btn btn-primary" style={{ padding: "0.3rem 0.75rem", fontSize: "0.72rem", background: "#22c55e", border: "none" }}>Final Approve</button>
+                            <button onClick={() => handleProcessLeave(l.id, "REJECTED")} className="btn btn-secondary" style={{ padding: "0.3rem 0.75rem", fontSize: "0.72rem", color: "#ef4444" }}>Reject</button>
+                          </div>
+                        ) : (
+                          <span className={`badge ${l.status === "APPROVED" ? "badge-success" : "badge-danger"}`}>{l.status} ✅</span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <button onClick={() => setLeaves(leaves.filter(x => x.id !== l.id))} className="btn btn-secondary" style={{ padding: "0.35rem 0.5rem", color: "#ef4444" }}><Trash2 size={13} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -552,53 +697,154 @@ export default function AttendancePage() {
         </div>
       )}
 
-      {/* ════════════ MODULE 5: ATTENDANCE REPORTS ════════════ */}
+      {/* ════════════ MODULE 5: ADVANCED ATTENDANCE MASTER REPORTS GENERATOR ════════════ */}
       {activeTab === "reports" && (
-        <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Attendance Master Reports Generator</h3>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button onClick={() => handleExportReport("attendance", "csv")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
-                <Download size={14} /> Export CSV
-              </button>
-              <button onClick={() => handleExportReport("attendance", "excel")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
-                <Download size={14} /> Export Excel
-              </button>
-              <button onClick={() => handleExportReport("attendance", "pdf")} className="btn btn-primary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
-                <FileText size={14} /> Export PDF
-              </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          
+          {/* REPORT FILTERS & SUMMARY HEADER */}
+          <div className="glass-card" style={{ padding: "1.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+              <div>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "#fff" }}>
+                  Attendance Master Reports Generator 📊
+                </h3>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: 2 }}>
+                  Generate and download class-wise, student-wise, and teacher-wise reports in Excel, CSV, or PDF
+                </div>
+              </div>
+
+              {/* MULTI-FORMAT EXPORTERS */}
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button onClick={() => handleExportReport("attendance", "excel")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem", color: "#16a34a" }}>
+                  <FileSpreadsheet size={14} /> Export Excel
+                </button>
+                <button onClick={() => handleExportReport("attendance", "csv")} className="btn btn-secondary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                  <Download size={14} /> Export CSV
+                </button>
+                <button onClick={() => handleExportReport("attendance", "pdf")} className="btn btn-primary" style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", gap: "0.3rem" }}>
+                  <FileText size={14} /> Export PDF
+                </button>
+              </div>
+            </div>
+
+            {/* REPORT FILTER DROPDOWNS */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", marginBottom: "1.25rem" }}>
+              <div>
+                <label style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>REPORT PERIOD</label>
+                <select style={{ width: "100%", padding: "0.6rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontWeight: 700 }}>
+                  <option value="Daily">Daily Report</option>
+                  <option value="Weekly">Weekly Report</option>
+                  <option value="Monthly" selected>Monthly Report (August 2026)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>REPORT SCOPE</label>
+                <select style={{ width: "100%", padding: "0.6rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontWeight: 700 }}>
+                  <option value="Class-wise" selected>Class-wise Report</option>
+                  <option value="Student-wise">Student-wise Report</option>
+                  <option value="Teacher-wise">Teacher-wise Report</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SELECT CLASS</label>
+                <select style={{ width: "100%", padding: "0.6rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontWeight: 700 }}>
+                  <option value="Class 8-A" selected>Class 8-A</option>
+                  <option value="Class 9-A">Class 9-A</option>
+                  <option value="Class 10-A">Class 10-A</option>
+                </select>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "flex-end" }}>
+                <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "0.6rem", fontSize: "0.8rem" }}>
+                  <RefreshCw size={14} /> Refresh Report
+                </button>
+              </div>
+            </div>
+
+            {/* CLASS 8-A REPORT SUMMARY STATS CARD */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.85rem", background: "rgba(15,23,42,0.6)", padding: "1.2rem", borderRadius: 12, border: "1px solid var(--border-color)" }}>
+              <div style={{ textAlign: "center" }}>
+                <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 800 }}>TOTAL STUDENTS</span>
+                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff" }}>42</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <span style={{ fontSize: "0.7rem", color: "#22c55e", fontWeight: 800 }}>PRESENT</span>
+                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#22c55e" }}>38</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <span style={{ fontSize: "0.7rem", color: "#ef4444", fontWeight: 800 }}>ABSENT</span>
+                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#ef4444" }}>3</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 800 }}>LATE</span>
+                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#f59e0b" }}>1</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <span style={{ fontSize: "0.7rem", color: "var(--primary)", fontWeight: 800 }}>ATTENDANCE RATE</span>
+                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "var(--primary)" }}>90.47%</div>
+              </div>
             </div>
           </div>
 
-          <div className="table-container">
-            <table className="custom-table">
-              <thead>
-                <tr>
-                  <th>STUDENT NAME</th>
-                  <th>CLASS</th>
-                  <th>TOTAL WORKING DAYS</th>
-                  <th>PRESENT (P)</th>
-                  <th>ABSENT (A)</th>
-                  <th>LEAVE (L)</th>
-                  <th>ATTENDANCE %</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map(s => (
-                  <tr key={s.id}>
-                    <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{s.name}</td>
-                    <td style={{ fontWeight: 700 }}>{s.classSection}</td>
+          {/* DETAILED STUDENT ROSTER TABLE */}
+          <div className="glass-card" style={{ padding: "1.5rem" }}>
+            <h4 style={{ fontSize: "1rem", fontWeight: 800, margin: "0 0 1rem 0", color: "#fff" }}>
+              Class 8-A Roster Breakup (August 2026)
+            </h4>
+            <div className="table-container">
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>STUDENT NAME</th>
+                    <th>CLASS</th>
+                    <th>TOTAL WORKING DAYS</th>
+                    <th>PRESENT (P)</th>
+                    <th>ABSENT (A)</th>
+                    <th>LATE (L)</th>
+                    <th>LEAVE (LV)</th>
+                    <th>ATTENDANCE %</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr key="s1">
+                    <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>Rahul Kumar</td>
+                    <td style={{ fontWeight: 700 }}>Class 8-A</td>
                     <td style={{ fontWeight: 700 }}>24 Days</td>
-                    <td style={{ fontWeight: 900, color: "#22c55e" }}>22 Days</td>
-                    <td style={{ fontWeight: 900, color: "#ef4444" }}>1 Day</td>
-                    <td style={{ fontWeight: 900, color: "#3b82f6" }}>1 Day</td>
-                    <td style={{ fontWeight: 900, color: "var(--primary)" }}>95.8%</td>
+                    <td style={{ fontWeight: 900, color: "#22c55e" }}>20 Days</td>
+                    <td style={{ fontWeight: 900, color: "#ef4444" }}>2 Days</td>
+                    <td style={{ fontWeight: 900, color: "#f59e0b" }}>1 Day</td>
+                    <td style={{ fontWeight: 900, color: "#a855f7" }}>1 Day</td>
+                    <td style={{ fontWeight: 900, color: "var(--primary)" }}>83.33%</td>
                     <td><span className="badge badge-success">REGULAR ✅</span></td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                  <tr key="s2">
+                    <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>Aman Kumar</td>
+                    <td style={{ fontWeight: 700 }}>Class 8-A</td>
+                    <td style={{ fontWeight: 700 }}>24 Days</td>
+                    <td style={{ fontWeight: 900, color: "#22c55e" }}>23 Days</td>
+                    <td style={{ fontWeight: 900, color: "#ef4444" }}>1 Day</td>
+                    <td style={{ fontWeight: 900, color: "#f59e0b" }}>0 Days</td>
+                    <td style={{ fontWeight: 900, color: "#a855f7" }}>0 Days</td>
+                    <td style={{ fontWeight: 900, color: "var(--primary)" }}>95.83%</td>
+                    <td><span className="badge badge-success">EXCELLENT ✅</span></td>
+                  </tr>
+                  <tr key="s3">
+                    <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>Priya Singh</td>
+                    <td style={{ fontWeight: 700 }}>Class 8-A</td>
+                    <td style={{ fontWeight: 700 }}>24 Days</td>
+                    <td style={{ fontWeight: 900, color: "#22c55e" }}>24 Days</td>
+                    <td style={{ fontWeight: 900, color: "#ef4444" }}>0 Days</td>
+                    <td style={{ fontWeight: 900, color: "#f59e0b" }}>0 Days</td>
+                    <td style={{ fontWeight: 900, color: "#a855f7" }}>0 Days</td>
+                    <td style={{ fontWeight: 900, color: "var(--primary)" }}>100.0%</td>
+                    <td><span className="badge badge-success">100% PERFECT 🏆</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

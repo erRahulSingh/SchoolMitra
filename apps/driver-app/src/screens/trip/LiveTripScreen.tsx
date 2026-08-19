@@ -1,9 +1,68 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Bus, Gauge, Navigation, Clock, MapPin, Send } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { createSocketConnection } from '../../lib/socketClient';
 
 export default function LiveTripScreen({ navigation }: any) {
+  useEffect(() => {
+    const socket = createSocketConnection("http://localhost:5000");
+
+    let lat = 28.5833;
+    let lng = 77.0667;
+    let heading = 90;
+    let isOnline = true;
+    let localQueue: any[] = [];
+
+    // Simulate network connectivity toggle (e.g. offline for 9s, online for 12s)
+    const connToggle = setInterval(() => {
+      isOnline = !isOnline;
+      console.log(`[GPS Telemetry Tracker] Simulated Network Connectivity toggled to: ${isOnline ? 'ONLINE 🟢' : 'OFFLINE 🔴'}`);
+      if (isOnline && localQueue.length > 0) {
+        console.log(`[GPS Telemetry Tracker] Restored network connection! Syncing ${localQueue.length} queued offline coordinates...`);
+        localQueue.forEach(item => {
+          if (socket && typeof socket.emit === 'function') {
+            socket.emit("bus:location_changed", item);
+          }
+        });
+        localQueue = []; // clear cache
+      }
+    }, 12000);
+
+    const interval = setInterval(() => {
+      lat += (Math.random() - 0.5) * 0.0004;
+      lng += (Math.random() - 0.5) * 0.0004;
+      heading = (heading + (Math.random() - 0.5) * 12) % 360;
+
+      const payload = {
+        busId: "BUS-01",
+        tripId: "TRIP-101",
+        latitude: lat,
+        longitude: lng,
+        speed: Math.round(32 + Math.random() * 20),
+        heading: Math.round(heading),
+        timestamp: new Date().toISOString(),
+        isStale: false
+      };
+
+      if (isOnline) {
+        if (socket && typeof socket.emit === 'function') {
+          socket.emit("bus:location_changed", payload);
+        }
+      } else {
+        console.warn(`[GPS Telemetry Tracker] Offline: Caching coordinates locally: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        localQueue.push({ ...payload, isStale: true });
+      }
+    }, 3000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(connToggle);
+      if (socket && typeof socket.disconnect === 'function') {
+        socket.disconnect();
+      }
+    };
+  }, []);
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />

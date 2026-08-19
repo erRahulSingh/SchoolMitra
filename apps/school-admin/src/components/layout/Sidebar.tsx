@@ -21,7 +21,10 @@ import {
   BarChart3, 
   Settings,
   Building2,
-  Radio
+  Radio,
+  Calendar,
+  CalendarDays,
+  CalendarOff
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -31,6 +34,9 @@ const NAV_ITEMS = [
   { label: "Teachers & Staff", href: "/teachers", icon: UserCheck },
   { label: "Academics & Timetable", href: "/academics", icon: BookOpen },
   { label: "Daily Attendance", href: "/attendance", icon: CalendarCheck },
+  { label: "School Calendar", href: "/calendar", icon: Calendar },
+  { label: "Events Management", href: "/events", icon: CalendarDays },
+  { label: "Leave Applications", href: "/leaves", icon: CalendarOff },
   { label: "Homework Hub", href: "/homework", icon: FileText },
   { label: "Assignments Desk", href: "/assignments", icon: ClipboardList },
   { label: "Exams & Report Cards", href: "/exams", icon: Award },

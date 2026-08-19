@@ -5,23 +5,17 @@ import Link from "next/link";
 import {
   Phone, Mail, MapPin, Send, CheckCircle, Clock, Shield,
   Headphones, MessageCircle, ChevronDown, ChevronRight,
-  Sun, Moon, Bus, Smartphone, FileText, ArrowRight, Globe,
-  Building2, Calendar, GraduationCap
+  Bus, Smartphone, FileText, ArrowRight, Globe,
+  Building2, Calendar, GraduationCap, Sparkles, Zap, Compass, CheckCircle2
 } from "lucide-react";
 import SchoolRegistrationModal from "@/components/SchoolRegistrationModal";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
 export default function ContactPage() {
-  const [theme, setTheme] = useState("light");
+  const [modalOpen, setModalOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    document.documentElement.setAttribute("data-theme", next);
-  };
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,431 +28,918 @@ export default function ContactPage() {
   };
 
   const faqData = [
-    { q: "How can I request a demo for my school?", a: "You can request a free demo by filling out the contact form above, or by directly contacting us via email at support@schoolmitra.com." },
-    { q: "What is the pricing for SchoolMitra?", a: "Pricing depends on the number of active students and modules selected. Visit our Pricing page or contact our sales team for a custom quote." },
-    { q: "Do you provide training and onboarding?", a: "Yes, we provide complete virtual and on-site training for administrators, teachers, and drivers during onboarding." },
-    { q: "Can I integrate SchoolMitra with other tools?", a: "Yes, our developer friendly APIs support integrations with biometric devices, RFID scanners, SMS gateways, and GPS devices." },
-    { q: "Is my school data secure with SchoolMitra?", a: "Absolutely. We use industry-standard encryption, secure cloud infrastructure, and regular automated backups to ensure your data is always protected." }
+    {
+      q: "How can I request a live demo for my school?",
+      a: "You can request a free demo by filling out our contact form below, or by calling our onboarding team at +91 91234 56789. We arrange virtual or on-campus walk-throughs within 24 hours."
+    },
+    {
+      q: "What is the onboarding timeline for a new school?",
+      a: "Complete student data migration, staff account creation, and RFID/GPS hardware syncing are completed in 3 to 5 business days with zero campus downtime."
+    },
+    {
+      q: "Do you provide on-site teacher and driver training?",
+      a: "Yes! We conduct interactive training sessions for teachers, administrators, and bus drivers, supplemented with step-by-step video guides in English and Hindi."
+    },
+    {
+      q: "Can SchoolMitra integrate with our existing RFID gates & biometrics?",
+      a: "Yes, our developer-friendly cloud APIs support integrations with standard biometric devices, RFID turnstiles, SMS gateways, and GPS hardware."
+    },
+    {
+      q: "How secure is student and financial data?",
+      a: "We maintain bank-grade 256-bit SSL encryption, ISO-27001 data governance, and automated daily off-site cloud backups to ensure total protection."
+    }
   ];
 
   return (
-    <div style={{ background: "var(--bg-page)", minHeight: "100vh", color: "var(--text-main)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-
+    <div style={{
+      background: "var(--bg-page)",
+      minHeight: "100vh",
+      color: "var(--text-main)",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      overflowX: "hidden",
+      WebkitFontSmoothing: "antialiased"
+    }}>
       {/* ═══════════ NAVBAR ═══════════ */}
       <Navbar />
 
-      {/* ═══════════ HERO: CONTACT FORM + INFO ═══════════ */}
-      <section style={{
-        paddingTop: 95, paddingBottom: 15, paddingLeft: "5%", paddingRight: "5%",
-        background: "var(--bg-page)", position: "relative"
+      {/* ═══════════ HERO SECTION (ENGAGING & COLOURFUL) ═══════════ */}
+      <section className="contact-hero-section" style={{
+        position: "relative",
+        paddingTop: 110,
+        paddingBottom: 40,
+        paddingLeft: "5%",
+        paddingRight: "5%",
+        overflow: "hidden"
       }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: "2.5rem", alignItems: "flex-start" }}>
+        {/* Animated Mesh Orbs */}
+        <div className="anim-orb-1" style={{
+          position: "absolute",
+          top: "5%",
+          left: "5%",
+          width: "420px",
+          height: "420px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99, 102, 241, 0.16) 0%, rgba(139, 92, 246, 0.08) 45%, transparent 70%)",
+          filter: "blur(60px)",
+          pointerEvents: "none",
+          zIndex: 0
+        }} />
+        <div className="anim-orb-2" style={{
+          position: "absolute",
+          top: "15%",
+          right: "5%",
+          width: "480px",
+          height: "480px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, rgba(249, 115, 22, 0.1) 40%, transparent 70%)",
+          filter: "blur(70px)",
+          pointerEvents: "none",
+          zIndex: 0
+        }} />
 
-          {/* ── Left: Contact info ── */}
+        <div style={{
+          maxWidth: 1240,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "1.15fr 0.85fr",
+          gap: "2.8rem",
+          alignItems: "center",
+          position: "relative",
+          zIndex: 1
+        }}>
+          {/* Left Copy */}
           <div>
-            {/* Pill Badge */}
-            <div className="resources-badge" style={{
-              display: "inline-flex", alignItems: "center", gap: "0.4rem",
-              padding: "0.35rem 0.95rem", borderRadius: 9999,
-              background: "#eef2ff", color: "#4f46e5",
-              fontSize: "0.82rem", fontWeight: 600, marginBottom: "1.5rem"
-            }}>
-              <Phone size={14} color="#4f46e5" /> We&apos;re Here to Help
+            <div className="shimmer-badge" style={{ marginBottom: "1rem", padding: "0.3rem 0.85rem" }}>
+              <Headphones size={14} color="#8b5cf6" />
+              <span className="gradient-text-vibrant" style={{ fontWeight: 600, fontSize: "0.82rem" }}>24/7 Dedicated Support &amp; Onboarding</span>
+              <span style={{
+                background: "linear-gradient(135deg, #10b981, #06b6d4)",
+                color: "#ffffff",
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                padding: "0.12rem 0.45rem",
+                borderRadius: "99px"
+              }}>
+                PAN-INDIA
+              </span>
             </div>
 
-            {/* Headline */}
-            <h1 style={{ fontSize: "clamp(2.5rem,4.2vw,3.3rem)", fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: "0.65rem", color: "var(--text-main)" }}>
-              Contact Us
+            <h1 style={{
+              fontSize: "clamp(2.1rem, 3.4vw, 3rem)",
+              fontWeight: 700,
+              lineHeight: 1.18,
+              letterSpacing: "-0.025em",
+              marginBottom: "1rem",
+              color: "var(--text-main)"
+            }}>
+              Let&apos;s Build a Smarter <span className="gradient-text-sunset">Campus Together</span>
             </h1>
-            <h2 style={{ fontSize: "clamp(1.75rem,3.2vw,2.4rem)", fontWeight: 800, lineHeight: 1.15, marginBottom: "1.5rem", color: "var(--text-main)" }}>
-              We would love to hear<br />from{" "}
-              <span style={{ color: "#4f46e5" }}>you!</span>
-            </h2>
 
-            <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", lineHeight: 1.65, maxWidth: 460, marginBottom: "2.2rem" }}>
-              Have a question, need a demo, or want to know more about SchoolMitra? Our team is ready to assist you.
+            <p style={{
+              fontSize: "1.02rem",
+              color: "var(--text-muted)",
+              lineHeight: 1.6,
+              maxWidth: 520,
+              marginBottom: "1.6rem",
+              fontWeight: 400
+            }}>
+              Have questions about our School ERP, live bus GPS telematics, or custom fee reconciliation? Our engineering and support team is here to assist you.
             </p>
 
-            {/* Info items */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.6rem", marginBottom: "2.2rem" }}>
+            {/* Quick Action Chips */}
+            <div style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.5rem",
+              marginBottom: "1.8rem"
+            }}>
               {[
-                { icon: <Headphones size={22} color="#4f46e5" />, bg: "#eef2ff", title: "Quick Support", desc: "Get fast and helpful responses from our support team." },
-                { icon: <MessageCircle size={22} color="#10b981" />, bg: "#e6f4ea", title: "Expert Guidance", desc: "Talk to our experts to find the right solution for your school." },
-                { icon: <Clock size={22} color="#f59e0b" />, bg: "#fef7e0", title: "We&apos;re Available", desc: "Mon – Sat, 9:00 AM to 7:00 PM (IST)" },
-              ].map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: "1.1rem" }}>
-                  <div style={{
-                    width: 48, height: 48, borderRadius: 14, background: item.bg,
-                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                  }}>{item.icon}</div>
-                  <div>
-                    <h4 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.15rem", color: "var(--text-main)" }}>{item.title}</h4>
-                    <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: 1.45 }}>{item.desc}</p>
-                  </div>
+                { label: "+91 91234 56789", icon: <Phone size={13} />, color: "#4f46e5", bg: "rgba(79, 70, 229, 0.08)" },
+                { label: "support@schoolmitra.com", icon: <Mail size={13} />, color: "#0284c7", bg: "rgba(2, 132, 199, 0.08)" },
+                { label: "2-4 Hr Response SLA", icon: <Clock size={13} />, color: "#059669", bg: "rgba(16, 185, 129, 0.08)" },
+                { label: "Mon-Sat, 9AM-7PM IST", icon: <Calendar size={13} />, color: "#d97706", bg: "rgba(217, 119, 6, 0.08)" }
+              ].map((chip, idx) => (
+                <div key={idx} style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  padding: "0.3rem 0.75rem",
+                  borderRadius: "99px",
+                  background: chip.bg,
+                  color: chip.color,
+                  fontWeight: 600,
+                  fontSize: "0.76rem"
+                }}>
+                  {chip.icon} {chip.label}
                 </div>
               ))}
             </div>
 
-            {/* Privacy alert box */}
-            <div className="contact-privacy-box" style={{
-              borderRadius: 16, padding: "1.2rem 1.4rem",
-              display: "flex", alignItems: "center", gap: "1.1rem",
-              position: "relative", overflow: "hidden"
-            }}>
-              <div style={{ width: 42, height: 42, borderRadius: "50%", background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Shield size={22} color="#0284c7" />
-              </div>
-              <div>
-                <h4 style={{ fontSize: "0.95rem", fontWeight: 700, marginBottom: "0.15rem", color: "#0369a1" }}>Your data is safe with us.</h4>
-                <p style={{ fontSize: "0.82rem", color: "#0369a1", opacity: 0.9, lineHeight: 1.45 }}>We respect your privacy and never share your information with third parties.</p>
-              </div>
-              {/* Watermark */}
-              <div style={{ position: "absolute", right: -10, bottom: -10, opacity: 0.05, transform: "rotate(15deg)" }}>
-                <Shield size={90} color="#0284c7" />
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Form Card */}
-          <div style={{
-            background: "var(--bg-card)", border: "1px solid var(--border-color)",
-            borderRadius: 20, padding: "2rem",
-            boxShadow: "0 10px 30px rgba(15,23,42,0.04)"
-          }}>
-            <h3 style={{ fontSize: "1.35rem", fontWeight: 800, marginBottom: "1.5rem", color: "var(--text-main)" }}>Send us a Message</h3>
-
-            {submitted ? (
-              <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
-                <CheckCircle size={52} color="#10b981" style={{ marginBottom: "1rem" }} />
-                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>Message Sent!</h3>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>We&apos;ll respond within 2-4 hours.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-                {/* Full Name */}
-                <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 600, display: "block", marginBottom: "0.35rem", color: "var(--text-main)" }}>Full Name</label>
-                  <input type="text" placeholder="Enter your full name" required style={{
-                    width: "100%", padding: "0.7rem 0.9rem", borderRadius: 10,
-                    border: "1px solid var(--border-color)", background: "var(--bg-page)",
-                    color: "var(--text-main)", fontSize: "0.88rem", fontFamily: "inherit", outline: "none"
-                  }} />
-                </div>
-
-                {/* Work Email */}
-                <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 600, display: "block", marginBottom: "0.35rem", color: "var(--text-main)" }}>Work Email</label>
-                  <input type="email" placeholder="Enter your email address" required style={{
-                    width: "100%", padding: "0.7rem 0.9rem", borderRadius: 10,
-                    border: "1px solid var(--border-color)", background: "var(--bg-page)",
-                    color: "var(--text-main)", fontSize: "0.88rem", fontFamily: "inherit", outline: "none"
-                  }} />
-                </div>
-
-                {/* Phone Number */}
-                <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 600, display: "block", marginBottom: "0.35rem", color: "var(--text-main)" }}>Phone Number</label>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: "0.35rem",
-                      padding: "0.7rem 0.75rem", borderRadius: 10,
-                      border: "1px solid var(--border-color)", background: "var(--bg-page)",
-                      fontSize: "0.85rem", fontWeight: 600, color: "var(--text-main)", minWidth: 85
-                    }}>
-                      🇮🇳 +91 <ChevronDown size={12} />
-                    </div>
-                    <input type="tel" placeholder="Enter your phone number" style={{
-                      flex: 1, padding: "0.7rem 0.9rem", borderRadius: 10,
-                      border: "1px solid var(--border-color)", background: "var(--bg-page)",
-                      color: "var(--text-main)", fontSize: "0.88rem", fontFamily: "inherit", outline: "none"
-                    }} />
-                  </div>
-                </div>
-
-                {/* Subject */}
-                <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 600, display: "block", marginBottom: "0.35rem", color: "var(--text-main)" }}>Subject</label>
-                  <select style={{
-                    width: "100%", padding: "0.7rem 0.9rem", borderRadius: 10,
-                    border: "1px solid var(--border-color)", background: "var(--bg-page)",
-                    color: "var(--text-muted)", fontSize: "0.88rem", fontFamily: "inherit", outline: "none",
-                    appearance: "none", cursor: "pointer"
-                  }}>
-                    <option>What is this regarding?</option>
-                    <option>School ERP Demo</option>
-                    <option>GPS Bus Tracking</option>
-                    <option>Pricing Inquiry</option>
-                    <option>Technical Support</option>
-                    <option>Partnership</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-
-                {/* Message */}
-                <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: 600, display: "block", marginBottom: "0.35rem", color: "var(--text-main)" }}>Message</label>
-                  <textarea placeholder="Tell us more about your query..." rows={3} style={{
-                    width: "100%", padding: "0.7rem 0.9rem", borderRadius: 10,
-                    border: "1px solid var(--border-color)", background: "var(--bg-page)",
-                    color: "var(--text-main)", fontSize: "0.88rem", fontFamily: "inherit", outline: "none",
-                    resize: "vertical"
-                  }} />
-                </div>
-
-                {/* Checkbox */}
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                  <input type="checkbox" required style={{ width: 16, height: 16, accentColor: "#4f46e5" }} />
-                  <span>I agree to the <Link href="/privacy" style={{ color: "#4f46e5", fontWeight: 600 }}>Privacy Policy</Link> and <Link href="/terms" style={{ color: "#4f46e5", fontWeight: 600 }}>Terms & Conditions</Link></span>
-                </div>
-
-                {/* Submit button */}
-                <button type="submit" style={{
-                  width: "100%", padding: "0.75rem",
-                  borderRadius: 12, border: "none",
-                  background: "#4f46e5",
-                  color: "#fff", fontWeight: 700, fontSize: "0.95rem",
-                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
-                  boxShadow: "0 4px 14px rgba(79,70,229,0.25)",
-                  transition: "all 0.2s"
-                }}>
-                  Send Message <Send size={16} />
-                </button>
-
-                {/* Response time */}
-                <div style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
-                  Average response time: <Clock size={14} color="#10b981" /> <span style={{ fontWeight: 700, color: "#10b981" }}>2-4 Hours</span>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ OUR OFFICES ═══════════ */}
-      <section style={{ paddingTop: 30, paddingBottom: 60, paddingLeft: "5%", paddingRight: "5%" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          {/* Divider */}
-          <div style={{ borderTop: "1px solid var(--border-color)", marginBottom: "2.5rem" }} />
-
-          {/* Section heading */}
-          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <div className="resources-badge" style={{
-              display: "inline-flex", alignItems: "center", gap: "0.4rem",
-              padding: "0.35rem 0.9rem", borderRadius: 9999,
-              background: "#eef2ff", color: "#4f46e5",
-              fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.75rem"
-            }}>
-              <Globe size={14} color="#4f46e5" /> Our Offices
-            </div>
-            <h2 style={{ fontSize: "1.7rem", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: "0.4rem", color: "var(--text-main)" }}>We Are Globally Connected</h2>
-            <p style={{ fontSize: "0.92rem", color: "var(--text-muted)" }}>Visit our offices or connect with our team through any of the channels below.</p>
-          </div>
-
-          {/* Office cards + More Ways grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1.2fr", gap: "1.5rem" }}>
-            {/* Office cards */}
-            {[
-              { color: "#4f46e5", bg: "#eef2ff", title: "Head Office", line1: "123, Tech Park, Sector 62", line2: "Noida, Uttar Pradesh", line3: "India – 201309" },
-              { color: "#10b981", bg: "#e6f4ea", title: "Corporate Office", line1: "45, Residency Road", line2: "Bengaluru, Karnataka", line3: "India – 560025" },
-              { color: "#f59e0b", bg: "#fef7e0", title: "Support Office", line1: "1st Floor, Plot No. 12", line2: "Hitech City, Hyderabad", line3: "Telangana – 500081" },
-            ].map((office, i) => (
-              <div key={i} style={{
-                background: "var(--bg-card)", border: "1px solid var(--border-color)",
-                borderRadius: 18, padding: "1.5rem",
-                display: "flex", flexDirection: "column",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
-                transition: "all 0.25s ease"
-              }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 10px 25px rgba(0,0,0,0.08)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 10px rgba(0,0,0,0.03)"; }}
+            {/* CTA Group */}
+            <div style={{ display: "flex", gap: "0.85rem", alignItems: "center", flexWrap: "wrap" }}>
+              <a
+                href="#message-form"
+                className="btn-vibrant-gradient"
+                style={{
+                  padding: "0.85rem 1.8rem",
+                  borderRadius: 12,
+                  fontSize: "0.92rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem"
+                }}
               >
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: office.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem" }}>
-                  <Building2 size={22} color={office.color} />
-                </div>
-                <h4 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "0.85rem", color: "var(--text-main)" }}>{office.title}</h4>
-                <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", lineHeight: 1.6, flex: 1 }}>
-                  {office.line1}<br />{office.line2}<br />{office.line3}
-                </p>
-                <button style={{
-                  marginTop: "1.25rem", display: "inline-flex", alignItems: "center", gap: "0.35rem",
-                  background: "transparent", border: "none", padding: 0,
-                  color: "#4f46e5", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer"
-                }}>View on Map <ArrowRight size={13} /></button>
-              </div>
-            ))}
+                <Send size={16} /> Send Us a Message
+              </a>
 
-            {/* More Ways to Connect */}
-            <div style={{
-              background: "var(--bg-card)", border: "1px solid var(--border-color)",
-              borderRadius: 18, padding: "1.5rem",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.03)"
-            }}>
-              <h4 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--text-main)" }}>More Ways to Connect</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-                {[
-                  { icon: <Mail size={18} />, bg: "#eef2ff", color: "#4f46e5", title: "Email Us", desc: "support@schoolmitra.com" },
-                  { icon: <Phone size={18} />, bg: "#e6f4ea", color: "#10b981", title: "Call Us", desc: "+91 91234 56789" },
-                  { icon: <MessageCircle size={18} />, bg: "#e6f4ea", color: "#22c55e", title: "WhatsApp Us", desc: "+91 91234 56789" },
-                  { icon: <Calendar size={18} />, bg: "#e0f2fe", color: "#0284c7", title: "Request a Demo", desc: "Book a free demo with our experts" },
-                ].map((c, j) => (
-                  <div key={j} style={{
-                    display: "flex", alignItems: "center", gap: "0.85rem",
-                    padding: "0.65rem 0.75rem", borderRadius: 12,
-                    cursor: "pointer", transition: "background 0.15s"
-                  }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "var(--bg-subtle)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
-                  >
-                    <div style={{ width: 38, height: 38, borderRadius: 10, background: c.bg, display: "flex", alignItems: "center", justifyContent: "center", color: c.color, flexShrink: 0 }}>
-                      {c.icon}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <h5 style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "0.15rem", color: "var(--text-main)" }}>{c.title}</h5>
-                      <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{c.desc}</p>
-                    </div>
-                    <ChevronRight size={16} color="var(--text-light)" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ FAQs & CHAT BOX SECTION ═══════════ */}
-      <section style={{ padding: "0 5% 4rem" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "2.5rem" }}>
-          {/* FAQ Accordion Box */}
-          <div style={{
-            background: "var(--bg-card)", border: "1px solid var(--border-color)",
-            borderRadius: 20, padding: "2rem",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.02)", display: "flex", flexDirection: "column"
-          }}>
-            <h3 style={{ fontSize: "1.3rem", fontWeight: 800, marginBottom: "1.5rem", color: "var(--text-main)" }}>Frequently Asked Questions</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem", flex: 1 }}>
-              {faqData.map((item, idx) => {
-                const isOpen = openIndex === idx;
-                return (
-                  <div key={idx} style={{
-                    borderBottom: "1px solid var(--border-color)",
-                    paddingBottom: "0.85rem",
-                    paddingTop: "0.45rem",
-                    display: "flex",
-                    flexDirection: "column",
-                    cursor: "pointer"
-                  }}
-                    onClick={() => toggleFaq(idx)}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text-main)" }}>{item.q}</span>
-                      <span style={{ fontSize: "1.2rem", fontWeight: 500, color: "var(--text-light)" }}>
-                        {isOpen ? "−" : "+"}
-                      </span>
-                    </div>
-                    {isOpen && (
-                      <p style={{
-                        marginTop: "0.55rem", fontSize: "0.82rem", color: "var(--text-muted)",
-                        lineHeight: 1.5, animation: "fadeIn 0.2s ease-out"
-                      }}>{item.a}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <button style={{
-              display: "inline-flex", alignItems: "center", gap: "0.35rem",
-              padding: "0.55rem 1.25rem", borderRadius: 10,
-              border: "1px solid #3b82f6", background: "transparent",
-              color: "#3b82f6", fontWeight: 700, fontSize: "0.85rem",
-              cursor: "pointer", transition: "all 0.2s", margin: "1.5rem auto 0",
-              width: "fit-content", justifyContent: "center"
-            }}>View All FAQs <ArrowRight size={14} /></button>
-          </div>
-
-          {/* Need Immediate Help Box */}
-          <div className="contact-help-box" style={{
-            borderRadius: 20, padding: "2rem",
-            display: "grid", gridTemplateColumns: "1.25fr 0.75fr", gap: "1rem", alignItems: "center",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.02)"
-          }}>
-            <div>
-              <h3 style={{ fontSize: "1.35rem", fontWeight: 800, marginBottom: "0.75rem", color: "var(--text-main)" }}>Need Immediate Help?</h3>
-              <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", lineHeight: 1.5, marginBottom: "1.5rem" }}>
-                Chat with our support team instantly for quick assistance.
-              </p>
-              <button className="contact-help-btn" style={{
-                display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                padding: "0.6rem 1.35rem", borderRadius: 12,
-                fontWeight: 800, fontSize: "0.88rem",
-                cursor: "pointer", boxShadow: "0 4px 12px rgba(67,56,202,0.08)",
-                transition: "all 0.2s"
-              }}>
-                Start Live Chat <MessageCircle size={16} />
+              <button
+                onClick={() => setModalOpen(true)}
+                className="btn-colorful-outline"
+                style={{
+                  padding: "0.85rem 1.5rem",
+                  borderRadius: 12,
+                  fontSize: "0.92rem",
+                  fontWeight: 600
+                }}
+              >
+                <Zap size={16} color="#6366f1" /> Book Campus Demo
               </button>
             </div>
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <img src="/images/resources/chat-headphones.png" alt="Headphones illustration" style={{ width: "100%", maxWidth: 130, height: "auto", objectFit: "contain" }} />
+          </div>
+
+          {/* Right Visual Showcase */}
+          <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <div style={{
+              position: "absolute",
+              inset: "-15px",
+              background: "linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(236, 72, 153, 0.2) 50%, rgba(6, 182, 212, 0.2) 100%)",
+              borderRadius: "28px",
+              filter: "blur(24px)",
+              zIndex: 0
+            }} />
+
+            <div style={{
+              position: "relative",
+              zIndex: 1,
+              width: "100%",
+              maxWidth: "420px",
+              borderRadius: "20px",
+              overflow: "hidden",
+              border: "1.5px solid rgba(255, 255, 255, 0.35)",
+              boxShadow: "0 20px 50px -10px rgba(67, 56, 202, 0.25)",
+              background: "var(--bg-card)"
+            }}>
+              <img
+                src="/images/smart-school-cta.png"
+                alt="SchoolMitra Support & Campus Connectivity"
+                style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }}
+              />
+            </div>
+
+            {/* Floating Live Badge 1 */}
+            <div className="anim-float-badge-1" style={{
+              position: "absolute",
+              top: "-12px",
+              right: "-12px",
+              background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+              borderRadius: "12px",
+              padding: "0.55rem 0.9rem",
+              boxShadow: "0 10px 25px rgba(79, 70, 229, 0.3)",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              zIndex: 3
+            }}>
+              <Headphones size={16} />
+              <div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700 }}>2-4 Hr Response</div>
+                <div style={{ fontSize: "0.62rem", opacity: 0.9 }}>Priority WhatsApp Support</div>
+              </div>
+            </div>
+
+            {/* Floating Live Badge 2 */}
+            <div className="anim-float-badge-2" style={{
+              position: "absolute",
+              bottom: "-12px",
+              left: "-12px",
+              background: "var(--bg-card)",
+              borderRadius: "12px",
+              padding: "0.55rem 0.9rem",
+              boxShadow: "0 10px 25px rgba(16, 185, 129, 0.2)",
+              border: "1.5px solid rgba(16, 185, 129, 0.3)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              zIndex: 3
+            }}>
+              <Shield size={16} color="#059669" />
+              <div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#059669" }}>100% Data Security</div>
+                <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", fontWeight: 500 }}>ISO-27001 Certified</div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ═══════════ MAP PREVIEW SECTION ═══════════ */}
-      <section style={{ padding: "0 5% 4rem" }}>
+      {/* ═══════════ 3 QUICK CONTACT CHANNELS STRIP ═══════════ */}
+      <section style={{ padding: "0 5% 45px 5%", maxWidth: 1240, margin: "0 auto" }}>
         <div style={{
-          maxWidth: 1280, margin: "0 auto", position: "relative",
-          borderRadius: 22, overflow: "hidden", height: 280,
-          border: "1px solid var(--border-color)", boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
-          background: "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)",
-          backgroundImage: "radial-gradient(rgba(99,102,241,0.15) 1.5px, transparent 1.5px)",
-          backgroundSize: "24px 24px"
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "1.4rem"
         }}>
-          {/* Background Map Image */}
-          <img 
-            src="/images/resources/map-view.png" 
-            alt="Office locations map" 
-            style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0, zIndex: 1 }}
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
+          {[
+            {
+              title: "Direct Phone & WhatsApp",
+              desc: "Speak with our education specialists for immediate campus assistance.",
+              val: "+91 91234 56789",
+              link: "tel:+919123456789",
+              icon: <Phone size={22} color="#ffffff" />,
+              grad: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+              color: "#4f46e5"
+            },
+            {
+              title: "Email Helpdesk",
+              desc: "Send us your RFP, queries, or student data migration requirements.",
+              val: "support@schoolmitra.com",
+              link: "mailto:support@schoolmitra.com",
+              icon: <Mail size={22} color="#ffffff" />,
+              grad: "linear-gradient(135deg, #0284c7, #06b6d4)",
+              color: "#0284c7"
+            },
+            {
+              title: "Corporate Headquarters",
+              desc: "Visit our technology campus in NCR for in-person consultation.",
+              val: "Sector 62, Noida, UP 201309",
+              link: "#offices",
+              icon: <Building2 size={22} color="#ffffff" />,
+              grad: "linear-gradient(135deg, #059669, #10b981)",
+              color: "#059669"
+            }
+          ].map((ch, i) => (
+            <div
+              key={i}
+              className="colorful-card"
+              style={{
+                background: "var(--bg-card)",
+                borderRadius: 18,
+                padding: "1.6rem 1.4rem",
+                border: "1.5px solid var(--border-color)",
+                boxShadow: "0 4px 15px rgba(15, 23, 42, 0.03)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                gap: "1rem",
+                "--card-top-gradient": ch.grad,
+                "--card-glow-color": "rgba(99, 102, 241, 0.12)"
+              } as React.CSSProperties}
+            >
+              <div>
+                <div style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: ch.grad,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "1rem",
+                  boxShadow: "0 6px 14px rgba(0,0,0,0.12)"
+                }}>
+                  {ch.icon}
+                </div>
 
-          {/* Fallback Vector Pin (Visible when image loads or fails) */}
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "0.3rem" }}>
+                  {ch.title}
+                </h3>
+                <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", lineHeight: 1.5, marginBottom: "0.85rem", fontWeight: 400 }}>
+                  {ch.desc}
+                </p>
+              </div>
+
+              <a
+                href={ch.link}
+                style={{
+                  fontSize: "0.88rem",
+                  fontWeight: 700,
+                  color: ch.color,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.3rem"
+                }}
+              >
+                {ch.val} <ArrowRight size={13} />
+              </a>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════════ MIDDLE DEDICATED SECTION: SEND US A MESSAGE FORM ═══════════ */}
+      <section id="message-form" style={{ padding: "40px 5% 70px 5%", background: "var(--bg-subtle)", borderTop: "1px solid var(--border-color)", borderBottom: "1px solid var(--border-color)" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", maxWidth: 680, margin: "0 auto 2.5rem auto" }}>
+            <span className="shimmer-badge" style={{ marginBottom: "0.6rem", fontSize: "0.76rem" }}>
+              <Send size={12} color="#4f46e5" /> DIRECT INQUIRY DESK
+            </span>
+            <h2 style={{ fontSize: "clamp(1.8rem, 2.8vw, 2.4rem)", fontWeight: 700, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
+              Send Us a <span className="gradient-text-sunset">Message</span>
+            </h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", lineHeight: 1.55, fontWeight: 400, marginTop: "0.4rem" }}>
+              Fill out the details below and our team will get in touch with you within 2-4 business hours.
+            </p>
+          </div>
+
           <div style={{
-            position: "absolute", left: "62%", top: "45%", zIndex: 0,
-            transform: "translate(-50%, -50%)", display: "flex", flexDirection: "column", alignItems: "center"
+            display: "grid",
+            gridTemplateColumns: "1fr 1.2fr",
+            gap: "2.5rem",
+            alignItems: "stretch"
+          }}>
+            {/* Left Context Column */}
+            <div style={{
+              background: "var(--bg-card)",
+              borderRadius: 22,
+              padding: "2.4rem 2rem",
+              border: "1.5px solid var(--border-color)",
+              boxShadow: "0 8px 25px rgba(15, 23, 42, 0.03)",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between"
+            }}>
+              <div>
+                <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "#4f46e5", textTransform: "uppercase", letterSpacing: "0.06em", display: "inline-block", marginBottom: "0.5rem" }}>
+                  WHY SCHOOLS TRUST US
+                </span>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "0.85rem", lineHeight: 1.25 }}>
+                  Fast Support, Zero Setup Friction
+                </h3>
+                <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.55, marginBottom: "1.4rem", fontWeight: 400 }}>
+                  Whether you manage a primary school or an education trust with multiple campuses, our dedicated specialists provide customized guidance.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.6rem" }}>
+                  {[
+                    "Dedicated engineer assigned for complete data migration",
+                    "Customized demo matching CBSE, ICSE, or State board workflows",
+                    "Transparent pricing with zero hidden implementation charges",
+                    "24/7 phone, WhatsApp, and email assistance"
+                  ].map((pt, pIdx) => (
+                    <div key={pIdx} style={{ display: "flex", alignItems: "flex-start", gap: "0.55rem", fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 500 }}>
+                      <CheckCircle2 size={16} color="#10b981" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{pt}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Privacy Notice Box */}
+              <div style={{
+                borderRadius: 14,
+                padding: "1rem 1.2rem",
+                background: "rgba(2, 132, 199, 0.08)",
+                border: "1px solid rgba(2, 132, 199, 0.2)",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem"
+              }}>
+                <Shield size={20} color="#0284c7" style={{ flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#0369a1" }}>Your data is 100% confidential</div>
+                  <div style={{ fontSize: "0.72rem", color: "#0284c7", opacity: 0.9 }}>We never share school details with third parties.</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Contact Form */}
+            <div style={{
+              background: "var(--bg-card)",
+              borderRadius: 22,
+              padding: "2.4rem",
+              border: "1.5px solid var(--border-color)",
+              boxShadow: "0 8px 25px rgba(15, 23, 42, 0.03)"
+            }}>
+              {submitted ? (
+                <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
+                  <CheckCircle size={48} color="#10b981" style={{ marginBottom: "1rem" }} />
+                  <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.4rem", color: "var(--text-main)" }}>Message Received!</h3>
+                  <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", fontWeight: 400 }}>Our specialist will contact you within 2-4 hours.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div>
+                      <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: "0.3rem", color: "var(--text-main)" }}>Your Name *</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Dr. Rajesh Sharma"
+                        required
+                        style={{
+                          width: "100%",
+                          padding: "0.65rem 0.85rem",
+                          borderRadius: 10,
+                          border: "1.5px solid var(--border-color)",
+                          background: "var(--bg-page)",
+                          color: "var(--text-main)",
+                          fontSize: "0.85rem",
+                          outline: "none"
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: "0.3rem", color: "var(--text-main)" }}>School Name *</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Greenwood Public School"
+                        required
+                        style={{
+                          width: "100%",
+                          padding: "0.65rem 0.85rem",
+                          borderRadius: 10,
+                          border: "1.5px solid var(--border-color)",
+                          background: "var(--bg-page)",
+                          color: "var(--text-main)",
+                          fontSize: "0.85rem",
+                          outline: "none"
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div>
+                      <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: "0.3rem", color: "var(--text-main)" }}>Official Email *</label>
+                      <input
+                        type="email"
+                        placeholder="principal@school.com"
+                        required
+                        style={{
+                          width: "100%",
+                          padding: "0.65rem 0.85rem",
+                          borderRadius: 10,
+                          border: "1.5px solid var(--border-color)",
+                          background: "var(--bg-page)",
+                          color: "var(--text-main)",
+                          fontSize: "0.85rem",
+                          outline: "none"
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: "0.3rem", color: "var(--text-main)" }}>Phone Number *</label>
+                      <div style={{ display: "flex", gap: "0.4rem" }}>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          padding: "0.65rem 0.65rem",
+                          borderRadius: 10,
+                          border: "1.5px solid var(--border-color)",
+                          background: "var(--bg-page)",
+                          fontSize: "0.82rem",
+                          fontWeight: 600,
+                          color: "var(--text-main)"
+                        }}>
+                          🇮🇳 +91
+                        </div>
+                        <input
+                          type="tel"
+                          placeholder="9876543210"
+                          required
+                          style={{
+                            flex: 1,
+                            padding: "0.65rem 0.85rem",
+                            borderRadius: 10,
+                            border: "1.5px solid var(--border-color)",
+                            background: "var(--bg-page)",
+                            color: "var(--text-main)",
+                            fontSize: "0.85rem",
+                            outline: "none"
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: "0.3rem", color: "var(--text-main)" }}>What is this regarding?</label>
+                    <select style={{
+                      width: "100%",
+                      padding: "0.65rem 0.85rem",
+                      borderRadius: 10,
+                      border: "1.5px solid var(--border-color)",
+                      background: "var(--bg-page)",
+                      color: "var(--text-main)",
+                      fontSize: "0.85rem",
+                      outline: "none",
+                      cursor: "pointer"
+                    }}>
+                      <option>School ERP Demo &amp; Pricing</option>
+                      <option>Live GPS Bus Tracking Solution</option>
+                      <option>Automated Fee Collection Engine</option>
+                      <option>Multi-Branch Trust Governance</option>
+                      <option>Hardware RFID / API Integration</option>
+                      <option>Technical Support</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: "0.3rem", color: "var(--text-main)" }}>Message or Specific Requirements</label>
+                    <textarea
+                      placeholder="Please share number of students, branches, or modules you need..."
+                      rows={3}
+                      style={{
+                        width: "100%",
+                        padding: "0.65rem 0.85rem",
+                        borderRadius: 10,
+                        border: "1.5px solid var(--border-color)",
+                        background: "var(--bg-page)",
+                        color: "var(--text-main)",
+                        fontSize: "0.85rem",
+                        outline: "none",
+                        resize: "vertical"
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", fontSize: "0.76rem", color: "var(--text-muted)" }}>
+                    <input type="checkbox" required style={{ width: 15, height: 15, accentColor: "#4f46e5" }} />
+                    <span>I agree to the <Link href="/privacy" style={{ color: "#4f46e5", fontWeight: 600 }}>Privacy Policy</Link> and <Link href="/terms" style={{ color: "#4f46e5", fontWeight: 600 }}>Terms &amp; Conditions</Link></span>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn-vibrant-gradient"
+                    style={{
+                      width: "100%",
+                      padding: "0.8rem",
+                      borderRadius: 12,
+                      fontSize: "0.92rem",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.4rem"
+                    }}
+                  >
+                    Send Message <Send size={15} />
+                  </button>
+
+                  <div style={{ textAlign: "center", fontSize: "0.76rem", color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }}>
+                    Average response time: <Clock size={13} color="#10b981" /> <span style={{ fontWeight: 700, color: "#10b981" }}>2-4 Business Hours</span>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════ OUR NATIONWIDE OFFICES ═══════════ */}
+      <section id="offices" style={{ padding: "50px 5% 60px 5%", maxWidth: 1240, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <span className="shimmer-badge" style={{ marginBottom: "0.6rem", fontSize: "0.76rem" }}>
+            <Globe size={12} color="#10b981" /> NATIONWIDE PRESENCE
+          </span>
+          <h2 style={{ fontSize: "clamp(1.8rem, 2.8vw, 2.4rem)", fontWeight: 700, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
+            Our Offices &amp; <span className="gradient-text-sunset">Support Hubs</span>
+          </h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", maxWidth: 560, margin: "0.3rem auto 0 auto", lineHeight: 1.55, fontWeight: 400 }}>
+            Dedicated engineering, deployment, and customer success centers across India.
+          </p>
+        </div>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "1.6rem"
+        }}>
+          {[
+            {
+              city: "Noida (Corporate HQ)",
+              badge: "HQ & Engineering",
+              addr: "123, Tech Park, Sector 62, Noida, UP 201309",
+              phone: "+91 91234 56789",
+              email: "support@schoolmitra.com",
+              grad: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+              tagColor: "#4f46e5",
+              glow: "rgba(79, 70, 229, 0.15)"
+            },
+            {
+              city: "Bengaluru (Tech Hub)",
+              badge: "Cloud R&D Lab",
+              addr: "45, Residency Road, Bengaluru, KA 560025",
+              phone: "+91 98765 43210",
+              email: "bengaluru@schoolmitra.com",
+              grad: "linear-gradient(135deg, #0284c7, #06b6d4)",
+              tagColor: "#0284c7",
+              glow: "rgba(2, 132, 199, 0.15)"
+            },
+            {
+              city: "Hyderabad (Support Hub)",
+              badge: "24/7 Operations",
+              addr: "Plot 12, Hitech City, Hyderabad, TS 500081",
+              phone: "+91 95555 12345",
+              email: "hyderabad@schoolmitra.com",
+              grad: "linear-gradient(135deg, #059669, #10b981)",
+              tagColor: "#059669",
+              glow: "rgba(16, 185, 129, 0.15)"
+            }
+          ].map((off, idx) => (
+            <div
+              key={idx}
+              className="colorful-card"
+              style={{
+                background: "var(--bg-card)",
+                borderRadius: 18,
+                padding: "1.6rem 1.4rem",
+                border: "1.5px solid var(--border-color)",
+                boxShadow: "0 6px 20px rgba(15, 23, 42, 0.03)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.9rem",
+                "--card-top-gradient": off.grad,
+                "--card-glow-color": off.glow
+              } as React.CSSProperties}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 12,
+                  background: off.grad,
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 6px 14px rgba(0,0,0,0.12)"
+                }}>
+                  <Building2 size={20} />
+                </div>
+                <span style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  color: off.tagColor,
+                  background: `${off.glow}`,
+                  padding: "0.25rem 0.65rem",
+                  borderRadius: "99px"
+                }}>
+                  {off.badge}
+                </span>
+              </div>
+
+              <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-main)", margin: 0 }}>
+                {off.city}
+              </h4>
+
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", fontSize: "0.82rem", color: "var(--text-muted)", lineHeight: 1.5, fontWeight: 400 }}>
+                <MapPin size={16} color={off.tagColor} style={{ flexShrink: 0, marginTop: 2 }} />
+                <span>{off.addr}</span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 500 }}>
+                <Phone size={15} color="#10b981" style={{ flexShrink: 0 }} />
+                <span>{off.phone}</span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 500 }}>
+                <Mail size={15} color="#3b82f6" style={{ flexShrink: 0 }} />
+                <span>{off.email}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════════ FREQUENTLY ASKED QUESTIONS ═══════════ */}
+      <section id="faq" style={{ padding: "40px 5% 60px 5%", background: "var(--bg-page)" }}>
+        <div style={{ textAlign: "center", maxWidth: 680, margin: "0 auto 2rem auto" }}>
+          <span className="shimmer-badge" style={{ marginBottom: "0.6rem", fontSize: "0.76rem" }}>
+            <Sparkles size={12} color="#8b5cf6" /> COMMON QUESTIONS
+          </span>
+          <h2 style={{ fontSize: "clamp(1.8rem, 2.8vw, 2.4rem)", fontWeight: 700, color: "var(--text-main)", letterSpacing: "-0.02em" }}>
+            Frequently Asked <span className="gradient-text-sunset">Questions</span>
+          </h2>
+        </div>
+
+        <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {faqData.map((item, idx) => {
+            const isOpen = openIndex === idx;
+            return (
+              <div
+                key={idx}
+                style={{
+                  background: "var(--bg-card)",
+                  borderRadius: 14,
+                  border: isOpen ? "1.5px solid #6366f1" : "1px solid var(--border-color)",
+                  boxShadow: isOpen ? "0 6px 20px rgba(99, 102, 241, 0.1)" : "0 2px 6px rgba(0,0,0,0.02)",
+                  transition: "all 0.2s ease",
+                  overflow: "hidden"
+                }}
+              >
+                <button
+                  onClick={() => toggleFaq(idx)}
+                  style={{
+                    width: "100%",
+                    padding: "1rem 1.2rem",
+                    background: "transparent",
+                    border: "none",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    color: isOpen ? "#4f46e5" : "var(--text-main)",
+                    fontWeight: 700,
+                    fontSize: "0.95rem"
+                  }}
+                >
+                  <span>{item.q}</span>
+                  <ChevronDown
+                    size={18}
+                    color={isOpen ? "#4f46e5" : "var(--text-muted)"}
+                    style={{
+                      transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.25s ease",
+                      flexShrink: 0
+                    }}
+                  />
+                </button>
+
+                {isOpen && (
+                  <div style={{
+                    padding: "0 1.2rem 1.1rem 1.2rem",
+                    color: "var(--text-muted)",
+                    fontSize: "0.88rem",
+                    lineHeight: 1.55,
+                    fontWeight: 400
+                  }}>
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ═══════════ COSMIC READY TO DIGITIZE CTA BANNER ═══════════ */}
+      <section style={{ padding: "0 5% 70px 5%", maxWidth: 1240, margin: "0 auto" }}>
+        <div className="features-cta-banner-box" style={{
+          background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%)",
+          borderRadius: 26,
+          padding: "3.2rem 3rem",
+          display: "grid",
+          gridTemplateColumns: "1fr 280px",
+          alignItems: "center",
+          gap: "2.5rem",
+          border: "2px solid rgba(139, 92, 246, 0.3)",
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <div style={{
+            position: "absolute",
+            top: "-40%",
+            left: "-30%",
+            width: "160%",
+            height: "180%",
+            background: "radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, rgba(99, 102, 241, 0.2) 40%, transparent 70%)",
+            pointerEvents: "none",
+            zIndex: 0
+          }} />
+
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <span style={{
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "#a5b4fc",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              marginBottom: "0.75rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.35rem"
+            }}>
+              <Sparkles size={12} color="#ec4899" /> EXPERIENCE SCHOOLMITRA LIVE
+            </span>
+
+            <h2 style={{
+              fontSize: "clamp(1.8rem, 3vw, 2.6rem)",
+              fontWeight: 700,
+              color: "#ffffff",
+              letterSpacing: "-0.025em",
+              marginBottom: "0.85rem",
+              lineHeight: 1.2
+            }}>
+              Ready to Modernize Your <span className="gradient-text-sunset">School Campus?</span>
+            </h2>
+
+            <p style={{
+              fontSize: "0.98rem",
+              color: "#cbd5e1",
+              fontWeight: 400,
+              marginBottom: "1.8rem",
+              maxWidth: 500,
+              lineHeight: 1.55
+            }}>
+              Join 500+ top Indian schools running smarter admissions, live bus safety, and automated fee collections with SchoolMitra.
+            </p>
+
+            <button
+              onClick={() => setModalOpen(true)}
+              className="btn-vibrant-gradient"
+              style={{
+                padding: "0.85rem 2.2rem",
+                borderRadius: 14,
+                fontSize: "0.95rem",
+                fontWeight: 600
+              }}
+            >
+              <Zap size={17} /> Schedule Free Demo
+            </button>
+          </div>
+
+          {/* Right Visual */}
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            position: "relative",
+            zIndex: 1
           }}>
             <div style={{
-              width: 24, height: 24, borderRadius: "50%", background: "rgba(99,102,241,0.2)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              animation: "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite", position: "absolute"
-            }} />
-            <MapPin size={32} color="#4f46e5" style={{ filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.15))" }} />
-          </div>
-
-          {/* Overlay Card */}
-          <div style={{
-            position: "absolute", left: 40, top: "50%", transform: "translateY(-50%)",
-            background: "var(--bg-card)", border: "1px solid var(--border-color)",
-            borderRadius: 16, padding: "1.5rem 1.75rem", maxWidth: 300,
-            boxShadow: "0 8px 30px rgba(15,23,42,0.12)", zIndex: 2
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.55rem" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <MapPin size={16} color="var(--primary)" />
-              </div>
-              <h4 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-main)" }}>Finding us is easy!</h4>
+              position: "relative",
+              zIndex: 1,
+              width: "100%",
+              maxWidth: 280,
+              borderRadius: 18,
+              overflow: "hidden",
+              border: "1.5px solid rgba(255, 255, 255, 0.3)",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.35)",
+              background: "#ffffff"
+            }}>
+              <img
+                src="/images/smart-school-cta.png"
+                alt="SchoolMitra Modern Campus"
+                style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }}
+              />
             </div>
-            <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.5, marginBottom: "1rem" }}>
-              Our offices are strategically located to serve you better.
-            </p>
-            <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--primary)", display: "inline-flex", alignItems: "center", gap: "0.3rem", cursor: "pointer" }}>
-              Get Directions <ArrowRight size={13} />
-            </span>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* ═══════════ FOOTER ═══════════ */}
       <Footer />
+
+      {/* Demo Booking Modal */}
+      {modalOpen && <SchoolRegistrationModal onClose={() => setModalOpen(false)} />}
     </div>
   );
 }

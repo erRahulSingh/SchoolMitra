@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   GraduationCap, ArrowRight, CheckCircle2, Users, Bus, FileText,
-  TrendingUp, Clock, CreditCard, MessageSquare, Play, Sparkles,
-  ChevronDown, Sun, Moon, Shield, Award, Smartphone, Activity,
-  Phone, Mail, MapPin, Check, Star, BarChart3, PieChart, Bell, ChevronRight, Building2,
+  TrendingUp, Clock, CreditCard, Sparkles, Shield, Award,
+  MapPin, Star, BarChart3, PieChart, Bell, Building2,
   Wallet, QrCode, CalendarCheck, ClipboardCheck, MessageCircle, Globe, Headphones, BookOpen,
-  Quote
+  Zap, Compass, ShieldCheck
 } from "lucide-react";
 import SchoolRegistrationModal from "@/components/SchoolRegistrationModal";
 import Footer from "@/components/Footer";
@@ -16,146 +15,168 @@ import Navbar from "@/components/Navbar";
 
 export default function FeaturesPage() {
   const [modalOpen, setModalOpen] = useState(false);
-  const [theme, setTheme] = useState("light");
   const [activeRole, setActiveRole] = useState("all");
-  const [openFaq, setOpenFaq] = useState(0);
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
-  };
 
   const featureCards = [
     {
       id: "bus",
       roles: ["all", "parents", "drivers", "admin"],
-      title: "Live Bus Tracking",
-      desc: "Real-time GPS tracking of school buses with ETA and route updates.",
-      icon: <Bus size={24} color="#3b82f6" />,
-      bg: "rgba(59, 130, 246, 0.1)"
+      title: "Live GPS Bus Tracking",
+      desc: "Real-time satellite GPS tracking with live ETA and geofencing updates.",
+      icon: <Bus size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #0284c7, #38bdf8)",
+      color: "#0284c7",
+      tag: "Transport"
     },
     {
       id: "attendance",
       roles: ["all", "admin", "teachers", "parents"],
-      title: "Student Attendance",
-      desc: "Smart attendance management with reports and analytics.",
-      icon: <CalendarCheck size={24} color="#8b5cf6" />,
-      bg: "rgba(139, 92, 246, 0.1)"
+      title: "Smart Attendance & RFID",
+      desc: "1-tap roll-call, RFID scan, and instant WhatsApp absence notifications.",
+      icon: <CalendarCheck size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+      color: "#4f46e5",
+      tag: "Operations"
     },
     {
       id: "fees",
       roles: ["all", "admin", "parents"],
-      title: "Fees Management",
-      desc: "Manage fees, payments, dues and generate receipts.",
-      icon: <Wallet size={24} color="#f59e0b" />,
-      bg: "rgba(245, 158, 11, 0.1)"
+      title: "Automated Fee Engine",
+      desc: "UPI, Cards & Netbanking with automated GST receipts on WhatsApp.",
+      icon: <Wallet size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #d97706, #f59e0b)",
+      color: "#d97706",
+      tag: "Finance"
     },
     {
       id: "exams",
       roles: ["all", "admin", "teachers", "students", "parents"],
-      title: "Exams & Results",
-      desc: "Create exams, publish results and performance analytics.",
-      icon: <FileText size={24} color="#2563eb" />,
-      bg: "rgba(37, 99, 235, 0.1)"
+      title: "Exams & Report Cards",
+      desc: "CBSE/ICSE grade formulas, rank sheets, and 1-click digital marksheets.",
+      icon: <FileText size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #2563eb, #60a5fa)",
+      color: "#2563eb",
+      tag: "Academics"
     },
     {
       id: "reports",
       roles: ["all", "teachers", "parents", "students"],
-      title: "Report Cards",
-      desc: "Digital report cards with detailed student performance.",
-      icon: <TrendingUp size={24} color="#f43f5e" />,
-      bg: "rgba(244, 63, 94, 0.1)"
+      title: "Student Growth Analytics",
+      desc: "Visual charts mapping academic milestones, attendance, and strengths.",
+      icon: <TrendingUp size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #e11d48, #fb7185)",
+      color: "#e11d48",
+      tag: "Analytics"
     },
     {
       id: "homework",
       roles: ["all", "teachers", "students", "parents"],
       title: "Homework & Assignments",
-      desc: "Assign homework & assignments and track submissions.",
-      icon: <ClipboardCheck size={24} color="#a855f7" />,
-      bg: "rgba(168, 85, 247, 0.1)"
+      desc: "Attach PDF assignments, track submissions, and give instant feedback.",
+      icon: <ClipboardCheck size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #7c3aed, #a855f7)",
+      color: "#7c3aed",
+      tag: "Classroom"
     },
     {
       id: "qr",
       roles: ["all", "admin", "drivers"],
-      title: "QR Check-In / Check-Out",
-      desc: "QR / NFC based attendance for students on transport & gate.",
-      icon: <QrCode size={24} color="#06b6d4" />,
-      bg: "rgba(6, 182, 212, 0.1)"
+      title: "QR / NFC Gate Security",
+      desc: "Fast QR code scanning at the school gate and bus doors for child safety.",
+      icon: <QrCode size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #0891b2, #06b6d4)",
+      color: "#0891b2",
+      tag: "Security"
     },
     {
       id: "chat",
       roles: ["all", "teachers", "parents"],
-      title: "Parent Communication",
-      desc: "Instant communication between teachers and parents.",
-      icon: <MessageCircle size={24} color="#f43f5e" />,
-      bg: "rgba(244, 63, 94, 0.1)"
+      title: "Parent-Teacher Chat",
+      desc: "Encrypted 1-on-1 messaging between parents and class teachers.",
+      icon: <MessageCircle size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #db2777, #ec4899)",
+      color: "#db2777",
+      tag: "Engagement"
     },
     {
       id: "notify",
       roles: ["all", "parents", "drivers", "teachers", "admin"],
-      title: "Notifications",
-      desc: "Real-time notifications & alerts for important updates.",
-      icon: <Bell size={24} color="#10b981" />,
-      bg: "rgba(16, 185, 129, 0.1)"
+      title: "WhatsApp & SMS Alerts",
+      desc: "Broadcast circulars, school closure notices, and fee dues instantly.",
+      icon: <Bell size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #059669, #10b981)",
+      color: "#059669",
+      tag: "Broadcasting"
     },
     {
       id: "timetable",
       roles: ["all", "admin", "teachers", "students"],
-      title: "Timetable Management",
-      desc: "Create and manage class timetables effortlessly.",
-      icon: <Clock size={24} color="#6366f1" />,
-      bg: "rgba(99, 102, 241, 0.1)"
+      title: "Timetable & Substitutions",
+      desc: "Clash-free schedule generator and 1-click teacher substitutions.",
+      icon: <Clock size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #6366f1, #818cf8)",
+      color: "#6366f1",
+      tag: "Scheduling"
     },
     {
       id: "events",
       roles: ["all", "admin", "students", "parents"],
       title: "Events & Calendar",
-      desc: "Manage events, holidays and academic calendar.",
-      icon: <CalendarCheck size={24} color="#10b981" />,
-      bg: "rgba(16, 185, 129, 0.1)"
+      desc: "Share holiday calendars, sports schedules, and PTM meetings.",
+      icon: <CalendarCheck size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #10b981, #34d399)",
+      color: "#10b981",
+      tag: "Calendar"
     },
     {
       id: "library",
       roles: ["all", "admin", "students"],
-      title: "Library Management",
-      desc: "Manage books, issue/return and library inventory.",
-      icon: <BookOpen size={24} color="#8b5cf6" />,
-      bg: "rgba(139, 92, 246, 0.1)"
+      title: "Digital Library Barcode",
+      desc: "Book cataloguing, barcode issue/return, and overdue fine tracking.",
+      icon: <BookOpen size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #8b5cf6, #c084fc)",
+      color: "#8b5cf6",
+      tag: "Library"
     },
     {
       id: "transport_mgmt",
       roles: ["all", "admin", "drivers"],
-      title: "Transport Management",
-      desc: "Manage routes, stops, drivers, vehicles and trips.",
-      icon: <Bus size={24} color="#f59e0b" />,
-      bg: "rgba(245, 158, 11, 0.1)"
+      title: "Fleet & Driver Telematics",
+      desc: "Manage vehicles, driver licenses, fuel logs, and speed alert thresholds.",
+      icon: <Bus size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #f59e0b, #fbbf24)",
+      color: "#f59e0b",
+      tag: "Fleet Control"
     },
     {
       id: "id_cards",
       roles: ["all", "admin", "students"],
-      title: "ID Cards & Certificates",
-      desc: "Generate ID cards, certificates and documents.",
-      icon: <CreditCard size={24} color="#3b82f6" />,
-      bg: "rgba(59, 130, 246, 0.1)"
+      title: "Digital ID Cards & TC",
+      desc: "Generate student & staff ID cards with barcodes and transfer certificates.",
+      icon: <CreditCard size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #0284c7, #38bdf8)",
+      color: "#0284c7",
+      tag: "Documentation"
     },
     {
       id: "analytics",
       roles: ["all", "admin", "teachers"],
-      title: "Analytics & Reports",
-      desc: "Advanced analytics and custom reports for better decisions.",
-      icon: <PieChart size={24} color="#10b981" />,
-      bg: "rgba(16, 185, 129, 0.1)"
+      title: "Executive Dashboards",
+      desc: "School financial trends, fee recovery forecasting, and workload metrics.",
+      icon: <PieChart size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #059669, #34d399)",
+      color: "#059669",
+      tag: "Intelligence"
     },
     {
       id: "multi_saas",
       roles: ["all", "admin"],
-      title: "Multi-School SaaS",
-      desc: "Manage multiple schools in a single, powerful platform.",
-      icon: <Building2 size={24} color="#8b5cf6" />,
-      bg: "rgba(139, 92, 246, 0.1)"
+      title: "Multi-Branch Governance",
+      desc: "Manage multiple school campuses and compare branch revenues centrally.",
+      icon: <Building2 size={20} color="#ffffff" />,
+      grad: "linear-gradient(135deg, #7c3aed, #ec4899)",
+      color: "#7c3aed",
+      tag: "Multi-School"
     }
   ];
 
@@ -164,145 +185,180 @@ export default function FeaturesPage() {
     : featureCards.filter((card) => card.roles.includes(activeRole));
 
   return (
-    <div style={{ background: "var(--bg-page)", minHeight: "100vh", color: "var(--text-main)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{
+      background: "var(--bg-page)",
+      minHeight: "100vh",
+      color: "var(--text-main)",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      overflowX: "hidden",
+      WebkitFontSmoothing: "antialiased"
+    }}>
       {/* ========== TOP NAVBAR ========== */}
       <Navbar />
 
-      {/* ========== HERO SECTION (EXACT MATCH REFERENCE MOCKUP) ========== */}
+      {/* ========== HERO SECTION (COMPACT & SLEEK) ========== */}
       <section className="hero-wrapper" style={{
-        paddingTop: "140px",
-        paddingBottom: "50px",
+        paddingTop: "110px",
+        paddingBottom: "35px",
         paddingLeft: "5%",
         paddingRight: "5%",
         position: "relative",
         overflow: "hidden"
       }}>
-        <div style={{
+        {/* Ambient Glow Orbs */}
+        <div className="anim-orb-1" style={{
           position: "absolute",
-          top: "10%",
-          right: "15%",
-          width: "500px",
-          height: "500px",
-          background: "radial-gradient(circle, rgba(59, 130, 246, 0.14) 0%, rgba(67, 56, 202, 0.05) 50%, transparent 70%)",
+          top: "5%",
+          left: "5%",
+          width: "420px",
+          height: "420px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99, 102, 241, 0.16) 0%, rgba(139, 92, 246, 0.08) 45%, transparent 70%)",
           filter: "blur(60px)",
           pointerEvents: "none",
           zIndex: 0
-        }}></div>
+        }} />
+        <div className="anim-orb-2" style={{
+          position: "absolute",
+          top: "15%",
+          right: "5%",
+          width: "480px",
+          height: "480px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, rgba(249, 115, 22, 0.1) 40%, transparent 70%)",
+          filter: "blur(70px)",
+          pointerEvents: "none",
+          zIndex: 0
+        }} />
 
         <div className="hero-grid-container" style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1.15fr",
-          gap: "3rem",
+          gridTemplateColumns: "1.15fr 0.85fr",
+          gap: "2.8rem",
           alignItems: "center",
-          maxWidth: "1280px",
+          maxWidth: "1240px",
           margin: "0 auto",
           position: "relative",
           zIndex: 1
         }}>
-          {/* Left Hero Column */}
+          {/* Left Column */}
           <div className="hero-left">
-            <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.45rem",
-              padding: "0.4rem 1rem",
-              borderRadius: "99px",
-              background: "rgba(67, 56, 202, 0.08)",
-              border: "1px solid rgba(67, 56, 202, 0.18)",
-              color: "#4338ca",
-              fontSize: "0.85rem",
-              fontWeight: 800,
-              marginBottom: "1.5rem"
-            }}>
-              ❖ Powerful Features
-            </span>
+            <div className="shimmer-badge" style={{ marginBottom: "1rem", padding: "0.3rem 0.85rem" }}>
+              <Sparkles size={14} color="#8b5cf6" />
+              <span className="gradient-text-vibrant" style={{ fontWeight: 600, fontSize: "0.82rem" }}>16+ Enterprise School Modules</span>
+              <span style={{
+                background: "linear-gradient(135deg, #10b981, #06b6d4)",
+                color: "#ffffff",
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                padding: "0.12rem 0.45rem",
+                borderRadius: "99px"
+              }}>
+                ZERO SETUP FEES
+              </span>
+            </div>
 
             <h1 style={{
-              fontSize: "clamp(2.5rem, 4.2vw, 3.8rem)",
-              fontWeight: 800,
-              lineHeight: 1.12,
+              fontSize: "clamp(2.1rem, 3.4vw, 3rem)",
+              fontWeight: 700,
+              lineHeight: 1.18,
               color: "var(--text-main)",
-              letterSpacing: "-0.03em",
-              marginBottom: "1.4rem"
+              letterSpacing: "-0.025em",
+              marginBottom: "1rem"
             }}>
-              Everything You Need to Run a <span style={{ color: "#f97316" }}>Smarter School</span>
+              Everything You Need to Run a <span className="gradient-text-sunset">Smarter School</span>
             </h1>
 
             <p style={{
-              fontSize: "1.15rem",
+              fontSize: "1.02rem",
               color: "var(--text-muted)",
-              lineHeight: 1.65,
-              maxWidth: "540px",
-              marginBottom: "2.4rem",
-              fontWeight: 500
+              lineHeight: 1.6,
+              maxWidth: "500px",
+              marginBottom: "1.4rem",
+              fontWeight: 400
             }}>
-              SchoolMitra brings all the essential tools together in one powerful platform to simplify school management, improve communication, and ensure student safety.
+              SchoolMitra brings all essential operations together into one unified platform to simplify management, delight parents, and ensure student safety.
             </p>
 
-            <div className="hero-cta-group" style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-              <button onClick={() => window.location.href = "/auth?mode=signup"} className="btn-interactive-glow" style={{
-                padding: "0.9rem 2rem",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, #4338ca 0%, #3b82f6 100%)",
-                color: "#ffffff",
-                border: "none",
-                fontWeight: 800,
-                fontSize: "1rem",
-                cursor: "pointer",
-                boxShadow: "0 8px 24px rgba(67, 56, 202, 0.3)",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.5rem"
-              }}>
-                Request a Demo
+            {/* Benefit Chips */}
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.6rem" }}>
+              {[
+                { label: "CBSE & ICSE Ready", icon: "🏅", color: "#4f46e5", bg: "rgba(79, 70, 229, 0.08)" },
+                { label: "Live GPS Telematics", icon: "🚌", color: "#0284c7", bg: "rgba(2, 132, 199, 0.08)" },
+                { label: "1-Click UPI Fees", icon: "💳", color: "#d97706", bg: "rgba(217, 119, 6, 0.08)" },
+                { label: "24/7 Support", icon: "💬", color: "#059669", bg: "rgba(5, 150, 105, 0.08)" }
+              ].map((b, idx) => (
+                <div key={idx} style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  padding: "0.25rem 0.65rem",
+                  borderRadius: "99px",
+                  background: b.bg,
+                  color: b.color,
+                  fontWeight: 600,
+                  fontSize: "0.75rem"
+                }}>
+                  <span>{b.icon}</span> {b.label}
+                </div>
+              ))}
+            </div>
+
+            <div className="hero-cta-group" style={{ display: "flex", gap: "0.85rem", alignItems: "center", flexWrap: "wrap" }}>
+              <button
+                onClick={() => setModalOpen(true)}
+                className="btn-vibrant-gradient"
+                style={{
+                  padding: "0.85rem 1.8rem",
+                  borderRadius: "12px",
+                  fontSize: "0.95rem",
+                  fontWeight: 600
+                }}
+              >
+                <Zap size={16} /> Request Free Campus Demo
               </button>
 
-              <a href="#features" style={{
-                padding: "0.9rem 2rem",
-                borderRadius: "12px",
-                background: "var(--bg-card)",
-                color: "var(--text-main)",
-                border: "1px solid var(--border-color)",
-                fontWeight: 700,
-                fontSize: "1rem",
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-              }}>
-                <Play size={16} color="#4338ca" /> Explore Solutions
+              <a
+                href="#features"
+                className="btn-colorful-outline"
+                style={{
+                  padding: "0.85rem 1.5rem",
+                  borderRadius: "12px",
+                  fontSize: "0.92rem",
+                  fontWeight: 600,
+                  textDecoration: "none"
+                }}
+              >
+                <Compass size={16} color="#6366f1" /> Explore 16+ Modules ↓
               </a>
             </div>
           </div>
 
-          {/* Right Column: Visual Showcase using AI Generated ERP & Live Tracking Image */}
+          {/* Right Column: Visual Showcase */}
           <div className="showcase-container" style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>
-            {/* Glowing Backdrop Ambient Effect */}
             <div style={{
               position: "absolute",
               inset: "-15px",
-              background: "linear-gradient(135deg, rgba(67, 56, 202, 0.25) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(139, 92, 246, 0.25) 100%)",
-              borderRadius: "32px",
+              background: "linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(236, 72, 153, 0.2) 50%, rgba(6, 182, 212, 0.2) 100%)",
+              borderRadius: "28px",
               filter: "blur(24px)",
               zIndex: 0
             }}></div>
 
-            {/* Image Container Card */}
             <div style={{
               position: "relative",
               zIndex: 1,
               width: "100%",
-              maxWidth: "600px",
-              borderRadius: "24px",
+              maxWidth: "440px",
+              borderRadius: "20px",
               overflow: "hidden",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              boxShadow: "0 25px 60px -10px rgba(15, 23, 42, 0.35)",
+              border: "1.5px solid rgba(255, 255, 255, 0.35)",
+              boxShadow: "0 20px 50px -10px rgba(67, 56, 202, 0.25)",
               background: "var(--bg-card)"
             }}>
               <img
                 src="/images/erp-live-tracking.png"
-                alt="SchoolMitra ERP Dashboard & Live GPS Bus Tracking Showcase"
+                alt="SchoolMitra ERP Dashboard & GPS Bus Tracking Showcase"
                 style={{
                   width: "100%",
                   height: "auto",
@@ -312,139 +368,127 @@ export default function FeaturesPage() {
               />
             </div>
 
-            {/* Floating Live Tracking Badge - Bottom Right */}
-            <div style={{
+            {/* Floating Live Tracking Badge */}
+            <div className="anim-float-badge-1" style={{
               position: "absolute",
-              bottom: "-15px",
-              right: "-15px",
-              background: "rgba(15, 23, 42, 0.85)",
-              backdropFilter: "blur(12px)",
-              borderRadius: "14px",
-              padding: "0.65rem 1rem",
-              boxShadow: "0 15px 35px rgba(0, 0, 0, 0.3)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
+              bottom: "-12px",
+              right: "-12px",
+              background: "linear-gradient(135deg, #0284c7, #38bdf8)",
+              borderRadius: "12px",
+              padding: "0.55rem 0.9rem",
+              boxShadow: "0 10px 25px rgba(2, 132, 199, 0.3)",
+              color: "#ffffff",
               display: "flex",
               alignItems: "center",
-              gap: "0.6rem",
-              color: "#ffffff",
+              gap: "0.5rem",
               zIndex: 3
             }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 10px #10b981" }}></div>
+              <div className="radar-pulse-dot" style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffffff" }}></div>
               <div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 800 }}>Live Tracking - Bus #12</div>
-                <div style={{ fontSize: "0.62rem", color: "#94a3b8", fontWeight: 600 }}>UP 16 CT 2345 • On Route</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700 }}>Live Tracking • Bus #12</div>
+                <div style={{ fontSize: "0.62rem", opacity: 0.9 }}>UP 16 CT 2345 • On Route</div>
+              </div>
+            </div>
+
+            {/* Floating Badge 2 */}
+            <div className="anim-float-badge-2" style={{
+              position: "absolute",
+              top: "-12px",
+              left: "-12px",
+              background: "var(--bg-card)",
+              borderRadius: "12px",
+              padding: "0.55rem 0.9rem",
+              boxShadow: "0 12px 30px rgba(79, 70, 229, 0.2)",
+              border: "1px solid rgba(79, 70, 229, 0.3)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              zIndex: 3
+            }}>
+              <ShieldCheck size={16} color="#4f46e5" />
+              <div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#4f46e5" }}>500+ Schools Trust Us</div>
+                <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", fontWeight: 500 }}>All-in-One Cloud Suite</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ========== 5 STATS METRICS BANNER (EXACT MATCH BOTTOM BAR) ========== */}
-      <section style={{ padding: "0 5% 70px 5%" }}>
-        <div className="features-stats-banner" style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          background: "var(--bg-card)",
-          borderRadius: "20px",
-          padding: "1.75rem 2rem",
-          border: "1px solid var(--border-color)",
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)",
+      {/* ========== 5 STATS METRICS BANNER ========== */}
+      <section style={{ padding: "0 5% 40px 5%", maxWidth: "1240px", margin: "0 auto" }}>
+        <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(5, 1fr)",
-          gap: "1.5rem",
-          alignItems: "center"
+          gap: "1rem"
         }}>
-          {/* Stat 1: 500+ Schools Trust Us */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
-            <div style={{ width: 46, height: 46, borderRadius: "12px", background: "rgba(67, 56, 202, 0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Building2 size={24} color="#4338ca" />
+          {[
+            { v: "500+", l: "Schools Trust Us", icon: <Building2 size={20} color="#ffffff" />, grad: "linear-gradient(135deg, #4f46e5, #7c3aed)", color: "#4f46e5" },
+            { v: "50K+", l: "Active Users Daily", icon: <Users size={20} color="#ffffff" />, grad: "linear-gradient(135deg, #0284c7, #06b6d4)", color: "#0284c7" },
+            { v: "25K+", l: "Students Managed", icon: <GraduationCap size={20} color="#ffffff" />, grad: "linear-gradient(135deg, #7c3aed, #a855f7)", color: "#7c3aed" },
+            { v: "99.9%", l: "Uptime & Reliability", icon: <Shield size={20} color="#ffffff" />, grad: "linear-gradient(135deg, #059669, #10b981)", color: "#059669" },
+            { v: "24/7", l: "Dedicated Support", icon: <Headphones size={20} color="#ffffff" />, grad: "linear-gradient(135deg, #d97706, #f59e0b)", color: "#d97706" }
+          ].map((st, i) => (
+            <div
+              key={i}
+              className="colorful-card"
+              style={{
+                background: "var(--bg-card)",
+                borderRadius: "16px",
+                padding: "1.1rem 1rem",
+                border: "1.5px solid var(--border-color)",
+                boxShadow: "0 4px 15px rgba(15, 23, 42, 0.03)",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                "--card-top-gradient": st.grad,
+                "--card-glow-color": "rgba(99, 102, 241, 0.1)"
+              } as React.CSSProperties}
+            >
+              <div style={{
+                width: 38,
+                height: 38,
+                borderRadius: "11px",
+                background: st.grad,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+              }}>
+                {st.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text-main)", lineHeight: 1.1 }}>{st.v}</div>
+                <div style={{ fontSize: "0.74rem", color: st.color, fontWeight: 600, marginTop: "0.1rem" }}>{st.l}</div>
+              </div>
             </div>
-            <div>
-              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.1 }}>500+</div>
-              <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 600, marginTop: "0.15rem" }}>Schools Trust Us</div>
-            </div>
-          </div>
-
-          {/* Stat 2: 50K+ Active Users */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
-            <div style={{ width: 46, height: 46, borderRadius: "12px", background: "rgba(59, 130, 246, 0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Users size={24} color="#3b82f6" />
-            </div>
-            <div>
-              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.1 }}>50K+</div>
-              <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 600, marginTop: "0.15rem" }}>Active Users</div>
-            </div>
-          </div>
-
-          {/* Stat 3: 25K+ Students Managed */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
-            <div style={{ width: 46, height: 46, borderRadius: "12px", background: "rgba(139, 92, 246, 0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <GraduationCap size={24} color="#8b5cf6" />
-            </div>
-            <div>
-              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.1 }}>25K+</div>
-              <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 600, marginTop: "0.15rem" }}>Students Managed</div>
-            </div>
-          </div>
-
-          {/* Stat 4: 99.9% Uptime & Reliability */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
-            <div style={{ width: 46, height: 46, borderRadius: "12px", background: "rgba(16, 185, 129, 0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Shield size={24} color="#10b981" />
-            </div>
-            <div>
-              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.1 }}>99.9%</div>
-              <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 600, marginTop: "0.15rem" }}>Uptime &amp; Reliability</div>
-            </div>
-          </div>
-
-          {/* Stat 5: 24/7 Customer Support */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
-            <div style={{ width: 46, height: 46, borderRadius: "12px", background: "rgba(245, 158, 11, 0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Headphones size={24} color="#f59e0b" />
-            </div>
-            <div>
-              <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "var(--text-main)", lineHeight: 1.1 }}>24/7</div>
-              <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 600, marginTop: "0.15rem" }}>Customer Support</div>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* ========== SECTION 1: POWERFUL FEATURES FOR EVERY ROLE ========== */}
-      <section id="features" style={{ paddingTop: "20px", paddingBottom: "70px", paddingLeft: "4%", paddingRight: "4%", maxWidth: "1320px", margin: "0 auto" }}>
-        <div style={{ textAlign: "center", maxWidth: "750px", margin: "0 auto 3rem auto" }}>
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.35rem",
-            fontSize: "0.82rem",
-            fontWeight: 800,
-            color: "#4338ca",
-            background: "rgba(67, 56, 202, 0.08)",
-            padding: "0.4rem 1rem",
-            borderRadius: "99px",
-            border: "1px solid rgba(67, 56, 202, 0.18)",
-            marginBottom: "1.2rem"
-          }}>
-            ☖ Features
+      {/* ========== SECTION 1: 16 FEATURES GRID ========== */}
+      <section id="features" style={{ paddingTop: "20px", paddingBottom: "60px", paddingLeft: "5%", paddingRight: "5%", maxWidth: "1240px", margin: "0 auto" }}>
+        <div style={{ textAlign: "center", maxWidth: "680px", margin: "0 auto 2.2rem auto" }}>
+          <span className="shimmer-badge" style={{ marginBottom: "0.6rem", fontSize: "0.76rem" }}>
+            <Sparkles size={12} color="#8b5cf6" /> COMPLETE MODULAR SUITE
           </span>
-          <h1 style={{
-            fontSize: "clamp(2.5rem, 4vw, 3.4rem)",
-            fontWeight: 800,
+          <h2 style={{
+            fontSize: "clamp(1.8rem, 2.8vw, 2.5rem)",
+            fontWeight: 700,
             color: "var(--text-main)",
-            letterSpacing: "-0.03em",
-            marginBottom: "1rem"
+            letterSpacing: "-0.02em",
+            marginBottom: "0.6rem"
           }}>
-            Powerful Features <span style={{ color: "#f97316" }}>for Every Role</span>
-          </h1>
+            Powerful Features <span className="gradient-text-sunset">for Every Role</span>
+          </h2>
           <p style={{
-            fontSize: "1.1rem",
+            fontSize: "0.98rem",
             color: "var(--text-muted)",
-            lineHeight: 1.6,
-            fontWeight: 500
+            lineHeight: 1.55,
+            fontWeight: 400
           }}>
-            Designed to simplify operations, improve communication, and ensure safety for students, parents, and schools.
+            Designed to simplify operations, automate fee collections, and ensure safety across your campus.
           </p>
         </div>
 
@@ -453,148 +497,172 @@ export default function FeaturesPage() {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          gap: "0.75rem",
-          marginBottom: "3.5rem",
+          gap: "0.6rem",
+          marginBottom: "2.4rem",
           flexWrap: "wrap"
         }}>
           {[
-            { id: "all", label: "All Features" },
-            { id: "admin", label: "School Admin" },
-            { id: "teachers", label: "Teachers" },
-            { id: "parents", label: "Parents" },
-            { id: "students", label: "Students" },
-            { id: "drivers", label: "Drivers" }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveRole(tab.id)}
-              style={{
-                padding: "0.65rem 1.4rem",
-                borderRadius: "10px",
-                border: activeRole === tab.id ? "none" : "1px solid var(--border-color)",
-                background: activeRole === tab.id ? "#3b82f6" : "var(--bg-card)",
-                color: activeRole === tab.id ? "#ffffff" : "var(--text-main)",
-                fontWeight: 700,
-                fontSize: "0.9rem",
-                cursor: "pointer",
-                boxShadow: activeRole === tab.id ? "0 4px 14px rgba(59, 130, 246, 0.3)" : "0 2px 6px rgba(0,0,0,0.02)",
-                transition: "all 0.25s ease"
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+            { id: "all", label: "All Features", grad: "linear-gradient(135deg, #4f46e5, #7c3aed)" },
+            { id: "admin", label: "School Admin", grad: "linear-gradient(135deg, #d97706, #f59e0b)" },
+            { id: "teachers", label: "Teachers", grad: "linear-gradient(135deg, #059669, #10b981)" },
+            { id: "parents", label: "Parents", grad: "linear-gradient(135deg, #0284c7, #06b6d4)" },
+            { id: "students", label: "Students", grad: "linear-gradient(135deg, #7c3aed, #a855f7)" },
+            { id: "drivers", label: "Drivers", grad: "linear-gradient(135deg, #db2777, #ec4899)" }
+          ].map((tab) => {
+            const active = activeRole === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveRole(tab.id)}
+                style={{
+                  padding: "0.55rem 1.3rem",
+                  borderRadius: "10px",
+                  border: active ? "none" : "1.5px solid var(--border-color)",
+                  background: active ? tab.grad : "var(--bg-card)",
+                  color: active ? "#ffffff" : "var(--text-main)",
+                  fontWeight: 600,
+                  fontSize: "0.86rem",
+                  cursor: "pointer",
+                  boxShadow: active ? "0 4px 14px rgba(0,0,0,0.15)" : "none",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* 4 Columns Grid Layout (Exact Match Screenshot Cards) */}
+        {/* 4 Columns Grid Layout (16 Cards) */}
         <div className="features-grid-cards" style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "1.75rem"
+          gap: "1.4rem"
         }}>
           {filteredCards.map((card, i) => (
-            <div key={i} className="feature-card-item" style={{
-              background: "var(--bg-card)",
-              borderRadius: "22px",
-              padding: "2rem 1.6rem",
-              textAlign: "left",
-              border: "1px solid var(--border-color)",
-              boxShadow: "0 10px 30px rgba(15, 23, 42, 0.04)",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              minHeight: "220px",
-              cursor: "pointer"
-            }}>
+            <div
+              key={i}
+              className="colorful-card feature-vibrant-card"
+              style={{
+                background: "var(--bg-card)",
+                borderRadius: "18px",
+                padding: "1.5rem 1.3rem",
+                textAlign: "left",
+                border: "1.5px solid var(--border-color)",
+                boxShadow: "0 4px 15px rgba(15, 23, 42, 0.03)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                minHeight: "200px",
+                cursor: "pointer",
+                "--card-top-gradient": card.grad,
+                "--card-glow-color": "rgba(99, 102, 241, 0.1)"
+              } as React.CSSProperties}
+            >
               <div>
-                <div className="feature-icon-badge" style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: "14px",
-                  background: card.bg,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "1.2rem"
-                }}>
-                  {card.icon}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem" }}>
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "12px",
+                    background: card.grad,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 6px 14px rgba(0,0,0,0.12)"
+                  }}>
+                    {card.icon}
+                  </div>
+                  <span style={{
+                    fontSize: "0.7rem",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    padding: "0.2rem 0.55rem",
+                    borderRadius: "8px",
+                    background: `${card.color}15`,
+                    color: card.color
+                  }}>
+                    {card.tag}
+                  </span>
                 </div>
 
                 <h3 style={{
-                  fontSize: "1.2rem",
-                  fontWeight: 800,
+                  fontSize: "1.05rem",
+                  fontWeight: 700,
                   color: "var(--text-main)",
-                  marginBottom: "0.5rem",
-                  letterSpacing: "-0.01em"
+                  marginBottom: "0.35rem",
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1.35
                 }}>
                   {card.title}
                 </h3>
 
                 <p style={{
-                  fontSize: "0.88rem",
+                  fontSize: "0.82rem",
                   color: "var(--text-muted)",
-                  lineHeight: 1.55,
-                  marginBottom: "1.4rem"
+                  lineHeight: 1.5,
+                  marginBottom: "1rem",
+                  fontWeight: 400
                 }}>
                   {card.desc}
                 </p>
               </div>
 
-              <div style={{
-                fontSize: "0.85rem",
+              <div className="learn-more-link" style={{
+                fontSize: "0.8rem",
                 fontWeight: 700,
-                color: "#3b82f6",
+                color: card.color,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.35rem"
+                gap: "0.3rem"
               }}>
-                Learn More <ArrowRight size={14} />
+                Learn More <ArrowRight size={13} />
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ========== SECTION 2: REAL-TIME TRACKING FOR PEACE OF MIND (EXACT MATCH SCREENSHOT 1 ROW 2) ========== */}
-      <section style={{ padding: "40px 4% 80px 4%", maxWidth: "1320px", margin: "0 auto" }}>
-        <div className="realtime-tracking-section-grid" style={{
-          background: "linear-gradient(135deg, rgba(238, 242, 255, 0.95) 0%, rgba(243, 244, 255, 0.85) 100%)",
-          borderRadius: "28px",
-          padding: "3.5rem 3rem",
-          border: "1px solid rgba(199, 210, 254, 0.6)",
-          boxShadow: "0 15px 40px rgba(99, 102, 241, 0.08)",
+      {/* ========== SECTION 2: REAL-TIME TRACKING (COMPACT) ========== */}
+      <section style={{ padding: "30px 5% 60px", maxWidth: "1240px", margin: "0 auto" }}>
+        <div className="colorful-card realtime-tracking-section-grid" style={{
+          background: "var(--bg-card)",
+          borderRadius: "24px",
+          padding: "2.5rem 2.2rem",
+          border: "1.5px solid rgba(2, 132, 199, 0.2)",
+          boxShadow: "0 10px 35px rgba(2, 132, 199, 0.06)",
           display: "grid",
-          gridTemplateColumns: "1.1fr 1fr",
-          gap: "3rem",
-          alignItems: "center"
-        }}>
-          {/* Left Visual: 3D GPS Bus Tracking Map Image Showcase */}
+          gridTemplateColumns: "1fr 1fr",
+          gap: "2.5rem",
+          alignItems: "center",
+          "--card-top-gradient": "linear-gradient(90deg, #0284c7, #38bdf8)",
+          "--card-glow-color": "rgba(2, 132, 199, 0.15)"
+        } as React.CSSProperties}>
+          {/* Left Visual: 3D GPS Map */}
           <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>
-            {/* Glowing Backdrop Ambient Effect */}
             <div style={{
               position: "absolute",
-              inset: "-15px",
-              background: "linear-gradient(135deg, rgba(67, 56, 202, 0.2) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(139, 92, 246, 0.2) 100%)",
-              borderRadius: "32px",
-              filter: "blur(24px)",
+              inset: "-12px",
+              background: "linear-gradient(135deg, rgba(2, 132, 199, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%)",
+              borderRadius: "24px",
+              filter: "blur(20px)",
               zIndex: 0
             }}></div>
 
-            {/* Image Container Card */}
             <div style={{
               position: "relative",
               zIndex: 1,
               width: "100%",
-              maxWidth: "520px",
-              borderRadius: "24px",
+              maxWidth: "440px",
+              borderRadius: "18px",
               overflow: "hidden",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              boxShadow: "0 25px 50px -10px rgba(15, 23, 42, 0.25)",
+              border: "1.5px solid rgba(255, 255, 255, 0.3)",
+              boxShadow: "0 15px 40px -10px rgba(15, 23, 42, 0.2)",
               background: "var(--bg-card)"
             }}>
               <img
                 src="/images/gps-map-tracking-3d.png"
-                alt="SchoolMitra Real-time 3D GPS Bus Tracking Map Showcase"
+                alt="SchoolMitra Real-time GPS Tracking Map Showcase"
                 style={{
                   width: "100%",
                   height: "auto",
@@ -605,239 +673,289 @@ export default function FeaturesPage() {
             </div>
           </div>
 
-          {/* Right Text Details */}
+          {/* Right Details */}
           <div>
-            <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.35rem",
-              fontSize: "0.8rem",
-              fontWeight: 800,
-              color: "#4338ca",
-              background: "rgba(67, 56, 202, 0.08)",
-              padding: "0.35rem 0.85rem",
-              borderRadius: "99px",
-              border: "1px solid rgba(67, 56, 202, 0.15)",
-              marginBottom: "1.2rem"
-            }}>
-              ❖ Student Safety First
+            <span className="shimmer-badge" style={{ marginBottom: "0.85rem", fontSize: "0.76rem" }}>
+              <Bus size={12} color="#0284c7" /> SATELLITE TELEMATICS SUITE
             </span>
 
             <h2 style={{
-              fontSize: "clamp(2rem, 3.2vw, 2.8rem)",
-              fontWeight: 800,
+              fontSize: "clamp(1.7rem, 2.6vw, 2.3rem)",
+              fontWeight: 700,
               color: "var(--text-main)",
               letterSpacing: "-0.02em",
-              marginBottom: "1rem",
-              lineHeight: 1.2
+              marginBottom: "0.75rem",
+              lineHeight: 1.25
             }}>
-              Real-time Tracking for <span style={{ color: "#f97316" }}>Peace of Mind</span>
+              Real-Time Tracking for <span className="gradient-text-sunset">Peace of Mind</span>
             </h2>
 
             <p style={{
-              fontSize: "1.05rem",
+              fontSize: "0.98rem",
               color: "var(--text-muted)",
-              lineHeight: 1.6,
-              marginBottom: "1.8rem"
+              lineHeight: 1.55,
+              marginBottom: "1.4rem",
+              fontWeight: 400
             }}>
-              Our live tracking system ensures parents always know where the bus is and when their child will reach.
+              Live GPS telemetry ensures parents and school authorities always know live bus locations and arrival ETAs.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBottom: "2.2rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem", marginBottom: "1.6rem" }}>
               {[
-                "Live bus location on map",
-                "Real-time alerts for pickup & drop",
-                "ETA & route updates",
-                "Geo-fencing & safe zones"
+                "Live satellite bus location on smartphone map",
+                "WhatsApp & Push alerts for pickup/drop events",
+                "Speed alerts & emergency SOS driver trigger",
+                "Custom safe-zone geofencing around campus"
               ].map((item, idx) => (
-                <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.65rem", fontSize: "0.95rem", fontWeight: 700, color: "var(--text-main)" }}>
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid #3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", color: "#3b82f6" }}>⊙</div>
+                <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.86rem", fontWeight: 600, color: "var(--text-main)" }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(2, 132, 199, 0.12)", color: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 700 }}>✓</div>
                   <span>{item}</span>
                 </div>
               ))}
             </div>
 
-            <button onClick={() => window.location.href = "/auth?mode=signup"} className="btn-interactive-glow" style={{
-              padding: "0.85rem 2.2rem",
-              borderRadius: "12px",
-              background: "#3b82f6",
-              color: "#ffffff",
-              border: "none",
-              fontWeight: 800,
-              fontSize: "0.98rem",
-              cursor: "pointer",
-              boxShadow: "0 8px 24px rgba(59, 130, 246, 0.35)"
-            }}>
-              Explore Tracking Features
+            <button
+              onClick={() => setModalOpen(true)}
+              className="btn-vibrant-gradient"
+              style={{
+                padding: "0.75rem 1.8rem",
+                borderRadius: "12px",
+                fontSize: "0.92rem",
+                fontWeight: 600
+              }}
+            >
+              Explore GPS Tracking Demo
             </button>
           </div>
         </div>
       </section>
 
-      {/* ========== SECTION 3: WHY SCHOOLS LOVE SCHOOLMITRA + TESTIMONIAL (EXACT MATCH SCREENSHOT 1 ROW 3) ========== */}
-      <section style={{ padding: "0 4% 90px 4%", maxWidth: "1320px", margin: "0 auto" }}>
+      {/* ========== SECTION 3: WHY SCHOOLS LOVE SCHOOLMITRA ========== */}
+      <section style={{ padding: "0 5% 60px", maxWidth: "1240px", margin: "0 auto" }}>
         <div className="why-schools-love-grid" style={{
           background: "var(--bg-card)",
-          borderRadius: "28px",
-          padding: "3.5rem 3rem",
-          border: "1px solid var(--border-color)",
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)",
+          borderRadius: "24px",
+          padding: "2.5rem 2.2rem",
+          border: "1.5px solid var(--border-color)",
+          boxShadow: "0 6px 20px rgba(15, 23, 42, 0.03)",
           display: "grid",
           gridTemplateColumns: "1.1fr 1fr",
-          gap: "3.5rem",
+          gap: "2.5rem",
           alignItems: "center"
         }}>
-          {/* Left Column: Why Schools Love SchoolMitra */}
+          {/* Left Column */}
           <div>
+            <span className="shimmer-badge" style={{ marginBottom: "0.85rem", fontSize: "0.76rem" }}>
+              <Award size={12} color="#f59e0b" /> TRUSTED BY 500+ CAMPUSES
+            </span>
+
             <h2 style={{
-              fontSize: "clamp(1.8rem, 2.8vw, 2.4rem)",
-              fontWeight: 800,
+              fontSize: "clamp(1.7rem, 2.6vw, 2.3rem)",
+              fontWeight: 700,
               color: "var(--text-main)",
               letterSpacing: "-0.02em",
-              marginBottom: "1.5rem"
+              marginBottom: "1.2rem"
             }}>
-              Why Schools Love <span style={{ color: "#f97316" }}>SchoolMitra</span>
+              Why Schools Love <span className="gradient-text-sunset">SchoolMitra</span>
             </h2>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.95rem", marginBottom: "2.2rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.6rem" }}>
               {[
-                "All-in-one platform for complete school management",
-                "Easy to use with modern & intuitive interface",
-                "Reliable support and regular updates",
-                "Secure, scalable and future-ready"
+                "All-in-one platform for complete school administration",
+                "Modern, high-speed, and intuitive user interface",
+                "24/7 support with dedicated engineer assistance",
+                "Bank-grade 256-bit SSL security & daily backups"
               ].map((item, idx) => (
-                <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "0.98rem", fontWeight: 700, color: "var(--text-main)" }}>
-                  <CheckCircle2 size={20} color="#3b82f6" />
+                <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.88rem", fontWeight: 600, color: "var(--text-main)" }}>
+                  <CheckCircle2 size={16} color="#10b981" />
                   <span>{item}</span>
                 </div>
               ))}
             </div>
 
-            <div className="hero-cta-group" style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-              <button onClick={() => window.location.href = "/auth?mode=signup"} className="btn-interactive-glow" style={{
-                padding: "0.85rem 2rem",
-                borderRadius: "12px",
-                background: "#3b82f6",
-                color: "#ffffff",
-                border: "none",
-                fontWeight: 800,
-                fontSize: "0.95rem",
-                cursor: "pointer",
-                boxShadow: "0 8px 24px rgba(59, 130, 246, 0.3)"
-              }}>
-                Request a Demo
+            <div className="hero-cta-group" style={{ display: "flex", alignItems: "center", gap: "0.85rem", flexWrap: "wrap" }}>
+              <button
+                onClick={() => setModalOpen(true)}
+                className="btn-vibrant-gradient"
+                style={{
+                  padding: "0.75rem 1.6rem",
+                  borderRadius: "12px",
+                  fontSize: "0.9rem",
+                  fontWeight: 600
+                }}
+              >
+                Request Free Demo
               </button>
 
-              <Link href="/contact" style={{
-                fontSize: "0.95rem",
-                fontWeight: 800,
-                color: "#3b82f6",
+              <Link href="/contact" className="btn-colorful-outline" style={{
+                padding: "0.75rem 1.4rem",
+                borderRadius: "12px",
+                fontSize: "0.88rem",
                 textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem"
+                fontWeight: 600
               }}>
-                Contact Sales <ArrowRight size={16} />
+                Contact Sales <ArrowRight size={14} />
               </Link>
             </div>
           </div>
 
-          {/* Right Column: School Leader Testimonial Box */}
-          <div style={{
-            background: "var(--bg-subtle)",
-            borderRadius: "22px",
-            padding: "2.2rem 2rem",
-            border: "1px solid var(--border-color)",
-            position: "relative"
-          }}>
-            <Quote size={36} color="#3b82f6" style={{ opacity: 0.3, marginBottom: "1rem" }} />
-            
+          {/* Right Testimonial Card */}
+          <div
+            className="colorful-card"
+            style={{
+              background: "var(--bg-subtle)",
+              borderRadius: "20px",
+              padding: "1.8rem 1.6rem",
+              border: "1.5px solid var(--border-color)",
+              position: "relative",
+              "--card-top-gradient": "linear-gradient(90deg, #4f46e5, #ec4899)",
+              "--card-glow-color": "rgba(99, 102, 241, 0.15)"
+            } as React.CSSProperties}
+          >
+            <div style={{ display: "flex", gap: "0.2rem", color: "#f59e0b", marginBottom: "0.85rem", fontSize: "0.85rem" }}>
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={15} fill="#f59e0b" color="#f59e0b" />
+              ))}
+            </div>
+
             <p style={{
-              fontSize: "1.02rem",
+              fontSize: "0.92rem",
               color: "var(--text-main)",
-              lineHeight: 1.65,
-              fontWeight: 500,
-              marginBottom: "1.8rem"
+              lineHeight: 1.6,
+              fontWeight: 400,
+              fontStyle: "italic",
+              marginBottom: "1.4rem"
             }}>
-              &ldquo;SchoolMitra has transformed the way we manage our school. From bus tracking to fee management, everything is now automated and transparent. Communication with parents has never been easier!&rdquo;
+              &ldquo;SchoolMitra transformed our school administration. From live bus tracking to automated UPI fees, everything is smooth. Communication with parents has never been easier!&rdquo;
             </p>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderTop: "1px solid var(--border-color)", paddingTop: "0.95rem" }}>
               <div style={{
-                width: 46,
-                height: 46,
+                width: 40,
+                height: 40,
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, #4338ca, #3b82f6)",
+                background: "linear-gradient(135deg, #4f46e5, #ec4899)",
                 color: "#fff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontWeight: 800,
-                fontSize: "1rem"
+                fontWeight: 700,
+                fontSize: "0.95rem"
               }}>
                 PS
               </div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text-main)" }}>Dr. Priya Sharma</div>
-                <div style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>Principal, Greenwood International School</div>
+                <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-main)" }}>Dr. Priya Sharma</div>
+                <div style={{ fontSize: "0.76rem", color: "var(--text-muted)", fontWeight: 500 }}>Principal, Greenwood International School</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ========== SECTION 4: FULL-WIDTH SOLID BLUE CTA BANNER (EXACT MATCH SCREENSHOT 2) ========== */}
-      <section style={{ padding: "0 4% 90px 4%", maxWidth: "1320px", margin: "0 auto" }}>
+      {/* ========== SECTION 4: COSMIC CTA BANNER ========== */}
+      <section style={{ padding: "0 5% 70px", maxWidth: "1240px", margin: "0 auto" }}>
         <div className="features-cta-banner-box" style={{
-          background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)",
-          borderRadius: "24px",
-          padding: "3.5rem 3.5rem",
-          display: "flex",
-          justifyContent: "space-between",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%)",
+          borderRadius: "26px",
+          padding: "3.2rem 3rem",
+          display: "grid",
+          gridTemplateColumns: "1fr 280px",
           alignItems: "center",
-          boxShadow: "0 20px 50px rgba(37, 99, 235, 0.3)",
+          gap: "2.5rem",
+          border: "2px solid rgba(139, 92, 246, 0.3)",
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
           position: "relative",
           overflow: "hidden"
         }}>
-          {/* Edge decorative dots */}
-          <div style={{ position: "absolute", left: "20px", top: "20px", opacity: 0.15, color: "#fff", fontSize: "1.5rem" }}>•••••<br />•••••</div>
+          <div style={{
+            position: "absolute",
+            top: "-40%",
+            left: "-30%",
+            width: "160%",
+            height: "180%",
+            background: "radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, rgba(99, 102, 241, 0.2) 40%, transparent 70%)",
+            pointerEvents: "none",
+            zIndex: 0
+          }}></div>
 
-          <div>
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <span style={{
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              color: "#a5b4fc",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              marginBottom: "0.75rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.35rem"
+            }}>
+              <Sparkles size={12} color="#ec4899" /> ELEVATE YOUR INSTITUTION
+            </span>
+
             <h2 style={{
-              fontSize: "clamp(1.8rem, 3vw, 2.5rem)",
-              fontWeight: 800,
+              fontSize: "clamp(1.8rem, 3vw, 2.6rem)",
+              fontWeight: 700,
               color: "#ffffff",
-              letterSpacing: "-0.02em",
-              marginBottom: "0.6rem"
+              letterSpacing: "-0.025em",
+              marginBottom: "0.85rem",
+              lineHeight: 1.2
             }}>
-              Ready to Experience <span style={{ color: "#f97316" }}>These Powerful Features?</span>
+              Ready to Experience <span className="gradient-text-sunset">These Features?</span>
             </h2>
+
             <p style={{
-              fontSize: "1.05rem",
-              color: "rgba(255, 255, 255, 0.9)",
-              fontWeight: 500
+              fontSize: "0.98rem",
+              color: "#cbd5e1",
+              fontWeight: 400,
+              marginBottom: "1.8rem",
+              maxWidth: "500px",
+              lineHeight: 1.55
             }}>
-              Join 500+ schools that trust SchoolMitra to simplify their operations and enhance student safety.
+              Join 500+ schools that trust SchoolMitra to automate administrative workflows, ensure bus safety, and engage parents.
             </p>
+
+            <button
+              onClick={() => setModalOpen(true)}
+              className="btn-vibrant-gradient"
+              style={{
+                padding: "0.85rem 2.2rem",
+                borderRadius: "14px",
+                fontSize: "0.95rem",
+                fontWeight: 600
+              }}
+            >
+              <Zap size={17} /> Schedule Free Demo
+            </button>
           </div>
 
-          <button onClick={() => window.location.href = "/auth?mode=signup"} style={{
-            padding: "0.95rem 2.2rem",
-            borderRadius: "14px",
-            background: "#ffffff",
-            color: "#2563eb",
-            border: "none",
-            fontWeight: 800,
-            fontSize: "1rem",
-            cursor: "pointer",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-            display: "inline-flex",
+          {/* Right Visual */}
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
             alignItems: "center",
-            gap: "0.4rem",
-            whiteSpace: "nowrap"
+            position: "relative",
+            zIndex: 1
           }}>
-            Get Started Now <ArrowRight size={16} />
-          </button>
+            <div style={{
+              position: "relative",
+              zIndex: 1,
+              width: "100%",
+              maxWidth: "280px",
+              borderRadius: "18px",
+              overflow: "hidden",
+              border: "1.5px solid rgba(255, 255, 255, 0.3)",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.35)",
+              background: "#ffffff"
+            }}>
+              <img
+                src="/images/smart-school-cta.png"
+                alt="SchoolMitra Modern Smart School"
+                style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }}
+              />
+            </div>
+          </div>
         </div>
       </section>
 

@@ -471,7 +471,7 @@ export default function ReportsPage() {
                 { name: "Rahul Verma", class: "Class 10-A", rate: "72.4%" },
                 { name: "Suresh Gupta", class: "Class 9-B", rate: "74.0%" }
               ].map((def, idx) => (
-                <div key={idx} style={{ padding: "0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, display: "flex", justify: "space-between", alignItems: "center" }}>
+                <div key={idx} style={{ padding: "0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <strong style={{ display: "block", fontSize: "0.85rem", color: "var(--text-heading)" }}>{def.name}</strong>
                     <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Grade: {def.class}</span>
@@ -875,7 +875,7 @@ export default function ReportsPage() {
 
           {/* compiled grid preview */}
           <div className="glass-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div style={{ display: "flex", justify: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-heading)", margin: 0 }}>Compiled Results Preview</h3>
                 <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--text-muted)" }}>Ledger matches selected module filter query.</p>

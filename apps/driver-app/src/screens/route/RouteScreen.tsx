@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { MapPin, Clock, Users, Navigation, CheckCircle2 } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import { MapPin, Clock, Users, Navigation, CheckCircle2, Menu } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 
-export default function RouteScreen({ navigation }: any) {
+export default function RouteScreen({ navigation, route }: any) {
   const { colors, isDark } = useTheme();
+  const openDrawer = route?.params?.openDrawer;
 
   const stops = [
     { id: 1, name: 'Sector 14 Crossing', time: '07:15 AM', students: 6, status: 'completed' },
@@ -15,11 +16,25 @@ export default function RouteScreen({ navigation }: any) {
   ];
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Today's Route #4 Schedule</Text>
-        <Text style={[styles.subTitle, { color: colors.textSecondary }]}>Total 5 Stops • 32 Students Enroute</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
+
+      {/* Top Header Bar */}
+      <View style={[styles.headerBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View style={styles.headerLeftRow}>
+          <TouchableOpacity onPress={openDrawer} style={styles.menuBtn} activeOpacity={0.7}>
+            <Menu size={22} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerLogoText, { color: colors.text }]}>SchoolMitra</Text>
+          <Text style={styles.headerSubBadge}>Route</Text>
+        </View>
       </View>
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>Today's Route #4 Schedule</Text>
+          <Text style={[styles.subTitle, { color: colors.textSecondary }]}>Total 5 Stops • 32 Students Enroute</Text>
+        </View>
 
       <TouchableOpacity 
         style={styles.navBanner} 
@@ -81,7 +96,8 @@ export default function RouteScreen({ navigation }: any) {
         ))}
       </View>
       <View style={{ height: 100 }} />
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -89,6 +105,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 8 : 48,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+  },
+  headerLeftRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  menuBtn: { padding: 4 },
+  headerLogoText: { fontSize: 18, fontWeight: '900', color: '#1d4ed8' },
+  headerSubBadge: { fontSize: 11, fontWeight: '700', color: '#64748b', marginTop: 2 },
   content: {
     padding: 16,
   },

@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   header: {
     flexDirection: 'row',
-    justify: 'space-between',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: '#f1f5f9',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center'
   },
   headerTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: '#f1f5f9',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center'
   },
   scrollContent: { paddingHorizontal: 20, paddingVertical: 16 },
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   videoFrame: {
     height: 180,
     backgroundColor: '#1e293b',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center'
   },
   playCenterBtn: {
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     backgroundColor: '#7c3aed',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center'
   },
   videoTimeTag: { position: 'absolute', bottom: 10, left: 12, color: '#ffffff', fontSize: 11, fontWeight: '700' },
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ede9fe',
     height: 70,
     borderRadius: 10,
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10
   },
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   actionRow: { marginBottom: 20 },
   downloadBtn: {
     flexDirection: 'row',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
     backgroundColor: '#7c3aed',
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: '#f3e8ff',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center'
   },
   logAvatarText: { fontSize: 13, fontWeight: '800', color: '#7c3aed' },

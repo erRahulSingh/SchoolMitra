@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GraduationCap, ArrowRight, Calendar, FileText, Award, FileBarChart2 } from 'lucide-react-native';
+import { ArrowRight, Calendar, FileText, Award, FileBarChart2 } from 'lucide-react-native';
+import Logo from '../components/Logo';
 
 const { width } = Dimensions.get('window');
 
@@ -30,7 +31,7 @@ export default function Splash({ navigation }: any) {
         <View style={styles.header}>
           <View style={styles.emblemBorder}>
             <View style={styles.iconCircle}>
-              <GraduationCap size={36} color="#ffffff" />
+              <Logo size={48} />
             </View>
             <Text style={styles.emblemTag}>TEACHER APP</Text>
           </View>

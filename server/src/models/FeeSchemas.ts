@@ -23,11 +23,18 @@ const feeStructureSchema = new Schema({
     ref: "academicYears",
     required: true,
   },
+  title: { type: String, trim: true },
+  class: { type: String, trim: true },
   components: [{
     name: {
       type: String,
       required: true,
       trim: true,
+    },
+    feeType: {
+      type: String,
+      enum: ["Admission Fee", "Tuition Fee", "Development Fee", "Examination Fee", "Computer Fee", "Library Fee", "Annual Fee", "Transport Fee", "Other Fee"],
+      default: "Tuition Fee",
     },
     amount: {
       type: Number,
@@ -40,12 +47,36 @@ const feeStructureSchema = new Schema({
       default: "Monthly",
     },
   }],
-  totalAnnualFee: { type: Number, required: true },
+  totalAnnualFee: { type: Number, required: true, alias: "totalAmount" },
+  paymentFrequency: {
+    type: String,
+    enum: ["Monthly", "Quarterly", "Half-Yearly", "Yearly", "Custom"],
+    default: "Quarterly",
+  },
+  installmentSchedule: [{
+    termName: { type: String, trim: true },
+    amount: { type: Number, min: 0 },
+    dueDate: { type: Date },
+  }],
+  optionalTransportFee: { type: Number, default: 0 },
   lateFeePerDay: { type: Number, default: 0 },
+  status: {
+    type: String,
+    enum: ["Active", "Inactive", "Draft"],
+    default: "Active",
+  },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+  },
+  updatedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+  },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
-feeStructureSchema.index({ schoolId: 1, classId: 1, academicYearId: 1 }, { unique: true });
+feeStructureSchema.index({ schoolId: 1, academicYearId: 1, classId: 1 }, { unique: true });
 export const FeeStructureModel = model("feeStructures", feeStructureSchema);
 
 // ──────────── 26. FEE INVOICES ────────────
@@ -76,6 +107,9 @@ const feeInvoiceSchema = new Schema({
     name: { type: String },
     amount: { type: Number },
   }],
+  baseClassFeeAmount: { type: Number, default: 0 },
+  hasTransportOptIn: { type: Boolean, default: false },
+  transportAmount: { type: Number, default: 0 },
   totalAmount: {
     type: Number,
     required: true,
@@ -269,3 +303,36 @@ const scholarshipSchema = new Schema({
 
 scholarshipSchema.index({ schoolId: 1, studentId: 1 });
 export const ScholarshipModel = model("scholarships", scholarshipSchema);
+
+// ──────────── 31. STUDENT FEE ADJUSTMENT AUDIT LOG ────────────
+const feeAdjustmentAuditSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    index: true,
+  },
+  studentId: {
+    type: Schema.Types.ObjectId,
+    ref: "students",
+    required: true,
+    index: true,
+  },
+  adjustedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+  },
+  adjustmentType: {
+    type: String,
+    enum: ["Discount", "Scholarship", "Waiver", "Custom Adjustment"],
+    required: true,
+  },
+  standardFeeAmount: { type: Number, required: true },
+  adjustmentAmount: { type: Number, required: true },
+  netPayableAmount: { type: Number, required: true },
+  reason: { type: String, required: true, trim: true },
+}, { timestamps: true });
+
+feeAdjustmentAuditSchema.index({ schoolId: 1, studentId: 1, createdAt: -1 });
+export const FeeAdjustmentAuditModel = model("fee_adjustment_audits", feeAdjustmentAuditSchema);

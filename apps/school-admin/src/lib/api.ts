@@ -122,8 +122,8 @@ export const schoolAdminApi = {
   getLiveMapFleet: () => apiRequest("/gps/live-map"),
 
   // Notifications & Support Tickets
-  getAnnouncements: () => apiRequest("/notifications/announcements"),
-  createAnnouncement: (payload: any) => apiRequest("/notifications/announcements", { method: "POST", body: JSON.stringify(payload) }),
+  getAnnouncements: () => apiRequest("/admin/announcements"),
+  createAnnouncement: (payload: any) => apiRequest("/admin/announcements", { method: "POST", body: JSON.stringify(payload) }),
   sendPushNotification: (payload: any) => apiRequest("/notifications/push/send", { method: "POST", body: JSON.stringify(payload) }),
   getSupportTickets: () => apiRequest("/support/tickets"),
   createSupportTicket: (payload: any) => apiRequest("/support/tickets", { method: "POST", body: JSON.stringify(payload) }),

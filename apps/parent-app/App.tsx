@@ -62,6 +62,7 @@ import TeacherProfileScreen from './src/screens/school/TeacherProfileScreen';
 
 // Profile & Settings
 import ParentProfileScreen from './src/screens/profile/ParentProfileScreen';
+import ParentDocumentsCertificatesScreen from './src/screens/profile/ParentDocumentsCertificatesScreen';
 import NotificationSettingsScreen from './src/screens/profile/NotificationSettingsScreen';
 import PrivacySecurityScreen from './src/screens/profile/PrivacySecurityScreen';
 import LegalScreen from './src/screens/profile/LegalScreen';
@@ -214,9 +215,12 @@ export default function App() {
 
               {/* Academics */}
               <Stack.Screen name="AcademicsHub" component={AcademicsHubScreen} />
+              <Stack.Screen name="AcademicsTab" component={AcademicsHubScreen} />
               <Stack.Screen name="Attendance" component={AttendanceScreen} />
+              <Stack.Screen name="AttendanceTab" component={AttendanceScreen} />
               <Stack.Screen name="AttendanceAnalytics" component={AttendanceAnalyticsScreen} />
               <Stack.Screen name="Homework" component={HomeworkScreen} />
+              <Stack.Screen name="HomeworkTab" component={HomeworkScreen} />
               <Stack.Screen name="Assignments" component={AssignmentsScreen} />
               <Stack.Screen name="Exams" component={ExamsScreen} />
               <Stack.Screen name="ReportCard" component={ReportCardScreen} />
@@ -232,6 +236,8 @@ export default function App() {
               <Stack.Screen name="AcademicPerformance" component={AcademicPerformanceScreen} />
 
               {/* Transport Stack */}
+              <Stack.Screen name="LiveBusTracking" component={LiveBusTrackingScreen} />
+              <Stack.Screen name="TransportTab" component={LiveBusTrackingScreen} />
               <Stack.Screen name="RouteDetails" component={RouteDetailsScreen} />
               <Stack.Screen name="BusStopDetails" component={BusStopDetailsScreen} />
               <Stack.Screen name="TripHistory" component={TripHistoryScreen} />
@@ -249,6 +255,7 @@ export default function App() {
               <Stack.Screen name="TeacherProfile" component={TeacherProfileScreen} />
 
               {/* Settings */}
+              <Stack.Screen name="ParentDocumentsCertificates" component={ParentDocumentsCertificatesScreen} />
               <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
               <Stack.Screen name="PrivacySecurity" component={PrivacySecurityScreen} />
               <Stack.Screen name="Legal" component={LegalScreen} />

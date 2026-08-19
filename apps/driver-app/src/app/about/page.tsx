@@ -32,7 +32,7 @@ function AboutOption({ icon: Icon, label, sub }: AboutOptionProps) {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-        <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justify: "center", color: "#2563eb", flexShrink: 0 }}>
+        <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb", flexShrink: 0 }}>
           <Icon size={16} strokeWidth={2.5} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>

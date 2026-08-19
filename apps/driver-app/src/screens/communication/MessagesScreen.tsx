@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { Search, Wrench, Users, Headset } from 'lucide-react-native';
+import { useTheme } from '../../context/ThemeContext';
 
-export default function MessagesScreen({ navigation }: any) {
+export default function MessagesScreen({ navigation, route }: any) {
+  const { colors, isDark } = useTheme();
+  const openDrawer = route?.params?.openDrawer;
   const [activeTab, setActiveTab] = useState('Chats');
 
   const chats = [
@@ -14,19 +17,19 @@ export default function MessagesScreen({ navigation }: any) {
   ];
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
       
       {/* Header Bar */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity style={styles.menuBtn}>
-          <View style={styles.menuLine} />
-          <View style={styles.menuLine} />
-          <View style={styles.menuLine} />
+      <View style={[styles.headerBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={openDrawer} style={styles.menuBtn} activeOpacity={0.7}>
+          <View style={[styles.menuLine, { backgroundColor: colors.text }]} />
+          <View style={[styles.menuLine, { backgroundColor: colors.text }]} />
+          <View style={[styles.menuLine, { backgroundColor: colors.text }]} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Messages</Text>
-        <TouchableOpacity style={styles.searchBtn}>
-          <Search size={20} color="#0f172a" />
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Messages</Text>
+        <TouchableOpacity style={[styles.searchBtn, { backgroundColor: colors.background }]}>
+          <Search size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -35,19 +38,35 @@ export default function MessagesScreen({ navigation }: any) {
         {/* Filter Pills Row */}
         <View style={styles.pillsRow}>
           <TouchableOpacity
-            style={[styles.pillBtn, activeTab === 'Chats' && styles.pillActive]}
+            style={[
+              styles.pillBtn, 
+              { backgroundColor: colors.card, borderColor: colors.border },
+              activeTab === 'Chats' && styles.pillActive
+            ]}
             onPress={() => setActiveTab('Chats')}
             activeOpacity={0.8}
           >
-            <Text style={[styles.pillText, activeTab === 'Chats' && styles.pillTextActive]}>Chats</Text>
+            <Text style={[
+              styles.pillText, 
+              { color: colors.textSecondary },
+              activeTab === 'Chats' && styles.pillTextActive
+            ]}>Chats</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.pillBtn, activeTab === 'Channels' && styles.pillActive]}
+            style={[
+              styles.pillBtn, 
+              { backgroundColor: colors.card, borderColor: colors.border },
+              activeTab === 'Channels' && styles.pillActive
+            ]}
             onPress={() => setActiveTab('Channels')}
             activeOpacity={0.8}
           >
-            <Text style={[styles.pillText, activeTab === 'Channels' && styles.pillTextActive]}>Channels</Text>
+            <Text style={[
+              styles.pillText, 
+              { color: colors.textSecondary },
+              activeTab === 'Channels' && styles.pillTextActive
+            ]}>Channels</Text>
           </TouchableOpacity>
         </View>
 
@@ -69,12 +88,12 @@ export default function MessagesScreen({ navigation }: any) {
 
                 <View style={styles.infoCol}>
                   <View style={styles.nameTimeRow}>
-                    <Text style={styles.nameText}>{chat.name}</Text>
-                    <Text style={styles.timeText}>{chat.time}</Text>
+                    <Text style={[styles.nameText, { color: colors.text }]}>{chat.name}</Text>
+                    <Text style={[styles.timeText, { color: colors.textMuted }]}>{chat.time}</Text>
                   </View>
 
                   <View style={styles.msgBadgeRow}>
-                    <Text style={styles.msgText} numberOfLines={1}>{chat.msg}</Text>
+                    <Text style={[styles.msgText, { color: colors.textSecondary }]} numberOfLines={1}>{chat.msg}</Text>
                     {chat.unread ? (
                       <View style={styles.unreadBadge}>
                         <Text style={styles.unreadBadgeText}>{chat.unread}</Text>

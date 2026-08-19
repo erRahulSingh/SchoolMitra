@@ -6,12 +6,20 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "teacherschoolmitra",
+    "icon": "./src/assets/logo.png",
+    "splash": {
+      "backgroundColor": "#1e1b4b"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.schoolmitra.teacher"
     },
     "android": {
-      "package": "com.schoolmitra.teacher"
+      "package": "com.schoolmitra.teacher",
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/logo.png",
+        "backgroundColor": "#1e1b4b"
+      }
     }
   }
 }

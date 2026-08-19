@@ -7,7 +7,11 @@ export interface TeacherAuditLogEntry {
   schoolId: string;
   teacherId: string;
   teacherName: string;
-  action: "UPDATE_ATTENDANCE" | "UPDATE_MARKS" | "CREATE_HOMEWORK" | "PUBLISH_TEST" | "SUBMIT_REPORT_CARD" | "SEND_MESSAGE" | "CREATE_ANNOUNCEMENT";
+  action: "UPDATE_ATTENDANCE" | "UPDATE_MARKS" | "CREATE_HOMEWORK" | "PUBLISH_TEST" | "SUBMIT_REPORT_CARD" | "SEND_MESSAGE" | "CREATE_ANNOUNCEMENT"
+    | "CREATE_EVENT" | "UPDATE_EVENT" | "DELETE_EVENT" | "PUBLISH_EVENT"
+    | "APPLY_LEAVE" | "APPROVE_LEAVE" | "REJECT_LEAVE" | "CANCEL_LEAVE"
+    | "ADD_HOLIDAY" | "UPDATE_HOLIDAY" | "DELETE_HOLIDAY"
+    | "CREATE_CALENDAR" | "UPDATE_CALENDAR";
   classId?: string;
   className?: string;
   studentId?: string;

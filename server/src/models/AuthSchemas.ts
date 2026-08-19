@@ -2,7 +2,7 @@
 // SchoolMitra — Module 1: Auth & Tenancy Collections (7)
 // ═══════════════════════════════════════════════════════════
 
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, models, Types } from "mongoose";
 
 // ──────────── 1. SCHOOLS (Tenant Root) ────────────
 const schoolSchema = new Schema({
@@ -65,7 +65,7 @@ const schoolSchema = new Schema({
   },
 }, { timestamps: true });
 
-export const SchoolModel = model("schools", schoolSchema);
+export const SchoolModel = models.schools || model("schools", schoolSchema);
 
 // ──────────── 2. BRANCHES ────────────
 const branchSchema = new Schema({
@@ -88,7 +88,7 @@ const branchSchema = new Schema({
 }, { timestamps: true });
 
 branchSchema.index({ schoolId: 1, branchName: 1 }, { unique: true });
-export const BranchModel = model("branches", branchSchema);
+export const BranchModel = models.branches || model("branches", branchSchema);
 
 // ──────────── 3. USERS ────────────
 const userSchema = new Schema({
@@ -177,7 +177,7 @@ const userSchema = new Schema({
 }, { timestamps: true });
 
 userSchema.index({ schoolId: 1, role: 1 });
-export const UserModel = model("users", userSchema);
+export const UserModel = models.users || model("users", userSchema);
 
 // ──────────── 4. ROLES (System & Custom Per School) ────────────
 const roleSchema = new Schema({
@@ -205,7 +205,7 @@ const roleSchema = new Schema({
 }, { timestamps: true });
 
 roleSchema.index({ schoolId: 1, roleName: 1 });
-export const RoleModel = model("roles", roleSchema);
+export const RoleModel = models.roles || model("roles", roleSchema);
 
 // ──────────── 4.1. ROLE PERMISSIONS ────────────
 const rolePermissionSchema = new Schema({
@@ -227,7 +227,7 @@ const rolePermissionSchema = new Schema({
 }, { timestamps: true });
 
 rolePermissionSchema.index({ roleId: 1, permissionKey: 1 }, { unique: true });
-export const RolePermissionModel = model("rolePermissions", rolePermissionSchema);
+export const RolePermissionModel = models.rolePermissions || model("rolePermissions", rolePermissionSchema);
 
 // ──────────── 4.2. USER PERMISSION OVERRIDES ────────────
 const userPermissionOverrideSchema = new Schema({
@@ -258,7 +258,7 @@ const userPermissionOverrideSchema = new Schema({
 }, { timestamps: true });
 
 userPermissionOverrideSchema.index({ schoolId: 1, userId: 1, permissionKey: 1 }, { unique: true });
-export const UserPermissionOverrideModel = model("userPermissionOverrides", userPermissionOverrideSchema);
+export const UserPermissionOverrideModel = models.userPermissionOverrides || model("userPermissionOverrides", userPermissionOverrideSchema);
 
 // ──────────── 5. PERMISSIONS (Global & Custom Registry) ────────────
 const permissionSchema = new Schema({
@@ -289,7 +289,7 @@ const permissionSchema = new Schema({
 }, { timestamps: true });
 
 permissionSchema.index({ module: 1, action: 1 });
-export const PermissionModel = model("permissions", permissionSchema);
+export const PermissionModel = models.permissions || model("permissions", permissionSchema);
 
 // ──────────── 6. SESSIONS ────────────
 const sessionSchema = new Schema({
@@ -315,7 +315,7 @@ const sessionSchema = new Schema({
 }, { timestamps: true });
 
 sessionSchema.index({ userId: 1, expiresAt: 1 });
-export const SessionModel = model("sessions", sessionSchema);
+export const SessionModel = models.sessions || model("sessions", sessionSchema);
 
 // ──────────── 7. REFRESH TOKENS ────────────
 const refreshTokenSchema = new Schema({
@@ -336,7 +336,7 @@ const refreshTokenSchema = new Schema({
   },
 }, { timestamps: true });
 
-export const RefreshTokenModel = model("refreshTokens", refreshTokenSchema);
+export const RefreshTokenModel = models.refreshTokens || model("refreshTokens", refreshTokenSchema);
 
 // ──────────── 8. AUDIT LOGS ────────────
 const auditLogSchema = new Schema({
@@ -364,5 +364,4 @@ const auditLogSchema = new Schema({
   ipAddress: { type: String },
 }, { timestamps: true });
 
-export const AuditLogModel = model("auditLogs", auditLogSchema);
-
+export const AuditLogModel = models.auditLogs || model("auditLogs", auditLogSchema);

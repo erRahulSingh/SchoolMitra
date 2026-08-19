@@ -12,10 +12,32 @@ import {
   getLeaveList,
   updateLeaveStatus,
   getMonthlyAttendanceReport,
-  getAttendanceAnalytics
+  getAttendanceAnalytics,
+  getAttendanceSettings,
+  updateAttendanceSettings,
+  createCorrectionRequest,
+  getCorrectionRequests,
+  approveCorrectionRequest,
+  rejectCorrectionRequest,
+  getSubjectWiseAttendance,
+  sendLowAttendanceWarningNotification
 } from "./attendance.controller";
 
 const router = Router();
+
+// Subject-Wise Attendance & Defaulter Alerts
+router.get("/subject-wise/:studentId?", getSubjectWiseAttendance);
+router.post("/alert-defaulter", sendLowAttendanceWarningNotification);
+
+// Attendance Window Settings & Lock Status
+router.get("/settings", getAttendanceSettings);
+router.post("/settings", updateAttendanceSettings);
+
+// Attendance Correction Requests Workflow
+router.post("/correction-request", createCorrectionRequest);
+router.get("/correction-requests", getCorrectionRequests);
+router.post("/correction-requests/:id/approve", approveCorrectionRequest);
+router.post("/correction-requests/:id/reject", rejectCorrectionRequest);
 
 // Student Attendance
 router.post("/student/mark", markStudentAttendance);

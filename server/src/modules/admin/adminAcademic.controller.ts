@@ -7,6 +7,7 @@ import { Request, Response } from "express";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { notifyParent, notifyTeacher } from "../../services/pushNotificationService";
+import { sendClassNotification, sendStudentNotification } from "../../services/notificationService";
 import {
   HomeworkModel,
   AssignmentModel,
@@ -104,21 +105,18 @@ export const publishAdminHomework = asyncHandler(async (req: Request, res: Respo
   await hw.save();
 
   if (hw.status === "PUBLISHED") {
-    try {
-      notifyParent(
-        "ExponentPushToken[SampleParentToken]",
-        "HOMEWORK_PUBLISHED",
-        "Homework Published by Admin 📚",
-        `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,
-        { homeworkId: String(hw._id) }
-      );
-    } catch (e) {}
-
-    emitParentSyncEvent("PARENT_HOMEWORK_CREATED", {
-      title: "New Homework Available 📚",
-      message: `Homework "${hw.title}" has been published by Admin.`,
-      homeworkId: String(hw._id)
-    });
+    const adminUserId = (req as any).user?.id || (req as any).user?._id;
+    sendClassNotification(
+      schoolId,
+      adminUserId,
+      hw.classId?._id || hw.classId,
+      hw.sectionId?._id || hw.sectionId,
+      "HOMEWORK",
+      "Homework Published by Admin 📚",
+      `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,
+      "homeworks",
+      hw._id
+    );
   }
 
   return ApiResponse.success(res, 200, `Homework status updated to ${hw.status}`);
@@ -192,15 +190,18 @@ export const publishAdminAssignment = asyncHandler(async (req: Request, res: Res
   await asg.save();
 
   if (asg.status === "PUBLISHED") {
-    try {
-      notifyParent(
-        "ExponentPushToken[SampleParentToken]",
-        "ASSIGNMENT_PUBLISHED",
-        "Assignment Published by Admin 📄",
-        `New Assignment announced: "${asg.title}". Max Marks: ${asg.maxMarks}.`,
-        { assignmentId: String(asg._id) }
-      );
-    } catch (e) {}
+    const adminUserId = (req as any).user?.id || (req as any).user?._id;
+    sendClassNotification(
+      schoolId,
+      adminUserId,
+      asg.classId?._id || asg.classId,
+      asg.sectionId?._id || asg.sectionId,
+      "HOMEWORK",
+      "Assignment Published by Admin 📄",
+      `New Assignment announced: "${asg.title}". Max Marks: ${asg.maxMarks}.`,
+      "assignments",
+      asg._id
+    );
   }
 
   return ApiResponse.success(res, 200, `Assignment status updated to ${asg.status}`);
@@ -698,22 +699,16 @@ export const publishAdminReportCard = asyncHandler(async (req: Request, res: Res
   rc.approvedAt = new Date();
   await rc.save();
 
-  try {
-    notifyParent(
-      "ExponentPushToken[SampleParentToken]",
-      "EXAM_RESULT_PUBLISHED",
-      "Report Card Published! 📊",
-      `Official Report Card for "${(rc.examId as any)?.examName || "Exam"}" has been published.`,
-      { studentId: String(rc.studentId?._id || rc.studentId) }
-    );
-  } catch (e) {}
-
-  emitParentSyncEvent("PARENT_REPORT_CARD_PUBLISHED", {
-    title: "Report Card Published 📊",
-    message: `Official Report Card for ${(rc.studentId as any)?.name || "Student"} has been published.`,
-    studentId: String(rc.studentId?._id || rc.studentId),
-    examId: String(rc.examId?._id || rc.examId)
-  });
+  sendStudentNotification(
+    schoolId,
+    adminUserId,
+    rc.studentId?._id || rc.studentId,
+    "REPORT_CARD",
+    "Report Card Published! 📊",
+    `Official Report Card for "${(rc.examId as any)?.examName || "Exam"}" has been published.`,
+    "reportCards",
+    rc._id
+  );
 
   return ApiResponse.success(res, 200, "Report card published successfully to Parent App!", { reportCard: rc });
 });

@@ -10,13 +10,13 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  GraduationCap,
   ChevronRight,
   Zap,
   Smartphone,
   Shield,
   User
 } from 'lucide-react-native';
+import Logo from '../../components/Logo';
 
 const { width } = Dimensions.get('window');
 
@@ -40,9 +40,7 @@ export default function Splash({ navigation }: any) {
         
         {/* LOGO */}
         <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <GraduationCap size={28} color="#7c3aed" />
-          </View>
+          <Logo size={56} />
           <Text style={styles.logoText}>SchoolMitra</Text>
           <Text style={styles.logoSubtext}>Teacher App</Text>
         </View>
@@ -107,16 +105,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1, paddingHorizontal: 24, justifyContent: 'space-between', paddingVertical: 30 },
   logoContainer: { alignItems: 'center', marginTop: 10 },
-  logoCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 6
-  },
-  logoText: { fontSize: 18, fontWeight: '950', color: '#ffffff' },
+  logoText: { fontSize: 18, fontWeight: '950', color: '#ffffff', marginTop: 8 },
   logoSubtext: { fontSize: 10, color: '#94a3b8', fontWeight: '800', marginTop: 2 },
   heroTitle: { fontSize: 22, fontWeight: '950', color: '#ffffff', textAlign: 'center', lineHeight: 28 },
   heroDesc: { fontSize: 12, color: '#94a3b8', fontWeight: '750', textAlign: 'center', marginTop: 8, paddingHorizontal: 20, lineHeight: 16 },

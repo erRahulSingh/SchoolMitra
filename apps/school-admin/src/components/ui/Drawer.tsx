@@ -58,7 +58,7 @@ export const Drawer: React.FC<DrawerProps> = ({
           boxShadow: "var(--shadow-glow)"
         }}
       >
-        <div style={{ display: "flex", justify: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
           <div>
             <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-heading)" }}>{title}</h3>
             {subtitle && <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 2 }}>{subtitle}</p>}

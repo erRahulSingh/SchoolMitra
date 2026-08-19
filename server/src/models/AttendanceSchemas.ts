@@ -2,7 +2,7 @@
 // SchoolMitra — Module 3: Attendance Collections (3)
 // ═══════════════════════════════════════════════════════════
 
-import { Schema, model } from "mongoose";
+import { Schema, model, models } from "mongoose";
 
 // ──────────── 16. STUDENT ATTENDANCE ────────────
 const studentAttendanceSchema = new Schema({
@@ -28,6 +28,15 @@ const studentAttendanceSchema = new Schema({
     ref: "sections",
     required: true,
   },
+  subjectId: {
+    type: Schema.Types.ObjectId,
+    ref: "subjects",
+  },
+  subjectName: {
+    type: String,
+    trim: true,
+    default: "General Class Attendance",
+  },
   date: {
     type: Date,
     required: [true, "Date is required"],
@@ -36,7 +45,7 @@ const studentAttendanceSchema = new Schema({
   status: {
     type: String,
     required: true,
-    enum: ["Present", "Absent", "Late", "HalfDay", "Holiday", "Leave"],
+    enum: ["Present", "Absent", "Late", "Half Day", "HalfDay", "Holiday", "Leave"],
     default: "Present",
   },
   markedBy: {
@@ -50,7 +59,36 @@ studentAttendanceSchema.index({ schoolId: 1, classId: 1, date: -1 });
 studentAttendanceSchema.index({ schoolId: 1, studentId: 1, date: -1 });
 // Prevent duplicate attendance per student per day
 studentAttendanceSchema.index({ schoolId: 1, studentId: 1, date: 1 }, { unique: true });
-export const StudentAttendanceModel = model("studentAttendance", studentAttendanceSchema);
+export const StudentAttendanceModel = models.studentAttendance || model("studentAttendance", studentAttendanceSchema);
+
+// ──────────── ATTENDANCE SETTINGS (TIME WINDOW & LOCK CONFIG) ────────────
+const attendanceSettingSchema = new Schema({
+  schoolId: {
+    type: Schema.Types.ObjectId,
+    ref: "schools",
+    required: true,
+    unique: true,
+    index: true,
+  },
+  attendanceOpenTime: {
+    type: String,
+    default: "08:00 AM",
+  },
+  attendanceCloseTime: {
+    type: String,
+    default: "10:00 AM",
+  },
+  allowEdit: {
+    type: Boolean,
+    default: true,
+  },
+  editApprovalRequired: {
+    type: Boolean,
+    default: true,
+  },
+}, { timestamps: true });
+
+export const AttendanceSettingsModel = models.attendanceSettings || model("attendanceSettings", attendanceSettingSchema);
 
 // ──────────── 17. TEACHER ATTENDANCE ────────────
 const teacherAttendanceSchema = new Schema({

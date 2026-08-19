@@ -13,45 +13,36 @@ try {
   // Fallback if setServers is restricted
 }
 
-// Disable Mongoose command buffering so queries fail immediately or fallback instead of timing out after 10000ms
-mongoose.set("bufferCommands", false);
+// Mongoose command buffering enabled for smooth query handling
+mongoose.set("bufferCommands", true);
 
 export const connectDB = async (): Promise<void> => {
-  const connStr =
-    process.env.MONGODB_URI ||
-    "mongodb+srv://rahulengineer492_db_user:Schoolmitra_db@schoolmitra.qztpv50.mongodb.net/schoolmitra?retryWrites=true&w=majority";
+  const mainConnStr = process.env.MONGODB_URI || process.env.MONGODB_ATLAS_URI || "mongodb+srv://rahulkahin_db_user:Schoolmitra_db@cluster0.mxb46ol.mongodb.net/schoolmitra?retryWrites=true&w=majority";
 
   // ──── Connection Event Listeners ────
   mongoose.connection.on("connected", () => {
-    logger.info(`[MongoDB Atlas] Connected to cluster: ${mongoose.connection.host} / database: ${mongoose.connection.name}`);
-    // Auto-sync global permission definitions into permissions collection
+    logger.info(`[MongoDB Atlas] Connected to host: ${mongoose.connection.host} / database: ${mongoose.connection.name}`);
     import("../services/permissionSeeder").then(({ seedGlobalPermissions }) => {
       seedGlobalPermissions().catch(() => {});
     });
   });
 
   mongoose.connection.on("disconnected", () => {
-    logger.warn("[MongoDB Atlas] Disconnected from database. Mongoose will attempt to reconnect...");
-  });
-
-  mongoose.connection.on("reconnected", () => {
-    logger.info("[MongoDB Atlas] Successfully reconnected to database.");
+    logger.warn("[MongoDB] Disconnected from database.");
   });
 
   mongoose.connection.on("error", (err) => {
-    logger.error(`[MongoDB Atlas] Connection error: ${err.message}`, { stack: err.stack });
+    logger.error(`[MongoDB] Connection error: ${err.message}`);
   });
 
   // ──── Initial Connection ────
   try {
-    await mongoose.connect(connStr, {
-      serverSelectionTimeoutMS: 10000,  // 10 seconds timeout
-      heartbeatFrequencyMS: 30000,      // 30 seconds heartbeat
+    logger.info(`[MongoDB] Connecting to database cluster...`);
+    await mongoose.connect(mainConnStr, {
+      serverSelectionTimeoutMS: 8000,
     });
-  } catch (error) {
-    logger.error(`[MongoDB Atlas] Initial connection failed: ${(error as Error).message}`);
-    // Don't crash the process — let the reconnect logic handle it
-    // In production, you may want to exit: process.exit(1);
+  } catch (err) {
+    logger.error(`[MongoDB Atlas] Connection failed: ${(err as Error).message}`);
   }
 };
 

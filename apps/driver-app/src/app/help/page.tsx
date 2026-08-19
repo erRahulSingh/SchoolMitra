@@ -173,7 +173,7 @@ export default function HelpSupportPage({ onNavigate }: { onNavigate?: (tab: str
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.95rem 1.15rem", borderBottom: "1px solid #f1f5f9", cursor: "pointer" }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justify: "center", color: "#2563eb" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb" }}>
                 <HelpCircle size={16} strokeWidth={2.5} />
               </div>
               <span style={{ fontSize: "0.85rem", color: "#1e293b", fontWeight: 800 }}>View Frequently Asked Questions</span>
@@ -187,7 +187,7 @@ export default function HelpSupportPage({ onNavigate }: { onNavigate?: (tab: str
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.95rem 1.15rem", cursor: "pointer" }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#fdf4ff", display: "flex", alignItems: "center", justify: "center", color: "#d946ef" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#fdf4ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#d946ef" }}>
                 <Video size={16} strokeWidth={2.5} />
               </div>
               <span style={{ fontSize: "0.85rem", color: "#1e293b", fontWeight: 800 }}>Video Guides</span>

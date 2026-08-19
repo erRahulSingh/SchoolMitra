@@ -2,7 +2,7 @@
 // SchoolMitra — Module 10: System & SaaS Collections (9)
 // ═══════════════════════════════════════════════════════════
 
-import { Schema, model } from "mongoose";
+import { Schema, model, models } from "mongoose";
 
 // ──────────── AUDIT LOGS ────────────
 const auditLogSchema = new Schema({
@@ -26,7 +26,7 @@ const auditLogSchema = new Schema({
 
 auditLogSchema.index({ schoolId: 1, createdAt: -1 });
 auditLogSchema.index({ userId: 1, createdAt: -1 });
-export const AuditLogModel = model("auditLogs", auditLogSchema);
+export const AuditLogModel = models.auditLogs || model("auditLogs", auditLogSchema);
 
 // ──────────── SETTINGS (Per-School Configs) ────────────
 const settingSchema = new Schema({
@@ -50,7 +50,7 @@ const settingSchema = new Schema({
 }, { timestamps: true });
 
 settingSchema.index({ schoolId: 1, key: 1 }, { unique: true });
-export const SettingModel = model("settings", settingSchema);
+export const SettingModel = models.settings || model("settings", settingSchema);
 
 // ──────────── PLANS (SaaS Pricing Tier Definitions) ────────────
 const planSchema = new Schema({
@@ -70,7 +70,7 @@ const planSchema = new Schema({
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
-export const PlanModel = model("plans", planSchema);
+export const PlanModel = models.plans || model("plans", planSchema);
 
 // ──────────── SUBSCRIPTIONS (School SaaS Billing State) ────────────
 const subscriptionSchema = new Schema({
@@ -104,7 +104,7 @@ const subscriptionSchema = new Schema({
 }, { timestamps: true });
 
 subscriptionSchema.index({ schoolId: 1, status: 1 });
-export const SubscriptionModel = model("subscriptions", subscriptionSchema);
+export const SubscriptionModel = models.subscriptions || model("subscriptions", subscriptionSchema);
 
 // ──────────── SUPPORT TICKETS ────────────
 const supportTicketSchema = new Schema({
@@ -146,7 +146,7 @@ const supportTicketSchema = new Schema({
 }, { timestamps: true });
 
 supportTicketSchema.index({ schoolId: 1, status: 1 });
-export const SupportTicketModel = model("supportTickets", supportTicketSchema);
+export const SupportTicketModel = models.supportTickets || model("supportTickets", supportTicketSchema);
 
 // ──────────── FEATURE FLAGS ────────────
 const featureFlagSchema = new Schema({
@@ -166,7 +166,7 @@ const featureFlagSchema = new Schema({
 }, { timestamps: true });
 
 featureFlagSchema.index({ schoolId: 1, featureName: 1 });
-export const FeatureFlagModel = model("featureFlags", featureFlagSchema);
+export const FeatureFlagModel = models.featureFlags || model("featureFlags", featureFlagSchema);
 
 // ──────────── SYSTEM ANALYTICS ────────────
 const analyticsSchema = new Schema({
@@ -181,7 +181,7 @@ const analyticsSchema = new Schema({
   date: { type: Date, default: Date.now, index: true },
 }, { timestamps: true });
 
-export const AnalyticsModel = model("analytics", analyticsSchema);
+export const AnalyticsModel = models.analytics || model("analytics", analyticsSchema);
 
 // ──────────── SYSTEM ACTIVITY LOGS ────────────
 const activityLogSchema = new Schema({
@@ -191,7 +191,7 @@ const activityLogSchema = new Schema({
   timestamp: { type: Date, default: Date.now, index: true },
 }, { timestamps: true });
 
-export const ActivityLogModel = model("activityLogs", activityLogSchema);
+export const ActivityLogModel = models.activityLogs || model("activityLogs", activityLogSchema);
 
 // ──────────── BACKUPS ────────────
 const backupSchema = new Schema({
@@ -211,4 +211,4 @@ const backupSchema = new Schema({
   completedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 
-export const BackupModel = model("backups", backupSchema);
+export const BackupModel = models.backups || model("backups", backupSchema);

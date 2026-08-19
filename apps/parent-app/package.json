@@ -7,14 +7,17 @@
     "start": "expo start -c",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:aab": "npx eas-cli build --platform android --profile production",
+    "build:apk": "npx eas-cli build --platform android --profile preview",
+    "build:local": "npx eas-cli build --platform android --profile production --local"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.0.0",
     "@react-navigation/native": "^7.0.0",
     "@react-navigation/stack": "^7.0.0",
-    "expo": "~54.0.0",
+    "expo": "~54.0.37",
     "expo-linear-gradient": "~15.0.8",
     "expo-status-bar": "~3.0.9",
     "lucide-react-native": "^0.460.0",
@@ -34,12 +37,6 @@
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.0",
     "typescript": "^5.3.3"
-  },
-  "overrides": {
-    "lucide-react-native": {
-      "react": "$react",
-      "react-native": "$react-native"
-    }
   },
   "private": true
 }

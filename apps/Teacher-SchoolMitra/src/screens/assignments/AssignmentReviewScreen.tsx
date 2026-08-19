@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   header: {
     flexDirection: 'row',
-    justify: 'space-between',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: '#f1f5f9',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center'
   },
   headerTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: '#f3e8ff',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center'
   },
   avatarText: { fontSize: 14, fontWeight: '800', color: '#7c3aed' },
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   fileNameText: { flex: 1, fontSize: 12, fontWeight: '700', color: '#334155' },
   studentFooter: {
     flexDirection: 'row',
-    justify: 'space-between',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 12,
     paddingTop: 10,
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   },
   modalHeader: {
     flexDirection: 'row',
-    justify: 'space-between',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
   },
   saveGradeBtn: {
     flexDirection: 'row',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
     backgroundColor: '#7c3aed',

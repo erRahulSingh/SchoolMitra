@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, Dimensions, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions, Platform } from 'react-native';
 import { Home, Map, AlertTriangle, Users, User } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 
@@ -57,6 +57,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: TabBarP
                 onPress={onPress}
                 colors={colors}
                 isDark={isDark}
+                label={tab.label}
               />
             );
           }
@@ -118,16 +119,11 @@ function TabButton({ Icon, label, isFocused, onPress, colors, isDark }: TabButto
         {isFocused && (
           <View style={[styles.activeGlow, { backgroundColor: colors.accentSoft }]} />
         )}
-        <Icon size={22} color={iconColor} strokeWidth={isFocused ? 2.5 : 1.8} />
+        <Icon size={20} color={iconColor} strokeWidth={isFocused ? 2.5 : 1.8} />
       </Animated.View>
-      <Animated.View style={[
-        styles.activeDot, 
-        { 
-          backgroundColor: colors.accent,
-          opacity: dotAnim,
-          transform: [{ scale: dotAnim }],
-        }
-      ]} />
+      <Text style={[styles.tabLabel, { color: iconColor, fontWeight: isFocused ? 'bold' : '500' }]}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -137,9 +133,10 @@ interface SosTabButtonProps {
   onPress: () => void;
   colors: any;
   isDark: boolean;
+  label: string;
 }
 
-function SosTabButton({ isFocused, onPress, colors, isDark }: SosTabButtonProps) {
+function SosTabButton({ isFocused, onPress, colors, isDark, label }: SosTabButtonProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -181,6 +178,9 @@ function SosTabButton({ isFocused, onPress, colors, isDark }: SosTabButtonProps)
           <AlertTriangle size={22} color="#ffffff" strokeWidth={2.5} />
         </View>
       </Animated.View>
+      <Text style={[styles.tabLabel, { color: isFocused ? '#ef4444' : colors.tabBarInactive, fontWeight: isFocused ? 'bold' : '500', marginTop: 4 }]}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -199,8 +199,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    height: 64,
-    borderRadius: 32,
+    height: 78,
+    borderRadius: 39,
     borderWidth: 1,
     paddingHorizontal: 8,
     width: '100%',
@@ -213,33 +213,33 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 64,
-    gap: 4,
+    height: 78,
+    gap: 1,
   },
   iconWrapper: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
+    borderRadius: 18,
   },
   activeGlow: {
     position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
-  activeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
+  tabLabel: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    marginTop: 0,
   },
   sosTabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 64,
-    marginTop: -20,
+    height: 78,
+    marginTop: -24,
   },
   sosOuter: {
     width: 56,

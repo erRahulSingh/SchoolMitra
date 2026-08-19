@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Bus, ClipboardCheck, Calendar, Users, PhoneCall, MessageSquare } from 'lucide-react-native';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function DriverNotificationsScreen({ navigation }: any) {
+  const { colors, isDark } = useTheme();
   const [activeFilter, setActiveFilter] = useState('All');
 
   const filters = ['All', 'Alerts', 'Messages'];
@@ -21,15 +23,15 @@ export default function DriverNotificationsScreen({ navigation }: any) {
     : notifications.filter(n => n.category === activeFilter);
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
       
       {/* Header Bar */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ChevronLeft size={22} color="#0f172a" />
+      <View style={[styles.headerBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.background }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <ChevronLeft size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Notifications</Text>
         <TouchableOpacity>
           <Text style={styles.markReadText}>Mark all as read</Text>
         </TouchableOpacity>
@@ -44,32 +46,40 @@ export default function DriverNotificationsScreen({ navigation }: any) {
             return (
               <TouchableOpacity
                 key={idx}
-                style={[styles.pillBtn, isActive && styles.pillActive]}
+                style={[
+                  styles.pillBtn, 
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  isActive && styles.pillActive
+                ]}
                 onPress={() => setActiveFilter(filter)}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.pillText, isActive && styles.pillTextActive]}>{filter}</Text>
+                <Text style={[
+                  styles.pillText, 
+                  { color: colors.textSecondary },
+                  isActive && styles.pillTextActive
+                ]}>{filter}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
 
         {/* Notifications List */}
-        <View style={styles.listCard}>
+        <View style={[styles.listCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {filteredNotifications.map((item, idx) => {
             const IconComp = item.icon;
             return (
-              <View key={idx} style={[styles.notifRow, idx < filteredNotifications.length - 1 && styles.rowBorder]}>
+              <View key={idx} style={[styles.notifRow, idx < filteredNotifications.length - 1 && styles.rowBorder, { borderBottomColor: colors.border }]}>
                 <View style={[styles.iconCircle, { backgroundColor: item.bg }]}>
                   <IconComp size={18} color={item.color} />
                 </View>
 
                 <View style={styles.infoCol}>
                   <View style={styles.titleTimeRow}>
-                    <Text style={styles.notifTitleText}>{item.title}</Text>
-                    <Text style={styles.timeText}>{item.time}</Text>
+                    <Text style={[styles.notifTitleText, { color: colors.text }]}>{item.title}</Text>
+                    <Text style={[styles.timeText, { color: colors.textMuted }]}>{item.time}</Text>
                   </View>
-                  <Text style={styles.notifDescText}>{item.desc}</Text>
+                  <Text style={[styles.notifDescText, { color: colors.textSecondary }]}>{item.desc}</Text>
                 </View>
 
                 {item.unread && <View style={styles.redDot} />}

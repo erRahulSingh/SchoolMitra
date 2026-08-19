@@ -1,27 +1,34 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Alert } from 'react-native';
-import { ChevronLeft, Bus, CheckCircle2, Circle, Info, Play } from 'lucide-react-native';
+import { ChevronLeft, Bus, CheckCircle2, Circle, Info, Play, Users, UserCheck, UserX, Clock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function StartTripScreen({ navigation }: any) {
-  const [selectedRoute, setSelectedRoute] = useState(1);
-  const [selectedShift, setSelectedShift] = useState('morning');
-
-  const routes = [
-    { id: 1, title: 'Route 01 - Morning', sub: 'Green Valley Route', details: '12 Stops  •  18.6 km' },
-    { id: 2, title: 'Route 02 - Evening', sub: 'City Center Route', details: '10 Stops  •  16.2 km' },
-  ];
-
-  const shifts = [
-    { id: 'morning', title: 'Morning Shift', time: '06:30 AM - 11:30 AM' },
-    { id: 'afternoon', title: 'Afternoon Shift', time: '12:00 PM - 04:30 PM' },
-  ];
+  const [currentStep, setCurrentStep] = useState<'SCHEDULED' | 'STARTED' | 'IN_PROGRESS' | 'COMPLETED'>('SCHEDULED');
 
   const handleStartTrip = () => {
-    Alert.alert('Trip Started 🚀', 'Live GPS Tracking & Parent notifications activated.', [
-      { text: 'OK', onPress: () => navigation.navigate('LiveTrip') }
-    ]);
+    setCurrentStep('STARTED');
+    Alert.alert(
+      'Trip Started 🚀',
+      'Live GPS Tracking activated. Lifecycle: STARTED',
+      [
+        { 
+          text: 'Proceed to Cockpit', 
+          onPress: () => {
+            setCurrentStep('IN_PROGRESS');
+            navigation.navigate('LiveTrip');
+          }
+        }
+      ]
+    );
   };
+
+  const steps = [
+    { key: 'SCHEDULED', label: '1. Scheduled' },
+    { key: 'STARTED', label: '2. Started' },
+    { key: 'IN_PROGRESS', label: '3. In Progress' },
+    { key: 'COMPLETED', label: '4. Completed' },
+  ];
 
   return (
     <View style={styles.container}>
@@ -32,113 +39,83 @@ export default function StartTripScreen({ navigation }: any) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Start Trip</Text>
+        <Text style={styles.headerTitle}>Today's Trip</Text>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* Vehicle Info Hero Banner */}
+        {/* Today's Trip Details Hero */}
         <LinearGradient
-          colors={['#1e3a8a', '#2563eb', '#1d4ed8']}
+          colors={['#0f172a', '#1e293b', '#334155']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.vehicleHeroCard}
         >
           <View style={styles.heroTopRow}>
             <View style={styles.vehicleTextCol}>
-              <Text style={styles.plateText}>UP32 AB 1234</Text>
-              <Text style={styles.busNameText}>Green Valley School Bus</Text>
+              <Text style={styles.plateText}>Bus: BUS-01</Text>
+              <Text style={styles.busNameText}>Route: Route 01</Text>
             </View>
 
             <View style={styles.busGraphicCircle}>
-              <Bus size={32} color="#f59e0b" fill="#fef08a" strokeWidth={1.8} />
+              <Bus size={28} color="#eab308" strokeWidth={2} />
             </View>
           </View>
 
           <View style={styles.heroDivider} />
 
-          <View style={styles.heroStatsRow}>
-            <View style={styles.heroStatCol}>
-              <Text style={styles.heroStatLabel}>Capacity</Text>
-              <Text style={styles.heroStatVal}>52 Seats</Text>
-            </View>
-
-            <View style={styles.heroStatCol}>
-              <Text style={styles.heroStatLabel}>Driver</Text>
-              <Text style={styles.heroStatVal}>Rajesh Kumar</Text>
-            </View>
-
-            <View style={styles.heroStatCol}>
-              <Text style={styles.heroStatLabel}>Status</Text>
-              <View style={styles.activeDotRow}>
-                <View style={styles.greenDot} />
-                <Text style={styles.activeStatusText}>Active</Text>
-              </View>
-            </View>
+          {/* Lifecycle Stepper Badge */}
+          <Text style={styles.stepperHeader}>TRIP LIFECYCLE PROGRESS</Text>
+          <View style={styles.lifecycleStepper}>
+            {steps.map((step) => {
+              const isActive = currentStep === step.key;
+              return (
+                <View key={step.key} style={[styles.stepItem, isActive && styles.stepItemActive]}>
+                  <Text style={[styles.stepLabel, isActive && styles.stepLabelActive]}>
+                    {step.label}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         </LinearGradient>
 
-        {/* Select Route Section */}
-        <Text style={styles.sectionTitle}>Select Route</Text>
-        <View style={styles.groupContainer}>
-          {routes.map((route) => {
-            const isSelected = selectedRoute === route.id;
-            return (
-              <TouchableOpacity
-                key={route.id}
-                style={[styles.selectableCard, isSelected && styles.cardSelected]}
-                onPress={() => setSelectedRoute(route.id)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.cardTextCol}>
-                  <Text style={styles.cardTitleText}>{route.title}</Text>
-                  <Text style={styles.cardSubText}>{route.sub}</Text>
-                  <Text style={styles.cardDetailsText}>{route.details}</Text>
-                </View>
+        {/* Student Attendance Roster Details Card */}
+        <Text style={styles.sectionTitle}>Attendance Roster Summary</Text>
+        <View style={styles.attendanceCard}>
+          <View style={styles.rosterRow}>
+            <View style={styles.rosterStatCol}>
+              <View style={[styles.rosterIconBg, { backgroundColor: '#eff6ff' }]}>
+                <Users size={20} color="#2563eb" />
+              </View>
+              <Text style={styles.rosterLabel}>Total Students</Text>
+              <Text style={[styles.rosterVal, { color: '#1e3a8a' }]}>42</Text>
+            </View>
 
-                {isSelected ? (
-                  <CheckCircle2 size={22} color="#2563eb" fill="#2563eb" />
-                ) : (
-                  <Circle size={22} color="#cbd5e1" />
-                )}
-              </TouchableOpacity>
-            );
-          })}
+            <View style={styles.rosterStatCol}>
+              <View style={[styles.rosterIconBg, { backgroundColor: '#f0fdf4' }]}>
+                <UserCheck size={20} color="#16a34a" />
+              </View>
+              <Text style={styles.rosterLabel}>Present Expected</Text>
+              <Text style={[styles.rosterVal, { color: '#14532d' }]}>39</Text>
+            </View>
+
+            <View style={styles.rosterStatCol}>
+              <View style={[styles.rosterIconBg, { backgroundColor: '#fef2f2' }]}>
+                <UserX size={20} color="#ef4444" />
+              </View>
+              <Text style={styles.rosterLabel}>Absent Today</Text>
+              <Text style={[styles.rosterVal, { color: '#7f1d1d' }]}>3</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Select Shift Section */}
-        <Text style={styles.sectionTitle}>Select Shift</Text>
-        <View style={styles.groupContainer}>
-          {shifts.map((shift) => {
-            const isSelected = selectedShift === shift.id;
-            return (
-              <TouchableOpacity
-                key={shift.id}
-                style={[styles.selectableCard, isSelected && styles.cardSelected]}
-                onPress={() => setSelectedShift(shift.id)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.cardTextCol}>
-                  <Text style={styles.cardTitleText}>{shift.title}</Text>
-                  <Text style={styles.cardSubText}>{shift.time}</Text>
-                </View>
-
-                {isSelected ? (
-                  <CheckCircle2 size={22} color="#2563eb" fill="#2563eb" />
-                ) : (
-                  <Circle size={22} color="#cbd5e1" />
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Note Banner */}
+        {/* Duty Info Banner */}
         <View style={styles.noteBanner}>
-          <Info size={18} color="#2563eb" />
+          <Info size={18} color="#4f46e5" />
           <Text style={styles.noteText}>
-            Please ensure all safety checklist items are checked before starting the trip.
+            Starting this trip notifies parents and begins Socket.IO GPS telemetry broadcasting for Bus-01.
           </Text>
         </View>
 
@@ -178,66 +155,104 @@ const styles = StyleSheet.create({
   vehicleHeroCard: {
     borderRadius: 22,
     padding: 20,
-    marginBottom: 20,
+    marginBottom: 24,
     elevation: 4,
-    shadowColor: '#1d4ed8',
+    shadowColor: '#0f172a',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
   },
   heroTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   vehicleTextCol: { flex: 1 },
   plateText: { fontSize: 20, fontWeight: '900', color: '#ffffff' },
-  busNameText: { fontSize: 12, color: '#bfdbfe', fontWeight: '600', marginTop: 2 },
-  busGraphicCircle: { width: 54, height: 54, borderRadius: 27, backgroundColor: 'rgba(255, 255, 255, 0.15)', alignItems: 'center', justifyContent: 'center' },
+  busNameText: { fontSize: 14, color: '#bfdbfe', fontWeight: '700', marginTop: 4 },
+  busGraphicCircle: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(255, 255, 255, 0.1)', alignItems: 'center', justifyContent: 'center' },
 
-  heroDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 14 },
-  heroStatsRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  heroStatCol: { flex: 1 },
-  heroStatLabel: { fontSize: 11, color: '#93c5fd', fontWeight: '600' },
-  heroStatVal: { fontSize: 13, color: '#ffffff', fontWeight: '900', marginTop: 2 },
-  activeDotRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  greenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22c55e' },
-  activeStatusText: { fontSize: 12, color: '#4ade80', fontWeight: '800' },
-
-  // Group Containers
-  sectionTitle: { fontSize: 15, fontWeight: '900', color: '#0f172a', marginBottom: 12 },
-  groupContainer: { gap: 10, marginBottom: 20 },
-  selectableCard: {
+  heroDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginVertical: 16 },
+  stepperHeader: { fontSize: 10, fontWeight: '900', color: '#94a3b8', letterSpacing: 1, marginBottom: 10 },
+  lifecycleStepper: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    flexWrap: 'wrap',
+    gap: 6,
   },
-  cardSelected: { borderColor: '#2563eb', backgroundColor: '#f0f7ff' },
-  cardTextCol: { flex: 1 },
-  cardTitleText: { fontSize: 14, fontWeight: '900', color: '#0f172a' },
-  cardSubText: { fontSize: 12, color: '#64748b', fontWeight: '500', marginTop: 2 },
-  cardDetailsText: { fontSize: 11, color: '#2563eb', fontWeight: '700', marginTop: 4 },
+  stepItem: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  stepItemActive: {
+    backgroundColor: '#22c55e',
+  },
+  stepLabel: {
+    fontSize: 10,
+    color: '#94a3b8',
+    fontWeight: '700',
+  },
+  stepLabelActive: {
+    color: '#ffffff',
+    fontWeight: '900',
+  },
+
+  // Attendance Card
+  sectionTitle: { fontSize: 15, fontWeight: '900', color: '#0f172a', marginBottom: 12 },
+  attendanceCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 22,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 20,
+  },
+  rosterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  rosterStatCol: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 4,
+  },
+  rosterIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  rosterLabel: {
+    fontSize: 10,
+    color: '#64748b',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  rosterVal: {
+    fontSize: 18,
+    fontWeight: '900',
+    marginTop: 4,
+  },
 
   // Note Banner
   noteBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#eff6ff',
-    borderRadius: 16,
+    backgroundColor: '#f5f3ff',
+    borderRadius: 18,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#ddd6fe',
     marginBottom: 24,
   },
-  noteText: { flex: 1, fontSize: 12, color: '#1d4ed8', fontWeight: '600', lineHeight: 17 },
+  noteText: { flex: 1, fontSize: 12, color: '#4f46e5', fontWeight: '600', lineHeight: 17 },
 
   // Start Trip Button
   startTripBtn: {
     backgroundColor: '#16a34a',
     borderRadius: 20,
-    paddingVertical: 15,
+    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -248,5 +263,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
   },
-  startTripBtnText: { fontSize: 16, fontWeight: '900', color: '#ffffff' },
+  startTripBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '900' },
 });

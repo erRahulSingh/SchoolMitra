@@ -10,6 +10,7 @@ import {
 import { Menu, Bell, Sparkles } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SidebarDrawer from './SidebarDrawer';
+import Logo from './Logo';
 
 interface HeaderProps {
   navigation: any;
@@ -62,7 +63,7 @@ export default function Header({ navigation, title, subtitle, currentRoute }: He
           </View>
         </View>
 
-        {/* RIGHT SECTION: NOTIFICATION & PROFILE ICONS SHIFTED TO RIGHT */}
+        {/* RIGHT SECTION: NOTIFICATION ICON */}
         <View style={styles.rightSection}>
           <TouchableOpacity
             style={styles.bellBtn}
@@ -70,14 +71,6 @@ export default function Header({ navigation, title, subtitle, currentRoute }: He
           >
             <Bell size={19} color="#0f172a" />
             <View style={styles.unreadDot} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.avatarCircle}
-            onPress={() => navigation.navigate('MyProfile')}
-          >
-            <Text style={styles.avatarText}>{initials}</Text>
-            <View style={styles.activeDot} />
           </TouchableOpacity>
         </View>
       </View>

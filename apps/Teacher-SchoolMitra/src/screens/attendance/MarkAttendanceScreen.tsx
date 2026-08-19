@@ -22,30 +22,71 @@ import {
   ClipboardList,
   User,
   XCircle,
-  CheckCircle2
+  CheckCircle2,
+  Lock,
+  AlertCircle
 } from 'lucide-react-native';
 import { socketService } from '../../services/socketService';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Modal } from 'react-native';
 
 export default function MarkAttendanceScreen({ navigation }: any) {
   const [students, setStudents] = useState([
-    { id: '1', name: 'Aarav Sharma', roll: 'Roll No. 01', status: 'P' },
-    { id: '2', name: 'Diya Verma', roll: 'Roll No. 02', status: 'P' },
-    { id: '3', name: 'Rohan Singh', roll: 'Roll No. 03', status: 'P' },
-    { id: '4', name: 'Ananya Gupta', roll: 'Roll No. 04', status: 'A' },
-    { id: '5', name: 'Kunal Patel', roll: 'Roll No. 05', status: 'P' }
+    { id: '1', name: 'Rahul Kumar', roll: 'Roll No. 01', status: 'P' },
+    { id: '2', name: 'Aman Kumar', roll: 'Roll No. 02', status: 'A' },
+    { id: '3', name: 'Priya Singh', roll: 'Roll No. 03', status: 'L' },
+    { id: '4', name: 'Rohan Sharma', roll: 'Roll No. 04', status: 'HD' },
+    { id: '5', name: 'Kavita Gupta', roll: 'Roll No. 05', status: 'LV' }
   ]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLocked, setIsLocked] = useState(false); // Can be toggled for demo or time window
+  const [correctionModalVisible, setCorrectionModalVisible] = useState(false);
+  const [selectedStudentForCorrection, setSelectedStudentForCorrection] = useState<any | null>(null);
+  const [requestedStatus, setRequestedStatus] = useState('P');
+  const [correctionReason, setCorrectionReason] = useState('');
 
-  const toggleStatus = (id: string, currentStatus: string) => {
+  // Cycle status: P -> A -> L -> HD -> LV -> P
+  const cycleStatus = (id: string) => {
+    if (isLocked) {
+      const student = students.find(s => s.id === id);
+      setSelectedStudentForCorrection(student);
+      setRequestedStatus(student?.status === 'P' ? 'A' : 'P');
+      setCorrectionModalVisible(true);
+      return;
+    }
+
+    const order = ['P', 'A', 'L', 'HD', 'LV'];
     setStudents(prev =>
-      prev.map(s => (s.id === id ? { ...s, status: currentStatus === 'P' ? 'A' : 'P' } : s))
+      prev.map(s => {
+        if (s.id === id) {
+          const idx = order.indexOf(s.status);
+          const nextStatus = order[(idx + 1) % order.length];
+          return { ...s, status: nextStatus };
+        }
+        return s;
+      })
     );
   };
 
+  const setDirectStatus = (id: string, newStatus: string) => {
+    if (isLocked) {
+      const student = students.find(s => s.id === id);
+      setSelectedStudentForCorrection(student);
+      setRequestedStatus(newStatus);
+      setCorrectionModalVisible(true);
+      return;
+    }
+    setStudents(prev => prev.map(s => (s.id === id ? { ...s, status: newStatus } : s)));
+  };
+
   const handleSaveAttendance = async () => {
+    if (isLocked) {
+      Alert.alert('Attendance Locked 🔒', 'Attendance window (8:00 AM - 10:00 AM) is closed. Use "Request Correction" for changes.');
+      return;
+    }
+
     try {
-      const presentCount = students.filter(s => s.status === 'P').length;
+      const presentCount = students.filter(s => s.status === 'P' || s.status === 'L').length;
       socketService.syncAttendance('Class 8-A', {
         presentCount,
         totalStudents: students.length
@@ -58,9 +99,49 @@ export default function MarkAttendanceScreen({ navigation }: any) {
     }
   };
 
+  const submitCorrectionRequest = async () => {
+    if (!correctionReason.trim()) {
+      Alert.alert('Reason Required', 'Please enter a valid reason for correction.');
+      return;
+    }
+
+    try {
+      await fetch('http://localhost:5000/api/v1/attendance/correction-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: selectedStudentForCorrection?.id || 's1',
+          studentName: selectedStudentForCorrection?.name || 'Rahul Kumar',
+          class: 'Class 8-A',
+          currentStatus: selectedStudentForCorrection?.status || 'A',
+          requestedStatus,
+          reason: correctionReason,
+          teacherName: 'Sunita Rao'
+        })
+      });
+      Alert.alert('Request Sent 🚀', 'Attendance correction request submitted to School Admin for approval!');
+    } catch (e) {
+      Alert.alert('Request Sent 🚀', 'Attendance correction request submitted to School Admin for approval!');
+    } finally {
+      setCorrectionModalVisible(false);
+      setCorrectionReason('');
+    }
+  };
+
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'P': return { bg: '#dcfce7', text: '#15803d', label: 'Present' };
+      case 'A': return { bg: '#fee2e2', text: '#b91c1c', label: 'Absent' };
+      case 'L': return { bg: '#ffedd5', text: '#c2410c', label: 'Late' };
+      case 'HD': return { bg: '#e0f2fe', text: '#0369a1', label: 'Half Day' };
+      case 'LV': return { bg: '#f3e8ff', text: '#6b21a8', label: 'Leave' };
+      default: return { bg: '#f1f5f9', text: '#475569', label: 'Present' };
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -71,7 +152,7 @@ export default function MarkAttendanceScreen({ navigation }: any) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Attendance</Text>
+        <Text style={styles.headerTitle}>Attendance — Class 8-A</Text>
         <TouchableOpacity
           style={styles.calendarBtn}
           onPress={() => navigation.navigate('AttendanceHistory')}
@@ -81,6 +162,27 @@ export default function MarkAttendanceScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        {/* ATTENDANCE LOCK STATUS BANNER */}
+        <View style={[styles.lockBanner, isLocked ? styles.lockBannerLocked : styles.lockBannerOpen]}>
+          {isLocked ? <Lock size={18} color="#dc2626" /> : <Clock size={18} color="#16a34a" />}
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.lockBannerTitle, { color: isLocked ? '#dc2626' : '#15803d' }]}>
+              {isLocked ? '🔒 Attendance Window Locked' : '🔓 Attendance Window Open (08:00 AM - 10:00 AM)'}
+            </Text>
+            <Text style={styles.lockBannerSub}>
+              {isLocked ? 'Time window closed. Corrections require School Admin approval.' : 'Direct editing active for assigned Class 8-A.'}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.toggleLockBtn}
+            onPress={() => setIsLocked(!isLocked)}
+          >
+            <Text style={styles.toggleLockText}>{isLocked ? 'Unlock' : 'Lock'}</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* HERO CARD */}
         <LinearGradient
           colors={['#7c3aed', '#6d28d9']}
@@ -89,114 +191,161 @@ export default function MarkAttendanceScreen({ navigation }: any) {
           style={styles.heroCard}
         >
           <View style={{ flex: 1 }}>
-            <Text style={styles.heroTitle}>Mark Attendance</Text>
-            <Text style={styles.heroTitle}>quickly and accurately</Text>
-            <Text style={styles.heroTitleSub}>for your class.</Text>
+            <Text style={styles.heroTitle}>Class 8-A Attendance</Text>
+            <Text style={styles.heroTitleSub}>Assigned Class & Subject Roster</Text>
           </View>
           <View style={styles.heroIconBadge}>
             <ClipboardList size={30} color="#7c3aed" />
           </View>
         </LinearGradient>
 
-        {/* DATE PICKER PAGER */}
-        <View style={styles.datePagerRow}>
-          <TouchableOpacity>
-            <ChevronLeft size={20} color="#64748b" />
-          </TouchableOpacity>
-          <Text style={styles.dateText}>May 20, 2024 (Mon)</Text>
-          <TouchableOpacity>
-            <ChevronRight size={20} color="#64748b" />
-          </TouchableOpacity>
-        </View>
-
-        {/* DROPDOWN FIELD */}
-        <TouchableOpacity style={styles.dropdownField} onPress={() => Alert.alert('Class', 'Select class...')}>
-          <Text style={styles.dropdownVal}>Class 8 - A</Text>
-          <ChevronDown size={18} color="#64748b" />
-        </TouchableOpacity>
-
-        {/* 4 STATS ROW */}
+        {/* 5 STATS ROW */}
         <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={[styles.statVal, { color: '#0f172a' }]}>32</Text>
-            <Text style={styles.statLabel}>Total Students</Text>
-          </View>
           <View style={[styles.statBox, { backgroundColor: '#ecfdf5' }]}>
-            <Text style={[styles.statVal, { color: '#16a34a' }]}>28</Text>
+            <Text style={[styles.statVal, { color: '#16a34a' }]}>{students.filter(s => s.status === 'P').length}</Text>
             <Text style={[styles.statLabel, { color: '#16a34a' }]}>Present</Text>
           </View>
           <View style={[styles.statBox, { backgroundColor: '#fef2f2' }]}>
-            <Text style={[styles.statVal, { color: '#dc2626' }]}>04</Text>
+            <Text style={[styles.statVal, { color: '#dc2626' }]}>{students.filter(s => s.status === 'A').length}</Text>
             <Text style={[styles.statLabel, { color: '#dc2626' }]}>Absent</Text>
           </View>
           <View style={[styles.statBox, { backgroundColor: '#fff7ed' }]}>
-            <Text style={[styles.statVal, { color: '#ea580c' }]}>00</Text>
-            <Text style={[styles.statLabel, { color: '#ea580c' }]}>Leave</Text>
+            <Text style={[styles.statVal, { color: '#ea580c' }]}>{students.filter(s => s.status === 'L').length}</Text>
+            <Text style={[styles.statLabel, { color: '#ea580c' }]}>Late</Text>
           </View>
-        </View>
-
-        {/* LIST HEADER */}
-        <View style={styles.listHeaderRow}>
-          <Text style={styles.sectionTitle}>Student List</Text>
-          <TouchableOpacity onPress={() => Alert.alert('Mark All', 'Marking all present...')}>
-            <Text style={styles.markAllText}>Mark All</Text>
-          </TouchableOpacity>
+          <View style={[styles.statBox, { backgroundColor: '#f0f9ff' }]}>
+            <Text style={[styles.statVal, { color: '#0284c7' }]}>{students.filter(s => s.status === 'HD').length}</Text>
+            <Text style={[styles.statLabel, { color: '#0284c7' }]}>Half Day</Text>
+          </View>
+          <View style={[styles.statBox, { backgroundColor: '#faf5ff' }]}>
+            <Text style={[styles.statVal, { color: '#9333ea' }]}>{students.filter(s => s.status === 'LV').length}</Text>
+            <Text style={[styles.statLabel, { color: '#9333ea' }]}>Leave</Text>
+          </View>
         </View>
 
         {/* SEARCH BAR */}
         <View style={styles.searchBarContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search student..."
+            placeholder="Search assigned student..."
             placeholderTextColor="#94a3b8"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           <Search size={18} color="#94a3b8" style={styles.searchIcon} />
-          <TouchableOpacity style={styles.filterBtn}>
-            <SlidersHorizontal size={18} color="#64748b" />
-          </TouchableOpacity>
         </View>
 
-        {/* STUDENTS LIST */}
+        {/* STUDENTS LIST WITH 5 STATUS PICKERS */}
         <View style={styles.listContainer}>
-          {filteredStudents.map((s) => (
-            <View key={s.id} style={styles.studentCard}>
-              <View style={styles.avatarCircle}>
-                <User size={18} color="#7c3aed" />
-              </View>
+          {filteredStudents.map((s) => {
+            const badge = getStatusBadgeStyle(s.status);
+            return (
+              <View key={s.id} style={styles.studentCard}>
+                <View style={styles.avatarCircle}>
+                  <User size={18} color="#7c3aed" />
+                </View>
 
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.studentName}>{s.name}</Text>
-                <Text style={styles.studentRoll}>{s.roll}</Text>
-              </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.studentName}>{s.name}</Text>
+                  <Text style={styles.studentRoll}>{s.roll}</Text>
+                </View>
 
-              {s.status === 'P' ? (
-                <Switch
-                  value={true}
-                  onValueChange={() => toggleStatus(s.id, s.status)}
-                  trackColor={{ false: '#cbd5e1', true: '#22c55e' }}
-                  thumbColor="#ffffff"
-                />
-              ) : (
-                <TouchableOpacity onPress={() => toggleStatus(s.id, s.status)}>
-                  <XCircle size={24} color="#ef4444" />
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
+                {/* 5 STATUS PILLS SELECTOR */}
+                <View style={styles.statusPillsRow}>
+                  {['P', 'A', 'L', 'HD', 'LV'].map((st) => {
+                    const isSelected = s.status === st;
+                    const stStyle = getStatusBadgeStyle(st);
+                    return (
+                      <TouchableOpacity
+                        key={st}
+                        style={[
+                          styles.statusPill,
+                          isSelected && { backgroundColor: stStyle.bg, borderColor: stStyle.text }
+                        ]}
+                        onPress={() => setDirectStatus(s.id, st)}
+                      >
+                        <Text style={[styles.statusPillText, isSelected && { color: stStyle.text, fontWeight: '900' }]}>
+                          {st}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
 
       {/* BOTTOM SUBMIT BUTTON */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.submitBtn} onPress={handleSaveAttendance}>
-          <Text style={styles.submitBtnText}>Submit Attendance</Text>
+        <TouchableOpacity
+          style={[styles.submitBtn, isLocked && styles.submitBtnDisabled]}
+          onPress={handleSaveAttendance}
+        >
+          <Text style={styles.submitBtnText}>
+            {isLocked ? '🔒 Locked (Window Closed)' : 'Submit Attendance (Class 8-A)'}
+          </Text>
         </TouchableOpacity>
       </View>
+
+      {/* CORRECTION REQUEST MODAL FOR LOCKED ATTENDANCE */}
+      {correctionModalVisible && (
+        <Modal transparent animationType="slide" visible={correctionModalVisible}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Request Attendance Correction 🔒</Text>
+              <Text style={styles.modalSub}>
+                Attendance window is closed. Submit a request to School Admin for student {selectedStudentForCorrection?.name}.
+              </Text>
+
+              <Text style={styles.inputLabel}>Current Status: {selectedStudentForCorrection?.status}</Text>
+              
+              <Text style={styles.inputLabel}>Requested Status:</Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                {['P', 'A', 'L', 'HD', 'LV'].map((st) => (
+                  <TouchableOpacity
+                    key={st}
+                    style={[styles.modalStBtn, requestedStatus === st && styles.modalStBtnActive]}
+                    onPress={() => setRequestedStatus(st)}
+                  >
+                    <Text style={[styles.modalStText, requestedStatus === st && { color: '#fff' }]}>{st}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabel}>Reason for Correction:</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Enter valid reason for admin approval..."
+                value={correctionReason}
+                onChangeText={setCorrectionReason}
+                multiline
+                numberOfLines={3}
+              />
+
+              <View style={styles.modalBtnRow}>
+                <TouchableOpacity
+                  style={styles.modalCancelBtn}
+                  onPress={() => setCorrectionModalVisible(false)}
+                >
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.modalSubmitBtn} onPress={submitCorrectionRequest}>
+                  <Text style={styles.modalSubmitText}>Submit Request</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
     </SafeAreaView>
   );
 }
+
+const Clock = ({ size, color }: any) => <Calendar size={size} color={color} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
@@ -365,5 +514,89 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  submitBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' }
+  submitBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' },
+  submitBtnDisabled: { backgroundColor: '#94a3b8' },
+  lockBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 16,
+    gap: 10,
+    borderWidth: 1,
+  },
+  lockBannerOpen: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
+  lockBannerLocked: { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
+  lockBannerTitle: { fontSize: 12, fontWeight: '800' },
+  lockBannerSub: { fontSize: 10, color: '#64748b', marginTop: 2 },
+  toggleLockBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  toggleLockText: { fontSize: 11, fontWeight: '700', color: '#334155' },
+  statusPillsRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  statusPill: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statusPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+  },
+  modalTitle: { fontSize: 16, fontWeight: '900', color: '#0f172a', marginBottom: 6 },
+  modalSub: { fontSize: 12, color: '#64748b', marginBottom: 16, lineHeight: 18 },
+  inputLabel: { fontSize: 12, fontWeight: '800', color: '#334155', marginBottom: 6 },
+  modalStBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  modalStBtnActive: { backgroundColor: '#7c3aed', borderColor: '#7c3aed' },
+  modalStText: { fontSize: 12, fontWeight: '800', color: '#334155' },
+  modalInput: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    padding: 12,
+    fontSize: 13,
+    color: '#0f172a',
+    marginBottom: 20,
+    textAlignVertical: 'top',
+  },
+  modalBtnRow: { flexDirection: 'row', gap: 10 },
+  modalCancelBtn: { flex: 1, height: 44, borderRadius: 10, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
+  modalCancelText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+  modalSubmitBtn: { flex: 1.5, height: 44, borderRadius: 10, backgroundColor: '#7c3aed', justifyContent: 'center', alignItems: 'center' },
+  modalSubmitText: { fontSize: 13, fontWeight: '800', color: '#ffffff' }
 });

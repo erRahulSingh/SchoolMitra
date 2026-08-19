@@ -372,7 +372,7 @@ export default function NotificationsPage() {
                 {deliveryChannels.includes("push") && (
                   <div className="glass-card" style={{ padding: "0.6rem", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(17, 24, 39, 0.9)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-                      <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justify: "center", fontSize: "0.55rem", fontWeight: "bold", color: "#fff" }}>SM</div>
+                      <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.55rem", fontWeight: "bold", color: "#fff" }}>SM</div>
                       <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#fff" }}>Push Notification</span>
                       <span style={{ fontSize: "0.55rem", color: "var(--text-muted)", marginLeft: "auto" }}>now</span>
                     </div>
@@ -462,7 +462,7 @@ export default function NotificationsPage() {
           <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-heading)", margin: "0 0 1rem 0" }}>Pending Scheduled Broadcasts Queue</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
             {scheduledQueue.map((s) => (
-              <div key={s.id} className="glass-card" style={{ padding: "1.15rem", border: "1px solid var(--border-color)", background: "rgba(255,255,255,0.01)", display: "flex", flexDirection: "column", justify: "space-between" }}>
+              <div key={s.id} className="glass-card" style={{ padding: "1.15rem", border: "1px solid var(--border-color)", background: "rgba(255,255,255,0.01)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span className="badge badge-warning" style={{ fontSize: "0.65rem" }}>Pending Schedule</span>

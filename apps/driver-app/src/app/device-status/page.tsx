@@ -35,7 +35,7 @@ function StatusRow({ icon: Icon, label, value, color = "#16a34a", bg = "#dcfce7"
       background: "#ffffff"
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-        <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justify: "center", color: "#2563eb", flexShrink: 0 }}>
+        <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb", flexShrink: 0 }}>
           <Icon size={16} strokeWidth={2.5} />
         </div>
         <span style={{ fontSize: "0.88rem", color: "#1e293b", fontWeight: 800 }}>{label}</span>

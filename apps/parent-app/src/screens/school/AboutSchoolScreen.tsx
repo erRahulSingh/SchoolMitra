@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Linking } from 'react-native';
 import { ChevronLeft, Building, Phone, Mail, MapPin, Globe, Share2, MessageCircle, Youtube, Instagram, Facebook, Twitter, Linkedin } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import ParentAppLogo from '../../components/ParentAppLogo';
 
 export default function AboutSchoolScreen({ navigation }: any) {
   const socialLinks = [
@@ -44,6 +45,7 @@ export default function AboutSchoolScreen({ navigation }: any) {
             Green Valley Public School is a CBSE-affiliated institution dedicated to providing quality education since 1995. We focus on holistic development of students through academics, sports, and cultural activities.
           </Text>
         </View>
+
 
         {/* Quick Stats Grid */}
         <View style={styles.statsRow}>
@@ -118,6 +120,15 @@ export default function AboutSchoolScreen({ navigation }: any) {
           </View>
         </View>
 
+        {/* Powered By SchoolMitra Card */}
+        <View style={styles.poweredCard}>
+          <ParentAppLogo size={42} showBorder={false} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.poweredTitle}>Powered by SchoolMitra</Text>
+            <Text style={styles.poweredSub}>Smart ERP & Parent Communication System</Text>
+          </View>
+        </View>
+
       </ScrollView>
     </View>
   );
@@ -173,4 +184,28 @@ const styles = StyleSheet.create({
   socialTextCol: { flex: 1 },
   socialNameText: { fontSize: 13, fontWeight: '900', color: '#0f172a' },
   socialHandleText: { fontSize: 11, color: '#64748b', fontWeight: '600', marginTop: 1 },
+
+  poweredCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 16,
+    gap: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginTop: 8,
+  },
+  poweredTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#0f172a',
+  },
+  poweredSub: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '600',
+    marginTop: 2,
+  },
 });
+

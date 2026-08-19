@@ -38,7 +38,8 @@ export default function Footer() {
       position: "relative",
       overflow: "hidden",
       borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-      fontFamily: "'Plus Jakarta Sans', sans-serif"
+      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      WebkitFontSmoothing: "antialiased"
     }}>
       {/* Background Ambient Glow Accents */}
       <div style={{
@@ -62,46 +63,46 @@ export default function Footer() {
         zIndex: 0
       }}></div>
 
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "80px 5% 40px 5%", position: "relative", zIndex: 1 }}>
+      <div style={{ maxWidth: "1240px", margin: "0 auto", padding: "60px 5% 30px 5%", position: "relative", zIndex: 1 }}>
 
         {/* ════════════ TOP NEWSLETTER SUBSCRIBER BANNER ════════════ */}
         <div className="footer-newsletter-banner" style={{
           background: "linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)",
-          borderRadius: "24px",
-          padding: "2.8rem 3rem",
+          borderRadius: "18px",
+          padding: "2rem 2.2rem",
           border: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: "0 20px 45px rgba(0, 0, 0, 0.3)",
+          boxShadow: "0 15px 35px rgba(0, 0, 0, 0.25)",
           display: "grid",
           gridTemplateColumns: "1.2fr 1fr",
-          gap: "2.5rem",
+          gap: "2rem",
           alignItems: "center",
-          marginBottom: "4rem"
+          marginBottom: "3rem"
         }}>
           <div>
             <span style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.4rem",
-              padding: "0.35rem 0.85rem",
+              gap: "0.3rem",
+              padding: "0.25rem 0.65rem",
               borderRadius: "99px",
               background: "rgba(99, 102, 241, 0.15)",
               color: "#818cf8",
-              fontSize: "0.78rem",
-              fontWeight: 800,
-              marginBottom: "0.8rem",
+              fontSize: "0.72rem",
+              fontWeight: 600,
+              marginBottom: "0.5rem",
               border: "1px solid rgba(99, 102, 241, 0.3)"
             }}>
               ✨ Stay Ahead in EdTech
             </span>
-            <h3 style={{ fontSize: "1.65rem", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.02em", marginBottom: "0.5rem" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 600, color: "#ffffff", letterSpacing: "-0.015em", marginBottom: "0.3rem" }}>
               Subscribe to School Management Insights
             </h3>
-            <p style={{ fontSize: "0.92rem", color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>
-              Get monthly updates on CBSE/ICSE compliance, school administration best practices, and new product features.
+            <p style={{ fontSize: "0.82rem", color: "#94a3b8", lineHeight: 1.5, margin: 0, fontWeight: 400 }}>
+              Get monthly updates on CBSE/ICSE compliance, administration best practices, and new product releases.
             </p>
           </div>
 
-          <form onSubmit={handleSubscribe} style={{ display: "flex", gap: "0.6rem" }}>
+          <form onSubmit={handleSubscribe} style={{ display: "flex", gap: "0.5rem" }}>
             <div style={{ flex: 1, position: "relative" }}>
               <input
                 type="email"
@@ -111,12 +112,12 @@ export default function Footer() {
                 onChange={(e) => setEmail(e.target.value)}
                 style={{
                   width: "100%",
-                  padding: "0.85rem 1.1rem",
-                  borderRadius: "12px",
+                  padding: "0.65rem 0.9rem",
+                  borderRadius: "10px",
                   background: "#0f172a",
                   border: "1px solid rgba(255, 255, 255, 0.15)",
                   color: "#ffffff",
-                  fontSize: "0.9rem",
+                  fontSize: "0.82rem",
                   outline: "none"
                 }}
               />
@@ -124,22 +125,22 @@ export default function Footer() {
             <button
               type="submit"
               style={{
-                padding: "0.85rem 1.5rem",
-                borderRadius: "12px",
+                padding: "0.65rem 1.25rem",
+                borderRadius: "10px",
                 background: "linear-gradient(135deg, #4338ca 0%, #3b82f6 100%)",
                 color: "#ffffff",
                 border: "none",
-                fontWeight: 800,
-                fontSize: "0.9rem",
+                fontWeight: 600,
+                fontSize: "0.82rem",
                 cursor: "pointer",
-                boxShadow: "0 8px 20px rgba(67, 56, 202, 0.35)",
+                boxShadow: "0 6px 16px rgba(67, 56, 202, 0.3)",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.4rem",
+                gap: "0.35rem",
                 whiteSpace: "nowrap"
               }}
             >
-              {subscribed ? <CheckCircle2 size={18} color="#4ade80" /> : <Send size={16} />}
+              {subscribed ? <CheckCircle2 size={15} color="#4ade80" /> : <Send size={14} />}
               <span>{subscribed ? "Subscribed!" : "Subscribe"}</span>
             </button>
           </form>
@@ -149,49 +150,49 @@ export default function Footer() {
         <div className="footer-nav-grid" style={{
           display: "grid",
           gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr",
-          gap: "3.5rem",
-          marginBottom: "4rem"
+          gap: "2.8rem",
+          marginBottom: "3rem"
         }}>
           {/* Column 1: Brand & Mission */}
           <div>
-            <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "1.2rem" }}>
+            <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.55rem", marginBottom: "0.95rem" }}>
               <img
                 src="/images/resources/logo.png"
                 alt="SchoolMitra Logo"
-                style={{ height: "62px", width: "auto", objectFit: "contain", borderRadius: "8px" }}
+                style={{ height: "48px", width: "auto", objectFit: "contain", borderRadius: "6px" }}
               />
             </Link>
 
-            <p style={{ fontSize: "0.92rem", color: "#94a3b8", lineHeight: 1.65, marginBottom: "1.8rem", maxWidth: "320px" }}>
-              Empowering 500+ K-12 institutions across India with automated ERP administration, real-time GPS bus tracking, and 1-click parent engagement.
+            <p style={{ fontSize: "0.82rem", color: "#94a3b8", lineHeight: 1.55, marginBottom: "1.2rem", maxWidth: "290px", fontWeight: 400 }}>
+              Empowering 500+ K-12 institutions across India with automated ERP administration, real-time GPS bus tracking, and parent engagement.
             </p>
 
             {/* Live Operational Status Indicator */}
             <div style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.55rem",
-              padding: "0.4rem 0.85rem",
+              gap: "0.45rem",
+              padding: "0.28rem 0.7rem",
               borderRadius: "99px",
               background: "rgba(16, 185, 129, 0.1)",
               border: "1px solid rgba(16, 185, 129, 0.25)",
               color: "#34d399",
-              fontSize: "0.78rem",
-              fontWeight: 700,
-              marginBottom: "1.8rem"
+              fontSize: "0.72rem",
+              fontWeight: 500,
+              marginBottom: "1.3rem"
             }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 10px #10b981" }}></span>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }}></span>
               All Systems Operational • 99.99% Uptime
             </div>
 
-            {/* Social Media Links Squircles */}
-            <div style={{ display: "flex", gap: "0.6rem" }}>
+            {/* Social Media Links */}
+            <div style={{ display: "flex", gap: "0.45rem" }}>
               {[
-                { icon: <Facebook size={16} />, href: "#", name: "Facebook" },
-                { icon: <Twitter size={16} />, href: "#", name: "Twitter" },
-                { icon: <Linkedin size={16} />, href: "#", name: "LinkedIn" },
-                { icon: <Youtube size={16} />, href: "#", name: "YouTube" },
-                { icon: <Instagram size={16} />, href: "#", name: "Instagram" }
+                { icon: <Facebook size={14} />, href: "#", name: "Facebook" },
+                { icon: <Twitter size={14} />, href: "#", name: "Twitter" },
+                { icon: <Linkedin size={14} />, href: "#", name: "LinkedIn" },
+                { icon: <Youtube size={14} />, href: "#", name: "YouTube" },
+                { icon: <Instagram size={14} />, href: "#", name: "Instagram" }
               ].map((soc, idx) => (
                 <a
                   key={idx}
@@ -199,9 +200,9 @@ export default function Footer() {
                   aria-label={soc.name}
                   className={`footer-social-icon social-${soc.name.toLowerCase()}`}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
                     background: "rgba(255, 255, 255, 0.05)",
                     border: "1px solid rgba(255, 255, 255, 0.1)",
                     display: "flex",
@@ -209,7 +210,7 @@ export default function Footer() {
                     justifyContent: "center",
                     color: "#94a3b8",
                     textDecoration: "none",
-                    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+                    transition: "all 0.2s ease"
                   }}
                 >
                   {soc.icon}
@@ -220,61 +221,61 @@ export default function Footer() {
 
           {/* Column 2: Platform Features */}
           <div>
-            <h4 style={{ fontSize: "1rem", fontWeight: 800, color: "#ffffff", marginBottom: "1.4rem", letterSpacing: "-0.01em" }}>
+            <h4 style={{ fontSize: "0.88rem", fontWeight: 600, color: "#ffffff", marginBottom: "1rem", letterSpacing: "-0.01em" }}>
               Platform Features
             </h4>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "0.9rem" }}>
-              <li><Link href="/school-erp" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>School ERP Admin</Link></li>
-              <li><Link href="/transport" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>GPS Bus Tracking</Link></li>
-              <li><Link href="/parent-app" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Parent Mobile App</Link></li>
-              <li><Link href="/features#fees" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Fee Gateway &amp; UPI</Link></li>
-              <li><Link href="/features#exams" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Report Cards &amp; Marks</Link></li>
-              <li><Link href="/features#attendance" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Digital Attendance &amp; SMS</Link></li>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.65rem", fontSize: "0.8rem" }}>
+              <li><Link href="/school-erp" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>School ERP Admin</Link></li>
+              <li><Link href="/transport" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>GPS Bus Tracking</Link></li>
+              <li><Link href="/parent-app" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>Parent Mobile App</Link></li>
+              <li><Link href="/features#fees" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>Fee Gateway &amp; UPI</Link></li>
+              <li><Link href="/features#exams" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>Report Cards &amp; Marks</Link></li>
+              <li><Link href="/features#attendance" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>Digital Attendance &amp; SMS</Link></li>
             </ul>
           </div>
 
-          {/* Column 3: Solutions & Stakeholders */}
+          {/* Column 3: Solutions & Company */}
           <div>
-            <h4 style={{ fontSize: "1rem", fontWeight: 800, color: "#ffffff", marginBottom: "1.4rem", letterSpacing: "-0.01em" }}>
-              Solutions
+            <h4 style={{ fontSize: "0.88rem", fontWeight: 600, color: "#ffffff", marginBottom: "1rem", letterSpacing: "-0.01em" }}>
+              Solutions &amp; Company
             </h4>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "0.9rem" }}>
-              <li><Link href="/pricing" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>For School Principals</Link></li>
-              <li><Link href="/features" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>For Teachers &amp; Educators</Link></li>
-              <li><Link href="/parent-app" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>For Parents &amp; Guardians</Link></li>
-              <li><Link href="/transport" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>For Transport Managers</Link></li>
-              <li><Link href="/resources" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Resources &amp; Guides</Link></li>
-              <li><Link href="/pricing" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none" }}>Pricing Plans</Link></li>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.65rem", fontSize: "0.8rem" }}>
+              <li><Link href="/about" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>About SchoolMitra</Link></li>
+              <li><Link href="/solutions" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>Stakeholder Solutions</Link></li>
+              <li><Link href="/pricing" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>Pricing Plans</Link></li>
+              <li><Link href="/resources" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>Resources &amp; SOPs</Link></li>
+              <li><Link href="/terms" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>Terms &amp; Conditions</Link></li>
+              <li><Link href="/privacy" className="footer-link-hover" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 400 }}>Privacy Policy</Link></li>
             </ul>
           </div>
 
           {/* Column 4: Contact & Office Support */}
           <div>
-            <h4 style={{ fontSize: "1rem", fontWeight: 800, color: "#ffffff", marginBottom: "1.4rem", letterSpacing: "-0.01em" }}>
+            <h4 style={{ fontSize: "0.88rem", fontWeight: 600, color: "#ffffff", marginBottom: "1rem", letterSpacing: "-0.01em" }}>
               Contact &amp; Support
             </h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.9rem", color: "#94a3b8" }}>
-              <div className="footer-contact-item" style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
-                <Phone size={18} color="#3b82f6" className="footer-contact-icon" style={{ marginTop: "2px", flexShrink: 0 }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.8rem", color: "#94a3b8" }}>
+              <div className="footer-contact-item" style={{ display: "flex", alignItems: "flex-start", gap: "0.55rem" }}>
+                <Phone size={15} color="#3b82f6" className="footer-contact-icon" style={{ marginTop: "2px", flexShrink: 0 }} />
                 <div>
-                  <div style={{ color: "#ffffff", fontWeight: 700 }}>+91 98765 43210</div>
-                  <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Mon-Sat (9:00 AM - 7:00 PM IST)</div>
+                  <div style={{ color: "#ffffff", fontWeight: 500, fontSize: "0.8rem" }}>+91 91234 56789</div>
+                  <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Mon-Sat (9:00 AM - 7:00 PM IST)</div>
                 </div>
               </div>
 
-              <div className="footer-contact-item" style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
-                <Mail size={18} color="#3b82f6" className="footer-contact-icon" style={{ marginTop: "2px", flexShrink: 0 }} />
+              <div className="footer-contact-item" style={{ display: "flex", alignItems: "flex-start", gap: "0.55rem" }}>
+                <Mail size={15} color="#3b82f6" className="footer-contact-icon" style={{ marginTop: "2px", flexShrink: 0 }} />
                 <div>
-                  <div style={{ color: "#ffffff", fontWeight: 700 }}>support@schoolmitra.com</div>
-                  <div style={{ fontSize: "0.78rem", color: "#64748b" }}>24-hour response guarantee</div>
+                  <div style={{ color: "#ffffff", fontWeight: 500, fontSize: "0.8rem" }}>support@schoolmitra.com</div>
+                  <div style={{ fontSize: "0.72rem", color: "#64748b" }}>2-4 hour response guarantee</div>
                 </div>
               </div>
 
-              <div className="footer-contact-item" style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
-                <MapPin size={18} color="#3b82f6" className="footer-contact-icon" style={{ marginTop: "2px", flexShrink: 0 }} />
+              <div className="footer-contact-item" style={{ display: "flex", alignItems: "flex-start", gap: "0.55rem" }}>
+                <MapPin size={15} color="#3b82f6" className="footer-contact-icon" style={{ marginTop: "2px", flexShrink: 0 }} />
                 <div>
-                  <div style={{ color: "#ffffff", fontWeight: 700 }}>SchoolMitra EdTech HQ</div>
-                  <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Cyber City, Sector 24, Gurugram, India</div>
+                  <div style={{ color: "#ffffff", fontWeight: 500, fontSize: "0.8rem" }}>Corporate HQ (Noida)</div>
+                  <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Tech Park, Sector 62, Noida, UP</div>
                 </div>
               </div>
             </div>
@@ -284,28 +285,28 @@ export default function Footer() {
         {/* ════════════ BOTTOM COPYRIGHT BAR ════════════ */}
         <div style={{
           borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-          paddingTop: "2rem",
+          paddingTop: "1.4rem",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: "1.2rem",
-          fontSize: "0.85rem",
+          gap: "0.85rem",
+          fontSize: "0.76rem",
           color: "#64748b"
         }}>
           <div>
             © {new Date().getFullYear()} SchoolMitra Technologies Pvt. Ltd. All rights reserved.
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#94a3b8", fontSize: "0.82rem" }}>
-            <ShieldCheck size={16} color="#34d399" />
+          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#94a3b8", fontSize: "0.76rem" }}>
+            <ShieldCheck size={14} color="#34d399" />
             <span>ISO 27001 Certified • 256-Bit SSL Encrypted</span>
           </div>
 
-          <div style={{ display: "flex", gap: "1.5rem" }}>
-            <Link href="/privacy" style={{ color: "#94a3b8", textDecoration: "none" }}>Privacy Policy</Link>
-            <Link href="/terms" style={{ color: "#94a3b8", textDecoration: "none" }}>Terms of Service</Link>
-            <Link href="/contact" style={{ color: "#94a3b8", textDecoration: "none" }}>Contact</Link>
+          <div style={{ display: "flex", gap: "1.2rem" }}>
+            <Link href="/privacy" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 500 }}>Privacy Policy</Link>
+            <Link href="/terms" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 500 }}>Terms &amp; Conditions</Link>
+            <Link href="/contact" style={{ color: "#94a3b8", textDecoration: "none", fontWeight: 500 }}>Contact</Link>
           </div>
         </div>
 

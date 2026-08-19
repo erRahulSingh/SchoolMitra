@@ -14,6 +14,8 @@ import DrawerContent from './src/components/DrawerContent';
 // Auth Screens
 import Splash from './src/screens/auth/Splash';
 import Login from './src/screens/auth/Login';
+import SignUp from './src/screens/auth/SignUp';
+import ForgotPassword from './src/screens/auth/ForgotPassword';
 
 // Main Dashboard & Navigation Screens
 import MainDashboard from './src/screens/dashboard/MainDashboard';
@@ -64,50 +66,38 @@ function BottomTabNavigator({ openDrawer }: { openDrawer: () => void }) {
     <Tab.Navigator
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        headerStyle: { 
-          backgroundColor: colors.headerBg,
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 0.5,
-          borderBottomColor: colors.border,
-        },
-        headerTintColor: colors.text,
-        headerTitleStyle: { fontWeight: 'bold', fontSize: 16 },
-        headerLeft: () => (
-          <TouchableOpacity 
-            onPress={openDrawer} 
-            style={{ marginLeft: 16, padding: 4 }}
-            activeOpacity={0.7}
-          >
-            <Menu size={22} color={colors.text} />
-          </TouchableOpacity>
-        ),
+        headerShown: false,
       }}
     >
       <Tab.Screen 
         name="Dashboard" 
         component={MainDashboard} 
         options={{ title: 'Driver Cockpit' }}
+        initialParams={{ openDrawer }}
       />
       <Tab.Screen 
         name="Route" 
         component={RouteScreen} 
         options={{ title: 'Route Map' }}
+        initialParams={{ openDrawer }}
       />
       <Tab.Screen 
         name="Sos" 
         component={SosScreen} 
         options={{ title: 'Emergency SOS' }}
+        initialParams={{ openDrawer }}
       />
       <Tab.Screen 
         name="StudentPickup" 
         component={StudentPickupScreen} 
         options={{ title: 'Pickup Roster' }}
+        initialParams={{ openDrawer }}
       />
       <Tab.Screen 
         name="DriverProfile" 
         component={DriverProfileScreen} 
         options={{ title: 'My Profile' }}
+        initialParams={{ openDrawer }}
       />
     </Tab.Navigator>
   );
@@ -213,21 +203,15 @@ function AppNavigator() {
           <Stack.Navigator
             initialRouteName="Splash"
             screenOptions={{
-              headerStyle: { 
-                backgroundColor: colors.headerBg,
-                elevation: 0,
-                shadowOpacity: 0,
-                borderBottomWidth: 0.5,
-                borderBottomColor: colors.border,
-              },
-              headerTintColor: colors.text,
-              headerTitleStyle: { fontWeight: 'bold', fontSize: 16 },
+              headerShown: false,
               cardStyle: { backgroundColor: colors.background },
             }}
           >
             {/* Auth Flow */}
             <Stack.Screen name="Splash" component={Splash} options={{ headerShown: false }} />
             <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
+            <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{ headerShown: false }} />
 
             {/* Main App Tabs */}
             <Stack.Screen name="MainApp" options={{ headerShown: false }}>
@@ -281,10 +265,14 @@ function AppNavigator() {
   );
 }
 
+import { LanguageProvider } from './src/context/LanguageContext';
+
 export default function App() {
   return (
     <ThemeProvider>
-      <AppNavigator />
+      <LanguageProvider>
+        <AppNavigator />
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { Globe, Moon, Sun, Check, ChevronRight, Bell, BellOff } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../context/ThemeContext';
-
-type LanguageCode = 'en' | 'hi' | 'mr' | 'ta' | 'te' | 'bn';
+import { useLanguage, LanguageCode } from '../../context/LanguageContext';
 
 interface Language {
   code: LanguageCode;
@@ -17,43 +15,22 @@ interface Language {
 const languages: Language[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧', available: true },
   { code: 'hi', name: 'Hindi', nativeName: 'हिंदी', flag: '🇮🇳', available: true },
-  { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳', available: false },
-  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳', available: false },
-  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳', available: false },
-  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇮🇳', available: false },
+  { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳', available: true },
+  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳', available: true },
+  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳', available: true },
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇮🇳', available: true },
 ];
 
 export default function ProfileSettingsScreen() {
   const { colors, isDark, toggleTheme } = useTheme();
-  const [selectedLang, setSelectedLang] = useState<LanguageCode>('en');
+  const { language, setLanguage, t } = useLanguage();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  const loadLanguage = async () => {
-    try {
-      const saved = await AsyncStorage.getItem('driverAppLanguage');
-      if (saved) setSelectedLang(saved as LanguageCode);
-    } catch (e) {}
-  };
-
   const selectLanguage = async (lang: Language) => {
-    if (!lang.available) {
-      Alert.alert(
-        'Coming Soon! 🚧',
-        `${lang.name} (${lang.nativeName}) support will be available in the next update.`
-      );
-      return;
-    }
-    setSelectedLang(lang.code);
-    try {
-      await AsyncStorage.setItem('driverAppLanguage', lang.code);
-    } catch (e) {}
+    await setLanguage(lang.code);
     Alert.alert(
-      'Language Updated ✅',
+      t.languageUpdated || 'Language Updated ✅',
       `App language changed to ${lang.name} (${lang.nativeName})`
     );
   };
@@ -67,15 +44,15 @@ export default function ProfileSettingsScreen() {
       {/* Language Section */}
       <View style={styles.sectionHeader}>
         <Globe size={20} color={colors.accent} />
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>App Language / भाषा</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.selectAppLanguage || 'App Language'}</Text>
       </View>
       <Text style={[styles.sectionSub, { color: colors.textMuted }]}>
-        Select your preferred language for the app interface
+        {t.selectLanguage || 'Select your preferred language for the app interface'}
       </Text>
 
       <View style={styles.langGrid}>
         {languages.map((lang) => {
-          const isSelected = selectedLang === lang.code;
+          const isSelected = language === lang.code;
           return (
             <TouchableOpacity
               key={lang.code}

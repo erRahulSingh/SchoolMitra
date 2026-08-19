@@ -7,6 +7,7 @@ import { Request, Response } from "express";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { notifyParent } from "../../services/pushNotificationService";
+import { sendClassesNotification } from "../../services/notificationService";
 import { ExamModel } from "../../models/AcademicSchemas";
 import mongoose from "mongoose";
 
@@ -243,21 +244,18 @@ export const publishAdminExam = asyncHandler(async (req: Request, res: Response)
   exam.status = "PUBLISHED";
   await exam.save();
 
-  try {
-    notifyParent(
-      "ExponentPushToken[SampleParentToken]",
-      "EXAM_SCHEDULED",
+  if (exam.classes && exam.classes.length > 0) {
+    sendClassesNotification(
+      schoolId,
+      (req as any).user?.id || (req as any).user?._id,
+      exam.classes,
+      "EXAM",
       "New Exam Scheduled 📅",
       `New Exam announced: "${exam.examName}" (${exam.examType}). Starts on ${new Date(exam.startDate).toDateString()}.`,
-      { examId: String(exam._id) }
+      "exams",
+      exam._id
     );
-  } catch (e) {}
-
-  emitParentSyncEvent("PARENT_EXAM_SCHEDULED", {
-    title: "New Exam Scheduled 📅",
-    message: `Exam "${exam.examName}" has been published by Admin.`,
-    examId: String(exam._id)
-  });
+  }
 
   return ApiResponse.success(res, 200, "Exam published successfully by Admin!", {
     examId: String(exam._id),
