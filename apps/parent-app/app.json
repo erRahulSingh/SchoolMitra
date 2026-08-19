@@ -4,14 +4,39 @@
     "slug": "schoolmitra-parent",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "schoolmitraparent",
     "entryPoint": "./index.js",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/parent_app_logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e1b4b"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.schoolmitra.parent"
+      "bundleIdentifier": "com.schoolmitra.parent",
+      "icon": "./assets/icon.png"
     },
     "android": {
-      "package": "com.schoolmitra.parent"
+      "package": "com.schoolmitra.parent",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e1b4b"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ea867b43-9c80-412b-9c84-5fe04755f945"
+      }
     }
   }
 }

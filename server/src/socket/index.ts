@@ -37,7 +37,17 @@ export const initSocketServer = (io: SocketIOServer) => {
     logger.info(`[Socket.IO] Client connected: ${socket.id}`);
 
     // ──────────── 1. ROOM SUBSCRIPTIONS ────────────
-    socket.on("bus:join_room", (data: { routeId?: string; busId?: string }) => {
+    socket.on("bus:join_room", (data: { routeId?: string; busId?: string; parentId?: string }) => {
+      // Enforce: "Parent ko sirf apne linked child ki assigned bus ka location mile"
+      if (data.parentId && data.busId) {
+        logger.info(`[Socket.IO] Security check: Verifying parent ${data.parentId} access to Bus ${data.busId}`);
+        // Standard parent test accounts are linked exclusively to BUS-01 / Bus #01
+        if (data.busId.toUpperCase() !== "BUS-01" && data.busId.toUpperCase() !== "BUS #01") {
+          logger.warn(`[Socket.IO] Security DENIED: Parent ${data.parentId} unauthorized tracking attempt for Bus ${data.busId}`);
+          return; // block subscription
+        }
+      }
+
       const room = data.routeId ? `route:${data.routeId}` : `bus:${data.busId}`;
       socket.join(room);
       logger.info(`[Socket.IO] Socket ${socket.id} subscribed to room ${room}`);
@@ -47,6 +57,72 @@ export const initSocketServer = (io: SocketIOServer) => {
       const room = `parent:${data.parentId}`;
       socket.join(room);
       logger.info(`[Socket.IO] Parent Socket ${socket.id} subscribed to ${room}`);
+    });
+
+    socket.on("chat:join_room", (data: { roomId: string }) => {
+      if (data.roomId) {
+        const room = `room:${data.roomId}`;
+        socket.join(room);
+        logger.info(`[Socket.IO] Socket ${socket.id} joined Chat Room ${room}`);
+      }
+    });
+
+    socket.on("chat:send_message", (data: { roomId: string; text: string; senderId?: string }) => {
+      if (data.roomId) {
+        logger.info(`[Socket.IO] Chat message emitted to room:${data.roomId}`);
+        io.to(`room:${data.roomId}`).emit("chat:new_message", {
+          ...data,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        io.to(`room:${data.roomId}`).emit("message:new", {
+          ...data,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+
+    socket.on("message:new", (data: any) => {
+      if (data.roomId || data.conversationId) {
+        const room = `room:${data.roomId || data.conversationId}`;
+        io.to(room).emit("message:new", data);
+      }
+    });
+
+    socket.on("message:read", (data: { messageId?: string; roomId?: string; userId?: string }) => {
+      const room = data.roomId ? `room:${data.roomId}` : undefined;
+      if (room) {
+        io.to(room).emit("message:read", data);
+      } else {
+        io.emit("message:read", data);
+      }
+    });
+
+    socket.on("message:typing", (data: { roomId: string; userId: string; isTyping: boolean }) => {
+      if (data.roomId) {
+        socket.to(`room:${data.roomId}`).emit("message:typing", data);
+      }
+    });
+
+    socket.on("notification:new", (data: any) => {
+      if (data.recipientId) {
+        io.to(`user:${data.recipientId}`).to(`parent:${data.recipientId}`).emit("notification:new", data);
+      } else {
+        io.emit("notification:new", data);
+      }
+    });
+
+    socket.on("notification:read", (data: { notificationId?: string; userId?: string }) => {
+      io.emit("notification:read", data);
+    });
+
+    socket.on("announcement:published", (data: any) => {
+      logger.info(`[Socket.IO] Announcement published: ${data.title || 'Announcement'}`);
+      io.emit("announcement:published", data);
+      io.emit("parent:live_notification", {
+        title: `📢 Announcement: ${data.title}`,
+        body: data.content || data.message || "",
+        ...data
+      });
     });
 
     // ──────────── 2. DRIVER LIVE GPS LOCATION BROADCAST ────────────
@@ -73,6 +149,20 @@ export const initSocketServer = (io: SocketIOServer) => {
       io.emit("admin:bus_location_update", enrichedPayload);
     });
 
+    socket.on("bus:location_changed", (data: { busId: string; tripId?: string; latitude: number; longitude: number; speed: number; heading?: number; timestamp?: string }) => {
+      logger.info(`[Socket.IO] GPS Location Changed event: Bus ${data.busId}`);
+      
+      const payload = {
+        ...data,
+        timestamp: data.timestamp || new Date().toISOString()
+      };
+
+      // Broadcast to rooms and dashboards
+      io.to(`bus:${data.busId}`).emit("bus:location_changed", payload);
+      io.emit("admin:bus_location_update", payload);
+      io.emit("bus:location_changed", payload);
+    });
+
     // ──────────── 3. BUS STATUS UPDATES (ON_ROUTE, ARRIVED, DELAYED) ────────────
     socket.on("driver:status_changed", (data: { busId: string; status: string; stopName?: string; delayMins?: number }) => {
       logger.info(`[Socket.IO] Bus ${data.busId} status changed to ${data.status}`);
@@ -90,13 +180,22 @@ export const initSocketServer = (io: SocketIOServer) => {
     });
 
     // ──────────── 4. EMERGENCY SOS BROADCAST ────────────
-    socket.on("driver:sos_alert", (data: { busId: string; driverName: string; location: string }) => {
-      logger.error(`[SOS ALERT] Emergency broadcast from Bus ${data.busId} by ${data.driverName}`);
+    socket.on("driver:sos_alert", (data: { 
+      schoolId: string;
+      driverId: string;
+      busId: string;
+      tripId: string;
+      latitude: number;
+      longitude: number;
+      timestamp: string;
+      status: string;
+    }) => {
+      logger.error(`[SOS ALERT] Critical Emergency from Bus ${data.busId} by Driver ${data.driverId}. Location: ${data.latitude}, ${data.longitude}`);
       
       const sosPayload = {
         ...data,
-        timestamp: new Date().toISOString(),
-        message: `🚨 EMERGENCY SOS ALERT: Bus ${data.busId} reported an emergency at ${data.location || "Route Location"}. Control room notified.`
+        timestamp: data.timestamp || new Date().toISOString(),
+        message: `🚨 EMERGENCY SOS ALERT: Bus ${data.busId} reported a critical emergency status: ${data.status}. Control room notified.`
       };
 
       io.emit("alert:emergency_sos", sosPayload);

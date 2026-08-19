@@ -11,7 +11,8 @@
       "bundleIdentifier": "com.schoolmitra.driver"
     },
     "android": {
-      "package": "com.schoolmitra.driver"
+      "package": "com.schoolmitra.driver",
+      "usesCleartextTraffic": true
     }
   }
 }

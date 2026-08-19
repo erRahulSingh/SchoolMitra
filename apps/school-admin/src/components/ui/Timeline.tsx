@@ -41,7 +41,7 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
               border: "1.5px solid var(--primary)",
               display: "flex",
               alignItems: "center",
-              justify: "center",
+              justifyContent: "center",
               flexShrink: 0,
               zIndex: 2
             }}
@@ -50,7 +50,7 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
           </div>
 
           <div style={{ flex: 1, paddingTop: 2 }}>
-            <div style={{ display: "flex", justify: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontWeight: 750, fontSize: "0.875rem", color: "var(--text-heading)" }}>{item.title}</span>
               <span style={{ fontSize: "0.72rem", color: "var(--text-dim)" }}>{item.timestamp}</span>
             </div>

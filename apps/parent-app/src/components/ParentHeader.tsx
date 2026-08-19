@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, StatusBar } from 'react-native';
-import { Menu, Bell, Shield } from 'lucide-react-native';
+import { Menu, Bell } from 'lucide-react-native';
 import { useParentDrawer } from '../context/ParentDrawerContext';
+import ParentAppLogo from './ParentAppLogo';
 
 interface ParentHeaderProps {
   onMenuPress?: () => void;
@@ -30,10 +31,10 @@ export default function ParentHeader({ onMenuPress, onBellPress, unreadCount = 3
       {/* SchoolMitra Brand Logo Center */}
       <View style={styles.logoCenter}>
         <View style={styles.logoBadge}>
-          <Shield size={18} color="#2563eb" fill="#38bdf8" />
+          <ParentAppLogo size={28} showBorder={false} />
           <View style={styles.brandTextRow}>
             <Text style={styles.brandName}>School<Text style={styles.brandAccent}>Mitra</Text></Text>
-            <Text style={styles.brandTagline}>Manage. Connect. Empower.</Text>
+            <Text style={styles.brandTagline}>Parent Portal</Text>
           </View>
         </View>
       </View>

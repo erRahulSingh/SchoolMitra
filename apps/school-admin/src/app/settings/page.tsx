@@ -1394,7 +1394,7 @@ export default function SettingsPage() {
             </div>
             
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div style={{ display: "flex", justify: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 700 }}>CURRENT PLAN</span>
                   <div style={{ fontSize: "1.35rem", fontWeight: 850, color: "var(--text-heading)" }}>{subscription.plan}</div>
@@ -1426,7 +1426,7 @@ export default function SettingsPage() {
               {[
                 { id: "INV-2026-01", date: "15 Jan 2026", amount: "₹ 5,40,000", status: "PAID" }
               ].map(inv => (
-                <div key={inv.id} style={{ padding: "0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, display: "flex", justify: "space-between", alignItems: "center" }}>
+                <div key={inv.id} style={{ padding: "0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <div style={{ fontWeight: 700, color: "var(--text-heading)" }}>{inv.id}</div>
                     <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>{inv.date} &bull; {inv.amount}</div>

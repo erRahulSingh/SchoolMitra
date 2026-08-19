@@ -7,6 +7,8 @@ import {
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import ParentAppLogo from './ParentAppLogo';
+
 interface DrawerProps {
   navigation: any;
 }
@@ -88,6 +90,15 @@ export default function ParentDrawerContent({ navigation }: DrawerProps) {
           <X size={20} color="#ffffff" />
         </TouchableOpacity>
 
+        {/* Top App Brand Identity */}
+        <View style={styles.brandRow}>
+          <ParentAppLogo size={36} showBorder={false} />
+          <View>
+            <Text style={styles.brandTitle}>School<Text style={styles.brandHighlight}>Mitra</Text></Text>
+            <Text style={styles.brandSubtitle}>Parent Companion</Text>
+          </View>
+        </View>
+
         <View style={styles.avatarRow}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{parent.initials}</Text>
@@ -141,6 +152,12 @@ export default function ParentDrawerContent({ navigation }: DrawerProps) {
           <LogOut size={18} color="#ef4444" />
           <Text style={styles.logoutText}>Logout Account</Text>
         </TouchableOpacity>
+
+        {/* App Version & Logo Footer */}
+        <View style={styles.drawerFooter}>
+          <ParentAppLogo size={24} showBorder={false} />
+          <Text style={styles.footerAppText}>SchoolMitra Parent Portal • v1.0.0</Text>
+        </View>
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -262,6 +279,42 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1e293b',
   },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 18,
+    paddingRight: 36,
+  },
+  brandTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: -0.3,
+  },
+  brandHighlight: {
+    color: '#38bdf8',
+  },
+  brandSubtitle: {
+    fontSize: 10.5,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '600',
+  },
+  drawerFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  footerAppText: {
+    fontSize: 11,
+    color: '#94a3b8',
+    fontWeight: '600',
+  },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -278,3 +331,4 @@ const styles = StyleSheet.create({
     color: '#ef4444',
   },
 });
+

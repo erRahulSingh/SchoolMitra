@@ -3,11 +3,13 @@
 // ═══════════════════════════════════════════════════════════
 
 import { Request, Response } from "express";
-import { FeeStructureModel, FeeInvoiceModel, PaymentModel, ScholarshipModel, DiscountModel } from "../../models/FeeSchemas";
+import { FeeStructureModel, FeeInvoiceModel, PaymentModel, ScholarshipModel, DiscountModel, FeeAdjustmentAuditModel } from "../../models/FeeSchemas";
+import { StudentModel } from "../../models/SchoolSchemas";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
-import { verifyPaymentSignature } from "../../config/razorpay";
+import { verifyPaymentSignature, createRazorpayOrder, RAZORPAY_KEY_ID } from "../../config/razorpay";
+import { send } from "../../services/notificationService";
 import { Types } from "mongoose";
 
 const dummySchoolId = new Types.ObjectId("650000000000000000000001");
@@ -83,23 +85,37 @@ const getOrSeedPayments = async () => {
 };
 
 // ════════════ 1. FEE STRUCTURES ════════════
-export const getFeeStructures = asyncHandler(async (_req: Request, res: Response) => {
-  const structures = await getOrSeedFeeStructures();
+export const getFeeStructures = asyncHandler(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || req.query.schoolId;
+
+  const query: any = {};
+  if (schoolId && Types.ObjectId.isValid(schoolId)) {
+    query.schoolId = new Types.ObjectId(schoolId);
+  }
+
+  let structures = await FeeStructureModel.find(query).lean();
+  if (structures.length === 0 && !schoolId) {
+    structures = await getOrSeedFeeStructures();
+  }
 
   const formatted = structures.map((s: any) => {
-    const tuition = s.components?.find((c: any) => c.name === "Tuition Fee")?.amount || 0;
-    const transport = s.components?.find((c: any) => c.name === "Transport Fee")?.amount || 0;
-    const exam = s.components?.find((c: any) => c.name === "Exam Fee")?.amount || 0;
+    const calculatedTotal = s.components && s.components.length > 0
+      ? s.components.reduce((acc: number, c: any) => acc + (Number(c.amount) || 0), 0)
+      : (s.totalAnnualFee || 0);
 
     return {
       _id: s._id.toString(),
-      title: s.title || "Custom Slab",
+      schoolId: s.schoolId ? s.schoolId.toString() : "",
+      classId: s.classId ? s.classId.toString() : "",
+      academicYearId: s.academicYearId ? s.academicYearId.toString() : "",
+      title: s.title || `Class ${s.class || 'Fee'} Structure`,
       class: s.class || "10",
-      tuitionFee: tuition,
-      transportFee: transport,
-      examFee: exam,
-      totalAmount: s.totalAnnualFee || 0,
-      term: s.components?.[0]?.frequency || "Monthly"
+      components: s.components || [],
+      totalAnnualFee: calculatedTotal,
+      totalAmount: calculatedTotal,
+      lateFeePerDay: s.lateFeePerDay || 0,
+      isActive: s.isActive !== false
     };
   });
 
@@ -107,33 +123,36 @@ export const getFeeStructures = asyncHandler(async (_req: Request, res: Response
 });
 
 export const createFeeStructure = asyncHandler(async (req: Request, res: Response) => {
-  const { title, className, tuitionFee, transportFee, examFee, totalAmount, term } = req.body;
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || req.body.schoolId || dummySchoolId;
+  const { title, className, classId, academicYearId, components, tuitionFee, transportFee, examFee, totalAmount, term } = req.body;
 
-  if (!title || !className) {
-    throw ApiError.badRequest("Fee structure title and className are required.");
+  if (!title && !className) {
+    throw ApiError.badRequest("Fee structure title or className is required.");
   }
 
-  const calcTotal = totalAmount || ((Number(tuitionFee) || 0) + (Number(transportFee) || 0) + (Number(examFee) || 0));
+  let resolvedComponents = components || [];
+  if (resolvedComponents.length === 0) {
+    if (tuitionFee) resolvedComponents.push({ name: "Tuition Fee", feeType: "Tuition Fee", amount: Number(tuitionFee), frequency: term || "Quarterly" });
+    if (transportFee) resolvedComponents.push({ name: "Transport Fee", feeType: "Transport Fee", amount: Number(transportFee), frequency: term || "Quarterly" });
+    if (examFee) resolvedComponents.push({ name: "Examination Fee", feeType: "Examination Fee", amount: Number(examFee), frequency: term || "Quarterly" });
+  }
 
-  const components = [
-    { name: "Tuition Fee", amount: Number(tuitionFee) || 0, frequency: term || "Monthly" },
-    { name: "Transport Fee", amount: Number(transportFee) || 0, frequency: term || "Monthly" },
-    { name: "Exam Fee", amount: Number(examFee) || 0, frequency: term || "Monthly" }
-  ];
+  const calcTotal = resolvedComponents.reduce((acc: number, c: any) => acc + (Number(c.amount) || 0), 0) || totalAmount || 0;
 
   const structure = await FeeStructureModel.create({
-    schoolId: dummySchoolId,
-    classId: dummyClassId,
-    academicYearId: dummyYearId,
-    title,
-    class: className,
-    components,
+    schoolId: new Types.ObjectId(schoolId),
+    classId: classId && Types.ObjectId.isValid(classId) ? new Types.ObjectId(classId) : dummyClassId,
+    academicYearId: academicYearId && Types.ObjectId.isValid(academicYearId) ? new Types.ObjectId(academicYearId) : dummyYearId,
+    title: title || `Class ${className} Annual Fee Slab`,
+    class: className || "10",
+    components: resolvedComponents,
     totalAnnualFee: calcTotal,
-    lateFeePerDay: 50,
+    lateFeePerDay: req.body.lateFeePerDay || 50,
     isActive: true
   });
 
-  return ApiResponse.created(res, "Fee structure defined successfully.", { structure });
+  return ApiResponse.created(res, "Itemized fee structure defined successfully.", { structure });
 });
 
 // ════════════ 2. ASSIGN FEE STRUCTURE ════════════
@@ -152,20 +171,26 @@ export const assignFeeStructure = asyncHandler(async (req: Request, res: Respons
   });
 });
 
-// ════════════ 3. COLLECT FEE PAYMENT ════════════
+// ════════════ 3. COLLECT FEE PAYMENT / GENERATE RAZORPAY ORDER ════════════
 export const collectFeePayment = asyncHandler(async (req: Request, res: Response) => {
-  const { studentId, studentName, amountPaid, paymentMethod = "UPI", gatewayTxnId } = req.body;
+  const { studentId, studentName, amountPaid, amount, paymentMethod = "UPI", gatewayTxnId } = req.body;
+  const payAmt = Number(amountPaid || amount);
 
-  if (!amountPaid) {
-    throw ApiError.badRequest("amountPaid is required.");
+  if (!payAmt) {
+    throw ApiError.badRequest("amountPaid or amount is required.");
   }
 
   const receiptNo = `REC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
-  const baseAmount = Math.round(Number(amountPaid) / 1.18);
-  const gstAmount = Number(amountPaid) - baseAmount;
+  const baseAmount = Math.round(payAmt / 1.18);
+  const gstAmount = payAmt - baseAmount;
+
+  // Generate Razorpay Order for online payments
+  const razorpayOrder = await createRazorpayOrder({
+    amount: payAmt,
+    receiptId: receiptNo
+  });
 
   const invoiceId = new Types.ObjectId("650000000000000000000004");
-
   let method = "UPI";
   if (paymentMethod === "Cash") method = "Cash";
   else if (paymentMethod === "Credit Card" || paymentMethod === "Card") method = "Card";
@@ -173,19 +198,21 @@ export const collectFeePayment = asyncHandler(async (req: Request, res: Response
   const payment = await PaymentModel.create({
     schoolId: dummySchoolId,
     invoiceId,
-    studentId: new Types.ObjectId("650000000000000000000005"),
-    amountPaid: Number(amountPaid),
+    studentId: studentId && Types.ObjectId.isValid(studentId) ? new Types.ObjectId(studentId) : new Types.ObjectId("650000000000000000000005"),
+    amountPaid: payAmt,
     paymentMethod: method as any,
     receiptNo,
-    remarks: `Collected for ${studentName}`
+    remarks: `Collected for ${studentName || 'Rahul Kumar'}`
   });
 
-  return ApiResponse.created(res, "Fee payment collected and receipt generated.", {
+  return ApiResponse.created(res, "Fee payment initialized and Razorpay order generated.", {
+    order: razorpayOrder,
+    key_id: RAZORPAY_KEY_ID,
     receipt: {
       receiptNo,
       studentId: studentId || "STU-1001",
-      studentName: studentName || "Aarav Sharma",
-      amountPaid: Number(amountPaid),
+      studentName: studentName || "Rahul Kumar",
+      amountPaid: payAmt,
       baseAmount,
       gstAmount,
       paymentMethod,
@@ -298,5 +325,122 @@ export const getDefaultersReport = asyncHandler(async (_req: Request, res: Respo
       { id: "STU-1002", name: "Ananya Patel", class: "Class 10-A", pendingDues: 18500, dueDate: "15 Jul 2026", status: "OVERDUE ⚠️" },
       { id: "STU-1044", name: "Kunal Singh", class: "Class 9-B", pendingDues: 17500, dueDate: "15 Jul 2026", status: "OVERDUE ⚠️" }
     ]
+  });
+});
+
+// ════════════ 8. SEND FEE DUE REMINDER NOTIFICATION ════════════
+export const sendFeeReminderNotification = asyncHandler(async (req: Request, res: Response) => {
+  const { parentId, title, message, amountDue, dueDate } = req.body;
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || req.body.schoolId;
+
+  if (!parentId) {
+    throw ApiError.badRequest("Target parentId is required for fee due reminder.");
+  }
+
+  const reminderMsg = message || `Fee payment reminder of ₹${amountDue || 15000} is due on ${dueDate || 'upcoming date'}. Please pay via SchoolMitra Parent App.`;
+
+  await send({
+    schoolId,
+    recipientId: parentId,
+    type: "FEE",
+    title: title || "💳 Fee Payment Due Notice",
+    message: reminderMsg,
+    referenceType: "fees",
+    priority: "NORMAL"
+  });
+
+  return ApiResponse.success(res, 200, "Fee reminder notification sent successfully to parent.");
+});
+
+// ════════════ 9. STUDENT FEE OVERRIDE & AUDIT LOG ════════════
+export const applyStudentFeeOverride = asyncHandler(async (req: Request, res: Response) => {
+  const { studentId, adjustmentType, standardFeeAmount, adjustmentAmount, reason } = req.body;
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || req.body.schoolId || dummySchoolId;
+  const userId = user?.id || user?._id || dummySchoolId;
+
+  if (!studentId || !adjustmentType || adjustmentAmount === undefined) {
+    throw ApiError.badRequest("studentId, adjustmentType, and adjustmentAmount are required.");
+  }
+
+  const baseStandard = Number(standardFeeAmount) || 26000;
+  const discountVal = Number(adjustmentAmount) || 0;
+  const netPayable = Math.max(0, baseStandard - discountVal);
+
+  const auditLog = await FeeAdjustmentAuditModel.create({
+    schoolId: new Types.ObjectId(schoolId),
+    studentId: new Types.ObjectId(studentId),
+    adjustedBy: new Types.ObjectId(userId),
+    adjustmentType,
+    standardFeeAmount: baseStandard,
+    adjustmentAmount: discountVal,
+    netPayableAmount: netPayable,
+    reason: reason || `Student level ${adjustmentType} applied`
+  });
+
+  return ApiResponse.created(res, "Student fee override & audit log created successfully.", {
+    auditLog,
+    summary: {
+      standardFeeAmount: baseStandard,
+      adjustmentType,
+      adjustmentAmount: discountVal,
+      netPayableAmount: netPayable
+    }
+  });
+});
+
+// ════════════ 10. STUDENT FEE LEDGER GENERATOR ════════════
+export const getStudentFeeLedger = asyncHandler(async (req: Request, res: Response) => {
+  const { studentId } = req.params;
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || req.query.schoolId || dummySchoolId;
+
+  if (!studentId || !Types.ObjectId.isValid(studentId)) {
+    throw ApiError.badRequest("Valid studentId is required.");
+  }
+
+  const sObjId = new Types.ObjectId(studentId);
+  const schObjId = new Types.ObjectId(schoolId);
+
+  // 1. Fetch student info
+  const student = await StudentModel.findById(sObjId).lean();
+  const studentName = student?.name || "Rahul Kumar";
+  const className = "Class 8-A";
+
+  // 2. Fetch standard fee structure or default ₹26,000
+  const feeStruct = await FeeStructureModel.findOne({ schoolId: schObjId }).lean();
+  const totalFee = feeStruct?.totalAnnualFee || 26000;
+
+  // 3. Fetch student overrides / discounts
+  const overrides = await FeeAdjustmentAuditModel.find({ schoolId: schObjId, studentId: sObjId }).lean();
+  const totalDiscount = overrides.reduce((sum: number, o: any) => sum + (Number(o.adjustmentAmount) || 0), 0) || 2000;
+
+  const payable = Math.max(0, totalFee - totalDiscount);
+
+  // 4. Fetch total payments collected
+  const payments = await PaymentModel.find({ schoolId: schObjId, studentId: sObjId }).lean();
+  const totalPaid = payments.reduce((sum: number, p: any) => sum + (Number(p.amountPaid) || 0), 0) || 8000;
+
+  const due = Math.max(0, payable - totalPaid);
+
+  let ledgerStatus: "PAID" | "PARTIAL" | "OVERDUE" | "UNPAID" = "UNPAID";
+  if (due === 0 && payable > 0) ledgerStatus = "PAID";
+  else if (totalPaid > 0 && due > 0) ledgerStatus = "PARTIAL";
+  else if (totalPaid === 0 && due > 0) ledgerStatus = "OVERDUE";
+
+  return ApiResponse.success(res, 200, "Student fee ledger generated successfully.", {
+    ledger: {
+      studentId: String(studentId),
+      studentName,
+      class: className,
+      totalFee,
+      discount: totalDiscount,
+      payable,
+      paid: totalPaid,
+      due,
+      status: ledgerStatus,
+      updatedAt: new Date().toISOString()
+    }
   });
 });

@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   header: {
     flexDirection: 'row',
-    justify: 'space-between',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: '#f1f5f9',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center'
   },
   headerTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   settingRow: {
     flexDirection: 'row',
-    justify: 'space-between',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   settingSub: { fontSize: 11, color: '#64748b', marginTop: 2 },
   logoutBtn: {
     flexDirection: 'row',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
     backgroundColor: '#fef2f2',

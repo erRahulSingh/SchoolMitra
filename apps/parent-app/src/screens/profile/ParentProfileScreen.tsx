@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Alert } from 'react-native';
 import { 
-  User, Lock, Bell, Link, HelpCircle, Info, LogOut, ChevronRight, Shield 
+  User, Lock, Bell, Link, HelpCircle, Info, LogOut, ChevronRight, Shield, Award
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -37,6 +37,7 @@ export default function ParentProfileScreen({ navigation }: any) {
 
   const accountMenu = [
     { title: 'Personal Information', icon: User, screen: 'ChildProfile' },
+    { title: 'Documents & Certificates', icon: Award, screen: 'ParentDocumentsCertificates' },
     { title: 'Change Password', icon: Lock, screen: 'PrivacySecurity' },
     { title: 'Notification Settings', icon: Bell, screen: 'NotificationSettings' },
     { title: 'Linked Accounts', icon: Link, screen: 'PrivacySecurity' },

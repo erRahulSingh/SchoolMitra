@@ -131,7 +131,7 @@ export function DataGrid<T extends { id: string | number }>({
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       
       {/* Top Search & Actions Bar */}
-      <div style={{ display: "flex", justify: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
         <div style={{ position: "relative", minWidth: 280, flex: 1, maxWidth: 420 }}>
           <Search size={16} color="var(--text-muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
           <input
@@ -284,7 +284,7 @@ export function DataGrid<T extends { id: string | number }>({
       </div>
 
       {/* Pagination Footer */}
-      <div style={{ display: "flex", justify: "space-between", alignItems: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>
         <div>
           Showing {sortedData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, sortedData.length)} of {sortedData.length} records
         </div>

@@ -41,7 +41,7 @@ interface ClaimRecord {
 }
 
 export default function HrPage() {
-  const [activeTab, setActiveTab] = useState<"payroll" | "leaves" | "pf_compliance" | "claims">("payroll");
+  const [activeTab, setActiveTab] = useState<"payroll" | "leaves" | "pf_compliance" | "claims" | "documents">("payroll");
   const [selectedStaffPayslip, setSelectedStaffPayslip] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("All");
@@ -53,6 +53,36 @@ export default function HrPage() {
   const [staffPayroll, setStaffPayroll] = useState<PayrollRecord[]>([]);
   const [leaveBalances, setLeaveBalances] = useState<LeaveRecord[]>([]);
   const [claims, setClaims] = useState<ClaimRecord[]>([]);
+
+  // Teacher Documents Vault State
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("t1");
+  const [teacherDocs, setTeacherDocs] = useState<any[]>([]);
+  const [isTeacherDocModalOpen, setIsTeacherDocModalOpen] = useState(false);
+  const [editingTeacherDocId, setEditingTeacherDocId] = useState<string | null>(null);
+  const [teacherDocForm, setTeacherDocForm] = useState({
+    title: "",
+    category: "Qualification Certificate",
+    fileUrl: "",
+    notes: ""
+  });
+
+  const fetchTeacherDocs = async (tId: string) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/v1/documents/teachers/${tId}`);
+      const json = await res.json();
+      if (json.success) {
+        setTeacherDocs(json.documents);
+      }
+    } catch (e) {
+      console.error("Teacher docs fetch error:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "documents") {
+      fetchTeacherDocs(selectedTeacherId);
+    }
+  }, [activeTab, selectedTeacherId]);
 
   // Add / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,11 +98,35 @@ export default function HrPage() {
     pf: 5400
   });
 
+  // Expiring Documents Alert State
+  const [expiringDocsAlert, setExpiringDocsAlert] = useState<{
+    totalExpiringSoon: number;
+    alertTitle: string;
+    alertDescription: string;
+    documents: any[];
+  }>({
+    totalExpiringSoon: 5,
+    alertTitle: "⚠ Documents Expiring Soon",
+    alertDescription: "5 documents expire within 30 days",
+    documents: []
+  });
+
+  const fetchExpiringDocsAlerts = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/v1/documents/expiring");
+      const json = await res.json();
+      if (json.success && json.summary) {
+        setExpiringDocsAlert(json.summary);
+      }
+    } catch (e) {}
+  };
+
   // Fetch all data from Backend DB
   const fetchAllHrData = async () => {
     setLoading(true);
     setError(null);
     try {
+      fetchExpiringDocsAlerts();
       // 1. Fetch Payroll
       const payrollRes = await fetch("http://localhost:5000/api/v1/hr/payroll");
       const payrollJson = await payrollRes.json();
@@ -306,7 +360,8 @@ export default function HrPage() {
           { id: "payroll", label: "Payroll & Salary Slips", icon: DollarSign },
           { id: "leaves", label: "Leave Balance Ledgers", icon: Calendar },
           { id: "pf_compliance", label: "PF & ESI Compliance", icon: Shield },
-          { id: "claims", label: "Expense Claims & Reimbursements", icon: Receipt }
+          { id: "claims", label: "Expense Claims & Reimbursements", icon: Receipt },
+          { id: "documents", label: "Teacher Documents Vault", icon: FileText }
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -796,6 +851,263 @@ export default function HrPage() {
               </button>
             </div>
           </div>
+      {/* MODULE 5: TEACHER & STAFF DOCUMENTS VAULT */}
+      {activeTab === "documents" && (
+        <div className="glass-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          
+          {/* EXPIRING DOCUMENTS ALERT BANNER */}
+          <div style={{
+            padding: "1rem 1.25rem",
+            background: "rgba(245, 158, 11, 0.12)",
+            border: "1px solid rgba(245, 158, 11, 0.35)",
+            borderRadius: "12px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "1rem"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+              <div style={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(245, 158, 11, 0.2)", display: "flex", justifyContent: "center", alignItems: "center", color: "#f59e0b", fontSize: "1.25rem", fontWeight: 900 }}>
+                ⚠
+              </div>
+              <div>
+                <h4 style={{ fontSize: "1.05rem", fontWeight: 800, color: "#f59e0b" }}>
+                  {expiringDocsAlert.alertTitle}
+                </h4>
+                <div style={{ fontSize: "0.82rem", color: "#e2e8f0", marginTop: 2 }}>
+                  {expiringDocsAlert.alertDescription} (e.g. Teacher Driving License, Qualification Accreditation, Fitness Cert)
+                </div>
+              </div>
+            </div>
+
+            <span className="badge badge-warning" style={{ padding: "0.4rem 0.8rem", fontSize: "0.78rem" }}>
+              ACTION REQUIRED: 5 DOCS
+            </span>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
+            <div>
+              <h4 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff" }}>Teacher &amp; Staff Compliance Documents Vault</h4>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: 2 }}>
+                Admin control for Photo, ID Proof, Qualification, Experience &amp; Joining Certificates
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+              <select
+                value={selectedTeacherId}
+                onChange={(e) => setSelectedTeacherId(e.target.value)}
+                style={{
+                  padding: "0.55rem 0.85rem",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: 8,
+                  color: "#fff",
+                  fontSize: "0.82rem",
+                  outline: "none"
+                }}
+              >
+                {staffPayroll.length > 0 ? (
+                  staffPayroll.map(s => <option key={s.id} value={s.id} style={{ background: "#0b0f19" }}>{s.name} ({s.id})</option>)
+                ) : (
+                  <option value="t1" style={{ background: "#0b0f19" }}>Sunita Rao (Faculty)</option>
+                )}
+              </select>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingTeacherDocId(null);
+                  setTeacherDocForm({ title: "", category: "Qualification Certificate", fileUrl: "", notes: "" });
+                  setIsTeacherDocModalOpen(true);
+                }}
+                className="btn btn-primary"
+                style={{ padding: "0.5rem 0.95rem", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
+              >
+                <Plus size={15} /> Upload Staff Document
+              </button>
+            </div>
+          </div>
+
+          {/* Document Categories Checklist Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            {[
+              "Photo",
+              "ID Proof",
+              "Qualification Certificate",
+              "Experience Certificate",
+              "Joining Document",
+              "Other"
+            ].map((catName) => {
+              const existingDocs = teacherDocs.filter(d => d.category === catName);
+              const hasDoc = existingDocs.length > 0;
+              return (
+                <div
+                  key={catName}
+                  style={{
+                    padding: "1.1rem",
+                    background: hasDoc ? "rgba(16, 185, 129, 0.04)" : "rgba(255,255,255,0.02)",
+                    borderRadius: "12px",
+                    border: hasDoc ? "1px solid rgba(16, 185, 129, 0.25)" : "1px solid var(--border-color)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.65rem"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <FileText size={16} color={hasDoc ? "#10b981" : "#64748b"} />
+                      <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff" }}>{catName}</span>
+                    </div>
+                    <span className={`badge ${hasDoc ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.68rem" }}>
+                      {hasDoc ? "VERIFIED & ON FILE" : "PENDING SUBMISSION"}
+                    </span>
+                  </div>
+
+                  {hasDoc ? (
+                    existingDocs.map((docItem) => (
+                      <div key={docItem._id || docItem.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(0,0,0,0.25)", padding: "0.6rem 0.85rem", borderRadius: "8px", marginTop: 4 }}>
+                        <div>
+                          <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#e2e8f0" }}>{docItem.title}</div>
+                          <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>{docItem.fileSize || "1.5 MB"} • {docItem.documentType || "PDF"}</div>
+                        </div>
+                        <div style={{ display: "flex", gap: "0.45rem" }}>
+                          <a
+                            href={docItem.fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn btn-secondary"
+                            style={{ padding: "0.3rem 0.6rem", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                          >
+                            <Download size={12} /> View
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingTeacherDocId(docItem._id || docItem.id);
+                              setTeacherDocForm({ title: docItem.title, category: docItem.category, fileUrl: docItem.fileUrl, notes: docItem.notes || "" });
+                              setIsTeacherDocModalOpen(true);
+                            }}
+                            style={{ background: "rgba(56, 189, 248, 0.15)", border: "1px solid rgba(56, 189, 248, 0.3)", color: "#38bdf8", padding: "0.3rem 0.6rem", borderRadius: 6, cursor: "pointer", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                          >
+                            <Edit3 size={12} /> Replace
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (confirm("Are you sure you want to delete this staff document?")) {
+                                try {
+                                  await fetch(`http://localhost:5000/api/v1/documents/teachers/doc/${docItem._id || docItem.id}`, { method: "DELETE" });
+                                  fetchTeacherDocs(selectedTeacherId);
+                                } catch (e) {}
+                              }
+                            }}
+                            style={{ background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#ef4444", padding: "0.3rem 0.6rem", borderRadius: 6, cursor: "pointer", fontSize: "0.72rem" }}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontStyle: "italic", marginTop: 2 }}>
+                      No staff document uploaded under this category.
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Upload / Replace Teacher Document Modal */}
+          {isTeacherDocModalOpen && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999, padding: "1rem" }}>
+              <div className="glass-card" style={{ padding: "1.5rem", width: "100%", maxWidth: 480, background: "#0f172a", border: "1px solid #334155", borderRadius: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff" }}>
+                    {editingTeacherDocId ? "Replace Staff Document" : "Upload Staff Document"}
+                  </h3>
+                  <button type="button" onClick={() => setIsTeacherDocModalOpen(false)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer" }}>
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!teacherDocForm.title || !teacherDocForm.fileUrl) return alert("Title and File URL are required!");
+                  try {
+                    if (editingTeacherDocId) {
+                      await fetch(`http://localhost:5000/api/v1/documents/teachers/doc/${editingTeacherDocId}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(teacherDocForm)
+                      });
+                    } else {
+                      await fetch(`http://localhost:5000/api/v1/documents/teachers/${selectedTeacherId}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(teacherDocForm)
+                      });
+                    }
+                    setIsTeacherDocModalOpen(false);
+                    fetchTeacherDocs(selectedTeacherId);
+                  } catch (err) {
+                    alert("Failed to save staff document.");
+                  }
+                }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#cbd5e1", display: "block", marginBottom: 4 }}>DOCUMENT TITLE</label>
+                    <input
+                      type="text"
+                      value={teacherDocForm.title}
+                      onChange={(e) => setTeacherDocForm({ ...teacherDocForm, title: e.target.value })}
+                      placeholder="e.g. B.Ed Degree Certificate Scan"
+                      required
+                      style={{ width: "100%", padding: "0.65rem", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#fff", fontSize: "0.85rem" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#cbd5e1", display: "block", marginBottom: 4 }}>CATEGORY</label>
+                    <select
+                      value={teacherDocForm.category}
+                      onChange={(e) => setTeacherDocForm({ ...teacherDocForm, category: e.target.value })}
+                      style={{ width: "100%", padding: "0.65rem", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#fff", fontSize: "0.85rem" }}
+                    >
+                      {[
+                        "Photo",
+                        "ID Proof",
+                        "Qualification Certificate",
+                        "Experience Certificate",
+                        "Joining Document",
+                        "Other"
+                      ].map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#cbd5e1", display: "block", marginBottom: 4 }}>FILE URL / LINK</label>
+                    <input
+                      type="text"
+                      value={teacherDocForm.fileUrl}
+                      onChange={(e) => setTeacherDocForm({ ...teacherDocForm, fileUrl: e.target.value })}
+                      placeholder="https://example.com/docs/degree.pdf"
+                      required
+                      style={{ width: "100%", padding: "0.65rem", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#fff", fontSize: "0.85rem" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                    <button type="button" onClick={() => setIsTeacherDocModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                    <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>
+                      {editingTeacherDocId ? "Update Staff Document" : "Save Staff Document"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

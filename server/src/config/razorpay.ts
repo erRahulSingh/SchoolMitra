@@ -5,6 +5,11 @@
 import crypto from "crypto";
 import logger from "../utils/logger";
 
+export const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || "rzp_test_SUIH6k4l3JewbV";
+export const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "13t9eVDEmoEaiZ4zjL03Zcav";
+
+logger.info(`[RAZORPAY] Merchant Config Initialized with Key ID: ${RAZORPAY_KEY_ID}`);
+
 export interface CreateOrderPayload {
   amount: number; // in INR
   receiptId: string;
@@ -17,6 +22,7 @@ export const createRazorpayOrder = async (payload: CreateOrderPayload) => {
 
   logger.info(`[RAZORPAY] Order generated: ${orderId} for amount ₹${payload.amount}`, {
     receiptId: payload.receiptId,
+    keyId: RAZORPAY_KEY_ID
   });
 
   return {
@@ -28,6 +34,7 @@ export const createRazorpayOrder = async (payload: CreateOrderPayload) => {
     currency: "INR",
     receipt: payload.receiptId,
     status: "created",
+    key_id: RAZORPAY_KEY_ID,
     created_at: Math.floor(Date.now() / 1000),
   };
 };
@@ -36,7 +43,7 @@ export const verifyPaymentSignature = (
   orderId: string,
   paymentId: string,
   signature: string,
-  secretKey: string = process.env.RAZORPAY_KEY_SECRET || "mock_secret"
+  secretKey: string = RAZORPAY_KEY_SECRET
 ): boolean => {
   const generatedSignature = crypto
     .createHmac("sha256", secretKey)

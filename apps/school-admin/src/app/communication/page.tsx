@@ -64,10 +64,26 @@ export default function CommunicationPage() {
   const [supportFilterType, setSupportFilterType] = useState("All");
 
   // ════════════ 2. ANNOUNCEMENTS STATE ════════════
-  const [announcements, setAnnouncements] = useState<AnnouncementRecord[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
   const [isAddAnnOpen, setIsAddAnnOpen] = useState(false);
   const [editingAnnId, setEditingAnnId] = useState<string | null>(null);
-  const [annForm, setAnnForm] = useState({ title: "", target: "Entire School", category: "Circular" as const });
+  const [annForm, setAnnForm] = useState({
+    title: "",
+    message: "",
+    attachment: "",
+    targetAudience: "All Parents",
+    classId: "",
+    sectionId: "",
+    teacherId: "",
+    publishDate: "",
+    expiryDate: "",
+    priority: "Normal" as "Low" | "Normal" | "High" | "Urgent",
+    status: "Published" as "Draft" | "Published"
+  });
+
+  const [dbClasses, setDbClasses] = useState<any[]>([]);
+  const [dbSections, setDbSections] = useState<any[]>([]);
+  const [dbTeachers, setDbTeachers] = useState<any[]>([]);
 
   // ════════════ 3. FCM PUSH NOTIFICATIONS STATE ════════════
   const [customPushTitle, setCustomPushTitle] = useState("");
@@ -176,31 +192,56 @@ export default function CommunicationPage() {
       }
 
       // 2. Fetch announcements & circulars
-      const aRes = await fetch("http://localhost:5000/api/v1/notifications/announcements");
+      const token = localStorage.getItem("accessToken");
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const aRes = await fetch("http://localhost:5000/api/v1/admin/announcements", { headers });
       const aJson = await aRes.json();
       if (aJson.success) {
-        const list = aJson.data.announcements;
+        const list = aJson.data.announcements || [];
         
         // Map announcements
-        const annMapped = list.filter((x: any) => x.category !== "Circular").map((a: any) => ({
-          id: a.id,
+        const annMapped = list.map((a: any) => ({
+          ...a,
+          id: a._id || a.id,
           title: a.title,
           target: a.targetAudience,
-          date: a.date,
-          category: a.category
+          date: a.publishDate ? new Date(a.publishDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Just Now"
         }));
         setAnnouncements(annMapped);
 
         // Map circulars
-        const circMapped = list.filter((x: any) => x.category === "Circular").map((c: any) => ({
-          id: c.id,
+        const circMapped = list.filter((x: any) => x.attachment).map((c: any) => ({
+          id: c._id || c.id,
           title: c.title,
-          format: "PDF Document",
-          date: c.date,
+          format: c.attachment.toLowerCase().endsWith(".pdf") ? "PDF Document" : "Image Flyer",
+          date: c.publishDate ? new Date(c.publishDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Just Now",
           seen: 142,
           downloads: 85
         }));
         setCirculars(circMapped);
+      }
+
+      // Fetch dynamic class, section, teacher filters
+      const classesRes = await fetch("http://localhost:5000/api/v1/admin/classes", { headers });
+      const classesJson = await classesRes.json();
+      if (classesJson.success) {
+        setDbClasses(classesJson.data.classes || []);
+      }
+
+      const sectionsRes = await fetch("http://localhost:5000/api/v1/admin/sections", { headers });
+      const sectionsJson = await sectionsRes.json();
+      if (sectionsJson.success) {
+        setDbSections(sectionsJson.data.sections || []);
+      }
+
+      const teachersRes = await fetch("http://localhost:5000/api/v1/admin/teachers", { headers });
+      const teachersJson = await teachersRes.json();
+      if (teachersJson.success) {
+        setDbTeachers(teachersJson.data.teachers || []);
       }
     } catch (e) {
       console.error("DB Sync error:", e);
@@ -240,45 +281,161 @@ export default function CommunicationPage() {
   // Announcements Handlers
   const handleOpenAddAnn = () => {
     setEditingAnnId(null);
-    setAnnForm({ title: "", target: "Entire School", category: "Circular" });
+    setAnnForm({
+      title: "",
+      message: "",
+      attachment: "",
+      targetAudience: "All Parents",
+      classId: "",
+      sectionId: "",
+      teacherId: "",
+      publishDate: new Date().toISOString().slice(0, 16),
+      expiryDate: "",
+      priority: "Normal",
+      status: "Published"
+    });
     setIsAddAnnOpen(true);
   };
 
-  const handleOpenEditAnn = (ann: AnnouncementRecord) => {
-    setEditingAnnId(ann.id);
-    setAnnForm({ title: ann.title, target: ann.target, category: ann.category as any });
+  const handleOpenEditAnn = (ann: any) => {
+    setEditingAnnId(ann.id || ann._id);
+    
+    let classId = "";
+    let sectionId = "";
+    let teacherId = "";
+
+    if (ann.targetClasses && ann.targetClasses.length > 0) {
+      classId = ann.targetClasses[0]._id || ann.targetClasses[0];
+    }
+    if (ann.targetSections && ann.targetSections.length > 0) {
+      sectionId = ann.targetSections[0]._id || ann.targetSections[0];
+    }
+    if (ann.targetTeacher) {
+      teacherId = ann.targetTeacher._id || ann.targetTeacher;
+    }
+
+    setAnnForm({
+      title: ann.title || "",
+      message: ann.content || "",
+      attachment: ann.attachment || "",
+      targetAudience: ann.targetAudience || "All Parents",
+      classId: String(classId),
+      sectionId: String(sectionId),
+      teacherId: String(teacherId),
+      publishDate: ann.publishDate ? new Date(ann.publishDate).toISOString().slice(0, 16) : "",
+      expiryDate: ann.expiryDate ? new Date(ann.expiryDate).toISOString().slice(0, 16) : "",
+      priority: ann.priority || "Normal",
+      status: ann.status || "Published"
+    });
     setIsAddAnnOpen(true);
   };
 
   const handleSaveAnn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!annForm.title) return;
+    if (!annForm.title || !annForm.message) {
+      alert("Title and message are required.");
+      return;
+    }
+
+    const token = localStorage.getItem("accessToken");
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json"
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const payload = {
+      title: annForm.title,
+      message: annForm.message,
+      attachment: annForm.attachment || undefined,
+      targetAudience: annForm.targetAudience,
+      classId: annForm.classId || undefined,
+      sectionId: annForm.sectionId || undefined,
+      teacherId: annForm.teacherId || undefined,
+      publishDate: annForm.publishDate || undefined,
+      expiryDate: annForm.expiryDate || undefined,
+      priority: annForm.priority,
+      status: annForm.status
+    };
 
     try {
-      const res = await fetch("http://localhost:5000/api/v1/notifications/announcements", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: annForm.title,
-          category: annForm.category,
-          targetAudience: annForm.target,
-          content: "Published via Admin Panel"
-        })
+      const url = editingAnnId 
+        ? `http://localhost:5000/api/v1/admin/announcements/${editingAnnId}`
+        : "http://localhost:5000/api/v1/admin/announcements";
+        
+      const method = editingAnnId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify(payload)
       });
+      
       const json = await res.json();
       if (json.success) {
-        alert("Announcement published to DB!");
+        alert(editingAnnId ? "Announcement updated successfully!" : "Announcement published successfully!");
         setIsAddAnnOpen(false);
         fetchCommunicationData();
+      } else {
+        alert(json.message || "Failed to save announcement.");
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to publish announcement.");
+      alert("Failed to save announcement.");
     }
   };
 
-  const handleDeleteAnn = (id: string) => {
-    alert("Announcement deletion is locked for administrative audit.");
+  const handleDeleteAnn = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this announcement?")) return;
+
+    const token = localStorage.getItem("accessToken");
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/v1/admin/announcements/${id}`, {
+        method: "DELETE",
+        headers
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert("Announcement deleted successfully!");
+        fetchCommunicationData();
+      } else {
+        alert(json.message || "Failed to delete announcement.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting announcement.");
+    }
+  };
+
+  const handlePublishAnn = async (id: string) => {
+    const token = localStorage.getItem("accessToken");
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/v1/admin/announcements/${id}/publish`, {
+        method: "PATCH",
+        headers
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert("Announcement published successfully!");
+        fetchCommunicationData();
+      } else {
+        alert(json.message || "Failed to publish announcement.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error publishing announcement.");
+    }
   };
 
   // FCM Dispatch Handler
@@ -772,26 +929,79 @@ export default function CommunicationPage() {
               <tr>
                 <th>Announcement Name</th>
                 <th>Target Audience</th>
-                <th>Logged Date</th>
-                <th>Category</th>
+                <th>Publish Date</th>
+                <th>Expiry Date</th>
+                <th>Priority</th>
+                <th>Status</th>
                 <th style={{ textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {announcements.map((ann) => (
-                <tr key={ann.id}>
-                  <td style={{ fontWeight: 800, color: "var(--text-heading)" }}>{ann.title}</td>
-                  <td><span className="badge badge-info">{ann.target}</span></td>
-                  <td style={{ fontWeight: 700 }}>{ann.date}</td>
-                  <td><span className="badge badge-secondary">{ann.category}</span></td>
-                  <td style={{ textAlign: "right" }}>
-                    <div style={{ display: "inline-flex", gap: "0.35rem" }}>
-                      <button onClick={() => handleOpenEditAnn(ann)} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem" }}><Edit3 size={13} /></button>
-                      <button onClick={() => handleDeleteAnn(ann.id)} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem", color: "#ef4444" }}><Trash2 size={13} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {announcements.map((ann) => {
+                const getTargetDisplayText = (a: any) => {
+                  if (a.targetAudience === "Specific Class" && a.targetClasses && a.targetClasses.length > 0) {
+                    return `Class: ${a.targetClasses[0]?.className || "Class"}`;
+                  }
+                  if (a.targetAudience === "Specific Section" && a.targetClasses && a.targetClasses.length > 0) {
+                    const clsName = a.targetClasses[0]?.className || "Class";
+                    const secName = a.targetSections && a.targetSections.length > 0 ? a.targetSections[0]?.sectionName : "A";
+                    return `Section: ${clsName}-${secName}`;
+                  }
+                  if (a.targetAudience === "Specific Teacher" && a.targetTeacher) {
+                    return `Teacher: ${a.targetTeacher.name || "Teacher"}`;
+                  }
+                  return a.targetAudience || "All Parents";
+                };
+
+                const priorityColors: Record<string, string> = {
+                  Low: "badge-secondary",
+                  Normal: "badge-info",
+                  High: "badge-warning",
+                  Urgent: "badge-danger"
+                };
+
+                const statusColors: Record<string, string> = {
+                  Draft: "badge-secondary",
+                  Published: "badge-success",
+                  Scheduled: "badge-warning",
+                  Archived: "badge-danger"
+                };
+
+                return (
+                  <tr key={ann.id}>
+                    <td>
+                      <div style={{ fontWeight: 800, color: "var(--text-heading)" }}>{ann.title}</div>
+                      {ann.content && <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "250px" }}>{ann.content}</div>}
+                    </td>
+                    <td><span className="badge badge-info">{getTargetDisplayText(ann)}</span></td>
+                    <td style={{ fontWeight: 700 }}>
+                      {ann.publishDate ? new Date(ann.publishDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ann.date || "Just Now"}
+                    </td>
+                    <td style={{ color: "var(--text-muted)" }}>
+                      {ann.expiryDate ? new Date(ann.expiryDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "--"}
+                    </td>
+                    <td>
+                      <span className={`badge ${priorityColors[ann.priority] || "badge-info"}`}>
+                        {ann.priority || "Normal"}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${statusColors[ann.status] || "badge-success"}`}>
+                        {ann.status || "Published"}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      <div style={{ display: "inline-flex", gap: "0.35rem" }}>
+                        {(ann.status === "Draft" || ann.status === "Scheduled") && (
+                          <button onClick={() => handlePublishAnn(ann.id)} title="Publish Now" className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem", color: "var(--success)" }}><CheckCircle2 size={13} /></button>
+                        )}
+                        <button onClick={() => handleOpenEditAnn(ann)} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem" }}><Edit3 size={13} /></button>
+                        <button onClick={() => handleDeleteAnn(ann.id)} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem", color: "#ef4444" }}><Trash2 size={13} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -888,7 +1098,7 @@ export default function CommunicationPage() {
                 {/* Push Banner Mockup */}
                 <div className="glass-card" style={{ padding: "0.75rem", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(17, 24, 39, 0.85)", boxShadow: "0 10px 25px rgba(0,0,0,0.5)", transition: "all 0.3s ease" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                    <div style={{ width: 14, height: 14, borderRadius: 3, background: "var(--primary)", display: "flex", alignItems: "center", justify: "center", fontSize: "0.6rem", fontWeight: "bold", color: "#fff" }}>M</div>
+                    <div style={{ width: 14, height: 14, borderRadius: 3, background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: "bold", color: "#fff" }}>M</div>
                     <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#fff" }}>SCHOOLMITRA</span>
                     <span style={{ fontSize: "0.6rem", color: "#9ca3af", marginLeft: "auto" }}>now</span>
                   </div>
@@ -1595,7 +1805,7 @@ export default function CommunicationPage() {
       {/* ════════════ ADD/EDIT ANNOUNCEMENT MODAL ════════════ */}
       {isAddAnnOpen && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div className="glass-card" style={{ width: "100%", maxWidth: "480px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
               <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>
                 {editingAnnId ? "Edit Announcement" : "Publish Announcement"}
@@ -1609,23 +1819,103 @@ export default function CommunicationPage() {
                 <input type="text" value={annForm.title} onChange={(e) => setAnnForm({ ...annForm, title: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
               </div>
 
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>MESSAGE BODY</label>
+                <textarea value={annForm.message} onChange={(e) => setAnnForm({ ...annForm, message: e.target.value })} required rows={4} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", resize: "vertical" }} />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>ATTACHMENT LINK (Optional)</label>
+                <input type="text" value={annForm.attachment} onChange={(e) => setAnnForm({ ...annForm, attachment: e.target.value })} placeholder="https://example.com/file.pdf" style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              </div>
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>TARGET AUDIENCE</label>
-                  <select value={annForm.target} onChange={(e) => setAnnForm({ ...annForm, target: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
-                    <option value="Entire School">Entire School</option>
-                    <option value="Class 10">Class 10 Only</option>
-                    <option value="Class 9">Class 9 Only</option>
+                  <select value={annForm.targetAudience} onChange={(e) => setAnnForm({ ...annForm, targetAudience: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                    <option value="All Parents">All Parents</option>
+                    <option value="All Teachers">All Teachers</option>
+                    <option value="Specific Class">Specific Class</option>
+                    <option value="Specific Section">Specific Section</option>
+                    <option value="Specific Teacher">Specific Teacher</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>CATEGORY</label>
-                  <select value={annForm.category} onChange={(e) => setAnnForm({ ...annForm, category: e.target.value as any })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
-                    <option value="Circular">Circular</option>
-                    <option value="Holiday">Holiday</option>
-                    <option value="Emergency">Emergency</option>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>PRIORITY</label>
+                  <select value={annForm.priority} onChange={(e) => setAnnForm({ ...annForm, priority: e.target.value as any })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                    <option value="Low">Low</option>
+                    <option value="Normal">Normal</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Conditional targeting selectors */}
+              {annForm.targetAudience === "Specific Class" && (
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SELECT TARGET CLASS</label>
+                  <select value={annForm.classId} onChange={(e) => setAnnForm({ ...annForm, classId: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                    <option value="">-- Choose Class --</option>
+                    {dbClasses.map(c => (
+                      <option key={c._id || c.id} value={c._id || c.id}>{c.className || c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {annForm.targetAudience === "Specific Section" && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>CLASS</label>
+                    <select value={annForm.classId} onChange={(e) => setAnnForm({ ...annForm, classId: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                      <option value="">-- Class --</option>
+                      {dbClasses.map(c => (
+                        <option key={c._id || c.id} value={c._id || c.id}>{c.className || c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SECTION</label>
+                    <select value={annForm.sectionId} onChange={(e) => setAnnForm({ ...annForm, sectionId: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                      <option value="">-- Section --</option>
+                      {dbSections.filter(s => !annForm.classId || s.classId === annForm.classId).map(s => (
+                        <option key={s._id || s.id} value={s._id || s.id}>{s.sectionName || s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {annForm.targetAudience === "Specific Teacher" && (
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SELECT TARGET TEACHER</label>
+                  <select value={annForm.teacherId} onChange={(e) => setAnnForm({ ...annForm, teacherId: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                    <option value="">-- Choose Teacher --</option>
+                    {dbTeachers.map(t => (
+                      <option key={t._id || t.id} value={t._id || t.id}>{t.name} ({t.email})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>PUBLISH DATE & TIME</label>
+                  <input type="datetime-local" value={annForm.publishDate} onChange={(e) => setAnnForm({ ...annForm, publishDate: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>EXPIRY DATE & TIME</label>
+                  <input type="datetime-local" value={annForm.expiryDate} onChange={(e) => setAnnForm({ ...annForm, expiryDate: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>STATUS</label>
+                <select value={annForm.status} onChange={(e) => setAnnForm({ ...annForm, status: e.target.value as any })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  <option value="Published">Published</option>
+                  <option value="Draft">Draft</option>
+                </select>
               </div>
 
               <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>

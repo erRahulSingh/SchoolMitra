@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, StatusBar, Alert } from 'react-native';
 import { ChevronLeft, Filter, Search, CheckCircle2, Flag } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function StudentDropScreen({ navigation }: any) {
+  const { colors, isDark } = useTheme();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -15,7 +17,19 @@ export default function StudentDropScreen({ navigation }: any) {
     { id: 5, name: 'Rohan Mehta', class: 'Class 5 – B', roll: 'Roll No. 24', dropped: false, initials: 'RM' },
   ]);
 
-  const handleDropSingle = (id: number) => {
+  const handleDropSingle = async (id: number) => {
+    const student = studentsList.find(s => s.id === id);
+    if (student) {
+      try {
+        await fetch("http://localhost:5000/api/v1/driver/student/drop", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ studentId: id, studentName: student.name, status: "Dropped" })
+        });
+      } catch (e) {
+        console.warn("Offline or backend unreachable, dropping student locally.");
+      }
+    }
     setStudentsList(prev => prev.map(s => s.id === id ? { ...s, dropped: true } : s));
   };
 
@@ -36,17 +50,17 @@ export default function StudentDropScreen({ navigation }: any) {
   });
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
       
       {/* Header Bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ChevronLeft size={22} color="#0f172a" />
+          <ChevronLeft size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Student Drop</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Student Drop</Text>
         <TouchableOpacity style={styles.filterBtn}>
-          <Filter size={20} color="#0f172a" />
+          <Filter size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -72,10 +86,10 @@ export default function StudentDropScreen({ navigation }: any) {
         </LinearGradient>
 
         {/* Search Field */}
-        <View style={styles.searchBarWrapper}>
+        <View style={[styles.searchBarWrapper, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Search size={18} color="#94a3b8" />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search Student"
             placeholderTextColor="#94a3b8"
             value={searchQuery}
@@ -94,11 +108,19 @@ export default function StudentDropScreen({ navigation }: any) {
             return (
               <TouchableOpacity
                 key={idx}
-                style={[styles.pillBtn, isActive && styles.pillActive]}
+                style={[
+                  styles.pillBtn, 
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  isActive && styles.pillActive
+                ]}
                 onPress={() => setActiveFilter(pill.key)}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.pillText, isActive && styles.pillTextActive]}>{pill.label}</Text>
+                <Text style={[
+                  styles.pillText, 
+                  { color: colors.textSecondary },
+                  isActive && styles.pillTextActive
+                ]}>{pill.label}</Text>
               </TouchableOpacity>
             );
           })}
@@ -107,14 +129,14 @@ export default function StudentDropScreen({ navigation }: any) {
         {/* Students List */}
         <View style={styles.listContainer}>
           {filteredStudents.map((student) => (
-            <View key={student.id} style={styles.studentCard}>
+            <View key={student.id} style={[styles.studentCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.avatarCircle}>
                 <Text style={styles.avatarText}>{student.initials}</Text>
               </View>
 
               <View style={styles.studentInfoCol}>
-                <Text style={styles.studentNameText}>{student.name}</Text>
-                <Text style={styles.studentMetaText}>{student.class}  •  {student.roll}</Text>
+                <Text style={[styles.studentNameText, { color: colors.text }]}>{student.name}</Text>
+                <Text style={[styles.studentMetaText, { color: colors.textSecondary }]}>{student.class}  •  {student.roll}</Text>
               </View>
 
               {student.dropped ? (

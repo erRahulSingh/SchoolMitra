@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Filter, Search, CheckCircle2, UserX, SkipForward } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function StudentPickupScreen({ navigation }: any) {
+  const { colors, isDark } = useTheme();
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(3);
@@ -14,13 +16,39 @@ export default function StudentPickupScreen({ navigation }: any) {
     { id: 3, name: 'Vivaan Singh', class: 'Class 5 – A', roll: 'Roll No. 18', status: 'Pending', time: '', initials: 'VS' },
   ]);
 
-  const handleMarkPicked = () => {
+  const handleMarkPicked = async () => {
     if (!selectedStudentId) return;
+    const student = students.find(s => s.id === selectedStudentId);
+    if (!student) return;
+
+    try {
+      await fetch("http://localhost:5000/api/v1/driver/student/pickup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: student.id, studentName: student.name, status: "Picked" })
+      });
+    } catch (e) {
+      console.warn("Offline or backend unreachable, picking student locally.");
+    }
+
     setStudents(prev => prev.map(s => s.id === selectedStudentId ? { ...s, status: 'Picked', time: '07:12 AM' } : s));
   };
 
-  const handleMarkAbsent = () => {
+  const handleMarkAbsent = async () => {
     if (!selectedStudentId) return;
+    const student = students.find(s => s.id === selectedStudentId);
+    if (!student) return;
+
+    try {
+      await fetch("http://localhost:5000/api/v1/driver/student/pickup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: student.id, studentName: student.name, status: "Absent" })
+      });
+    } catch (e) {
+      console.warn("Offline or backend unreachable, marking student absent locally.");
+    }
+
     setStudents(prev => prev.map(s => s.id === selectedStudentId ? { ...s, status: 'Absent', time: '' } : s));
   };
 
@@ -31,17 +59,17 @@ export default function StudentPickupScreen({ navigation }: any) {
   });
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
       
       {/* Header Bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ChevronLeft size={22} color="#0f172a" />
+          <ChevronLeft size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Student Pickup</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Student Pickup</Text>
         <TouchableOpacity style={styles.filterBtn}>
-          <Filter size={20} color="#0f172a" />
+          <Filter size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -66,10 +94,10 @@ export default function StudentPickupScreen({ navigation }: any) {
         </LinearGradient>
 
         {/* Search Field */}
-        <View style={styles.searchBarWrapper}>
+        <View style={[styles.searchBarWrapper, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Search size={18} color="#94a3b8" />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search Student"
             placeholderTextColor="#94a3b8"
             value={searchQuery}
@@ -85,11 +113,19 @@ export default function StudentPickupScreen({ navigation }: any) {
             return (
               <TouchableOpacity
                 key={idx}
-                style={[styles.pillBtn, isActive && styles.pillActive]}
+                style={[
+                  styles.pillBtn, 
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  isActive && styles.pillActive
+                ]}
                 onPress={() => setActiveFilter(key)}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.pillText, isActive && styles.pillTextActive]}>{pill}</Text>
+                <Text style={[
+                  styles.pillText, 
+                  { color: colors.textSecondary },
+                  isActive && styles.pillTextActive
+                ]}>{pill}</Text>
               </TouchableOpacity>
             );
           })}
@@ -102,7 +138,11 @@ export default function StudentPickupScreen({ navigation }: any) {
             return (
               <TouchableOpacity
                 key={student.id}
-                style={[styles.studentCard, isSelected && styles.studentCardSelected]}
+                style={[
+                  styles.studentCard, 
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  isSelected && styles.studentCardSelected
+                ]}
                 onPress={() => setSelectedStudentId(student.id)}
                 activeOpacity={0.8}
               >
@@ -111,9 +151,9 @@ export default function StudentPickupScreen({ navigation }: any) {
                 </View>
 
                 <View style={styles.studentInfoCol}>
-                  <Text style={styles.studentNameText}>{student.name}</Text>
-                  <Text style={styles.studentClassText}>{student.class}</Text>
-                  <Text style={styles.studentRollText}>{student.roll}</Text>
+                  <Text style={[styles.studentNameText, { color: colors.text }]}>{student.name}</Text>
+                  <Text style={[styles.studentClassText, { color: colors.textSecondary }]}>{student.class}</Text>
+                  <Text style={[styles.studentRollText, { color: colors.textMuted }]}>{student.roll}</Text>
                 </View>
 
                 {student.status === 'Picked' && (
@@ -160,8 +200,8 @@ export default function StudentPickupScreen({ navigation }: any) {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.skipBtn} activeOpacity={0.75}>
-            <SkipForward size={16} color="#64748b" />
-            <Text style={styles.skipBtnText}>Not Picked (Skip)</Text>
+            <SkipForward size={16} color={colors.textSecondary} />
+            <Text style={[styles.skipBtnText, { color: colors.textSecondary }]}>Not Picked (Skip)</Text>
           </TouchableOpacity>
         </View>
 

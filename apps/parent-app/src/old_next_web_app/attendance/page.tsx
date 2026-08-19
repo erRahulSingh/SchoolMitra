@@ -160,7 +160,7 @@ export default function AttendancePage({ language = "en", onNavigate }: Attendan
 
           <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
             {/* Circle Progress Gauge */}
-            <div style={{ position: "relative", width: "82px", height: "82px", display: "flex", alignItems: "center", justify: "center", flexShrink: 0 }}>
+            <div style={{ position: "relative", width: "82px", height: "82px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <svg width="82" height="82" viewBox="0 0 84 84">
                 <circle cx="42" cy="42" r="34" stroke="rgba(255,255,255,0.15)" strokeWidth="8" fill="none" />
                 <circle cx="42" cy="42" r="34" stroke="#22c55e" strokeWidth="8" strokeDasharray="213" strokeDashoffset={213 - (213 * 92) / 100} fill="none" strokeLinecap="round" transform="rotate(-90 42 42)" />

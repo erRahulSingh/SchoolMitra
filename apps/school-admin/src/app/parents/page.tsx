@@ -109,7 +109,7 @@ export default function ParentsPage() {
         borderRadius: "var(--radius-lg)",
         padding: "1.5rem 1.75rem",
         display: "flex",
-        justify: "space-between",
+        justifyContent: "space-between",
         alignItems: "center"
       }}>
         <div>

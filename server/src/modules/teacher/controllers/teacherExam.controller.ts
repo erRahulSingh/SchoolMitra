@@ -6,6 +6,7 @@ import { Request, Response } from "express";
 import { ApiResponse } from "../../../utils/ApiResponse";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import { ExamModel, MarkModel, ExamMarkSubmissionModel } from "../../../models/AcademicSchemas";
+import { sendClassNotification } from "../../../services/notificationService";
 import { StudentModel, TeacherAssignmentModel } from "../../../models/SchoolSchemas";
 import { SettingModel, AuditLogModel } from "../../../models/SystemSchemas";
 import mongoose from "mongoose";
@@ -378,6 +379,17 @@ export const saveTeacherMarks = asyncHandler(async (req: Request, res: Response)
 
   if (normalizedStatus === "SUBMITTED") {
     submissionUpdate.submittedAt = new Date();
+    sendClassNotification(
+      schoolId,
+      teacherId,
+      classId,
+      sectionId,
+      "RESULT",
+      `Exam Marks Published 📊`,
+      `Official marks roster submitted for ${exam.examName}. Scores available on app.`,
+      "results",
+      id
+    );
   }
 
   await ExamMarkSubmissionModel.findOneAndUpdate(

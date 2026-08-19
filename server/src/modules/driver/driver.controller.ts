@@ -1,52 +1,238 @@
-import { Request, Response } from "express";
+import { UserModel } from "../../models/AuthSchemas";
+import { DriverModel } from "../../models/TransportSchemas";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import mongoose, { Types } from "mongoose";
 
-// Mock Data Models for Driver API Microservices
-const demoDriver = {
-  id: "drv_101",
-  name: "Ram Singh",
-  email: "driver@schoolmitra.com",
-  phone: "+91 98111 22334",
-  empId: "EMP-DRV-104",
-  licenseNo: "DL-04-2019-883012",
-  status: "Active"
-};
+const dummySchoolId = new Types.ObjectId("650000000000000000000001");
+const inMemoryUserStore: Array<any> = [];
 
-const demoBus = {
-  busNo: "Bus #01",
-  vehicleNo: "DL 01 AB 4321",
-  model: "Tata Starbus Ultra 2024",
-  capacity: "42 Passengers",
-  fuelLevel: "78% (93.6 L)",
-  insuranceExpiry: "15 Nov 2027",
-  fitnessExpiry: "28 March 2028"
-};
-
-const demoRoute = {
-  routeName: "Route 1 - Dwarka Sector 12 Express",
-  totalStops: 12,
-  totalStudents: 42,
-  distance: "14.2 km",
-  estimatedTime: "45 Mins"
-};
-
-const demoStudents = [
-  { id: "s1", name: "Rahul Sharma", class: "Class 5-A", parentName: "Vikram Sharma", stopName: "Sector 12 Market Gate", status: "Waiting" },
-  { id: "s2", name: "Ananya Patel", class: "Class 4-B", parentName: "Rajesh Patel", stopName: "Sector 10 Metro Gate", status: "Boarded" },
-  { id: "s3", name: "Aarav Gupta", class: "Class 6-C", parentName: "Sunil Gupta", stopName: "Sector 6 Market", status: "Waiting" }
-];
-
-export const driverLogin = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  return res.json({
-    success: true,
-    message: "Driver authenticated successfully",
-    token: "jwt_token_driver_demo_998123",
-    driver: demoDriver
+// Helper to generate JWT token
+const generateDriverToken = (userId: string, role: string = "Driver") => {
+  return jwt.sign({ id: userId, role }, process.env.JWT_SECRET || "default_secret", {
+    expiresIn: "7d",
   });
 };
 
+export const driverLogin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: "Email and password are required." });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    let user: any = null;
+
+    // 1. Check MongoDB if connected (readyState === 1)
+    if (mongoose.connection.readyState === 1) {
+      try {
+        user = await UserModel.findOne({ email: cleanEmail });
+      } catch (dbErr) {
+        console.warn("[Driver DB Lookup Warning]:", (dbErr as Error).message);
+      }
+    }
+
+    // 2. Check In-Memory Store if not found in MongoDB
+    if (!user) {
+      user = inMemoryUserStore.find(u => u.email === cleanEmail);
+    }
+
+    // Auto-seed default test driver account if requested
+    if (!user && cleanEmail === "driver@schoolmitra.com") {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash("password123", salt);
+      
+      const seedPayload = {
+        _id: "drv_seed_101",
+        name: "Ram Singh",
+        email: "driver@schoolmitra.com",
+        password: hashedPassword,
+        passwordHash: hashedPassword,
+        role: "Driver",
+        empId: "EMP-DRV-101",
+        licenseNo: "DL142021008765"
+      };
+
+      inMemoryUserStore.push(seedPayload);
+
+      try {
+        user = await UserModel.create({
+          name: seedPayload.name,
+          email: seedPayload.email,
+          password: hashedPassword,
+          passwordHash: hashedPassword,
+          role: "Driver",
+          schoolId: dummySchoolId,
+          status: "Active"
+        });
+        await DriverModel.create({
+          schoolId: dummySchoolId,
+          userId: user._id,
+          name: seedPayload.name,
+          empId: seedPayload.empId,
+          phone: "+91 9876543210",
+          licenseNo: seedPayload.licenseNo,
+          licenseExpiry: new Date("2030-12-31"),
+          status: "Active"
+        });
+      } catch (e) {
+        user = seedPayload;
+      }
+    }
+
+    // 3. Check if user account exists in database or memory
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        code: "USER_NOT_FOUND",
+        message: "No driver account found with this email address. Please Sign Up to create an account."
+      });
+    }
+
+    // 4. Validate Password
+    let isMatch = false;
+    if (user.passwordHash) {
+      isMatch = await bcrypt.compare(password, user.passwordHash);
+    } else if (user.password) {
+      isMatch = (user.password === password) || (await bcrypt.compare(password, user.password).catch(() => false));
+    }
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        code: "INVALID_PASSWORD",
+        message: "Incorrect password. Please verify your password and try again."
+      });
+    }
+
+    const token = generateDriverToken(user._id ? user._id.toString() : user.id || "drv_101", user.role || "Driver");
+
+    const driverPayload = {
+      id: user._id || user.id || "drv_101",
+      name: user.name || "Driver Captain",
+      email: user.email,
+      role: "Senior Fleet Driver",
+      busNo: "BUS-01",
+      empId: user.empId || "EMP-DRV-101",
+      licenseNo: user.licenseNo || "DL142021008765"
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Driver authenticated successfully",
+      token,
+      driver: driverPayload
+    });
+  } catch (error: any) {
+    console.error("[Driver Login Error]:", error);
+    return res.status(500).json({ success: false, message: "Internal server authentication error." });
+  }
+};
+
+export const driverRegister = async (req: Request, res: Response) => {
+  try {
+    const { name, email, empId, license, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: "Name, email, and password are required." });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Check if exists in memory store or DB
+    let existingUser: any = inMemoryUserStore.find(u => u.email === cleanEmail);
+    if (!existingUser && mongoose.connection.readyState === 1) {
+      try {
+        existingUser = await UserModel.findOne({ email: cleanEmail });
+      } catch (e) {}
+    }
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        code: "EMAIL_EXISTS",
+        message: "An account with this email already exists. Please login using your password."
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const memoryPayload = {
+      id: `drv_mem_${Date.now()}`,
+      name,
+      email: cleanEmail,
+      password: hashedPassword,
+      passwordHash: hashedPassword,
+      empId: empId || `EMP-DRV-${Math.floor(100 + Math.random() * 900)}`,
+      licenseNo: license || `DL-${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+      role: "Driver"
+    };
+
+    inMemoryUserStore.push(memoryPayload);
+
+    // Persist to MongoDB if connected
+    let createdUser: any = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        createdUser = await UserModel.create({
+          name,
+          email: cleanEmail,
+          password: hashedPassword,
+        passwordHash: hashedPassword,
+        role: "Driver",
+        schoolId: dummySchoolId,
+        status: "Active"
+      });
+
+      await DriverModel.create({
+        schoolId: dummySchoolId,
+        userId: createdUser._id,
+        name,
+        empId: memoryPayload.empId,
+        phone: "+91 9876543210",
+        licenseNo: memoryPayload.licenseNo,
+        licenseExpiry: new Date("2030-12-31"),
+        status: "Active"
+      });
+    } catch (dbErr) {
+      console.warn("[Driver Register DB Persist Warning]:", (dbErr as Error).message);
+    }
+
+    const token = generateDriverToken(createdUser ? createdUser._id.toString() : memoryPayload.id, "Driver");
+
+    const driverPayload = {
+      id: createdUser ? createdUser._id : memoryPayload.id,
+      name: memoryPayload.name,
+      email: memoryPayload.email,
+      role: "Senior Fleet Driver",
+      busNo: "BUS-01",
+      empId: memoryPayload.empId,
+      licenseNo: memoryPayload.licenseNo
+    };
+
+    return res.status(201).json({
+      success: true,
+      message: "Driver profile registered successfully",
+      token,
+      driver: driverPayload
+    });
+  } catch (error: any) {
+    console.error("[Driver Register Error]:", error);
+    return res.status(500).json({ success: false, message: "Failed to register driver profile." });
+  }
+};
+
 export const getDriverProfile = async (req: Request, res: Response) => {
-  return res.json({ success: true, driver: demoDriver });
+  return res.json({ success: true, driver: {
+    id: "drv_101",
+    name: "Ram Singh",
+    email: "driver@schoolmitra.com",
+    phone: "+91 98111 22334",
+    empId: "EMP-DRV-104",
+    licenseNo: "DL-04-2019-883012",
+    status: "Active"
+  }});
 };
 
 export const getAssignedBus = async (req: Request, res: Response) => {
@@ -88,20 +274,53 @@ export const updateGPSLocation = async (req: Request, res: Response) => {
   });
 };
 
+import { Types } from "mongoose";
+import { createNotification } from "../../services/notificationService";
+
+const dummySchoolId = new Types.ObjectId("650000000000000000000001");
+
 export const pickupStudent = async (req: Request, res: Response) => {
-  const { studentId, studentName } = req.body;
+  const { studentId, studentName, status = "Picked" } = req.body;
+  const name = studentName || "Rahul Kumar";
+
+  const parentUserId = new Types.ObjectId("650000000000000000000101");
+  createNotification({
+    schoolId: dummySchoolId,
+    senderId: "650000000000000000000601",
+    recipientId: parentUserId,
+    recipientRole: "Parent",
+    type: "TRANSPORT",
+    title: "🚌 Bus Boarding Update",
+    message: `${name} has boarded the bus.`,
+    priority: "HIGH"
+  }).catch(() => {});
+
   return res.json({
     success: true,
-    message: `Student ${studentName || "Rahul"} marked as Picked. Parent notified via push alert.`,
+    message: `Student ${name} marked as ${status}. Parent notified.`,
     timestamp: new Date().toLocaleTimeString()
   });
 };
 
 export const dropStudent = async (req: Request, res: Response) => {
-  const { studentId, studentName } = req.body;
+  const { studentId, studentName, status = "Dropped" } = req.body;
+  const name = studentName || "Rahul Kumar";
+
+  const parentUserId = new Types.ObjectId("650000000000000000000101");
+  createNotification({
+    schoolId: dummySchoolId,
+    senderId: "650000000000000000000601",
+    recipientId: parentUserId,
+    recipientRole: "Parent",
+    type: "TRANSPORT",
+    title: "📍 School Arrival Update",
+    message: `${name} has reached school.`,
+    priority: "HIGH"
+  }).catch(() => {});
+
   return res.json({
     success: true,
-    message: `Student ${studentName || "Rahul"} marked as Dropped at School. Parent notified.`,
+    message: `Student ${name} marked as ${status}. Parent notified.`,
     timestamp: new Date().toLocaleTimeString()
   });
 };

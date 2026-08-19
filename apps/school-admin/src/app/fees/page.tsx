@@ -107,6 +107,8 @@ export default function FeesPage() {
   const [fineForm, setFineForm] = useState({ name: "", type: "Late tuition Fee Payment", amount: "500", date: "2026-08-06", status: "Unpaid" as const });
 
   const [refunds, setRefunds] = useState<RefundRecord[]>([]);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [refundForm, setRefundForm] = useState({ name: "", type: "Admission Cancellation", amount: 15000, date: "2026-08-10", status: "Approved" as const });
 
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [collectAmount, setCollectAmount] = useState(0);
@@ -217,6 +219,50 @@ export default function FeesPage() {
     setIsAssignModalOpen(false);
   };
 
+  const handleSaveScholarship = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scholarshipForm.name) return;
+    const newScholarship: ScholarshipWaiver = {
+      id: `SCH-${Date.now()}`,
+      name: scholarshipForm.name,
+      type: scholarshipForm.type,
+      percentage: scholarshipForm.percentage,
+      status: scholarshipForm.status
+    };
+    setScholarships([...scholarships, newScholarship]);
+    setIsScholarshipModalOpen(false);
+  };
+
+  const handleSaveFine = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fineForm.name) return;
+    const newFine: FineRecord = {
+      id: `FIN-${Date.now()}`,
+      name: fineForm.name,
+      type: fineForm.type,
+      amount: Number(fineForm.amount),
+      date: fineForm.date || new Date().toISOString().split("T")[0],
+      status: fineForm.status
+    };
+    setFines([...fines, newFine]);
+    setIsFineModalOpen(false);
+  };
+
+  const handleSaveRefund = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!refundForm.name) return;
+    const newRefund: RefundRecord = {
+      id: `REF-${Date.now().toString().slice(-4)}`,
+      name: refundForm.name,
+      amount: Number(refundForm.amount),
+      type: refundForm.type,
+      date: refundForm.date || new Date().toISOString().split("T")[0],
+      status: refundForm.status
+    };
+    setRefunds([...refunds, newRefund]);
+    setIsRefundModalOpen(false);
+  };
+
   // Counter Fee Collection submit
   const handleCollectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -275,60 +321,67 @@ export default function FeesPage() {
           onClick={() => {
             if (activeTab === "structure") handleOpenAddSlab();
             else if (activeTab === "assignment") handleOpenAddAssign();
+            else if (activeTab === "discounts") setIsScholarshipModalOpen(true);
+            else if (activeTab === "fines") setIsFineModalOpen(true);
+            else if (activeTab === "refunds") setIsRefundModalOpen(true);
             else alert("Select relevant tab to quick create accounts items.");
           }}
           className="btn btn-primary" 
-          style={{ padding: "0.6rem 1.15rem", fontSize: "0.85rem", gap: "0.45rem" }}
+          style={{ gap: "0.4rem" }}
         >
-          <Plus size={16} /> Quick Accounts Item
+          <Plus size={16} /> Quick Action
         </button>
       </div>
 
-      {/* TABS SWITCHER CONSOLE */}
-      <div className="glass-card" style={{ padding: "0.6rem", display: "flex", gap: "0.5rem", overflowX: "auto", whiteSpace: "nowrap" }}>
+      {/* TABS NAVIGATION */}
+      <div style={{ display: "flex", gap: "0.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem", overflowX: "auto" }}>
         {[
-          { id: "dashboard", label: "Finance Dashboard", icon: BarChart3 },
-          { id: "structure", label: "Fee Structures", icon: FileText },
-          { id: "assignment", label: "Slab Assignment", icon: Settings },
-          { id: "collection", label: "Collection Counter", icon: Banknote },
-          { id: "verification", label: "Payment Verification", icon: Wallet },
-          { id: "discounts", label: "Waivers & Scholarships", icon: Receipt },
-          { id: "fines", label: "Fine Management", icon: AlertCircle },
-          { id: "refunds", label: "Refund Audits", icon: AlertOctagon },
-          { id: "dues", label: "Dues & Defaulters", icon: Clock },
-          { id: "reports", label: "Export Ledgers", icon: Download }
-        ].map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`btn ${isActive ? "btn-primary" : "btn-secondary"}`}
-              style={{ padding: "0.55rem 0.95rem", fontSize: "0.82rem", gap: "0.4rem", borderRadius: 8, fontWeight: isActive ? 700 : 500 }}
-            >
-              <Icon size={16} /> {tab.label}
-            </button>
-          );
-        })}
+          { id: "dashboard", label: "📊 Finance Dashboard" },
+          { id: "structure", label: "⚙️ Fee Structures" },
+          { id: "assignment", label: "👤 Student Allocations" },
+          { id: "collection", label: "💳 Counter Collection" },
+          { id: "verification", label: "✅ Payment Verification" },
+          { id: "discounts", label: "🎖️ Scholarships" },
+          { id: "fines", label: "⚠️ Fines & Penalties" },
+          { id: "refunds", label: "🔄 Refund Audit" },
+          { id: "dues", label: "📋 Dues & Defaulters" },
+          { id: "reports", label: "📈 Ledger Exports" }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`btn ${activeTab === tab.id ? "btn-primary" : "btn-secondary"}`}
+            style={{ padding: "0.45rem 0.85rem", fontSize: "0.82rem", whiteSpace: "nowrap" }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* ════════════ 1. FINANCE DASHBOARD ════════════ */}
       {activeTab === "dashboard" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1rem" }}>
-            {[
-              { label: "TODAY'S COLLECTION", val: `₹${stats.todayCollection.toLocaleString("en-IN")}`, color: "var(--success)" },
-              { label: "MONTHLY TOTALS", val: `₹${stats.monthlyCollection.toLocaleString("en-IN")}`, color: "var(--text-heading)" },
-              { label: "PENDING ACCRUALS", val: `₹${stats.pendingFees.toLocaleString("en-IN")}`, color: "#f59e0b" },
-              { label: "OVERDUE DEFAULTS", val: `₹${stats.overdueFees.toLocaleString("en-IN")}`, color: "#ef4444" },
-              { label: "COLLECTION RATE", val: stats.collectionPercentage, color: "var(--success)" }
-            ].map((card, idx) => (
-              <div key={idx} className="glass-card" style={{ padding: "1.25rem", textAlign: "center" }}>
-                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 800 }}>{card.label}</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: 900, color: card.color, marginTop: 4 }}>{card.val}</div>
-              </div>
-            ))}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+            <div className="glass-card" style={{ padding: "1.25rem", borderLeft: "4px solid var(--primary)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>TODAY'S CASH &amp; ONLINE COLLECTION</div>
+              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text-heading)", marginTop: 4 }}>₹ {stats.todayCollection.toLocaleString("en-IN")}</div>
+              <div style={{ fontSize: "0.72rem", color: "var(--success)", marginTop: 4 }}>+14.2% higher vs yesterday</div>
+            </div>
+            <div className="glass-card" style={{ padding: "1.25rem", borderLeft: "4px solid var(--secondary)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>MONTHLY REALIZED COLLECTIONS</div>
+              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--secondary)", marginTop: 4 }}>₹ {stats.monthlyCollection.toLocaleString("en-IN")}</div>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 4 }}>Term Q2 Cycle</div>
+            </div>
+            <div className="glass-card" style={{ padding: "1.25rem", borderLeft: "4px solid #f59e0b" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>PENDING / UNPAID INVOICES</div>
+              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#f59e0b", marginTop: 4 }}>₹ {stats.pendingFees.toLocaleString("en-IN")}</div>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 4 }}>138 Invoices</div>
+            </div>
+            <div className="glass-card" style={{ padding: "1.25rem", borderLeft: "4px solid #ef4444" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>CRITICAL OVERDUE (90+ DAYS)</div>
+              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#ef4444", marginTop: 4 }}>₹ {stats.overdueFees.toLocaleString("en-IN")}</div>
+              <div style={{ fontSize: "0.72rem", color: "#ef4444", marginTop: 4 }}>SMS Reminders active</div>
+            </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
@@ -336,7 +389,7 @@ export default function FeesPage() {
               <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1rem", color: "var(--text-heading)" }}>Recent Transaction Logs (Live DB Sync)</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
                 {transactions.map((txn) => (
-                  <div key={txn.receiptNo} style={{ padding: "0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 10, display: "flex", justify: "space-between", alignItems: "center" }}>
+                  <div key={txn.receiptNo} style={{ padding: "0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <strong style={{ color: "var(--text-heading)", fontSize: "0.9rem" }}>{txn.studentName} ({txn.className || "10-A"})</strong>
                       <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 2 }}>{txn.paymentMethod} &bull; {txn.date} &bull; {txn.receiptNo}</div>
@@ -351,15 +404,15 @@ export default function FeesPage() {
             </div>
 
             <div className="glass-card" style={{ padding: "1.5rem" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1.25rem", color: "var(--text-heading)" }}>Payment Mode Breakdown</h3>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1rem", color: "var(--text-heading)" }}>Payment Channel Share</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 {[
-                  { name: "UPI / Net Banking", share: 55 },
-                  { name: "Credit / Debit Cards", share: 25 },
-                  { name: "Direct Cash Deposits", share: 20 }
+                  { name: "Razorpay Gateway (UPI / Cards)", share: 68 },
+                  { name: "Direct Bank NEFT / NetBanking", share: 22 },
+                  { name: "Counter Cash Ledger", share: 10 }
                 ].map((mode, idx) => (
                   <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                    <div style={{ display: "flex", justify: "space-between", fontSize: "0.85rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                       <strong style={{ color: "var(--text-heading)" }}>{mode.name}</strong>
                       <span style={{ fontWeight: 800, color: "var(--primary)" }}>{mode.share}%</span>
                     </div>
@@ -377,40 +430,77 @@ export default function FeesPage() {
       {/* ════════════ 2. FEE STRUCTURES (DB REGISTERED) ════════════ */}
       {activeTab === "structure" && (
         <div className="glass-card" style={{ padding: "1.5rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Class Fee Slabs Configuration (MongoDB Sync)</h3>
-            <button onClick={handleOpenAddSlab} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem", gap: "0.35rem" }}>
-              <Plus size={15} /> Add Fee Slab
-            </button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
+            <div>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>School Fee Structures Configuration</h3>
+              <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Configure independent class fee slabs per academic year</span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)" }}>Academic Year:</span>
+                <select style={{ padding: "0.4rem 0.75rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontWeight: 700, fontSize: "0.82rem" }}>
+                  <option value="2026-27">2026-27 ▼</option>
+                  <option value="2025-26">2025-26</option>
+                </select>
+              </div>
+
+              <button onClick={handleOpenAddSlab} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem", gap: "0.35rem" }}>
+                <Plus size={15} /> Add Custom Slab
+              </button>
+            </div>
           </div>
 
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Slab Title</th>
-                <th>Target Class</th>
-                <th>Tuition Fee</th>
-                <th>Transport Fee</th>
-                <th>Exam Fee</th>
-                <th>Total Expected (INR)</th>
-                <th>Billing Term</th>
-                <th style={{ textAlign: "right" }}>Actions</th>
+                <th>Class</th>
+                <th>Total Fee</th>
+                <th style={{ textAlign: "right" }}>Action</th>
               </tr>
             </thead>
             <tbody>
-              {feeSlabs.map((slab) => (
-                <tr key={slab._id || slab.id}>
-                  <td style={{ color: "var(--text-heading)", fontWeight: 800 }}>{slab.title || slab.name}</td>
-                  <td><span className="badge badge-info">Class {slab.class || slab.className}</span></td>
-                  <td>₹ {slab.tuitionFee?.toLocaleString("en-IN") || 0}</td>
-                  <td>₹ {slab.transportFee?.toLocaleString("en-IN") || 0}</td>
-                  <td>₹ {slab.examFee?.toLocaleString("en-IN") || 0}</td>
-                  <td style={{ fontWeight: 800, color: "var(--success)" }}>
-                    ₹ {(slab.totalAmount || slab.amount || 0).toLocaleString("en-IN")}
+              {[
+                { className: "Nursery", fee: 18000 },
+                { className: "LKG", fee: 20000 },
+                { className: "UKG", fee: 22000 },
+                { className: "Class 1", fee: 25000 },
+                { className: "Class 2", fee: 25000 },
+                { className: "Class 3", fee: 27000 },
+                { className: "Class 4", fee: 27000 },
+                { className: "Class 5", fee: 26000 },
+                { className: "Class 6", fee: 30000 },
+                { className: "Class 7", fee: 30000 },
+                { className: "Class 8", fee: 26000 },
+                { className: "Class 9", fee: 35000 },
+                { className: "Class 10", fee: 40000 },
+                { className: "Class 11", fee: 45000 },
+                { className: "Class 12", fee: 45000 },
+              ].map((row, idx) => (
+                <tr key={idx}>
+                  <td style={{ color: "var(--text-heading)", fontWeight: 800, fontSize: "0.95rem" }}>{row.className}</td>
+                  <td style={{ fontWeight: 850, color: "var(--success)", fontSize: "0.95rem" }}>
+                    ₹ {row.fee.toLocaleString("en-IN")}
                   </td>
-                  <td>{slab.term || slab.frequency}</td>
                   <td style={{ textAlign: "right" }}>
-                    <button onClick={() => handleDeleteSlab(slab._id || slab.id || "")} className="btn btn-secondary" style={{ padding: "0.3rem 0.5rem", color: "#ef4444" }}><Trash2 size={13} /></button>
+                    <button 
+                      onClick={() => {
+                        setEditingSlabId(String(idx));
+                        setSlabForm({
+                          title: `${row.className} Fee Structure`,
+                          className: row.className,
+                          tuitionFee: 20000,
+                          transportFee: 0,
+                          examFee: 1500,
+                          term: "Quarterly"
+                        });
+                        setIsSlabModalOpen(true);
+                      }} 
+                      className="btn btn-secondary" 
+                      style={{ padding: "0.35rem 0.75rem", fontSize: "0.78rem", gap: "0.3rem", color: "var(--primary)", border: "1px solid var(--border-color)" }}
+                    >
+                      <Edit3 size={13} /> Edit / Configure
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -743,49 +833,137 @@ export default function FeesPage() {
       {/* ════════════ ADD SLAB MODAL ════════════ */}
       {isSlabModalOpen && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div className="glass-card" style={{ width: "100%", maxWidth: "480px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "620px", maxHeight: "90vh", overflowY: "auto", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Add Fee Slab (MongoDB backend sync)</h3>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Configure Independent School Fee Slab</h3>
               <button onClick={() => setIsSlabModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
             </div>
 
-            <form onSubmit={handleSaveSlab} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SLAB TITLE</label>
-                <input type="text" value={slabForm.title} onChange={(e) => setSlabForm({ ...slabForm, title: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
-              </div>
-
+            <form onSubmit={handleSaveSlab} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              {/* Slab Title & Dynamic Class Selector */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>TARGET CLASS</label>
-                  <select value={slabForm.className} onChange={(e) => setSlabForm({ ...slabForm, className: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
-                    <option value="10">Class 10</option>
-                    <option value="9">Class 9</option>
-                    <option value="8">Class 8</option>
-                  </select>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SLAB TITLE</label>
+                  <input type="text" value={slabForm.title} onChange={(e) => setSlabForm({ ...slabForm, title: e.target.value })} placeholder="e.g. Class 5 Annual Slab 2026-27" required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FREQUENCY TERM</label>
-                  <select value={slabForm.term} onChange={(e) => setSlabForm({ ...slabForm, term: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
-                    <option value="Quarterly">Quarterly</option>
-                    <option value="Monthly">Monthly</option>
-                    <option value="Yearly">Yearly</option>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DYNAMIC CLASS</label>
+                  <select value={slabForm.className} onChange={(e) => setSlabForm({ ...slabForm, className: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                    <option value="Pre-Nursery">Pre-Nursery</option>
+                    <option value="Play Group">Play Group</option>
+                    <option value="Nursery">Nursery</option>
+                    <option value="LKG">LKG</option>
+                    <option value="UKG">UKG</option>
+                    <option value="Class 1">Class 1</option>
+                    <option value="Class 2">Class 2</option>
+                    <option value="Class 3">Class 3</option>
+                    <option value="Class 4">Class 4</option>
+                    <option value="Class 5">Class 5</option>
+                    <option value="Class 6">Class 6</option>
+                    <option value="Class 7">Class 7</option>
+                    <option value="Class 8">Class 8</option>
+                    <option value="Class 9">Class 9</option>
+                    <option value="Class 10">Class 10</option>
+                    <option value="Class 11">Class 11</option>
+                    <option value="Class 12">Class 12</option>
                   </select>
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem" }}>
-                <div>
-                  <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Tuition (₹)</label>
-                  <input type="number" value={slabForm.tuitionFee} onChange={(e) => setSlabForm({ ...slabForm, tuitionFee: Number(e.target.value) })} style={{ width: "100%", padding: "0.5rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              {/* Payment Frequency Selector */}
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>PAYMENT FREQUENCY</label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
+                  {["Monthly", "Quarterly", "Half-Yearly", "Yearly"].map(freq => (
+                    <button
+                      key={freq}
+                      type="button"
+                      onClick={() => setSlabForm({ ...slabForm, term: freq })}
+                      style={{
+                        padding: "0.5rem 0.75rem",
+                        borderRadius: 8,
+                        fontSize: "0.8rem",
+                        fontWeight: 700,
+                        border: "1px solid",
+                        borderColor: slabForm.term === freq ? "var(--primary)" : "var(--border-color)",
+                        background: slabForm.term === freq ? "rgba(99, 102, 241, 0.15)" : "var(--bg-input)",
+                        color: slabForm.term === freq ? "var(--primary)" : "var(--text-main)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      {freq}
+                    </button>
+                  ))}
                 </div>
+              </div>
+
+              {/* Itemized Fee Components Breakdown */}
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: 12, border: "1px solid var(--border-color)" }}>
+                <h4 style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--text-heading)", margin: "0 0 0.75rem 0" }}>💰 Itemized Fee Components Breakdown</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
+                  <div>
+                    <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Tuition Fee (₹)</label>
+                    <input type="number" value={slabForm.tuitionFee} onChange={(e) => setSlabForm({ ...slabForm, tuitionFee: Number(e.target.value) })} style={{ width: "100%", padding: "0.5rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Exam Fee (₹)</label>
+                    <input type="number" value={slabForm.examFee} onChange={(e) => setSlabForm({ ...slabForm, examFee: Number(e.target.value) })} style={{ width: "100%", padding: "0.5rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Admission Fee (₹)</label>
+                    <input type="number" defaultValue={2000} style={{ width: "100%", padding: "0.5rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Development (₹)</label>
+                    <input type="number" defaultValue={3000} style={{ width: "100%", padding: "0.5rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Library Fee (₹)</label>
+                    <input type="number" defaultValue={500} style={{ width: "100%", padding: "0.5rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Annual Fee (₹)</label>
+                    <input type="number" defaultValue={1000} style={{ width: "100%", padding: "0.5rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Separate Optional Transport Addon Section */}
+              <div style={{ background: "rgba(14, 165, 233, 0.08)", padding: "1rem", borderRadius: 12, border: "1px solid rgba(14, 165, 233, 0.25)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                  <h4 style={{ fontSize: "0.85rem", fontWeight: 800, color: "#0ea5e9", margin: 0 }}>🚌 Separate Optional Transport Fee Addon</h4>
+                  <span style={{ fontSize: "0.7rem", padding: "0.2rem 0.5rem", borderRadius: 4, background: "rgba(14, 165, 233, 0.2)", color: "#0ea5e9", fontWeight: 800 }}>OPT-IN ADDON</span>
+                </div>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "0 0 0.75rem 0" }}>Transport fee is kept separate from mandatory class base fees. Only students opting into bus service pay transport fees.</p>
                 <div>
-                  <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Transport (₹)</label>
+                  <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Annual Transport Fee (₹)</label>
                   <input type="number" value={slabForm.transportFee} onChange={(e) => setSlabForm({ ...slabForm, transportFee: Number(e.target.value) })} style={{ width: "100%", padding: "0.5rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
                 </div>
-                <div>
-                  <label style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block", marginBottom: 4 }}>Exam (₹)</label>
-                  <input type="number" value={slabForm.examFee} onChange={(e) => setSlabForm({ ...slabForm, examFee: Number(e.target.value) })} style={{ width: "100%", padding: "0.5rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              </div>
+
+              {/* Installment Breakdown Preview & Calculated Totals Card */}
+              <div style={{ background: "rgba(16, 185, 129, 0.08)", padding: "1rem", borderRadius: 12, border: "1px solid rgba(16, 185, 129, 0.25)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block" }}>CLASS BASE FEE (NON-BUS STUDENTS)</span>
+                    <strong style={{ fontSize: "1.1rem", color: "var(--text-heading)" }}>₹ {(slabForm.tuitionFee + slabForm.examFee + 6500).toLocaleString("en-IN")}</strong>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", display: "block" }}>TOTAL FOR BUS USERS</span>
+                    <strong style={{ fontSize: "1.1rem", color: "#10b981" }}>₹ {(slabForm.tuitionFee + slabForm.examFee + 6500 + slabForm.transportFee).toLocaleString("en-IN")}</strong>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(16, 185, 129, 0.2)", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                  📅 <strong>{slabForm.term} Installments:</strong> {
+                    slabForm.term === "Quarterly"
+                      ? `Q1: ₹ ${Math.round((slabForm.tuitionFee + slabForm.examFee + 6500) / 4).toLocaleString("en-IN")} | Q2: ₹ ${Math.round((slabForm.tuitionFee + slabForm.examFee + 6500) / 4).toLocaleString("en-IN")} | Q3: ₹ ${Math.round((slabForm.tuitionFee + slabForm.examFee + 6500) / 4).toLocaleString("en-IN")} | Q4: ₹ ${Math.round((slabForm.tuitionFee + slabForm.examFee + 6500) / 4).toLocaleString("en-IN")}`
+                      : slabForm.term === "Monthly"
+                        ? `12 Installments of ₹ ${Math.round((slabForm.tuitionFee + slabForm.examFee + 6500) / 12).toLocaleString("en-IN")}/month`
+                        : slabForm.term === "Half-Yearly"
+                          ? `H1: ₹ ${Math.round((slabForm.tuitionFee + slabForm.examFee + 6500) / 2).toLocaleString("en-IN")} | H2: ₹ ${Math.round((slabForm.tuitionFee + slabForm.examFee + 6500) / 2).toLocaleString("en-IN")}`
+                          : `1 Installment of ₹ ${(slabForm.tuitionFee + slabForm.examFee + 6500).toLocaleString("en-IN")}/year`
+                  }
                 </div>
               </div>
 
@@ -830,6 +1008,133 @@ export default function FeesPage() {
               <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
                 <button type="button" onClick={() => setIsAssignModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Assign Slab</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ SCHOLARSHIP MODAL ════════════ */}
+      {isScholarshipModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "480px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Add Waiver / Scholarship</h3>
+              <button onClick={() => setIsScholarshipModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSaveScholarship} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>STUDENT NAME</label>
+                <select value={scholarshipForm.name} onChange={(e) => setScholarshipForm({ ...scholarshipForm, name: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  <option value="">Select Student...</option>
+                  {MOCK_STUDENTS.map(s => <option key={s.id} value={s.name}>{s.name} ({s.class}-{s.section})</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DISCOUNT CATEGORY</label>
+                <select value={scholarshipForm.type} onChange={(e) => setScholarshipForm({ ...scholarshipForm, type: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  <option value="Sibling Discount">Sibling Discount</option>
+                  <option value="Merit Scholarship (Top 5%)">Merit Scholarship (Top 5%)</option>
+                  <option value="Staff Ward Concession">Staff Ward Concession</option>
+                  <option value="Sports Excellence Waiver">Sports Excellence Waiver</option>
+                  <option value="EWS / Financial Aid">EWS / Financial Aid</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>WAIVER RATE</label>
+                <input type="text" value={scholarshipForm.percentage} onChange={(e) => setScholarshipForm({ ...scholarshipForm, percentage: e.target.value })} placeholder="e.g. 15% or 25%" required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setIsScholarshipModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Apply Waiver</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ FINE MODAL ════════════ */}
+      {isFineModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "480px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Log Student Penalty / Fine</h3>
+              <button onClick={() => setIsFineModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSaveFine} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>STUDENT NAME</label>
+                <select value={fineForm.name} onChange={(e) => setFineForm({ ...fineForm, name: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  <option value="">Select Student...</option>
+                  {MOCK_STUDENTS.map(s => <option key={s.id} value={s.name}>{s.name} ({s.class}-{s.section})</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FINE REASON / CATEGORY</label>
+                <select value={fineForm.type} onChange={(e) => setFineForm({ ...fineForm, type: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  <option value="Late tuition Fee Payment">Late tuition Fee Payment</option>
+                  <option value="Library Overdue Book Penalty">Library Overdue Book Penalty</option>
+                  <option value="Campus Property Damage Charge">Campus Property Damage Charge</option>
+                  <option value="ID Card Replacement Fee">ID Card Replacement Fee</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FINE AMOUNT (₹)</label>
+                <input type="number" value={fineForm.amount} onChange={(e) => setFineForm({ ...fineForm, amount: e.target.value })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setIsFineModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Save Fine</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ REFUND MODAL ════════════ */}
+      {isRefundModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "480px", padding: "1.75rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Log Refund Claim</h3>
+              <button onClick={() => setIsRefundModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSaveRefund} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>STUDENT NAME</label>
+                <select value={refundForm.name} onChange={(e) => setRefundForm({ ...refundForm, name: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  <option value="">Select Student...</option>
+                  {MOCK_STUDENTS.map(s => <option key={s.id} value={s.name}>{s.name} ({s.class}-{s.section})</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>REFUND CATEGORY / REASON</label>
+                <select value={refundForm.type} onChange={(e) => setRefundForm({ ...refundForm, type: e.target.value })} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
+                  <option value="Admission Caution Deposit Refund">Admission Caution Deposit Refund</option>
+                  <option value="Transfer Certificate Relocation">Transfer Certificate Relocation</option>
+                  <option value="Duplicate Fee Payment Reversal">Duplicate Fee Payment Reversal</option>
+                  <option value="Bus Route Discontinuation">Bus Route Discontinuation</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>REFUND AMOUNT (₹)</label>
+                <input type="number" value={refundForm.amount} onChange={(e) => setRefundForm({ ...refundForm, amount: Number(e.target.value) })} required style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }} />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setIsRefundModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>Audit &amp; Log Refund</button>
               </div>
             </form>
           </div>

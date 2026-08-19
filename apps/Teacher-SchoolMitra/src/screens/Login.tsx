@@ -3,8 +3,9 @@ import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, 
   KeyboardAvoidingView, Platform, ScrollView, Alert 
 } from 'react-native';
-import { Mail, Lock, Eye, EyeOff, GraduationCap, ChevronLeft } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, ChevronLeft } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Logo from '../components/Logo';
 
 export default function Login({ navigation, route }: any) {
   const [emailOrPhone, setEmailOrPhone] = useState('');
@@ -152,7 +153,7 @@ export default function Login({ navigation, route }: any) {
 
           <View style={styles.header}>
             <View style={styles.brandBadge}>
-              <GraduationCap size={32} color="#ffffff" />
+              <Logo size={42} />
             </View>
             <Text style={styles.title}>Welcome Back!</Text>
             <Text style={styles.subtitle}>Sign in to continue to SchoolMitra</Text>

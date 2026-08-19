@@ -11,7 +11,10 @@ import {
   verifyFeePayment,
   getFeeReceiptByNo,
   getCollectionsReport,
-  getDefaultersReport
+  getDefaultersReport,
+  sendFeeReminderNotification,
+  applyStudentFeeOverride,
+  getStudentFeeLedger
 } from "./fees.controller";
 
 const router = Router();
@@ -20,10 +23,14 @@ const router = Router();
 router.get("/structure", getFeeStructures);
 router.post("/structure", createFeeStructure);
 router.post("/assign", assignFeeStructure);
+router.post("/students/override", applyStudentFeeOverride);
+router.get("/ledger/:studentId", getStudentFeeLedger);
 
 // Payment Collections & Verification
 router.post("/collect", collectFeePayment);
 router.post("/payment/verify", verifyFeePayment);
+router.post("/remind", sendFeeReminderNotification);
+router.post("/reminders", sendFeeReminderNotification);
 
 // Receipts & Reports
 router.get("/receipt/:receiptNo", getFeeReceiptByNo);

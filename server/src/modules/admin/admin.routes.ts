@@ -28,6 +28,7 @@ import {
   revokeApiKey,
   getSystemHealth,
   getStudentsList,
+  createStudentAdmission,
   getSuperAdminDashboard,
   getRevenueAnalytics,
   getSubscriptionsData,
@@ -51,9 +52,6 @@ import {
   createSupportTicket,
   updateSupportTicket,
   sendSupportChatMessage,
-  getAnnouncements,
-  createAnnouncement,
-  deleteAnnouncement,
   getAnalyticsCohorts,
   getGlobalNotifications,
   createGlobalNotification,
@@ -111,9 +109,6 @@ router.get("/support-tickets", getSupportTickets);
 router.post("/support-tickets", createSupportTicket);
 router.patch("/support-tickets/:id", updateSupportTicket);
 router.post("/support-chat", sendSupportChatMessage);
-router.get("/announcements", getAnnouncements);
-router.post("/announcements", createAnnouncement);
-router.delete("/announcements/:id", deleteAnnouncement);
 router.get("/analytics-cohorts", getAnalyticsCohorts);
 router.get("/global-notifications", getGlobalNotifications);
 router.post("/global-notifications", createGlobalNotification);
@@ -223,6 +218,25 @@ import {
 } from "./adminAcademic.controller";
 
 const schoolAdminGuards = [authenticate, requireSchool, requireRole("SchoolAdmin", "SuperAdmin")];
+
+// School Announcement System
+import {
+  getAdminAnnouncements,
+  createAdminAnnouncement,
+  getAdminAnnouncementById,
+  updateAdminAnnouncement,
+  deleteAdminAnnouncement,
+  publishAdminAnnouncement
+} from "./adminAnnouncement.controller";
+
+router.get("/announcements", schoolAdminGuards, getAdminAnnouncements);
+router.post("/announcements", schoolAdminGuards, createAdminAnnouncement);
+router.get("/announcements/:id", schoolAdminGuards, getAdminAnnouncementById);
+router.put("/announcements/:id", schoolAdminGuards, updateAdminAnnouncement);
+router.delete("/announcements/:id", schoolAdminGuards, deleteAdminAnnouncement);
+router.patch("/announcements/:id/publish", schoolAdminGuards, publishAdminAnnouncement);
+router.post("/announcements/:id/publish", schoolAdminGuards, publishAdminAnnouncement);
+
 
 // Homework Admin control
 router.get("/academics/homework", schoolAdminGuards, getAdminHomework);
@@ -355,6 +369,50 @@ router.get("/academics/report-cards", schoolAdminGuards, getAdminReportCards);
 router.post("/academics/report-cards/generate", schoolAdminGuards, generateAdminReportCards);
 router.patch("/academics/report-cards/:id/approve", schoolAdminGuards, approveAdminReportCard);
 router.patch("/academics/report-cards/:id/publish", schoolAdminGuards, publishAdminReportCard);
+
+// Active & Completed Trip Management Endpoints
+import {
+  getBuses,
+  createBus,
+  updateBus,
+  getRoutes,
+  createRoute,
+  updateRoute,
+  createStop,
+  updateStop,
+  assignBusRoute,
+  getAssignments,
+  getLiveTransport
+} from "../transport/transport.controller";
+
+router.post("/buses", schoolAdminGuards, createBus);
+router.get("/buses", schoolAdminGuards, getBuses);
+router.put("/buses/:id", schoolAdminGuards, updateBus);
+
+router.post("/routes", schoolAdminGuards, createRoute);
+router.get("/routes", schoolAdminGuards, getRoutes);
+router.put("/routes/:id", schoolAdminGuards, updateRoute);
+
+router.post("/stops", schoolAdminGuards, createStop);
+router.put("/stops/:id", schoolAdminGuards, updateStop);
+
+router.post("/transport/assignments", schoolAdminGuards, assignBusRoute);
+router.get("/transport/assignments", schoolAdminGuards, getAssignments);
+router.get("/transport/live", schoolAdminGuards, getLiveTransport);
+
+router.get("/trips", (req, res) => {
+  const trips = [
+    { id: "TRIP-01", busNo: "BUS-01", routeName: "Route 01", startTime: "07:00 AM", status: "IN PROGRESS" },
+    { id: "TRIP-02", busNo: "BUS-02", routeName: "Route 02", startTime: "07:15 AM", status: "COMPLETED" }
+  ];
+  return res.json({ success: true, trips });
+});
+
+router.get("/trips/:id", (req, res) => {
+  const { id } = req.params;
+  const trip = { id, busNo: "BUS-01", routeName: "Route 01", startTime: "07:00 AM", status: "IN PROGRESS" };
+  return res.json({ success: true, trip });
+});
 
 // Legacy/System Endpoints
 router.get("/stats", getDashboardStats);

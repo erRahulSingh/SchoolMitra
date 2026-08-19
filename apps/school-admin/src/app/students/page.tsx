@@ -61,14 +61,44 @@ export default function StudentsPage() {
   const [mandateAadhaar, setMandateAadhaar] = useState(true);
   const [mandateBirth, setMandateBirth] = useState(true);
 
-  React.useEffect(function() {
+  // Student Document Vault State
+  const [studentDocs, setStudentDocs] = useState([]);
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+  const [editingDocId, setEditingDocId] = useState(null);
+  const [docForm, setDocForm] = useState({
+    title: "",
+    category: "Aadhaar / ID",
+    fileUrl: "",
+    notes: ""
+  });
+
+  const fetchStudentDocs = async (studentId: any) => {
+    if (!studentId) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/v1/documents/students/${studentId}`);
+      const json = await res.json();
+      if (json.success) {
+        setStudentDocs(json.documents);
+      }
+    } catch (e) {
+      console.error("Student docs fetch error:", e);
+    }
+  };
+
+  React.useEffect(() => {
+    if (selectedStudentDossier && dossierTab === "documents") {
+      fetchStudentDocs(selectedStudentDossier.id);
+    }
+  }, [selectedStudentDossier, dossierTab]);
+
+  React.useEffect(() => {
     var fetchStudents = function() {
       fetch("http://localhost:5000/api/v1/students")
         .then(function(res) { return res.json(); })
         .then(function(json) {
           if (json.success && (json.students || json.data)) {
             var list = Array.isArray(json.students) ? json.students : (Array.isArray(json.data) ? json.data : []);
-            var mapped = list.map(function(s) {
+            var mapped = list.map(function(s: any) {
               return {
                 id: s.id || s._id || ("STU-" + Math.floor(1000 + Math.random() * 9000)),
                 admissionNo: s.admissionNo || "ADM-2026-101",
@@ -133,19 +163,19 @@ export default function StudentsPage() {
     return matchesSearch && matchesClass && matchesSec && matchesStatus;
   });
 
-  var toggleSelectStudent = function(id) {
-    setSelectedStudentIds(function(prev) { return Object.assign({}, prev, { [id]: !prev[id] }); });
+  var toggleSelectStudent = function(id: any) {
+    setSelectedStudentIds(function(prev: any) { return Object.assign({}, prev, { [id]: !prev[id] }); });
   };
 
   var toggleSelectAll = function() {
-    var allFilteredIds = filteredStudents.map(function(s) { return s.id; });
-    var someUnchecked = allFilteredIds.some(function(id) { return !selectedStudentIds[id]; });
+    var allFilteredIds = filteredStudents.map(function(s: any) { return s.id; });
+    var someUnchecked = allFilteredIds.some(function(id: any) { return !selectedStudentIds[id]; });
     var updated = Object.assign({}, selectedStudentIds);
-    allFilteredIds.forEach(function(id) { updated[id] = someUnchecked; });
+    allFilteredIds.forEach(function(id: any) { updated[id] = someUnchecked; });
     setSelectedStudentIds(updated);
   };
 
-  var handleDocStatusChange = function(studentId, docName, status) {
+  var handleDocStatusChange = function(studentId: any, docName: any, status: any) {
     setDocumentApprovals(function(prev) {
       var updated = Object.assign({}, prev);
       updated[studentId] = Object.assign({}, (prev[studentId] || {}), { [docName]: status });
@@ -751,28 +781,207 @@ export default function StudentsPage() {
                 )}
                 {dossierTab === "documents" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                    <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#fff", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem" }}>Admissions Documents Checklist</h4>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.75rem" }}>
+                      <div>
+                        <h4 style={{ fontSize: "1.05rem", fontWeight: 800, color: "#fff" }}>Student Documents &amp; Certificates Vault</h4>
+                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 2 }}>
+                          Manage Aadhaar, Birth Certificate, TC, Marksheets &amp; ID Proofs for <strong>{selectedStudentDossier?.name}</strong>
+                        </div>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setEditingDocId(null);
+                          setDocForm({ title: "", category: "Aadhaar / ID", fileUrl: "", notes: "" });
+                          setIsDocModalOpen(true);
+                        }} 
+                        className="btn btn-primary" 
+                        style={{ padding: "0.45rem 0.85rem", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
+                      >
+                        <Upload size={14} /> Upload Document
+                      </button>
+                    </div>
+
+                    {/* Document Categories Checklist */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                       {[
-                        { name: "Aadhaar Card Copy", key: "Aadhaar Card" },
-                        { name: "Birth Certificate", key: "Birth Certificate" },
-                        { name: "Transfer Certificate (TC)", key: "Transfer Certificate" },
-                        { name: "Medical Fit Certificate", key: "Medical Certificate" }
-                      ].map(function(doc, idx) {
-                        var status = (selectedStudentDossier && documentApprovals[selectedStudentDossier.id] && documentApprovals[selectedStudentDossier.id][doc.key]) || "Pending";
+                        "Aadhaar / ID",
+                        "Birth Certificate",
+                        "Transfer Certificate",
+                        "Previous Marksheet",
+                        "Address Proof",
+                        "Passport Photo",
+                        "Other"
+                      ].map((catName) => {
+                        const existingDocs = studentDocs.filter(d => d.category === catName);
+                        const hasDoc = existingDocs.length > 0;
                         return (
-                          <div key={idx} style={{ padding: "0.85rem", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div>
-                              <div style={{ fontSize: "0.825rem", fontWeight: 700, color: "#fff" }}>{doc.name}</div>
-                              <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: 2 }}>Verified by registrar</div>
+                          <div 
+                            key={catName} 
+                            style={{ 
+                              padding: "1rem", 
+                              background: hasDoc ? "rgba(16, 185, 129, 0.04)" : "rgba(255,255,255,0.02)", 
+                              borderRadius: "12px", 
+                              border: hasDoc ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid var(--border-color)",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "0.6rem"
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <FileText size={16} color={hasDoc ? "#10b981" : "#64748b"} />
+                                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>{catName}</span>
+                              </div>
+                              <span className={`badge ${hasDoc ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.65rem" }}>
+                                {hasDoc ? "UPLOADED & VERIFIED" : "NOT SUBMITTED"}
+                              </span>
                             </div>
-                            <span className={"badge " + (status === "Verified" ? "badge-success" : status === "Rejected" ? "badge-danger" : "badge-warning")} style={{ fontSize: "0.68rem" }}>
-                              {status === "Verified" ? "VERIFIED" : status === "Rejected" ? "REJECTED" : "PENDING"}
-                            </span>
+
+                            {hasDoc ? (
+                              existingDocs.map((docItem) => (
+                                <div key={docItem._id || docItem.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(0,0,0,0.2)", padding: "0.5rem 0.75rem", borderRadius: "8px", marginTop: 4 }}>
+                                  <div>
+                                    <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#e2e8f0" }}>{docItem.title}</div>
+                                    <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>{docItem.fileSize || "1.2 MB"} • {docItem.documentType || "PDF"}</div>
+                                  </div>
+                                  <div style={{ display: "flex", gap: "0.4rem" }}>
+                                    <a 
+                                      href={docItem.fileUrl} 
+                                      target="_blank" 
+                                      rel="noreferrer" 
+                                      className="btn btn-secondary" 
+                                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.7rem", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}
+                                    >
+                                      <Eye size={12} /> View
+                                    </a>
+                                    <button 
+                                      type="button" 
+                                      onClick={() => {
+                                        setEditingDocId(docItem._id || docItem.id);
+                                        setDocForm({ title: docItem.title, category: docItem.category, fileUrl: docItem.fileUrl, notes: docItem.notes || "" });
+                                        setIsDocModalOpen(true);
+                                      }}
+                                      style={{ background: "rgba(56, 189, 248, 0.15)", border: "1px solid rgba(56, 189, 248, 0.3)", color: "#38bdf8", padding: "0.25rem 0.5rem", borderRadius: 4, cursor: "pointer", fontSize: "0.7rem", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}
+                                    >
+                                      <Edit3 size={12} /> Replace
+                                    </button>
+                                    <button 
+                                      type="button" 
+                                      onClick={async () => {
+                                        if (confirm("Are you sure you want to delete this document?")) {
+                                          try {
+                                            await fetch(`http://localhost:5000/api/v1/documents/students/doc/${docItem._id || docItem.id}`, { method: "DELETE" });
+                                            fetchStudentDocs(selectedStudentDossier.id);
+                                          } catch (e) {}
+                                        }
+                                      }} 
+                                      style={{ background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#ef4444", padding: "0.25rem 0.5rem", borderRadius: 4, cursor: "pointer", fontSize: "0.7rem" }}
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic", marginTop: 2 }}>
+                                No document uploaded for this category yet.
+                              </div>
+                            )}
                           </div>
                         );
                       })}
                     </div>
+
+                    {/* Upload / Replace Document Modal */}
+                    {isDocModalOpen && (
+                      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999, padding: "1rem" }}>
+                        <div className="glass-card" style={{ padding: "1.5rem", width: "100%", maxWidth: 480, background: "#0f172a", border: "1px solid #334155", borderRadius: 16 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+                            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff" }}>
+                              {editingDocId ? "Replace Student Document" : "Upload Student Document"}
+                            </h3>
+                            <button type="button" onClick={() => setIsDocModalOpen(false)} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer" }}>
+                              <X size={20} />
+                            </button>
+                          </div>
+
+                          <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            if (!docForm.title || !docForm.fileUrl) return alert("Title and File URL are required!");
+                            try {
+                              if (editingDocId) {
+                                await fetch(`http://localhost:5000/api/v1/documents/students/doc/${editingDocId}`, {
+                                  method: "PUT",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify(docForm)
+                                });
+                              } else {
+                                await fetch(`http://localhost:5000/api/v1/documents/students/${selectedStudentDossier.id}`, {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify(docForm)
+                                });
+                              }
+                              setIsDocModalOpen(false);
+                              fetchStudentDocs(selectedStudentDossier.id);
+                            } catch (err) {
+                              alert("Failed to save document.");
+                            }
+                          }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            <div>
+                              <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#cbd5e1", display: "block", marginBottom: 4 }}>DOCUMENT TITLE</label>
+                              <input 
+                                type="text" 
+                                value={docForm.title} 
+                                onChange={(e) => setDocForm({ ...docForm, title: e.target.value })} 
+                                placeholder="e.g. Student Aadhaar Card Scan" 
+                                required 
+                                style={{ width: "100%", padding: "0.65rem", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#fff", fontSize: "0.85rem" }} 
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#cbd5e1", display: "block", marginBottom: 4 }}>CATEGORY</label>
+                              <select 
+                                value={docForm.category} 
+                                onChange={(e) => setDocForm({ ...docForm, category: e.target.value })} 
+                                style={{ width: "100%", padding: "0.65rem", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#fff", fontSize: "0.85rem" }}
+                              >
+                                {[
+                                  "Aadhaar / ID",
+                                  "Birth Certificate",
+                                  "Transfer Certificate",
+                                  "Previous Marksheet",
+                                  "Address Proof",
+                                  "Passport Photo",
+                                  "Other"
+                                ].map(c => <option key={c} value={c}>{c}</option>)}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#cbd5e1", display: "block", marginBottom: 4 }}>FILE URL / LINK</label>
+                              <input 
+                                type="text" 
+                                value={docForm.fileUrl} 
+                                onChange={(e) => setDocForm({ ...docForm, fileUrl: e.target.value })} 
+                                placeholder="https://example.com/docs/aadhaar.pdf" 
+                                required 
+                                style={{ width: "100%", padding: "0.65rem", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, color: "#fff", fontSize: "0.85rem" }} 
+                              />
+                            </div>
+
+                            <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                              <button type="button" onClick={() => setIsDocModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                              <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>
+                                {editingDocId ? "Update Document" : "Save Document"}
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 {dossierTab === "timeline" && (

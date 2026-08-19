@@ -31,7 +31,7 @@ function InfoField({ icon: Icon, label, value }: InfoFieldProps) {
       background: "#ffffff"
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-        <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justify: "center", color: "#2563eb", flexShrink: 0 }}>
+        <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563eb", flexShrink: 0 }}>
           <Icon size={16} strokeWidth={2.5} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
@@ -147,7 +147,7 @@ export default function ProfileSettingsPage({ onNavigate }: { onNavigate?: (tab:
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.95rem 1.15rem", borderBottom: "1px solid #f1f5f9", cursor: "pointer" }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#fef2f2", display: "flex", alignItems: "center", justify: "center", color: "#ef4444" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", color: "#ef4444" }}>
                 <Lock size={16} strokeWidth={2.5} />
               </div>
               <span style={{ fontSize: "0.85rem", color: "#1e293b", fontWeight: 800 }}>Change Password</span>
@@ -161,7 +161,7 @@ export default function ProfileSettingsPage({ onNavigate }: { onNavigate?: (tab:
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.95rem 1.15rem", borderBottom: "1px solid #f1f5f9", cursor: "pointer" }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#ecfdf5", display: "flex", alignItems: "center", justify: "center", color: "#10b981" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", color: "#10b981" }}>
                 <Globe size={16} strokeWidth={2.5} />
               </div>
               <span style={{ fontSize: "0.85rem", color: "#1e293b", fontWeight: 800 }}>Language</span>
@@ -178,7 +178,7 @@ export default function ProfileSettingsPage({ onNavigate }: { onNavigate?: (tab:
             style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.95rem 1.15rem", cursor: "pointer" }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#fffbeb", display: "flex", alignItems: "center", justify: "center", color: "#f59e0b" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center", color: "#f59e0b" }}>
                 <Sun size={16} strokeWidth={2.5} />
               </div>
               <span style={{ fontSize: "0.85rem", color: "#1e293b", fontWeight: 800 }}>Theme</span>

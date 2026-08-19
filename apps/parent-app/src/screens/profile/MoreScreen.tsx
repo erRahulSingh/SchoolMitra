@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { 
   IndianRupee, Bus, CalendarCheck, Image as ImageIcon, Calendar, Megaphone, 
   Download, FileEdit, CreditCard, BookOpen, Headphones, Settings, 
-  Trophy, FileText, UserCheck, HelpCircle, Headset, Clock, Layers
+  Trophy, FileText, UserCheck, HelpCircle, Headset, Clock, Layers, Info
 } from 'lucide-react-native';
 import ParentHeader from '../../components/ParentHeader';
 

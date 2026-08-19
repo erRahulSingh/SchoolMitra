@@ -16,6 +16,8 @@ import transportRoutes from "../modules/transport/transport.routes";
 import gpsRoutes from "../modules/gps/gps.routes";
 import notificationRoutes from "../modules/notifications/notifications.routes";
 import chatRoutes from "../modules/chat/chat.routes";
+import circularRoutes from "../modules/communication/circular.routes";
+import emergencyRoutes from "../modules/communication/emergency.routes";
 import reportRoutes from "../modules/report/report.routes";
 import analyticsRoutes from "../modules/analytics/analytics.routes";
 import subscriptionRoutes from "../modules/subscription/subscription.routes";
@@ -31,20 +33,35 @@ import libraryRoutes from "../modules/library/library.routes";
 import inventoryRoutes from "../modules/inventory/inventory.routes";
 import permissionsRoutes from "../modules/permissions/permissions.routes";
 import academicRoutes from "../modules/academic/academic.routes";
+import calendarRoutes from "../modules/calendar/calendar.routes";
+import eventsRoutes from "../modules/events/events.routes";
+import leaveRoutes from "../modules/leave/leave.routes";
+import adminDriverRoutes from "../modules/admin/adminDriver.routes";
 
 import uploadRoutes from "../modules/upload/upload.routes";
+import documentRoutes from "../modules/documents/document.routes";
+import certificateRoutes from "../modules/certificates/certificate.routes";
 
 const router = Router();
 
 // Mount all Backend Microservice Modules
 router.use("/auth", authRoutes);
 router.use("/upload", uploadRoutes);
+router.use("/documents", documentRoutes);
+router.use("/certificates", certificateRoutes);
+
+// Admin Microservice Aliases for Documents & Certificates
+router.use("/admin/certificates", certificateRoutes);
+router.use("/admin/documents", documentRoutes);
+router.use("/admin/students", documentRoutes);
+router.use("/admin/teachers", documentRoutes);
 
 router.use("/settings", settingsRoutes);
 router.use("/academics", academicsRoutes);
 router.use("/driver", driverRoutes);
 router.use("/tenant", tenantRoutes);
 router.use("/admin", adminRoutes);
+router.use("/admin/drivers", adminDriverRoutes);
 router.use("/admin", academicRoutes);
 router.use("/schools", schoolRoutes);
 router.use("/students", studentRoutes);
@@ -63,6 +80,10 @@ router.use("/transport", transportRoutes);
 router.use("/gps", gpsRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/chat", chatRoutes);
+router.use("/", circularRoutes);
+router.use("/communication", circularRoutes);
+router.use("/", emergencyRoutes);
+router.use("/communication", emergencyRoutes);
 router.use("/reports", reportRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/subscriptions", subscriptionRoutes);
@@ -72,14 +93,23 @@ router.use("/hr", hrRoutes);
 router.use("/library", libraryRoutes);
 router.use("/inventory", inventoryRoutes);
 router.use("/permissions", permissionsRoutes);
+router.use("/calendar", calendarRoutes);
+router.use("/events", eventsRoutes);
+router.use("/leave", leaveRoutes);
 
 // Health Check
+import mongoose from "mongoose";
+
 router.get("/health", (req, res) => {
+  const states = ["disconnected", "connected", "connecting", "disconnecting"];
+  const dbState = states[mongoose.connection.readyState] || "unknown";
   res.json({
     status: "healthy",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
-    database: "MongoDB Atlas Connected",
+    databaseStatus: dbState,
+    databaseHost: mongoose.connection.host || null,
+    databaseName: mongoose.connection.name || null,
     totalModules: 21,
     service: "SchoolMitra Unified Backend API"
   });

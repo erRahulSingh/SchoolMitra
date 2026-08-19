@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
-import { GraduationCap, Calendar, Clock, CheckCircle2, AlertCircle, BookOpen, ChevronRight, UserCheck } from 'lucide-react-native';
+import { Calendar, Clock, CheckCircle2, AlertCircle, BookOpen, ChevronRight, UserCheck } from 'lucide-react-native';
+import Logo from '../components/Logo';
 
 const { width } = Dimensions.get('window');
 
@@ -21,9 +22,6 @@ export default function Dashboard({ navigation }: any) {
             <Text style={styles.greeting}>Good Morning 👋</Text>
             <Text style={styles.teacherName}>Rahul Sharma</Text>
           </View>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>RS</Text>
-          </View>
         </View>
 
         {/* HERO BANNER CARD */}
@@ -33,7 +31,7 @@ export default function Dashboard({ navigation }: any) {
             <Text style={styles.heroSub}>Keep going, you're doing great!</Text>
           </View>
           <View style={styles.heroBadge}>
-            <GraduationCap size={28} color="#ffffff" />
+            <Logo size={36} />
           </View>
         </View>
 

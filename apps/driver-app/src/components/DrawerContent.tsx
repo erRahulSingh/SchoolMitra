@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Platform } from 'react-native';
 import { 
   Home, Map, Users, UserCheck, RotateCcw, ClipboardCheck, Cpu, Calendar,
@@ -15,6 +15,21 @@ interface DrawerContentProps {
 
 export default function DrawerContent({ navigation, state }: DrawerContentProps) {
   const { colors, isDark, toggleTheme } = useTheme();
+  const [driverUser, setDriverUser] = useState<any>({
+    name: 'Rajesh Kumar',
+    role: 'Senior School Bus Captain',
+    busNo: 'BUS-01'
+  });
+
+  useEffect(() => {
+    AsyncStorage.getItem('driverUser').then(res => {
+      if (res) {
+        try {
+          setDriverUser(JSON.parse(res));
+        } catch (e) {}
+      }
+    });
+  }, []);
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('driverUser');
@@ -81,13 +96,13 @@ export default function DrawerContent({ navigation, state }: DrawerContentProps)
           <View style={styles.onlineDot} />
         </View>
         
-        <Text style={styles.driverName}>Rajesh Kumar</Text>
-        <Text style={styles.driverRole}>Senior School Bus Captain</Text>
+        <Text style={styles.driverName}>{driverUser.name || 'Rajesh Kumar'}</Text>
+        <Text style={styles.driverRole}>{driverUser.role || 'Senior School Bus Captain'}</Text>
         
         <View style={styles.busInfoRow}>
           <View style={styles.busBadge}>
             <Bus size={12} color="#ffffff" />
-            <Text style={styles.busText}>UP-32-SM-9942</Text>
+            <Text style={styles.busText}>{driverUser.busNo || 'BUS-01'}</Text>
           </View>
           <View style={styles.statusBadge}>
             <View style={styles.statusDotGreen} />

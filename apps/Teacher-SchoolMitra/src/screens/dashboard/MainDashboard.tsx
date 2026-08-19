@@ -21,10 +21,10 @@ import {
   Calendar,
   Layers,
   FlaskConical,
-  GraduationCap,
   Sparkles
 } from 'lucide-react-native';
 import Header from '../../components/Header';
+import Logo from '../../components/Logo';
 
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -120,7 +120,7 @@ export default function MainDashboard({ navigation }: any) {
             <Text style={styles.heroSub}>Keep going, you're doing great!</Text>
           </View>
           <View style={styles.heroIconBadge}>
-            <GraduationCap size={32} color="#7c3aed" />
+            <Logo size={38} variant="white" />
           </View>
         </LinearGradient>
 
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   header: {
     flexDirection: 'row',
-    justify: 'space-between',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center'
   },
   unreadDot: {

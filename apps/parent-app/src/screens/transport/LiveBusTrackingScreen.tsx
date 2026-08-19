@@ -1,13 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Dimensions } from 'react-native';
 import { ChevronLeft, Bell, Bus, MapPin, Clock, CheckCircle2, Navigation, ClipboardList } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import ParentHeader from '../../components/ParentHeader';
+import { createSocketConnection } from '../../lib/socketClient';
 
 const { width } = Dimensions.get('window');
 
 export default function LiveBusTrackingScreen({ navigation }: any) {
+  const [isTrackingActive, setIsTrackingActive] = useState(false);
+  const [liveLocation, setLiveLocation] = useState<any>({
+    latitude: 28.5833,
+    longitude: 77.0667,
+    speed: 0,
+    heading: 90,
+    timestamp: ""
+  });
+
+  const [lastUpdatedText, setLastUpdatedText] = useState("Just now");
+
+  useEffect(() => {
+    if (!isTrackingActive) return;
+
+    const socket = createSocketConnection("http://localhost:5000");
+    let lastReceiveTime = Date.now();
+
+    if (socket) {
+      if (typeof socket.emit === 'function') {
+        socket.emit("bus:join_room", { busId: "BUS-01", parentId: "PARENT-9942" });
+      }
+
+      socket.on("bus:location_changed", (data: any) => {
+        if (data && data.busId === "BUS-01") {
+          setLiveLocation(data);
+          lastReceiveTime = Date.now();
+          setLastUpdatedText(data.isStale ? "Last updated 2 min ago" : "Just now");
+        }
+      });
+    }
+
+    const checker = setInterval(() => {
+      const diff = Date.now() - lastReceiveTime;
+      if (diff > 5000) {
+        setLastUpdatedText("Last updated 2 min ago");
+      }
+    }, 2000);
+
+    return () => {
+      clearInterval(checker);
+      if (socket && typeof socket.disconnect === 'function') {
+        socket.disconnect();
+      }
+    };
+  }, [isTrackingActive]);
+
   const routeStops = [
+    { name: 'Main Market', time: '07:35 AM', status: 'Completed', completed: true },
     { name: 'Maple Park', time: '07:50 AM', status: 'Completed', completed: true },
     { name: 'City Center', time: '07:58 AM', status: 'Completed', completed: true },
     { name: 'Sector 52', time: '08:03 AM', status: 'Upcoming', completed: false },
@@ -29,132 +77,177 @@ export default function LiveBusTrackingScreen({ navigation }: any) {
         {/* Page Title */}
         <Text style={styles.pageTitle}>Live Bus Tracking</Text>
 
-        {/* Bus Info Header Card (Purple) */}
-        <LinearGradient
-          colors={['#4c1d95', '#6d28d9', '#5b21b6']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.purpleBusCard}
-        >
-          <View style={styles.busIconWhiteCircle}>
-            <Bus size={24} color="#5b21b6" strokeWidth={2.2} />
+        {/* My Child -> Transport Info Card */}
+        <View style={styles.childTransportCard}>
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.busIconWhiteCircle}>
+              <Bus size={22} color="#4f46e5" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardHeaderTitle}>My Child's Transport</Text>
+              <Text style={styles.cardHeaderSubTitle}>Academic Year 2026-27</Text>
+            </View>
           </View>
-          <View style={styles.busInfoTextCol}>
-            <Text style={styles.busNumberText}>Bus No. UP32 AB 1234</Text>
-            <Text style={styles.busRouteText}>Route: Green Valley Route</Text>
-          </View>
-        </LinearGradient>
 
-        {/* Live Location GPS Map Box */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitleNoMargin}>Live Location</Text>
-          <View style={styles.livePill}>
-            <View style={styles.liveGreenDot} />
-            <Text style={styles.livePillText}>Live</Text>
-          </View>
-        </View>
+          <View style={styles.infoGrid}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabelText}>Assigned Bus:</Text>
+              <Text style={styles.infoValueText}>🚌 BUS-01</Text>
+            </View>
 
-        <View style={styles.mapCard}>
-          {/* Mock Map Vector Graphic */}
-          <LinearGradient
-            colors={['#f1f5f9', '#e2e8f0']}
-            style={styles.mapGraphicBox}
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabelText}>Pilot Driver:</Text>
+              <Text style={styles.infoValueText}>Amit Kumar</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabelText}>Bus Route Belt:</Text>
+              <Text style={styles.infoValueText}>Route 01</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabelText}>Pickup Stop:</Text>
+              <Text style={styles.infoValueText}>Main Market</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabelText}>Pickup Scheduled Time:</Text>
+              <Text style={styles.infoValueText}>7:35 AM</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabelText}>Today's Status:</Text>
+              <Text style={[styles.infoValueText, { color: '#16a34a', fontWeight: '900' }]}>🟢 Bus On Route</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.trackButton, isTrackingActive && styles.trackButtonActive]} 
+            onPress={() => setIsTrackingActive(!isTrackingActive)}
           >
-            {/* Sector Labels */}
-            <Text style={[styles.mapRoadText, { top: 20, left: 30 }]}>Sector 15</Text>
-            <Text style={[styles.mapRoadText, { top: 20, right: 30 }]}>Sector 52</Text>
-            <Text style={[styles.mapRoadText, { bottom: 50, left: 70 }]}>City Center</Text>
-            <Text style={[styles.mapRoadText, { bottom: 20, right: 20 }]}>Green Valley School</Text>
-
-            {/* Blue Route Route Path Line */}
-            <View style={styles.routePathLine} />
-
-            {/* Route Stop Dots */}
-            <View style={[styles.mapDotCircle, { top: 70, left: 50 }]} />
-            <View style={[styles.mapDotCircle, { top: 40, right: 80 }]} />
-
-            {/* Floating Bus Marker Pin */}
-            <View style={styles.busMarkerPin}>
-              <Bus size={18} color="#ffffff" />
-            </View>
-
-            {/* Destination School Pin */}
-            <View style={styles.destinationPin}>
-              <MapPin size={18} color="#ffffff" />
-            </View>
-          </LinearGradient>
-
-          {/* Bottom Info Cards (2 Columns) */}
-          <View style={styles.mapBottomInfoRow}>
-            <View style={styles.infoColLeft}>
-              <Text style={styles.infoLabel}>Estimated Arrival</Text>
-              <View style={styles.etaRow}>
-                <Text style={styles.etaTimeText}>08:05 AM</Text>
-                <Clock size={18} color="#ea580c" />
-              </View>
-              <Text style={styles.etaSubText}>5 min to school</Text>
-            </View>
-
-            <View style={styles.infoColRight}>
-              <Text style={styles.infoLabel}>Current Stop</Text>
-              <View style={styles.stopRowRight}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.stopMainText}>Maple Park</Text>
-                  <Text style={styles.stopSubText}>Next: School</Text>
-                </View>
-                <View style={styles.clipboardBadge}>
-                  <ClipboardList size={16} color="#7c3aed" />
-                </View>
-              </View>
-            </View>
-          </View>
+            <Text style={styles.trackButtonText}>
+              {isTrackingActive ? 'Hide Live Map' : 'Track Bus'}
+            </Text>
+            <Navigation size={18} color="#ffffff" style={{ transform: [{ rotate: isTrackingActive ? '180deg' : '0deg' }] }} />
+          </TouchableOpacity>
         </View>
 
-        {/* Route Stops Timeline */}
-        <Text style={styles.sectionTitle}>Route Stops</Text>
-        <View style={styles.timelineCard}>
-          {routeStops.map((stop, idx) => (
-            <View key={idx} style={styles.timelineRow}>
-              {/* Timeline Connector Line & Dot */}
-              <View style={styles.timelineLeftCol}>
-                <View style={[
-                  styles.timelineDot,
-                  stop.completed && styles.dotCompleted,
-                  !stop.completed && !stop.isFinal && styles.dotUpcoming,
-                  stop.isFinal && styles.dotFinal,
-                ]}>
-                  {stop.isFinal ? (
-                    <MapPin size={12} color="#ffffff" />
-                  ) : (
-                    <View style={styles.innerDotWhite} />
-                  )}
-                </View>
-                {idx < routeStops.length - 1 && (
-                  <View style={[styles.timelineLine, stop.completed && styles.lineCompleted]} />
-                )}
-              </View>
-
-              {/* Stop Info */}
-              <View style={styles.timelineInfoCol}>
-                <Text style={styles.stopNameText}>{stop.name}</Text>
-                <Text style={styles.stopTimeText}>{stop.time}</Text>
-              </View>
-
-              {/* Status Badge */}
-              <View style={[
-                styles.stopBadge,
-                stop.completed ? styles.badgeCompleted : styles.badgeUpcoming
-              ]}>
-                <Text style={[
-                  styles.stopBadgeText,
-                  stop.completed ? styles.textCompleted : styles.textUpcoming
-                ]}>
-                  {stop.status}
+        {isTrackingActive && (
+          <>
+            {/* Live Location GPS Map Box */}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitleNoMargin}>Live Location</Text>
+              <View style={[styles.livePill, lastUpdatedText.includes("2 min") && { backgroundColor: "#fee2e2" }]}>
+                <View style={[styles.liveGreenDot, lastUpdatedText.includes("2 min") && { backgroundColor: "#ef4444" }]} />
+                <Text style={[styles.livePillText, lastUpdatedText.includes("2 min") && { color: "#ef4444" }]}>
+                  {lastUpdatedText}
                 </Text>
               </View>
             </View>
-          ))}
-        </View>
+
+            <View style={styles.mapCard}>
+              {/* Mock Map Vector Graphic */}
+              <LinearGradient
+                colors={['#f1f5f9', '#e2e8f0']}
+                style={styles.mapGraphicBox}
+              >
+                {/* Sector Labels */}
+                <Text style={[styles.mapRoadText, { top: 20, left: 30 }]}>Main Road</Text>
+                <Text style={[styles.mapRoadText, { top: 20, right: 30 }]}>Sector 52</Text>
+                <Text style={[styles.mapRoadText, { bottom: 50, left: 70 }]}>Main Market</Text>
+                <Text style={[styles.mapRoadText, { bottom: 20, right: 20 }]}>Green Valley School</Text>
+
+                {/* Blue Route Route Path Line */}
+                <View style={styles.routePathLine} />
+
+                {/* Route Stop Dots */}
+                <View style={[styles.mapDotCircle, { top: 70, left: 50 }]} />
+                <View style={[styles.mapDotCircle, { top: 40, right: 80 }]} />
+
+                {/* Floating Bus Marker Pin */}
+                <View style={styles.busMarkerPin}>
+                  <Bus size={18} color="#ffffff" />
+                </View>
+
+                {/* Destination School Pin */}
+                <View style={styles.destinationPin}>
+                  <MapPin size={18} color="#ffffff" />
+                </View>
+              </LinearGradient>
+
+              {/* Bottom Info Cards (2 Columns) */}
+              <View style={styles.mapBottomInfoRow}>
+                <View style={styles.infoColLeft}>
+                  <Text style={styles.infoLabel}>Estimated Arrival</Text>
+                  <View style={styles.etaRow}>
+                    <Text style={styles.etaTimeText}>08:05 AM</Text>
+                    <Clock size={18} color="#ea580c" />
+                  </View>
+                  <Text style={styles.etaSubText}>{`Speed: ${liveLocation.speed} km/h • Heading: ${liveLocation.heading}°`}</Text>
+                </View>
+
+                <View style={styles.infoColRight}>
+                  <Text style={styles.infoLabel}>Current Stop</Text>
+                  <View style={styles.stopRowRight}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.stopMainText}>Main Market</Text>
+                      <Text style={styles.stopSubText}>Next: School</Text>
+                    </View>
+                    <View style={styles.clipboardBadge}>
+                      <ClipboardList size={16} color="#7c3aed" />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Route Stops Timeline */}
+            <Text style={styles.sectionTitle}>Route Stops</Text>
+            <View style={styles.timelineCard}>
+              {routeStops.map((stop, idx) => (
+                <View key={idx} style={styles.timelineRow}>
+                  {/* Timeline Connector Line & Dot */}
+                  <View style={styles.timelineLeftCol}>
+                    <View style={[
+                      styles.timelineDot,
+                      stop.completed && styles.dotCompleted,
+                      !stop.completed && !stop.isFinal && styles.dotUpcoming,
+                      stop.isFinal && styles.dotFinal,
+                    ]}>
+                      {stop.isFinal ? (
+                        <MapPin size={12} color="#ffffff" />
+                      ) : (
+                        <View style={styles.innerDotWhite} />
+                      )}
+                    </View>
+                    {idx < routeStops.length - 1 && (
+                      <View style={[styles.timelineLine, stop.completed && styles.lineCompleted]} />
+                    )}
+                  </View>
+
+                  {/* Stop Info */}
+                  <View style={styles.timelineInfoCol}>
+                    <Text style={styles.stopNameText}>{stop.name}</Text>
+                    <Text style={styles.stopTimeText}>{stop.time}</Text>
+                  </View>
+
+                  {/* Status Badge */}
+                  <View style={[
+                    styles.stopBadge,
+                    stop.completed ? styles.badgeCompleted : styles.badgeUpcoming
+                  ]}>
+                    <Text style={[
+                      styles.stopBadgeText,
+                      stop.completed ? styles.textCompleted : styles.textUpcoming
+                    ]}>
+                      {stop.status}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
 
       </ScrollView>
     </View>
@@ -166,31 +259,86 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 16, paddingBottom: 100 },
   pageTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a', marginBottom: 16 },
 
-  // Purple Bus Header Card
-  purpleBusCard: {
+  // Child Transport Card Styles
+  childTransportCard: {
+    backgroundColor: '#ffffff',
     borderRadius: 20,
-    padding: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    elevation: 3,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+  },
+  cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    marginBottom: 20,
-    elevation: 4,
-    shadowColor: '#5b21b6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    paddingBottom: 12,
+    marginBottom: 16,
   },
+  cardHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#1e293b',
+  },
+  cardHeaderSubTitle: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  infoGrid: {
+    gap: 10,
+    marginBottom: 20,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+  infoLabelText: {
+    fontSize: 13,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  infoValueText: {
+    fontSize: 13,
+    color: '#0f172a',
+    fontWeight: '800',
+  },
+  trackButton: {
+    backgroundColor: '#4f46e5',
+    borderRadius: 14,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    elevation: 2,
+  },
+  trackButtonActive: {
+    backgroundColor: '#3b82f6',
+  },
+  trackButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+
   busIconWhiteCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#ffffff',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#f5f3ff',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  busInfoTextCol: { flex: 1 },
-  busNumberText: { fontSize: 16, fontWeight: '900', color: '#ffffff' },
-  busRouteText: { fontSize: 12, color: '#ddd6fe', fontWeight: '500', marginTop: 2 },
 
   // Live Section Row
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },

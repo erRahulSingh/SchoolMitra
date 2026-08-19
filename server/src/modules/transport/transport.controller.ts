@@ -8,11 +8,14 @@ import {
   DriverModel, 
   RouteModel, 
   StopModel, 
-  TripModel
+  TripModel,
+  StudentRouteModel,
+  BusRouteAssignmentModel
 } from "../../models/TransportSchemas";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
+import { createNotification } from "../../services/notificationService";
 import { Types } from "mongoose";
 
 // In-Memory SOS & Active Trips Store
@@ -61,42 +64,167 @@ const getOrSeedRoutes = async () => {
 
 // ════════════ 1. BUS MANAGEMENT ════════════
 export const getBuses = asyncHandler(async (_req: Request, res: Response) => {
-  const buses = await getOrSeedBuses();
+  await getOrSeedBuses();
+  const buses = await BusModel.find().populate("driverId").lean();
   return ApiResponse.success(res, 200, "Fleet buses retrieved", { buses });
 });
 
 export const createBus = asyncHandler(async (req: Request, res: Response) => {
-  const { busNumber, capacity, registrationNumber, registrationNo, driverName, routeName } = req.body;
+  const { 
+    busNumber, 
+    capacity, 
+    registrationNumber, 
+    registrationNo, 
+    busType, 
+    gpsDeviceId, 
+    driverId, 
+    driverName, 
+    routeName, 
+    status 
+  } = req.body;
+
   if (!busNumber) {
     throw ApiError.badRequest("Bus number is required.");
+  }
+
+  let finalDriverName = driverName || "Unassigned Pilot";
+  if (driverId && Types.ObjectId.isValid(driverId)) {
+    const driver = await DriverModel.findById(driverId).lean();
+    if (driver) {
+      finalDriverName = (driver as any).name;
+    }
   }
 
   const created = await BusModel.create({
     schoolId: dummySchoolId,
     busNumber,
     registrationNo: registrationNumber || registrationNo || busNumber,
+    busType: busType || "School Bus",
     capacity: capacity || 40,
-    driverName: driverName || "Unassigned Pilot",
+    gpsDeviceId: gpsDeviceId || "",
+    driverId: driverId && Types.ObjectId.isValid(driverId) ? new Types.ObjectId(driverId) : undefined,
+    driverName: finalDriverName,
     routeName: routeName || "Default School Route",
-    status: "Active"
+    status: status || "ACTIVE"
   });
 
-  return ApiResponse.created(res, "Fleet Bus & Driver registered successfully in database.", { bus: created });
+  if (driverId && Types.ObjectId.isValid(driverId)) {
+    await DriverModel.findByIdAndUpdate(driverId, {
+      assignedBusId: created._id
+    });
+  }
+
+  return ApiResponse.created(res, "Fleet Bus registered successfully.", { bus: created });
+});
+
+export const updateBus = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { 
+    busNumber, 
+    capacity, 
+    registrationNumber, 
+    registrationNo, 
+    busType, 
+    gpsDeviceId, 
+    driverId, 
+    driverName, 
+    routeName, 
+    status 
+  } = req.body;
+
+  if (!Types.ObjectId.isValid(id)) {
+    throw ApiError.badRequest("Invalid bus ID.");
+  }
+
+  let finalDriverName = driverName;
+  if (driverId && Types.ObjectId.isValid(driverId)) {
+    const driver = await DriverModel.findById(driverId).lean();
+    if (driver) {
+      finalDriverName = (driver as any).name;
+    }
+  }
+
+  const updatedBus = await BusModel.findByIdAndUpdate(
+    id,
+    {
+      busNumber,
+      registrationNo: registrationNumber || registrationNo,
+      busType,
+      capacity,
+      gpsDeviceId,
+      driverId: driverId && Types.ObjectId.isValid(driverId) ? new Types.ObjectId(driverId) : undefined,
+      driverName: finalDriverName,
+      routeName,
+      status
+    },
+    { new: true }
+  );
+
+  if (!updatedBus) {
+    throw ApiError.notFound("Bus not found.");
+  }
+
+  if (driverId && Types.ObjectId.isValid(driverId)) {
+    await DriverModel.updateMany({ assignedBusId: updatedBus._id }, { $unset: { assignedBusId: 1 } });
+    await DriverModel.findByIdAndUpdate(driverId, { assignedBusId: updatedBus._id });
+  }
+
+  return ApiResponse.success(res, 200, "Bus record updated successfully.", { bus: updatedBus });
+});
+
+export const deleteBus = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!Types.ObjectId.isValid(id)) {
+    throw ApiError.badRequest("Invalid bus ID.");
+  }
+
+  const deleted = await BusModel.findByIdAndDelete(id);
+  if (!deleted) {
+    throw ApiError.notFound("Bus not found.");
+  }
+
+  await DriverModel.updateMany({ assignedBusId: id }, { $unset: { assignedBusId: 1 } });
+
+  return ApiResponse.success(res, 200, "Bus removed successfully.");
 });
 
 // ════════════ 2. ROUTE MANAGEMENT ════════════
 export const getRoutes = asyncHandler(async (_req: Request, res: Response) => {
-  const routes = await getOrSeedRoutes();
-  return ApiResponse.success(res, 200, "Transport routes retrieved", { routes });
+  await getOrSeedRoutes();
+  const routes = await RouteModel.find().lean();
+  
+  const routesWithStops = [];
+  for (const route of routes) {
+    const stops = await StopModel.find({ routeId: route._id }).sort({ order: 1 }).lean();
+    routesWithStops.push({
+      ...route,
+      stops: stops.map((s: any) => ({
+        id: s._id?.toString(),
+        _id: s._id,
+        name: s.stopName,
+        stopName: s.stopName,
+        latitude: s.latitude,
+        longitude: s.longitude,
+        sequence: s.sequence || s.order,
+        order: s.order,
+        pickupTime: s.pickupTime || s.scheduledTimeMorning,
+        dropTime: s.dropTime || s.scheduledTimeEvening,
+        scheduledTimeMorning: s.scheduledTimeMorning,
+        scheduledTimeEvening: s.scheduledTimeEvening,
+      }))
+    });
+  }
+
+  return ApiResponse.success(res, 200, "Transport routes retrieved", { routes: routesWithStops });
 });
 
 export const createRoute = asyncHandler(async (req: Request, res: Response) => {
-  const { routeName, startPoint, endPoint, distanceKm } = req.body;
+  const { routeName, startPoint, endPoint, distanceKm, stops } = req.body;
   if (!routeName) {
     throw ApiError.badRequest("Route name is required.");
   }
 
-  const created = await RouteModel.create({
+  const createdRoute = await RouteModel.create({
     schoolId: dummySchoolId,
     routeName,
     startPoint: startPoint || "Start Terminal",
@@ -104,27 +232,60 @@ export const createRoute = asyncHandler(async (req: Request, res: Response) => {
     distanceKm: Number(distanceKm) || 15
   });
 
-  return ApiResponse.created(res, "Route registered successfully in database.", { route: created });
+  if (Array.isArray(stops) && stops.length > 0) {
+    const stopsData = stops.map((stop: any, idx: number) => ({
+      schoolId: dummySchoolId,
+      routeId: createdRoute._id,
+      stopName: stop.name || stop.stopName,
+      order: stop.sequence || stop.order || (idx + 1),
+      sequence: stop.sequence || stop.order || (idx + 1),
+      latitude: Number(stop.latitude) || 0,
+      longitude: Number(stop.longitude) || 0,
+      pickupTime: stop.pickupTime || stop.scheduledTimeMorning || "07:00 AM",
+      dropTime: stop.dropTime || stop.scheduledTimeEvening || "02:00 PM",
+      scheduledTimeMorning: stop.pickupTime || stop.scheduledTimeMorning || "07:00 AM",
+      scheduledTimeEvening: stop.dropTime || stop.scheduledTimeEvening || "02:00 PM",
+    }));
+
+    await StopModel.insertMany(stopsData);
+  }
+
+  return ApiResponse.created(res, "Route registered successfully in database.", { route: createdRoute });
 });
 
 // ════════════ 3. STOP MANAGEMENT ════════════
 export const getStops = asyncHandler(async (_req: Request, res: Response) => {
   const stops = await StopModel.find().lean().catch(() => []);
-  return ApiResponse.success(res, 200, "Stops retrieved", { stops });
+  return ApiResponse.success(res, 200, "Stops retrieved", {
+    stops: stops.map((s: any) => ({
+      ...s,
+      name: s.stopName,
+      sequence: s.sequence || s.order,
+      pickupTime: s.pickupTime || s.scheduledTimeMorning,
+      dropTime: s.dropTime || s.scheduledTimeEvening
+    }))
+  });
 });
 
 export const createStop = asyncHandler(async (req: Request, res: Response) => {
-  const { stopName, routeId, scheduledTime, order = 1 } = req.body;
+  const { stopName, routeId, scheduledTime, order = 1, sequence, pickupTime, dropTime, latitude, longitude } = req.body;
   if (!stopName) throw ApiError.badRequest("Stop name is required.");
 
   const finalRouteId = routeId || new Types.ObjectId("650000000000000000000501");
+  const finalSequence = sequence || order || 1;
 
   const created = await StopModel.create({
     schoolId: dummySchoolId,
     routeId: finalRouteId,
     stopName,
-    order: Number(order) || 1,
-    scheduledTimeMorning: scheduledTime || "07:30 AM"
+    order: Number(finalSequence),
+    sequence: Number(finalSequence),
+    latitude: Number(latitude) || 0,
+    longitude: Number(longitude) || 0,
+    scheduledTimeMorning: pickupTime || scheduledTime || "07:30 AM",
+    scheduledTimeEvening: dropTime || "02:30 PM",
+    pickupTime: pickupTime || scheduledTime || "07:30 AM",
+    dropTime: dropTime || "02:30 PM",
   });
 
   return ApiResponse.created(res, "Stop created successfully in database.", { stop: created });
@@ -174,21 +335,96 @@ export const endTrip = asyncHandler(async (req: Request, res: Response) => {
   return ApiResponse.success(res, 200, `Trip completed safely for ${busNo}. All students dropped.`, { busNo, status: "COMPLETED ✅" });
 });
 
-// ════════════ 6. ASSIGN STUDENT TRANSPORT ════════════
-export const assignStudentTransport = asyncHandler(async (req: Request, res: Response) => {
-  const { studentId, busNo, routeName, stopName } = req.body;
+// ════════════ 6. ASSIGN BUS TO ROUTE ════════════
+export const assignBusRoute = asyncHandler(async (req: Request, res: Response) => {
+  const { busId, routeId, driverId, academicYearId } = req.body;
 
-  if (!studentId || !busNo) {
-    throw ApiError.badRequest("studentId and busNo are required.");
+  if (!busId || !routeId || !driverId) {
+    throw ApiError.badRequest("busId, routeId, and driverId are required.");
   }
 
-  return ApiResponse.success(res, 200, `Transport assigned for student ${studentId}.`, {
+  // Fetch bus, route, and driver records to validate school matching
+  const [bus, route, driver] = await Promise.all([
+    BusModel.findById(busId),
+    RouteModel.findById(routeId),
+    DriverModel.findById(driverId)
+  ]);
+
+  if (!bus || !route || !driver) {
+    throw ApiError.notFound("Bus, Route, or Driver record not found.");
+  }
+
+  // CONSTRAINT VALIDATION: One school's bus cannot be assigned to another school's route
+  if (bus.schoolId.toString() !== route.schoolId.toString()) {
+    throw ApiError.badRequest("Cannot assign a bus to a route from a different school.");
+  }
+
+  // Create or Update Assignment mapping
+  const assignment = await BusRouteAssignmentModel.findOneAndUpdate(
+    { schoolId: bus.schoolId, busId, academicYearId },
+    { routeId, driverId, status: "Active" },
+    { new: true, upsert: true }
+  );
+
+  // Sync details on Bus and Driver records
+  await Promise.all([
+    BusModel.findByIdAndUpdate(busId, { driverId, driverName: driver.name, routeName: route.routeName }),
+    DriverModel.findByIdAndUpdate(driverId, { assignedBusId: busId }),
+    RouteModel.findByIdAndUpdate(routeId, { assignedBusId: busId })
+  ]);
+
+  return ApiResponse.success(res, 200, "Bus successfully assigned to Route with Driver.", { assignment });
+});
+
+export const getBusRouteAssignments = asyncHandler(async (req: Request, res: Response) => {
+  const assignments = await BusRouteAssignmentModel.find()
+    .populate("busId")
+    .populate("routeId")
+    .populate("driverId")
+    .lean();
+
+  return ApiResponse.success(res, 200, "Bus to Route assignments retrieved.", { assignments });
+});
+
+// ════════════ 6B. ASSIGN STUDENT TRANSPORT ════════════
+export const assignStudentTransport = asyncHandler(async (req: Request, res: Response) => {
+  const { studentId, busId, routeId, pickupStopId, dropStopId, academicYearId, status } = req.body;
+
+  if (!studentId || !routeId) {
+    throw ApiError.badRequest("studentId and routeId are required.");
+  }
+
+  const payload: any = {
+    schoolId: dummySchoolId,
     studentId,
-    busNo,
-    routeName: routeName || "Route 1 - Dwarka",
-    stopName: stopName || "Sector 12 Market Gate",
-    assignedAt: new Date().toISOString()
-  });
+    busId: busId || undefined,
+    routeId,
+    pickupStopId: pickupStopId || undefined,
+    dropStopId: dropStopId || undefined,
+    academicYearId: academicYearId || undefined,
+    status: status || "Active"
+  };
+
+  // Upsert Student Route record
+  const assignment = await StudentRouteModel.findOneAndUpdate(
+    { schoolId: dummySchoolId, studentId },
+    payload,
+    { new: true, upsert: true }
+  );
+
+  return ApiResponse.success(res, 200, "Student transport settings assigned successfully.", { assignment });
+});
+
+export const getStudentTransportAssignments = asyncHandler(async (req: Request, res: Response) => {
+  const assignments = await StudentRouteModel.find()
+    .populate("studentId")
+    .populate("busId")
+    .populate("routeId")
+    .populate("pickupStopId")
+    .populate("dropStopId")
+    .lean();
+
+  return ApiResponse.success(res, 200, "Student transport assignments list retrieved.", { assignments });
 });
 
 // ════════════ 7. SOS EMERGENCY SAFETY ALERTS ════════════
@@ -206,9 +442,99 @@ export const triggerSOSAlert = asyncHandler(async (req: Request, res: Response) 
 
   sosAlertsStore.unshift(newAlert);
 
+  const schoolId = (req as any).user?.schoolId || "sch_default";
+  const senderId = (req as any).user?.id || (req as any).user?._id;
+
+  if ((req as any).user) {
+    createNotification({
+      schoolId,
+      senderId,
+      recipientId: senderId,
+      recipientRole: "SchoolAdmin",
+      type: "TRANSPORT",
+      title: `🚨 EMERGENCY SOS BROADCAST: ${busNo}`,
+      message: `Emergency Alert from ${busNo} driven by ${driverName} at ${location}. Control room notified.`,
+      referenceType: "buses"
+    }).catch(() => {});
+  }
+
   return ApiResponse.created(res, "🚨 EMERGENCY SOS BROADCAST SENT TO SCHOOL CONTROL ROOM & PARENTS!", { alert: newAlert });
 });
 
 export const getSOSAlerts = asyncHandler(async (_req: Request, res: Response) => {
   return ApiResponse.success(res, 200, "SOS Safety Emergency Alerts queue", { alerts: sosAlertsStore });
+});
+
+export const updateRoute = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { routeName, startPoint, endPoint, distanceKm } = req.body;
+
+  if (!Types.ObjectId.isValid(id)) {
+    throw ApiError.badRequest("Invalid route ID.");
+  }
+
+  const updated = await RouteModel.findByIdAndUpdate(
+    id,
+    { routeName, startPoint, endPoint, distanceKm: Number(distanceKm) },
+    { new: true }
+  );
+
+  if (!updated) {
+    throw ApiError.notFound("Route not found.");
+  }
+
+  return ApiResponse.success(res, 200, "Route updated successfully.", { route: updated });
+});
+
+export const updateStop = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { stopName, order, sequence, pickupTime, dropTime, latitude, longitude } = req.body;
+
+  if (!Types.ObjectId.isValid(id)) {
+    throw ApiError.badRequest("Invalid stop ID.");
+  }
+
+  const updated = await StopModel.findByIdAndUpdate(
+    id,
+    { 
+      stopName, 
+      order: Number(order || sequence), 
+      sequence: Number(sequence || order), 
+      pickupTime, 
+      dropTime,
+      scheduledTimeMorning: pickupTime,
+      scheduledTimeEvening: dropTime,
+      latitude: Number(latitude),
+      longitude: Number(longitude)
+    },
+    { new: true }
+  );
+
+  if (!updated) {
+    throw ApiError.notFound("Stop not found.");
+  }
+
+  return ApiResponse.success(res, 200, "Stop updated successfully.", { stop: updated });
+});
+
+export const getAssignments = asyncHandler(async (req: Request, res: Response) => {
+  const [busAssignments, studentAssignments] = await Promise.all([
+    BusRouteAssignmentModel.find().populate("busId").populate("routeId").populate("driverId").lean(),
+    StudentRouteModel.find().populate("studentId").populate("busId").populate("routeId").populate("pickupStopId").populate("dropStopId").lean()
+  ]);
+
+  return ApiResponse.success(res, 200, "All transport assignments retrieved.", { 
+    assignments: {
+      buses: busAssignments,
+      students: studentAssignments
+    }
+  });
+});
+
+export const getLiveTransport = asyncHandler(async (req: Request, res: Response) => {
+  const liveLocations = [
+    { busId: "BUS-01", latitude: 28.5833, longitude: 77.0667, speed: 45, heading: 90, status: "ACTIVE", lastUpdated: "Just now" },
+    { busId: "BUS-02", latitude: 28.5700, longitude: 77.1200, speed: 40, heading: 180, status: "ACTIVE", lastUpdated: "1 minute ago" }
+  ];
+  return ApiResponse.success(res, 200, "Live transport telemetry active lists.", { liveLocations });
 });
