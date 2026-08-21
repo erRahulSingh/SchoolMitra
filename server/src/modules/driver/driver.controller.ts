@@ -209,24 +209,25 @@ export const driverRegister = async (req: Request, res: Response) => {
           name,
           email: cleanEmail,
           password: hashedPassword,
-        passwordHash: hashedPassword,
-        role: "Driver",
-        schoolId: dummySchoolId,
-        status: "Active"
-      });
+          passwordHash: hashedPassword,
+          role: "Driver",
+          schoolId: dummySchoolId,
+          status: "Active"
+        });
 
-      await DriverModel.create({
-        schoolId: dummySchoolId,
-        userId: createdUser._id,
-        name,
-        empId: memoryPayload.empId,
-        phone: "+91 9876543210",
-        licenseNo: memoryPayload.licenseNo,
-        licenseExpiry: new Date("2030-12-31"),
-        status: "Active"
-      });
-    } catch (dbErr) {
-      console.warn("[Driver Register DB Persist Warning]:", (dbErr as Error).message);
+        await DriverModel.create({
+          schoolId: dummySchoolId,
+          userId: createdUser._id,
+          name,
+          empId: memoryPayload.empId,
+          phone: "+91 9876543210",
+          licenseNo: memoryPayload.licenseNo,
+          licenseExpiry: new Date("2030-12-31"),
+          status: "Active"
+        });
+      } catch (dbErr) {
+        console.warn("[Driver Register DB Persist Warning]:", (dbErr as Error).message);
+      }
     }
 
     const token = generateDriverToken(createdUser ? createdUser._id.toString() : memoryPayload.id, "Driver");

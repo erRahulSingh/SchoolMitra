@@ -27,6 +27,9 @@ export function calculateDynamicETA(speedKmH: number, distanceMeters: number): s
   }
   const hours = (distanceMeters / 1000) / speedKmH;
   const minutes = Math.max(1, Math.round(hours * 60));
+  return `${minutes} mins`;
+}
+
 // ──────────── Global Socket Instance & Status Dispatcher ────────────
 let globalIO: SocketIOServer | null = null;
 const suspendedSchoolsSet = new Set<string>();
