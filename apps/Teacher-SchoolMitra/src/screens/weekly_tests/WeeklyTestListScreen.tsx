@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  Alert
+  Alert,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import {
   ChevronLeft,
@@ -16,21 +18,74 @@ import {
   ClipboardList
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { teacherApi } from '../../services/apiService';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function WeeklyTestListScreen({ navigation }: any) {
+  const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState('All Tests');
+  const [allTests, setAllTests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const tabs = ['All Tests', 'Upcoming', 'Completed', 'Drafts'];
 
-  const upcomingTests = [
-    { id: '1', day: '28', month: 'May', title: 'Maths Unit Test - 1', class: 'Class 8 - A', details: '10:00 AM  •  30 Marks', status: 'Upcoming', color: '#16a34a', bg: '#ecfdf5' },
-    { id: '2', day: '31', month: 'May', title: 'Science Quiz - Electricity', class: 'Class 8 - A', details: '11:30 AM  •  20 Marks', status: 'Upcoming', color: '#16a34a', bg: '#ecfdf5' },
-    { id: '3', day: '05', month: 'Jun', title: 'English Grammar Test', class: 'Class 8 - A', details: '09:00 AM  •  25 Marks', status: 'Upcoming', color: '#16a34a', bg: '#ecfdf5' }
-  ];
+  const fetchTests = useCallback(async () => {
+    try {
+      const res = await teacherApi.getTests().catch(() => null);
+      if (res && (Array.isArray(res.tests) || Array.isArray(res))) {
+        const raw = Array.isArray(res.tests) ? res.tests : res;
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  const completedTests = [
-    { id: '4', day: '20', month: 'May', title: 'Maths Chapter - Algebra', class: 'Class 8 - A', details: '35 Marks  •  Avg. Score: 82%', status: 'Completed', color: '#2563eb', bg: '#eff6ff' }
-  ];
+        const mapped = raw.map((t: any, idx: number) => {
+          const d = t.date ? new Date(t.date) : new Date();
+          const day = String(d.getDate()).padStart(2, '0');
+          const month = months[d.getMonth()] || 'Aug';
+          const isCompleted = t.status === 'Completed' || (t.results && t.results.length > 0);
+          const status = isCompleted ? 'Completed' : (t.status || 'Upcoming');
+
+          return {
+            id: t.id || t._id || String(idx + 1),
+            day,
+            month,
+            title: t.title || t.name || 'Subject Test',
+            class: t.className || t.targetClass || 'Class 8-A',
+            details: `${t.time || '10:00 AM'} • ${t.totalMarks || 30} Marks`,
+            status,
+            color: status === 'Completed' ? '#2563eb' : (status === 'Upcoming' ? '#16a34a' : '#d97706'),
+            bg: status === 'Completed' ? '#eff6ff' : (status === 'Upcoming' ? '#ecfdf5' : '#fef3c7')
+          };
+        });
+        setAllTests(mapped);
+      } else {
+        setAllTests([]);
+      }
+    } catch (e) {
+      console.warn('Tests fetch error:', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchTests();
+    }
+  }, [isFocused, fetchTests]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchTests();
+  };
+
+  const filteredTests = allTests.filter(t => {
+    if (activeTab === 'All Tests') return true;
+    return t.status.toLowerCase() === activeTab.toLowerCase();
+  });
+
+  const upcomingTests = filteredTests.filter(t => t.status === 'Upcoming');
+  const completedTests = filteredTests.filter(t => t.status === 'Completed');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -47,7 +102,11 @@ export default function WeeklyTestListScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />}
+      >
         {/* HERO CARD */}
         <LinearGradient
           colors={['#7c3aed', '#6d28d9']}
@@ -80,68 +139,50 @@ export default function WeeklyTestListScreen({ navigation }: any) {
           ))}
         </View>
 
-        {/* UPCOMING TESTS */}
+        {/* TESTS LIST */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Upcoming Tests</Text>
-          <TouchableOpacity onPress={() => Alert.alert('View All', 'Showing all upcoming tests...')}>
-            <Text style={styles.viewAllText}>View All</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>{activeTab}</Text>
+          <Text style={styles.viewAllText}>{filteredTests.length} Tests</Text>
         </View>
 
         <View style={styles.listContainer}>
-          {upcomingTests.map((item) => (
-            <View key={item.id} style={styles.testCard}>
-              <View style={styles.dateCol}>
-                <Text style={styles.dateDayText}>{item.day}</Text>
-                <Text style={styles.dateMonthText}>{item.month}</Text>
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Text style={styles.testTitle}>{item.title}</Text>
-                <Text style={styles.testClass}>{item.class}</Text>
-                <View style={styles.timeRow}>
-                  <Clock size={12} color="#94a3b8" style={{ marginRight: 6 }} />
-                  <Text style={styles.timeText}>{item.details}</Text>
-                </View>
-              </View>
-
-              <View style={[styles.statusBadge, { backgroundColor: item.bg }]}>
-                <Text style={[styles.statusText, { color: item.color }]}>{item.status}</Text>
-              </View>
+          {loading ? (
+            <View style={{ padding: 30, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#7c3aed" />
             </View>
-          ))}
-        </View>
-
-        {/* RECENTLY COMPLETED */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Recently Completed</Text>
-          <TouchableOpacity onPress={() => Alert.alert('View All', 'Showing all completed tests...')}>
-            <Text style={styles.viewAllText}>View All</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.listContainer}>
-          {completedTests.map((item) => (
-            <View key={item.id} style={styles.testCard}>
-              <View style={styles.dateCol}>
-                <Text style={[styles.dateDayText, { color: '#16a34a' }]}>{item.day}</Text>
-                <Text style={styles.dateMonthText}>{item.month}</Text>
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Text style={styles.testTitle}>{item.title}</Text>
-                <Text style={styles.testClass}>{item.class}</Text>
-                <View style={styles.timeRow}>
-                  <Clock size={12} color="#94a3b8" style={{ marginRight: 6 }} />
-                  <Text style={styles.timeText}>{item.details}</Text>
-                </View>
-              </View>
-
-              <View style={[styles.statusBadge, { backgroundColor: item.bg }]}>
-                <Text style={[styles.statusText, { color: item.color }]}>{item.status}</Text>
-              </View>
+          ) : filteredTests.length === 0 ? (
+            <View style={{ padding: 24, alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 16 }}>
+              <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600' }}>
+                No weekly tests found in this category.
+              </Text>
             </View>
-          ))}
+          ) : (
+            filteredTests.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.testCard}
+                onPress={() => navigation.navigate('TestResultEntry', { test: item, testId: item.id })}
+              >
+                <View style={styles.dateCol}>
+                  <Text style={[styles.dateDayText, { color: item.color }]}>{item.day}</Text>
+                  <Text style={styles.dateMonthText}>{item.month}</Text>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.testTitle}>{item.title}</Text>
+                  <Text style={styles.testClass}>{item.class}</Text>
+                  <View style={styles.timeRow}>
+                    <Clock size={12} color="#94a3b8" style={{ marginRight: 6 }} />
+                    <Text style={styles.timeText}>{item.details}</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.statusBadge, { backgroundColor: item.bg }]}>
+                  <Text style={[styles.statusText, { color: item.color }]}>{item.status}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

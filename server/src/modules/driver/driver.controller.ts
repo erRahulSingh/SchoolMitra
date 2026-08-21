@@ -1,5 +1,6 @@
-import { UserModel } from "../../models/AuthSchemas";
+import { UserModel, SchoolModel } from "../../models/AuthSchemas";
 import { DriverModel } from "../../models/TransportSchemas";
+import { evaluateSchoolStatus } from "../../constants/schoolStatus.constants";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mongoose, { Types } from "mongoose";
@@ -8,8 +9,8 @@ const dummySchoolId = new Types.ObjectId("650000000000000000000001");
 const inMemoryUserStore: Array<any> = [];
 
 // Helper to generate JWT token
-const generateDriverToken = (userId: string, role: string = "Driver") => {
-  return jwt.sign({ id: userId, role }, process.env.JWT_SECRET || "default_secret", {
+const generateDriverToken = (userId: string, role: string = "Driver", schoolId?: string) => {
+  return jwt.sign({ id: userId, role, schoolId }, process.env.JWT_SECRET || "default_secret", {
     expiresIn: "7d",
   });
 };
@@ -59,7 +60,7 @@ export const driverLogin = async (req: Request, res: Response) => {
       try {
         user = await UserModel.create({
           name: seedPayload.name,
-          email: seedPayload.email,
+          email: cleanEmail,
           password: hashedPassword,
           passwordHash: hashedPassword,
           role: "Driver",
@@ -106,7 +107,36 @@ export const driverLogin = async (req: Request, res: Response) => {
       });
     }
 
-    const token = generateDriverToken(user._id ? user._id.toString() : user.id || "drv_101", user.role || "Driver");
+    // 5. Central Tenant Status Check (Login Control for Drivers)
+    const targetSchoolId = user?.schoolId || req.body?.schoolId;
+    if (targetSchoolId) {
+      const isObjectId = mongoose.Types.ObjectId.isValid(targetSchoolId);
+      let school: any = null;
+      if (isObjectId) {
+        school = await SchoolModel.findById(targetSchoolId).lean();
+      }
+      if (!school) {
+        school = await SchoolModel.findOne({ code: String(targetSchoolId).toLowerCase() }).lean();
+      }
+
+      if (school) {
+        const evaluation = evaluateSchoolStatus(school);
+        if (!evaluation.isOperational) {
+          return res.status(403).json({
+            success: false,
+            code: evaluation.code,
+            message: evaluation.message,
+            schoolStatus: evaluation.effectiveStatus
+          });
+        }
+      }
+    }
+
+    const token = generateDriverToken(
+      user._id ? user._id.toString() : user.id || "drv_101",
+      user.role || "Driver",
+      user.schoolId ? String(user.schoolId) : undefined
+    );
 
     const driverPayload = {
       id: user._id || user.id || "drv_101",

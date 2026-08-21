@@ -1,10 +1,8 @@
-// ═══════════════════════════════════════════════════════════
-// SchoolMitra Backend — Multi-Tenant Resolution Middleware
-// ═══════════════════════════════════════════════════════════
-
 import { Response, NextFunction } from "express";
+import { Types } from "mongoose";
 import { SchoolModel } from "../models/AuthSchemas";
 import { AuthenticatedRequest } from "./authMiddleware";
+import { evaluateSchoolStatus, SchoolStatus } from "../constants/schoolStatus.constants";
 import { ApiError } from "../utils/ApiError";
 import logger from "../utils/logger";
 
@@ -18,101 +16,110 @@ export interface TenantContext {
 
 export interface TenantRequest extends AuthenticatedRequest {
   tenant?: TenantContext;
+  school?: any;
 }
 
 /**
- * Resolves the tenant (school) from the authenticated user's schoolId.
- * Checks subscription status, trial expiry, and suspension.
- * Must be mounted AFTER verifyToken middleware.
+ * ═══════════════════════════════════════════════════════════
+ * requireActiveSchool — Central School Tenant Status Middleware
+ * ═══════════════════════════════════════════════════════════
+ * 
+ * Flow:
+ * 1. Identify user from JWT auth
+ * 2. SUPER_ADMIN bypasses tenant lock
+ * 3. Resolve schoolId
+ * 4. Load school from database
+ * 5. Check school.status via evaluateSchoolStatus()
+ * 6. If ACTIVE or valid TRIAL → continue (req.school / req.tenant attached)
+ * 7. If SUSPENDED, EXPIRED, DEACTIVATED, PENDING_APPROVAL → reject immediately with structured JSON
  */
-export const verifyTenantStatus = async (
+export const requireActiveSchool = async (
   req: TenantRequest,
-  _res: Response,
+  res: Response,
   next: NextFunction
 ) => {
   try {
-    if (!req.user || !req.user.schoolId) {
-      throw ApiError.unauthorized("Authentication required to resolve tenant workspace.");
+    const user = req.user;
+
+    // 1. SUPER_ADMIN is globally unscoped and bypasses school-level suspension
+    if (user && String(user.role || "").toUpperCase().replace(/[_\s]/g, "") === "SUPERADMIN") {
+      return next();
     }
 
-    const school = await SchoolModel.findById(req.user.schoolId);
-    if (!school) {
-      throw ApiError.notFound("Tenant workspace not found. School may have been deleted.");
-    }
+    // 2. Resolve schoolId from JWT, Headers, Query, Params, or Body
+    const schoolId =
+      user?.schoolId ||
+      (req.headers["x-school-id"] as string) ||
+      (req.query?.schoolId as string) ||
+      (req.params?.schoolId as string) ||
+      (req.body?.schoolId as string);
 
-    const now = new Date();
-
-    // 1. Suspension Check
-    if (school.status === "Suspended") {
-      logger.warn(`Tenant access blocked — school suspended`, {
-        schoolId: school._id,
-        schoolName: school.name,
+    if (!schoolId) {
+      return res.status(403).json({
+        success: false,
+        error: "NO_SCHOOL_BINDING",
+        message: "Access Denied: User is not assigned to a valid school tenant."
       });
-      throw ApiError.forbidden(
-        "This workspace has been suspended by SchoolMitra. Please contact support."
-      );
     }
 
-    // 2. Trial Period Expiry Check
-    if (school.status === "Trial") {
-      const trialEnd = school.trialEndsAt ? new Date(school.trialEndsAt as Date) : null;
-      if (trialEnd && trialEnd < now) {
-        school.status = "Expired";
-        await school.save();
-        logger.info(`Trial expired — school moved to Expired`, {
-          schoolId: school._id,
-          schoolName: school.name,
-        });
-        throw ApiError.paymentRequired(
-          "Your trial period has expired. Please upgrade your subscription to restore access."
-        );
-      }
+    // 3. Load school from DB (by ObjectId or school code)
+    const isObjectId = Types.ObjectId.isValid(schoolId);
+    let school: any = null;
+
+    if (isObjectId) {
+      school = await SchoolModel.findById(schoolId).lean();
+    }
+    if (!school) {
+      school = await SchoolModel.findOne({ code: String(schoolId).toLowerCase() }).lean();
     }
 
-    // 3. Subscription Expiry Check
-    if (school.status === "Active") {
-      const expiryDate = school.expiresAt ? new Date(school.expiresAt as Date) : null;
-      if (expiryDate && expiryDate < now) {
-        school.status = "Expired";
-        await school.save();
-        logger.info(`Subscription expired — school moved to Expired`, {
-          schoolId: school._id,
-          schoolName: school.name,
-        });
-        throw ApiError.paymentRequired(
-          "Your subscription has expired. Please renew to restore workspace access."
-        );
-      }
+    if (!school) {
+      return res.status(404).json({
+        success: false,
+        error: "TENANT_NOT_FOUND",
+        message: "School tenant not found. It may have been deleted or unprovisioned."
+      });
     }
 
-    // 4. Already Expired
-    if (school.status === "Expired") {
-      throw ApiError.paymentRequired(
-        "Your subscription is expired. Please renew to continue using SchoolMitra."
-      );
+    // 4. Central Status Evaluation Engine
+    const evaluation = evaluateSchoolStatus(school);
+
+    if (!evaluation.isOperational) {
+      logger.warn(`[Tenant Access Blocked] School '${school.name}' (${school.code}) is ${evaluation.effectiveStatus}`);
+
+      return res.status(403).json({
+        success: false,
+        code: evaluation.code,
+        message: evaluation.message,
+        schoolStatus: evaluation.effectiveStatus
+      });
     }
 
-    // 5. Pending Verification
-    if (school.status === "PendingEmailVerification") {
-      throw ApiError.forbidden(
-        "Email verification is pending. Please verify your email to activate your account."
-      );
-    }
-
-    // ──── Attach tenant context ────
+    // 5. Attach tenant and school context for downstream controllers
+    req.school = school;
     req.tenant = {
       schoolId: String(school._id),
-      schoolName: school.name as string,
-      schoolCode: school.code as string,
-      plan: (school.plan as string) || "Basic",
-      status: school.status as string,
+      schoolName: school.name,
+      schoolCode: school.code,
+      plan: school.plan || "Basic",
+      status: evaluation.effectiveStatus
     };
 
     return next();
-  } catch (error) {
-    return next(error);
+  } catch (error: any) {
+    logger.error(`[requireActiveSchool Error]:`, error?.message || error);
+    return res.status(500).json({
+      success: false,
+      error: "TENANT_EVALUATION_ERROR",
+      message: "Internal error verifying school tenant status."
+    });
   }
 };
+
+/**
+ * Alias for backward compatibility
+ */
+export const verifyTenantStatus = requireActiveSchool;
 
 /**
  * Strict Multi-Tenant Isolation Middleware (schoolId scoping).

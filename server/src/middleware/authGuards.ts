@@ -1,12 +1,9 @@
-// ═══════════════════════════════════════════════════════════
-// SchoolMitra Backend — Unified Auth Guards Middleware
-// Pipeline: authenticate() → requireSchool() → requireRole() → requirePermission()
-// ═══════════════════════════════════════════════════════════
-
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { ApiResponse } from "../utils/ApiResponse";
-import { UserPermissionOverrideModel, RolePermissionModel, RoleModel } from "../models/AuthSchemas";
+import { UserPermissionOverrideModel, RolePermissionModel, RoleModel, SchoolModel } from "../models/AuthSchemas";
+import { evaluateSchoolStatus } from "../constants/schoolStatus.constants";
 import { DEFAULT_TEACHER_PERMISSIONS } from "../constants/permissions.config";
 
 // ──────────── TYPES ────────────
@@ -23,13 +20,11 @@ export interface AuthUser {
 
 export interface AuthenticatedRequest extends Request {
   user?: AuthUser;
+  school?: any;
 }
 
-// ════════════ 1. authenticate() — JWT Token Verification ════════════
-// Extracts and verifies Bearer token from Authorization header.
-// On success, attaches decoded user to req.user.
-// On failure, returns 401 Unauthorized.
-export const authenticate = (
+// ════════════ 1. authenticate() — JWT Token Verification & Live Status Check ════════════
+export const authenticate = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
@@ -38,19 +33,6 @@ export const authenticate = (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      // DEV FALLBACK: Allow unauthenticated access in development with demo user context
-      if (process.env.NODE_ENV !== "production") {
-        (req as any).user = {
-          id: "dev_user_101",
-          _id: "dev_user_101",
-          email: "dev@schoolmitra.com",
-          role: "SchoolAdmin",
-          schoolId: "sch_default",
-          name: "Dev Admin",
-          permissions: {}
-        };
-        return next();
-      }
       return ApiResponse.error(res, 401, "Authentication required. Provide a valid Bearer token.", "UNAUTHORIZED");
     }
 
@@ -72,6 +54,55 @@ export const authenticate = (
       permissions: decoded.permissions
     };
 
+    const normalizedRole = String(decoded.role || "").toUpperCase().replace(/[_\s]/g, "");
+
+    // SUPER_ADMIN has global access — bypasses school-level suspension
+    if (normalizedRole === "SUPERADMIN") {
+      return next();
+    }
+
+    // Step 8: LIVE SCHOOL STATUS VALIDATION FOR EXISTING JWT SESSIONS
+    const targetSchoolId = decoded.schoolId || (req.headers["x-school-id"] as string);
+    if (targetSchoolId) {
+      const isObjectId = mongoose.Types.ObjectId.isValid(targetSchoolId);
+      let school: any = null;
+      if (isObjectId) {
+        school = await SchoolModel.findById(targetSchoolId).lean();
+      }
+      if (!school) {
+        school = await SchoolModel.findOne({ code: String(targetSchoolId).toLowerCase() }).lean();
+      }
+
+      if (school) {
+        const evaluation = evaluateSchoolStatus(school);
+        if (!evaluation.isOperational) {
+          return res.status(403).json({
+            success: false,
+            code: evaluation.code,
+            message: evaluation.message,
+            schoolStatus: evaluation.effectiveStatus
+          });
+        }
+
+        // Step 9: Token sessionVersion validation check
+        const tokenSessionVersion = (decoded as any).sessionVersion;
+        if (
+          typeof tokenSessionVersion === "number" &&
+          typeof school.sessionVersion === "number" &&
+          tokenSessionVersion < school.sessionVersion
+        ) {
+          return res.status(403).json({
+            success: false,
+            code: SchoolErrorCode.SCHOOL_ACCESS_REVOKED,
+            message: "Your session has been invalidated due to a school status change. Please login again.",
+            schoolStatus: evaluation.effectiveStatus
+          });
+        }
+
+        req.school = school;
+      }
+    }
+
     return next();
   } catch (error: any) {
     if (error.name === "TokenExpiredError") {
@@ -80,63 +111,19 @@ export const authenticate = (
     if (error.name === "JsonWebTokenError") {
       return ApiResponse.error(res, 401, "Invalid authentication token.", "INVALID_TOKEN");
     }
-    // DEV FALLBACK
-    if (process.env.NODE_ENV !== "production") {
-      (req as any).user = {
-        id: "dev_user_101",
-        _id: "dev_user_101",
-        email: "dev@schoolmitra.com",
-        role: "SchoolAdmin",
-        schoolId: "sch_default",
-        name: "Dev Admin",
-        permissions: {}
-      };
-      return next();
-    }
     return ApiResponse.error(res, 401, "Authentication failed.", "AUTH_FAILED");
   }
 };
 
-// ════════════ 2. requireSchool() — Multi-Tenant School Validation ════════════
-// Ensures authenticated user has a valid schoolId binding.
-// SUPER_ADMIN is exempted (global access).
-// On failure, returns 403 Forbidden.
+// ════════════ 2. requireSchool() / requireActiveSchool() — Multi-Tenant School Validation ════════════
+export { requireActiveSchool } from "./tenantMiddleware";
+
 export const requireSchool = (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const user = req.user;
-  if (!user) {
-    return ApiResponse.error(res, 401, "Authentication required.", "UNAUTHORIZED");
-  }
-
-  const normalizedRole = String(user.role || "").toUpperCase().replace(/[_\s]/g, "");
-
-  // SUPER_ADMIN has global access — no schoolId binding required
-  if (normalizedRole === "SUPERADMIN") {
-    return next();
-  }
-
-  const schoolId = user.schoolId || req.headers["x-school-id"] as string;
-  if (!schoolId) {
-    return ApiResponse.error(res, 403, "Access denied: User is not assigned to a valid school.", "NO_SCHOOL_BINDING");
-  }
-
-  // Attach resolved schoolId for downstream use
-  (req as any).user.schoolId = schoolId;
-
-  // Cross-tenant protection: if a target schoolId is provided, it must match
-  const targetSchoolId = req.params.schoolId || req.query.schoolId || req.body?.schoolId;
-  if (targetSchoolId && String(targetSchoolId) !== String(schoolId)) {
-    return ApiResponse.error(
-      res, 403,
-      "403 Forbidden: Cross-tenant data access blocked. schoolId mismatch.",
-      "CROSS_TENANT_BLOCKED"
-    );
-  }
-
-  return next();
+  return requireActiveSchool(req as any, res, next);
 };
 
 // ════════════ 3. requireRole() — Role-Based Access Control ════════════

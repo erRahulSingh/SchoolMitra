@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,25 +6,82 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import {
   Menu,
   SlidersHorizontal,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  BookOpen
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import Header from '../../components/Header';
+import { teacherApi } from '../../services/apiService';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function MyClassesScreen({ navigation }: any) {
-  const classesList = [
-    { id: '1', badge: '8A', name: 'Class 8 - A', subject: 'Mathematics', desc: 'Section A • 42 Students', color: '#7c3aed', bg: '#f3e8ff' },
-    { id: '2', badge: '9B', name: 'Class 9 - B', subject: 'Science', desc: 'Section B • 38 Students', color: '#16a34a', bg: '#dcfce7' },
-    { id: '3', badge: '10A', name: 'Class 10 - A', subject: 'English', desc: 'Section A • 40 Students', color: '#2563eb', bg: '#eff6ff' },
-    { id: '4', badge: '7C', name: 'Class 7 - C', subject: 'Social Science', desc: 'Section C • 35 Students', color: '#ea580c', bg: '#ffedd5' }
-  ];
+  const isFocused = useIsFocused();
+  const [classesList, setClassesList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchClasses = useCallback(async () => {
+    try {
+      const res = await teacherApi.getClasses().catch(() => null);
+      if (res && (Array.isArray(res.classes) || Array.isArray(res))) {
+        const raw = Array.isArray(res.classes) ? res.classes : res;
+        const colorPalette = [
+          { color: '#7c3aed', bg: '#f3e8ff' },
+          { color: '#16a34a', bg: '#dcfce7' },
+          { color: '#2563eb', bg: '#eff6ff' },
+          { color: '#ea580c', bg: '#ffedd5' },
+          { color: '#0d9488', bg: '#ccfbf1' },
+          { color: '#db2777', bg: '#fce7f3' }
+        ];
+
+        const mapped = raw.map((item: any, idx: number) => {
+          const theme = colorPalette[idx % colorPalette.length];
+          const name = item.name || item.className || `Class ${item.grade || '10'}-${item.section || 'A'}`;
+          const badge = (name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 3)).toUpperCase() || `${idx + 1}`;
+          const subject = item.subject || item.primarySubject || 'General';
+          const studentCount = item.studentCount || item.totalStudents || (item.students ? item.students.length : 0);
+
+          return {
+            id: item.id || item._id || String(idx + 1),
+            badge,
+            name,
+            subject,
+            desc: `Section ${item.section || 'A'} • ${studentCount} Students`,
+            color: theme.color,
+            bg: theme.bg
+          };
+        });
+        setClassesList(mapped);
+      } else {
+        setClassesList([]);
+      }
+    } catch (e) {
+      console.warn('Classes fetch error:', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchClasses();
+    }
+  }, [isFocused, fetchClasses]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchClasses();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,7 +90,11 @@ export default function MyClassesScreen({ navigation }: any) {
       {/* UNIFIED HEADER */}
       <Header navigation={navigation} title="My Classes" currentRoute="MyClasses" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />}
+      >
         {/* TOTAL CLASSES GRADIENT CARD */}
         <LinearGradient
           colors={['#7c3aed', '#6d28d9']}
@@ -43,7 +104,7 @@ export default function MyClassesScreen({ navigation }: any) {
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.heroLabel}>Total Classes</Text>
-            <Text style={styles.heroVal}>4</Text>
+            <Text style={styles.heroVal}>{classesList.length}</Text>
             <Text style={styles.heroSub}>Assigned to you</Text>
           </View>
           <View style={styles.heroIconBadge}>
@@ -53,25 +114,37 @@ export default function MyClassesScreen({ navigation }: any) {
 
         {/* CLASS CARDS LIST */}
         <View style={styles.listContainer}>
-          {classesList.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.classCard}
-              onPress={() => navigation.navigate('StudentsList', { classId: item.id })}
-            >
-              <View style={[styles.avatarCircle, { backgroundColor: item.bg }]}>
-                <Text style={[styles.avatarText, { color: item.color }]}>{item.badge}</Text>
-              </View>
+          {loading ? (
+            <View style={{ padding: 30, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#7c3aed" />
+            </View>
+          ) : classesList.length === 0 ? (
+            <View style={[styles.classCard, { justifyContent: 'center', paddingVertical: 24 }]}>
+              <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600', textAlign: 'center' }}>
+                No classes assigned yet.
+              </Text>
+            </View>
+          ) : (
+            classesList.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.classCard}
+                onPress={() => navigation.navigate('StudentsList', { classId: item.id, className: item.name })}
+              >
+                <View style={[styles.avatarCircle, { backgroundColor: item.bg }]}>
+                  <Text style={[styles.avatarText, { color: item.color }]}>{item.badge}</Text>
+                </View>
 
-              <View style={{ flex: 1 }}>
-                <Text style={styles.className}>{item.name}</Text>
-                <Text style={styles.subjectText}>{item.subject}</Text>
-                <Text style={styles.descText}>{item.desc}</Text>
-              </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.className}>{item.name}</Text>
+                  <Text style={styles.subjectText}>{item.subject}</Text>
+                  <Text style={styles.descText}>{item.desc}</Text>
+                </View>
 
-              <ChevronRight size={18} color="#cbd5e1" />
-            </TouchableOpacity>
-          ))}
+                <ChevronRight size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

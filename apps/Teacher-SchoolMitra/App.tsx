@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, GraduationCap, BookOpen, MessageSquare, User, LayoutDashboard, UserCheck, Award, Calendar, DollarSign } from 'lucide-react-native';
+import { TeacherSchoolStatusGuard } from './src/components/TeacherSchoolStatusGuard';
 
 // Module 1 — Authentication Screens
 import Splash from './src/screens/auth/Splash';
@@ -192,106 +193,109 @@ function MainTabNavigator() {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="auto" />
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
-        {/* Module 1 — Authentication Routes */}
-        <Stack.Screen name="Splash" component={Splash} />
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="SignUp" component={SignUp} />
-        <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-        <Stack.Screen name="ResetPassword" component={ResetPassword} />
+    <TeacherSchoolStatusGuard>
+      <NavigationContainer>
+        <StatusBar style="auto" />
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
+          {/* Module 1 — Authentication Routes */}
+          <Stack.Screen name="Splash" component={Splash} />
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="SignUp" component={SignUp} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+          <Stack.Screen name="ResetPassword" component={ResetPassword} />
 
-        {/* Module 2 — Dashboard Routes */}
-        <Stack.Screen name="MainDashboard" component={MainDashboard} />
-        <Stack.Screen name="Widgets" component={WidgetsScreen} />
-        <Stack.Screen name="TodayClasses" component={TodayClassesScreen} />
+          {/* Module 2 — Dashboard Routes */}
+          <Stack.Screen name="MainDashboard" component={MainDashboard} />
+          <Stack.Screen name="Widgets" component={WidgetsScreen} />
+          <Stack.Screen name="TodayClasses" component={TodayClassesScreen} />
 
-        {/* Module 3 — My Classes Routes */}
-        <Stack.Screen name="MyClasses" component={MyClassesScreen} />
-        <Stack.Screen name="StudentsList" component={StudentsListScreen} />
-        <Stack.Screen name="StudentProfile" component={StudentProfileScreen} />
-        <Stack.Screen name="ClassDetails" component={ClassDetailsScreen} />
-        <Stack.Screen name="SubjectDetails" component={SubjectDetailsScreen} />
+          {/* Module 3 — My Classes Routes */}
+          <Stack.Screen name="MyClasses" component={MyClassesScreen} />
+          <Stack.Screen name="StudentsList" component={StudentsListScreen} />
+          <Stack.Screen name="StudentProfile" component={StudentProfileScreen} />
+          <Stack.Screen name="ClassDetails" component={ClassDetailsScreen} />
+          <Stack.Screen name="SubjectDetails" component={SubjectDetailsScreen} />
 
-        {/* Module 4 — Attendance Routes */}
-        <Stack.Screen name="MarkAttendance" component={MarkAttendanceScreen} />
-        <Stack.Screen name="AttendanceHistory" component={AttendanceHistoryScreen} />
-        <Stack.Screen name="EditAttendance" component={EditAttendanceScreen} />
-        <Stack.Screen name="StudentAttendanceReport" component={StudentAttendanceReportScreen} />
-        <Stack.Screen name="MonthlyAttendance" component={MonthlyAttendanceScreen} />
+          {/* Module 4 — Attendance Routes */}
+          <Stack.Screen name="MarkAttendance" component={MarkAttendanceScreen} />
+          <Stack.Screen name="AttendanceHistory" component={AttendanceHistoryScreen} />
+          <Stack.Screen name="EditAttendance" component={EditAttendanceScreen} />
+          <Stack.Screen name="StudentAttendanceReport" component={StudentAttendanceReportScreen} />
+          <Stack.Screen name="MonthlyAttendance" component={MonthlyAttendanceScreen} />
 
-        {/* Module 5 — Homework Routes */}
-        <Stack.Screen name="HomeworkList" component={HomeworkListScreen} />
-        <Stack.Screen name="CreateHomework" component={CreateHomeworkScreen} />
-        <Stack.Screen name="HomeworkDetails" component={HomeworkDetailsScreen} />
-        <Stack.Screen name="HomeworkSubmissions" component={HomeworkSubmissionsScreen} />
-        <Stack.Screen name="HomeworkAnalytics" component={HomeworkAnalyticsScreen} />
+          {/* Module 5 — Homework Routes */}
+          <Stack.Screen name="HomeworkList" component={HomeworkListScreen} />
+          <Stack.Screen name="CreateHomework" component={CreateHomeworkScreen} />
+          <Stack.Screen name="HomeworkDetails" component={HomeworkDetailsScreen} />
+          <Stack.Screen name="HomeworkSubmissions" component={HomeworkSubmissionsScreen} />
+          <Stack.Screen name="HomeworkAnalytics" component={HomeworkAnalyticsScreen} />
 
-        {/* Module 6 — Assignments Routes */}
-        <Stack.Screen name="AssignmentList" component={AssignmentListScreen} />
-        <Stack.Screen name="CreateAssignment" component={CreateAssignmentScreen} />
-        <Stack.Screen name="AssignmentReview" component={AssignmentReviewScreen} />
-        <Stack.Screen name="AssignmentReport" component={AssignmentReportScreen} />
+          {/* Module 6 — Assignments Routes */}
+          <Stack.Screen name="AssignmentList" component={AssignmentListScreen} />
+          <Stack.Screen name="CreateAssignment" component={CreateAssignmentScreen} />
+          <Stack.Screen name="AssignmentReview" component={AssignmentReviewScreen} />
+          <Stack.Screen name="AssignmentReport" component={AssignmentReportScreen} />
 
-        {/* Module 7 — Study Materials Routes */}
-        <Stack.Screen name="UploadMaterial" component={UploadMaterialScreen} />
-        <Stack.Screen name="MaterialLibrary" component={MaterialLibraryScreen} />
-        <Stack.Screen name="MaterialDetails" component={MaterialDetailsScreen} />
+          {/* Module 7 — Study Materials Routes */}
+          <Stack.Screen name="UploadMaterial" component={UploadMaterialScreen} />
+          <Stack.Screen name="MaterialLibrary" component={MaterialLibraryScreen} />
+          <Stack.Screen name="MaterialDetails" component={MaterialDetailsScreen} />
+          <Stack.Screen name="Academics" component={AcademicsScreen} />
 
-        {/* Module 8 — Weekly Test Routes */}
-        <Stack.Screen name="WeeklyTestList" component={WeeklyTestListScreen} />
-        <Stack.Screen name="CreateWeeklyTest" component={CreateWeeklyTestScreen} />
-        <Stack.Screen name="QuestionManager" component={QuestionManagerScreen} />
-        <Stack.Screen name="TestResultEntry" component={TestResultEntryScreen} />
-        <Stack.Screen name="WeeklyTestAnalytics" component={WeeklyTestAnalyticsScreen} />
+          {/* Module 8 — Weekly Test Routes */}
+          <Stack.Screen name="WeeklyTestList" component={WeeklyTestListScreen} />
+          <Stack.Screen name="CreateWeeklyTest" component={CreateWeeklyTestScreen} />
+          <Stack.Screen name="QuestionManager" component={QuestionManagerScreen} />
+          <Stack.Screen name="TestResultEntry" component={TestResultEntryScreen} />
+          <Stack.Screen name="WeeklyTestAnalytics" component={WeeklyTestAnalyticsScreen} />
 
-        {/* Module 9 — Exams Routes */}
-        <Stack.Screen name="ExamSchedule" component={ExamScheduleScreen} />
-        <Stack.Screen name="ExamMarksEntry" component={ExamMarksEntryScreen} />
-        <Stack.Screen name="GradeSheet" component={GradeSheetScreen} />
-        <Stack.Screen name="PublishResult" component={PublishResultScreen} />
-        <Stack.Screen name="ExamReport" component={ExamReportScreen} />
+          {/* Module 9 — Exams Routes */}
+          <Stack.Screen name="ExamSchedule" component={ExamScheduleScreen} />
+          <Stack.Screen name="ExamMarksEntry" component={ExamMarksEntryScreen} />
+          <Stack.Screen name="GradeSheet" component={GradeSheetScreen} />
+          <Stack.Screen name="PublishResult" component={PublishResultScreen} />
+          <Stack.Screen name="ExamReport" component={ExamReportScreen} />
 
-        {/* Module 10 — Report Cards Routes */}
-        <Stack.Screen name="ReportCardGenerator" component={ReportCardGeneratorScreen} />
-        <Stack.Screen name="StudentPerformance" component={StudentPerformanceScreen} />
-        <Stack.Screen name="ReportPreview" component={ReportPreviewScreen} />
+          {/* Module 10 — Report Cards Routes */}
+          <Stack.Screen name="ReportCardGenerator" component={ReportCardGeneratorScreen} />
+          <Stack.Screen name="StudentPerformance" component={StudentPerformanceScreen} />
+          <Stack.Screen name="ReportPreview" component={ReportPreviewScreen} />
 
-        {/* Module 11 — Communication Routes */}
-        <Stack.Screen name="ParentMessages" component={ParentMessagesScreen} />
-        <Stack.Screen name="ClassAnnouncements" component={ClassAnnouncementsScreen} />
-        <Stack.Screen name="ComplaintReplies" component={ComplaintRepliesScreen} />
-        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+          {/* Module 11 — Communication Routes */}
+          <Stack.Screen name="ParentMessages" component={ParentMessagesScreen} />
+          <Stack.Screen name="ClassAnnouncements" component={ClassAnnouncementsScreen} />
+          <Stack.Screen name="ComplaintReplies" component={ComplaintRepliesScreen} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen} />
 
-        {/* Module 12 — Teacher Routes */}
-        <Stack.Screen name="MyProfile" component={MyProfileScreen} />
-        <Stack.Screen name="LeaveApplication" component={LeaveApplicationScreen} />
-        <Stack.Screen name="TeacherSettings" component={TeacherSettingsScreen} />
-        <Stack.Screen name="LiveClass" component={LiveClassScreen} />
-        <Stack.Screen name="FeesOverview" component={FeesOverviewScreen} />
-        <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
-        <Stack.Screen name="TransportDuty" component={TransportDutyScreen} />
-        <Stack.Screen name="HolidayCalendar" component={HolidayCalendarScreen} />
-        <Stack.Screen name="EventManagement" component={EventManagementScreen} />
-        <Stack.Screen name="MyDocuments" component={MyDocumentsScreen} />
-        <Stack.Screen name="ParentCommunication" component={ParentCommunicationScreen} />
-        <Stack.Screen name="LogoutConfirmation" component={LogoutConfirmationScreen} />
-        <Stack.Screen name="ClassNotes" component={ClassNotesScreen} />
-        <Stack.Screen name="StudentPortfolio" component={StudentPortfolioScreen} />
-        <Stack.Screen name="Communications" component={CommunicationsScreen} />
-        <Stack.Screen name="Calendar" component={CalendarScreen} />
+          {/* Module 12 — Teacher Routes */}
+          <Stack.Screen name="MyProfile" component={MyProfileScreen} />
+          <Stack.Screen name="LeaveApplication" component={LeaveApplicationScreen} />
+          <Stack.Screen name="TeacherSettings" component={TeacherSettingsScreen} />
+          <Stack.Screen name="LiveClass" component={LiveClassScreen} />
+          <Stack.Screen name="FeesOverview" component={FeesOverviewScreen} />
+          <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
+          <Stack.Screen name="TransportDuty" component={TransportDutyScreen} />
+          <Stack.Screen name="HolidayCalendar" component={HolidayCalendarScreen} />
+          <Stack.Screen name="EventManagement" component={EventManagementScreen} />
+          <Stack.Screen name="MyDocuments" component={MyDocumentsScreen} />
+          <Stack.Screen name="ParentCommunication" component={ParentCommunicationScreen} />
+          <Stack.Screen name="LogoutConfirmation" component={LogoutConfirmationScreen} />
+          <Stack.Screen name="ClassNotes" component={ClassNotesScreen} />
+          <Stack.Screen name="StudentPortfolio" component={StudentPortfolioScreen} />
+          <Stack.Screen name="Communications" component={CommunicationsScreen} />
+          <Stack.Screen name="Calendar" component={CalendarScreen} />
 
-        {/* Main Application Routes */}
-        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-        <Stack.Screen name="Attendance" component={MarkAttendanceScreen} />
-        <Stack.Screen name="Homework" component={HomeworkListScreen} />
-        <Stack.Screen name="Marks" component={ExamsMarksScreen} />
-        <Stack.Screen name="Timetable" component={TimetableScreen} />
-        <Stack.Screen name="Payroll" component={PayrollScreen} />
-        <Stack.Screen name="Profile" component={Profile} />
-        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+          {/* Main Application Routes */}
+          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+          <Stack.Screen name="Attendance" component={MarkAttendanceScreen} />
+          <Stack.Screen name="Homework" component={HomeworkListScreen} />
+          <Stack.Screen name="Marks" component={ExamsMarksScreen} />
+          <Stack.Screen name="Timetable" component={TimetableScreen} />
+          <Stack.Screen name="Payroll" component={PayrollScreen} />
+          <Stack.Screen name="Profile" component={Profile} />
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </TeacherSchoolStatusGuard>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   SafeAreaView,
   StatusBar,
   TextInput,
-  Alert
+  Alert,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import {
   ChevronLeft,
@@ -18,21 +20,58 @@ import {
   SlidersHorizontal,
   User
 } from 'lucide-react-native';
+import { teacherApi } from '../../services/apiService';
 
-export default function StudentsListScreen({ navigation }: any) {
+export default function StudentsListScreen({ navigation, route }: any) {
+  const classId = route?.params?.classId || '';
+  const classNameParam = route?.params?.className || 'Class Students';
+
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const students = [
-    { id: '1', name: 'Aarav Sharma', roll: 'Roll No. 1', status: 'Present', color: '#16a34a', bg: '#ecfdf5' },
-    { id: '2', name: 'Diya Verma', roll: 'Roll No. 2', status: 'Present', color: '#16a34a', bg: '#ecfdf5' },
-    { id: '3', name: 'Rohan Singh', roll: 'Roll No. 3', status: 'Present', color: '#16a34a', bg: '#ecfdf5' },
-    { id: '4', name: 'Ananya Gupta', roll: 'Roll No. 4', status: 'Absent', color: '#dc2626', bg: '#fef2f2' },
-    { id: '5', name: 'Kunal Patel', roll: 'Roll No. 5', status: 'Present', color: '#16a34a', bg: '#ecfdf5' },
-    { id: '6', name: 'Meera Joshi', roll: 'Roll No. 6', status: 'Present', color: '#16a34a', bg: '#ecfdf5' }
-  ];
+  const fetchStudents = useCallback(async () => {
+    try {
+      const res = await teacherApi.getStudents(classId).catch(() => null);
+      if (res && (Array.isArray(res.students) || Array.isArray(res))) {
+        const raw = Array.isArray(res.students) ? res.students : res;
+        const mapped = raw.map((s: any, idx: number) => ({
+          id: s.id || s._id || String(idx + 1),
+          name: s.name || s.studentName || `Student ${idx + 1}`,
+          roll: s.rollNo ? `Roll No. ${s.rollNo}` : (s.rollNumber ? `Roll No. ${s.rollNumber}` : `Roll No. ${idx + 1}`),
+          status: s.status || 'Active',
+          color: s.status === 'Absent' ? '#dc2626' : '#16a34a',
+          bg: s.status === 'Absent' ? '#fef2f2' : '#ecfdf5',
+          email: s.email || '',
+          phone: s.phone || s.guardianPhone || '',
+          parentName: s.parentName || s.fatherName || '',
+          attendanceRate: s.attendanceRate || '95%'
+        }));
+        setStudents(mapped);
+      } else {
+        setStudents([]);
+      }
+    } catch (err) {
+      console.warn('Students fetch error:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [classId]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchStudents();
+  };
 
   const filteredStudents = students.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.roll.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -49,22 +88,26 @@ export default function StudentsListScreen({ navigation }: any) {
           <TouchableOpacity style={styles.actionIconBtn}>
             <Search size={18} color="#0f172a" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionIconBtn} onPress={() => Alert.alert('Options', 'More actions...')}>
+          <TouchableOpacity style={styles.actionIconBtn} onPress={() => Alert.alert('Options', `${filteredStudents.length} students enrolled`)}>
             <MoreVertical size={18} color="#0f172a" />
           </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />}
+      >
         {/* PURPLE CLASS DETAIL CARD */}
         <View style={styles.classCard}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.classCardTitle}>Class 8 - A</Text>
-            <Text style={styles.classCardSub}>Mathematics</Text>
+            <Text style={styles.classCardTitle}>{classNameParam}</Text>
+            <Text style={styles.classCardSub}>Enrolled Students Register</Text>
           </View>
           <View style={styles.classIconBadge}>
             <Users size={16} color="#ffffff" style={{ marginRight: 6 }} />
-            <Text style={styles.classIconBadgeText}>42</Text>
+            <Text style={styles.classIconBadgeText}>{students.length}</Text>
           </View>
         </View>
 
@@ -72,7 +115,7 @@ export default function StudentsListScreen({ navigation }: any) {
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search students..."
+            placeholder="Search students by name or roll..."
             placeholderTextColor="#94a3b8"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -82,28 +125,40 @@ export default function StudentsListScreen({ navigation }: any) {
 
         {/* STUDENT ROSTER LIST */}
         <View style={styles.rosterList}>
-          {filteredStudents.map((item, idx) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.studentCard}
-              onPress={() => navigation.navigate('StudentProfile', { student: item })}
-            >
-              <View style={styles.avatarCircle}>
-                <User size={18} color="#7c3aed" />
-              </View>
+          {loading ? (
+            <View style={{ padding: 30, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#7c3aed" />
+            </View>
+          ) : filteredStudents.length === 0 ? (
+            <View style={{ padding: 24, alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 12 }}>
+              <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600' }}>
+                {searchQuery ? 'No matching students found.' : 'No students registered in this class.'}
+              </Text>
+            </View>
+          ) : (
+            filteredStudents.map((item, idx) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.studentCard}
+                onPress={() => navigation.navigate('StudentProfile', { student: item })}
+              >
+                <View style={styles.avatarCircle}>
+                  <User size={18} color="#7c3aed" />
+                </View>
 
-              <View style={{ flex: 1 }}>
-                <Text style={styles.studentName}>
-                  {idx + 1}. {item.name}
-                </Text>
-                <Text style={styles.studentRoll}>{item.roll}</Text>
-              </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.studentName}>
+                    {idx + 1}. {item.name}
+                  </Text>
+                  <Text style={styles.studentRoll}>{item.roll}</Text>
+                </View>
 
-              <View style={[styles.statusBadge, { backgroundColor: item.bg }]}>
-                <Text style={[styles.statusText, { color: item.color }]}>{item.status}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+                <View style={[styles.statusBadge, { backgroundColor: item.bg }]}>
+                  <Text style={[styles.statusText, { color: item.color }]}>{item.status}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

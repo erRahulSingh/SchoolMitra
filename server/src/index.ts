@@ -15,6 +15,7 @@ dotenv.config();
 
 import { connectDB, disconnectDB } from "./config/db";
 import { initSocketServer } from "./socket";
+import { initBackgroundJobs } from "./jobs/cronJobs";
 import apiRoutes from "./routes";
 import { globalErrorHandler } from "./middleware/errorHandler";
 import { globalLimiter } from "./middleware/rateLimiter";
@@ -54,8 +55,9 @@ connectDB().catch((err) => {
   logger.error(`[MongoDB Init Warning]: ${err?.message || err}`);
 });
 
-// ──────────── Socket.IO ────────────
+// ──────────── Socket.IO & Cron Jobs ────────────
 initSocketServer(io);
+initBackgroundJobs();
 
 // ──────────── API Routes ────────────
 app.use("/api/v1", apiRoutes);

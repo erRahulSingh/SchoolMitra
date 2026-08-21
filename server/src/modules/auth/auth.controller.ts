@@ -9,6 +9,7 @@ import crypto from "crypto";
 import { UserModel, SchoolModel, RefreshTokenModel, RoleModel, UserPermissionOverrideModel } from "../../models/AuthSchemas";
 import { SystemRole, SYSTEM_ROLES_CONFIG } from "./roles.config";
 import { GLOBAL_PERMISSIONS_REGISTRY, DEFAULT_TEACHER_PERMISSIONS } from "../../constants/permissions.config";
+import { evaluateSchoolStatus, SchoolStatus } from "../../constants/schoolStatus.constants";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -138,6 +139,36 @@ export const loginUserRole = asyncHandler(async (req: Request, res: Response) =>
     userRole = matchedRole;
   }
 
+  const normalizedRole = String(userRole).toUpperCase().replace(/[_\s]/g, "");
+
+  // ─── STEP 7: CENTRAL TENANT STATUS CHECK (LOGIN CONTROL) ───
+  if (normalizedRole !== "SUPERADMIN") {
+    const targetSchoolId = user?.schoolId || req.body?.schoolId || req.headers["x-school-id"];
+    if (targetSchoolId) {
+      const isObjectId = mongoose.Types.ObjectId.isValid(targetSchoolId);
+      let school: any = null;
+      if (isObjectId) {
+        school = await SchoolModel.findById(targetSchoolId).lean();
+      }
+      if (!school) {
+        school = await SchoolModel.findOne({ code: String(targetSchoolId).toLowerCase() }).lean();
+      }
+
+      if (school) {
+        const evaluation = evaluateSchoolStatus(school);
+        if (!evaluation.isOperational) {
+          logger.warn(`[Login Blocked — School Inactive] User ${email} attempted login to ${evaluation.effectiveStatus} school: ${school.name}`);
+          return res.status(403).json({
+            success: false,
+            code: evaluation.code,
+            message: evaluation.message,
+            schoolStatus: evaluation.effectiveStatus
+          });
+        }
+      }
+    }
+  }
+
   const roleConfig = SYSTEM_ROLES_CONFIG[userRole] || SYSTEM_ROLES_CONFIG["SchoolAdmin"];
 
   const accessTokenSecret = process.env.JWT_SECRET || "schoolmitra-super-secret-jwt-key-2026";
@@ -150,9 +181,9 @@ export const loginUserRole = asyncHandler(async (req: Request, res: Response) =>
 
   // ─── 4-Layer Permission Resolution Engine for Login Response ───
   let permissionsList: string[] = [];
-  const normalizedRole = String(userRole).toUpperCase();
+  const normalizedRolePerm = String(userRole).toUpperCase();
 
-  if (normalizedRole === "TEACHER") {
+  if (normalizedRolePerm === "TEACHER") {
     const schoolId = user?.schoolId || "sch_default";
 
     // Layer 3: Role defaults
@@ -218,18 +249,29 @@ export const loginUserRole = asyncHandler(async (req: Request, res: Response) =>
     permissionsList = roleConfig?.allowedModules || [];
   }
 
+  let schoolSessionVersion = 1;
+  if (user?.schoolId) {
+    try {
+      const sch = await SchoolModel.findById(user.schoolId).select("sessionVersion").lean();
+      if (sch && typeof sch.sessionVersion === "number") {
+        schoolSessionVersion = sch.sessionVersion;
+      }
+    } catch {}
+  }
+
   const payload = {
     id: userId,
     email: email.toLowerCase(),
     role: userRole,
     schoolId: user?.schoolId || undefined,
+    sessionVersion: schoolSessionVersion,
     permissions: permissionsList
   };
 
   const accessToken = jwt.sign(payload, accessTokenSecret, {
     expiresIn: TOKEN_CONFIG.ACCESS_TOKEN_EXPIRY || "7d",
   });
-  const refreshToken = jwt.sign({ id: userId }, refreshTokenSecret, {
+  const refreshToken = jwt.sign({ id: userId, sessionVersion: schoolSessionVersion }, refreshTokenSecret, {
     expiresIn: TOKEN_CONFIG.REFRESH_TOKEN_EXPIRY || "30d",
   });
 
@@ -445,6 +487,20 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
       });
     }
 
+    // Check School Status before normal login
+    const school = await SchoolModel.findById(user.schoolId).lean();
+    if (school) {
+      const evaluation = evaluateSchoolStatus(school);
+      if (!evaluation.isOperational) {
+        return res.status(403).json({
+          success: false,
+          code: evaluation.code,
+          message: evaluation.message,
+          schoolStatus: evaluation.effectiveStatus
+        });
+      }
+    }
+
     // Profile complete -> login
     const accessToken = jwt.sign(
       { id: user._id, email: user.email, role: user.role, schoolId: user.schoolId },
@@ -552,5 +608,83 @@ export const completeProfile = asyncHandler(async (req: Request, res: Response) 
       role: user.role,
     }
   });
+});
+
+// ════════════ 13. GET SESSION INFO & STARTUP STATUS CHECK (STEP 33) ════════════
+export const getSessionInfo = asyncHandler(async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    throw ApiError.unauthorized("Authentication required to fetch session status.");
+  }
+
+  const token = authHeader.split(" ")[1];
+  const accessTokenSecret = process.env.JWT_SECRET || "schoolmitra-super-secret-jwt-key-2026";
+  const decoded = jwt.verify(token, accessTokenSecret) as any;
+
+  const normalizedRole = String(decoded.role || "").toUpperCase().replace(/[_\s]/g, "");
+
+  // Super Admin global session
+  if (normalizedRole === "SUPERADMIN") {
+    return ApiResponse.success(res, 200, "Super Admin session active.", {
+      authenticated: true,
+      user: {
+        id: decoded.id,
+        email: decoded.email,
+        role: "SuperAdmin"
+      },
+      school: null
+    });
+  }
+
+  const targetSchoolId = decoded.schoolId || (req.headers["x-school-id"] as string);
+  let school: any = null;
+
+  if (targetSchoolId) {
+    const isObjectId = mongoose.Types.ObjectId.isValid(targetSchoolId);
+    if (isObjectId) {
+      school = await SchoolModel.findById(targetSchoolId).lean();
+    }
+    if (!school) {
+      school = await SchoolModel.findOne({ code: String(targetSchoolId).toLowerCase() }).lean();
+    }
+  }
+
+  if (!school) {
+    return res.status(403).json({
+      authenticated: false,
+      success: false,
+      code: "NO_SCHOOL_BINDING",
+      message: "No active school associated with session."
+    });
+  }
+
+  const evaluation = evaluateSchoolStatus(school);
+
+  const payload = {
+    authenticated: true,
+    user: {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role
+    },
+    school: {
+      schoolId: String(school._id),
+      name: school.name,
+      code: school.code,
+      status: evaluation.effectiveStatus,
+      isOperational: evaluation.isOperational
+    }
+  };
+
+  if (!evaluation.isOperational) {
+    return res.status(403).json({
+      success: false,
+      code: evaluation.code,
+      message: evaluation.message,
+      ...payload
+    });
+  }
+
+  return ApiResponse.success(res, 200, "Session valid & school active.", payload);
 });
 

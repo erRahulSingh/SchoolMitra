@@ -10,101 +10,148 @@ import {
   Platform,
   ScrollView,
   StatusBar,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import {
   ChevronLeft,
   Mail,
-  Lock,
+  Sparkles,
   Send
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Logo from '../../components/Logo';
 
 export default function ForgotPassword({ navigation }: any) {
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSendOTP = () => {
-    if (!emailOrPhone) {
-      Alert.alert('Validation Error', 'Please enter your registered Email or Phone number');
+    const trimmed = emailOrPhone.trim();
+    if (!trimmed) {
+      setError('Please enter your registered email or phone number');
       return;
     }
 
+    setError(null);
     setLoading(true);
 
     setTimeout(() => {
       setLoading(false);
-      Alert.alert('OTP Sent 📲', 'A 6-digit verification code has been sent to your device!');
-      navigation.navigate('ResetPassword', { contact: emailOrPhone });
+      Alert.alert('OTP Sent 📲', 'A 6-digit verification code has been sent to your device!', [
+        { text: 'Proceed', onPress: () => navigation.navigate('ResetPassword', { contact: emailOrPhone }) }
+      ]);
     }, 800);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          
-          {/* HEADER BACK BUTTON */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <ChevronLeft size={22} color="#0f172a" />
-          </TouchableOpacity>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* TOP NAV BAR */}
+          <View style={styles.topBar}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <ChevronLeft size={22} color="#1e293b" />
+            </TouchableOpacity>
 
-          {/* 3D VECTOR ILLUSTRATION */}
-          <View style={styles.vectorIllustration}>
-            <View style={styles.envelopeCard}>
-              <Mail size={48} color="#ffffff" />
-              <View style={styles.badgeLock}>
-                <Lock size={14} color="#7c3aed" />
-              </View>
+            <View style={styles.portalPill}>
+              <Sparkles size={13} color="#7c3aed" />
+              <Text style={styles.portalPillText}>PASSWORD RECOVERY</Text>
             </View>
+
+            <View style={{ width: 40 }} />
           </View>
 
-          {/* HEADINGS */}
-          <Text style={styles.forgotTitle}>Forgot Password?</Text>
-          <Text style={styles.subForgotText}>
-            Don't worry! Enter your registered email or phone number and we'll send you instructions to reset your password.
-          </Text>
+          {/* HERO HEADER */}
+          <View style={styles.heroSection}>
+            <View style={styles.logoWrapper}>
+              <View style={styles.logoGlow} />
+              <Logo size={64} />
+            </View>
+            <Text style={styles.heroTitle}>Forgot Password?</Text>
+            <Text style={styles.heroSubtitle}>
+              Enter your registered work email or phone number to receive a secure recovery code.
+            </Text>
+          </View>
 
-          {/* FORM */}
-          <View style={styles.form}>
-            <View style={styles.inputBox}>
-              <Mail size={18} color="#94a3b8" style={{ marginRight: 10 }} />
-              <TextInput
-                style={styles.textInput}
-                placeholder="Email or Phone Number"
-                placeholderTextColor="#94a3b8"
-                value={emailOrPhone}
-                onChangeText={setEmailOrPhone}
-                autoCapitalize="none"
-              />
+          {/* MAIN CARD */}
+          <View style={styles.cardContainer}>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Registered Email or Phone</Text>
+              <View
+                style={[
+                  styles.inputBox,
+                  focusedInput && styles.inputBoxFocused,
+                  error ? styles.inputBoxError : null
+                ]}
+              >
+                <Mail
+                  size={19}
+                  color={error ? '#ef4444' : focusedInput ? '#7c3aed' : '#94a3b8'}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="teacher@schoolmitra.com"
+                  placeholderTextColor="#94a3b8"
+                  value={emailOrPhone}
+                  onChangeText={(val) => {
+                    setEmailOrPhone(val);
+                    if (error) setError(null);
+                  }}
+                  onFocus={() => setFocusedInput(true)}
+                  onBlur={() => setFocusedInput(false)}
+                  autoCapitalize="none"
+                />
+              </View>
+              {error && <Text style={styles.errorText}>{error}</Text>}
             </View>
 
-            <TouchableOpacity onPress={handleSendOTP} activeOpacity={0.85} disabled={loading}>
+            <TouchableOpacity
+              onPress={handleSendOTP}
+              activeOpacity={0.88}
+              disabled={loading}
+              style={styles.sendBtnWrapper}
+            >
               <LinearGradient
-                colors={['#7c3aed', '#6d28d9']}
+                colors={['#7c3aed', '#6366f1']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.sendBtn}
               >
-                <Text style={styles.sendBtnText}>
-                  {loading ? 'Sending OTP...' : 'Send Reset Link'}
-                </Text>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <View style={styles.btnContent}>
+                    <Text style={styles.sendBtnText}>Send Reset Code</Text>
+                    <Send size={16} color="#ffffff" style={{ marginLeft: 8 }} />
+                  </View>
+                )}
               </LinearGradient>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.backToSignInBtn}
+              onPress={() => navigation.navigate('Login')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.backToSignInText}>← Back to Sign In</Text>
+            </TouchableOpacity>
           </View>
-
-          {/* BACK TO SIGN IN */}
-          <TouchableOpacity
-            style={styles.backToSignInBtn}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text style={styles.backToSignInText}>Back to Sign In</Text>
-          </TouchableOpacity>
-
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -112,74 +159,198 @@ export default function ForgotPassword({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
-  scrollContent: { paddingHorizontal: 24, paddingVertical: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc'
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 30
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
   backBtn: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#e2e8f0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0f172a',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4
+      },
+      android: {
+        elevation: 1.5
+      }
+    })
   },
-  vectorIllustration: {
-    height: 180,
-    justifyContent: 'center',
+  portalPill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20
-  },
-  envelopeCard: {
-    width: 110,
-    height: 90,
+    backgroundColor: '#f3e8ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: '#7c3aed',
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e9d5ff',
+    gap: 6
+  },
+  portalPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#7c3aed',
+    letterSpacing: 0.8
+  },
+  heroSection: {
     alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 10
+  },
+  logoWrapper: {
     position: 'relative',
-    elevation: 4,
-    shadowColor: '#7c3aed',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6
-  },
-  badgeLock: {
-    position: 'absolute',
-    top: -10,
-    right: -10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#7c3aed'
+    justifyContent: 'center',
+    marginBottom: 14
   },
-  forgotTitle: { fontSize: 24, fontWeight: '950', color: '#0f172a', textAlign: 'center' },
-  subForgotText: { fontSize: 13, color: '#64748b', fontWeight: '750', textAlign: 'center', marginTop: 10, paddingHorizontal: 10, lineHeight: 18, marginBottom: 24 },
-  form: { gap: 16 },
+  logoGlow: {
+    position: 'absolute',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: '#c084fc',
+    opacity: 0.25,
+    transform: [{ scale: 1.2 }]
+  },
+  heroTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#0f172a',
+    textAlign: 'center',
+    letterSpacing: -0.5
+  },
+  heroSubtitle: {
+    fontSize: 13.5,
+    color: '#64748b',
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 6,
+    paddingHorizontal: 16,
+    lineHeight: 20
+  },
+  cardContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    gap: 18,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0f172a',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.06,
+        shadowRadius: 14
+      },
+      android: {
+        elevation: 3
+      }
+    })
+  },
+  inputWrapper: {
+    gap: 6
+  },
+  inputLabel: {
+    fontSize: 12.5,
+    fontWeight: '750',
+    color: '#334155',
+    marginLeft: 2
+  },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 48,
-    backgroundColor: '#ffffff',
+    height: 50,
+    backgroundColor: '#f8fafc',
     borderRadius: 14,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#e2e8f0',
     paddingHorizontal: 14
   },
-  textInput: { flex: 1, fontSize: 14, color: '#0f172a', fontWeight: '650' },
-  sendBtn: {
-    height: 48,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8
+  inputBoxFocused: {
+    borderColor: '#7c3aed',
+    backgroundColor: '#ffffff'
   },
-  sendBtnText: { fontSize: 14, fontWeight: '850', color: '#ffffff' },
-  backToSignInBtn: { alignSelf: 'center', marginTop: 24 },
-  backToSignInText: { fontSize: 14, fontWeight: '900', color: '#7c3aed' }
+  inputBoxError: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2'
+  },
+  inputIcon: {
+    marginRight: 10
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 14.5,
+    color: '#0f172a',
+    fontWeight: '600',
+    height: '100%'
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+    marginLeft: 4
+  },
+  sendBtnWrapper: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginTop: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#7c3aed',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8
+      },
+      android: {
+        elevation: 4
+      }
+    })
+  },
+  sendBtn: {
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  sendBtnText: {
+    fontSize: 15.5,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.3
+  },
+  backToSignInBtn: {
+    alignSelf: 'center',
+    paddingVertical: 6
+  },
+  backToSignInText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#7c3aed'
+  }
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  Alert
+  Alert,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import {
   ChevronLeft,
@@ -18,53 +20,72 @@ import {
   FileCheck,
   Users
 } from 'lucide-react-native';
+import { teacherApi } from '../../services/apiService';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function HomeworkListScreen({ navigation }: any) {
+  const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState('All');
+  const [homeworkList, setHomeworkList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const tabs = ['All', 'Active', 'Submitted', 'Overdue'];
 
-  const homeworkList = [
-    {
-      id: 'hw_1',
-      title: 'Maths Homework',
-      meta: 'Class 8 - A • Due: 25 May 2024',
-      status: 'Active',
-      statusColor: '#16a34a',
-      statusBg: '#ecfdf5',
-      desc: 'Solve questions 1 to 20 from Chapter 5 - Linear Equations.',
-      submitted: 32,
-      total: 42,
-      iconColor: '#7c3aed',
-      iconBg: '#f3e8ff'
-    },
-    {
-      id: 'hw_2',
-      title: 'Science Homework',
-      meta: 'Class 8 - A • Due: 27 May 2024',
-      status: 'Active',
-      statusColor: '#16a34a',
-      statusBg: '#ecfdf5',
-      desc: 'Write short notes on the Human Digestive System.',
-      submitted: 30,
-      total: 42,
-      iconColor: '#ea580c',
-      iconBg: '#ffedd5'
-    },
-    {
-      id: 'hw_3',
-      title: 'English Homework',
-      meta: 'Rolls 8 - A • Due: 18 May 2024',
-      status: 'Overdue',
-      statusColor: '#dc2626',
-      statusBg: '#fef2f2',
-      desc: "Write a paragraph on 'My Favourite Teacher'.",
-      submitted: 28,
-      total: 42,
-      iconColor: '#ef4444',
-      iconBg: '#fef2f2'
+  const fetchHomework = useCallback(async () => {
+    try {
+      const res = await teacherApi.getHomework().catch(() => null);
+      if (res && (Array.isArray(res.homework) || Array.isArray(res))) {
+        const raw = Array.isArray(res.homework) ? res.homework : res;
+        const colorPalette = [
+          { iconColor: '#7c3aed', iconBg: '#f3e8ff' },
+          { iconColor: '#ea580c', iconBg: '#ffedd5' },
+          { iconColor: '#2563eb', iconBg: '#eff6ff' }
+        ];
+
+        const mapped = raw.map((hw: any, idx: number) => {
+          const theme = colorPalette[idx % colorPalette.length];
+          const isOverdue = hw.dueDate && new Date(hw.dueDate) < new Date();
+          const status = hw.status || (isOverdue ? 'Overdue' : 'Active');
+          const submittedCount = hw.submittedCount || (hw.submissions ? hw.submissions.length : 0);
+          const totalCount = hw.totalCount || hw.totalStudents || 40;
+
+          return {
+            id: hw.id || hw._id || String(idx + 1),
+            title: hw.title || 'Subject Homework',
+            meta: `${hw.className || hw.targetClass || 'Class 8-A'} • Due: ${hw.dueDate ? new Date(hw.dueDate).toLocaleDateString('en-GB') : 'Upcoming'}`,
+            status,
+            statusColor: status === 'Overdue' ? '#dc2626' : (status === 'Submitted' ? '#2563eb' : '#16a34a'),
+            statusBg: status === 'Overdue' ? '#fef2f2' : (status === 'Submitted' ? '#eff6ff' : '#ecfdf5'),
+            desc: hw.description || hw.instructions || 'Complete homework assignments.',
+            submitted: submittedCount,
+            total: totalCount,
+            iconColor: theme.iconColor,
+            iconBg: theme.iconBg
+          };
+        });
+        setHomeworkList(mapped);
+      } else {
+        setHomeworkList([]);
+      }
+    } catch (e) {
+      console.warn('Homework fetch error:', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  ];
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchHomework();
+    }
+  }, [isFocused, fetchHomework]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchHomework();
+  };
 
   const filteredList = homeworkList.filter(hw =>
     activeTab === 'All' ? true : hw.status === activeTab || (activeTab === 'Submitted' && hw.submitted > 0)
@@ -90,7 +111,11 @@ export default function HomeworkListScreen({ navigation }: any) {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />}
+      >
         {/* TABS PILLS */}
         <View style={styles.tabRow}>
           {tabs.map((tab) => (
@@ -108,45 +133,53 @@ export default function HomeworkListScreen({ navigation }: any) {
 
         {/* HOMEWORK LIST CARDS */}
         <View style={styles.listContainer}>
-          {filteredList.map((hw) => (
-            <TouchableOpacity
-              key={hw.id}
-              style={styles.hwCard}
-              onPress={() => navigation.navigate('HomeworkDetails', { hw })}
-            >
-              <View style={styles.topRow}>
-                <View style={[styles.iconBox, { backgroundColor: hw.iconBg }]}>
-                  <ClipboardList size={20} color={hw.iconColor} />
+          {loading ? (
+            <View style={{ padding: 30, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#7c3aed" />
+            </View>
+          ) : filteredList.length === 0 ? (
+            <View style={{ padding: 24, alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 16 }}>
+              <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600' }}>
+                No homework items found in this section.
+              </Text>
+            </View>
+          ) : (
+            filteredList.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.hwCard}
+                onPress={() => navigation.navigate('HomeworkDetails', { homework: item, homeworkId: item.id })}
+              >
+                <View style={styles.hwCardTop}>
+                  <View style={[styles.hwIconCircle, { backgroundColor: item.iconBg }]}>
+                    <ClipboardList size={20} color={item.iconColor} />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.hwTitle}>{item.title}</Text>
+                    <Text style={styles.hwMeta}>{item.meta}</Text>
+                  </View>
+
+                  <View style={[styles.statusBadge, { backgroundColor: item.statusBg }]}>
+                    <Text style={[styles.statusText, { color: item.statusColor }]}>{item.status}</Text>
+                  </View>
                 </View>
 
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.hwTitle}>{hw.title}</Text>
-                  <Text style={styles.metaText}>{hw.meta}</Text>
+                <Text style={styles.hwDesc} numberOfLines={2}>{item.desc}</Text>
+
+                <View style={styles.hwCardFooter}>
+                  <View style={styles.subCountBadge}>
+                    <FileCheck size={14} color="#7c3aed" style={{ marginRight: 4 }} />
+                    <Text style={styles.subCountText}>
+                      Submissions: {item.submitted}/{item.total}
+                    </Text>
+                  </View>
+
+                  <ChevronRight size={18} color="#cbd5e1" />
                 </View>
-
-                <View style={[styles.statusBadge, { backgroundColor: hw.statusBg }]}>
-                  <Text style={[styles.statusText, { color: hw.statusColor }]}>{hw.status}</Text>
-                </View>
-              </View>
-
-              <Text style={styles.descText}>{hw.desc}</Text>
-
-              {/* Bottom statistics block */}
-              <View style={styles.bottomRow}>
-                <View style={styles.metaStat}>
-                  <FileCheck size={16} color="#94a3b8" style={{ marginRight: 6 }} />
-                  <Text style={styles.metaStatText}>{hw.submitted} Submitted</Text>
-                </View>
-
-                <View style={styles.metaStat}>
-                  <Users size={16} color="#94a3b8" style={{ marginRight: 6 }} />
-                  <Text style={styles.metaStatText}>{hw.total} Total</Text>
-                </View>
-
-                <ChevronRight size={18} color="#cbd5e1" />
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

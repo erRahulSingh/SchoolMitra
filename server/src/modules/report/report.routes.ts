@@ -1,8 +1,6 @@
-// ═══════════════════════════════════════════════════════════
-// SchoolMitra Backend — Universal Reports Engine Routes (Phase 12)
-// ═══════════════════════════════════════════════════════════
-
 import { Router } from "express";
+import { authenticate } from "../../middleware/authGuards";
+import { requireActiveSchool } from "../../middleware/tenantMiddleware";
 import {
   getAttendanceReportMaster,
   getExamReportMaster,
@@ -14,6 +12,10 @@ import {
 } from "./report.controller";
 
 const router = Router();
+
+// ─── STEP 21: CENTRAL REPORTS & MARKS AUTH & TENANT STATUS GUARDS ───
+router.use(authenticate);
+router.use(requireActiveSchool);
 
 router.get("/attendance", getAttendanceReportMaster);
 router.get("/exams", getExamReportMaster);

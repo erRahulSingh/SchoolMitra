@@ -16,6 +16,7 @@ import {
   verifyOTP,
   googleLogin,
   completeProfile,
+  getSessionInfo
 } from "./auth.controller";
 import { validate } from "../../middleware/validate";
 import { authLimiter } from "../../middleware/rateLimiter";
@@ -47,5 +48,6 @@ router.post("/reset-password", validate(resetPasswordSchema), resetPassword);
 router.post("/send-otp", validate(sendOtpSchema), sendOTP);
 router.post("/verify-otp", validate(verifyOtpSchema), verifyOTP);
 router.get("/roles", getRolesConfig);
+router.get("/session", getSessionInfo);
 
 export default router;

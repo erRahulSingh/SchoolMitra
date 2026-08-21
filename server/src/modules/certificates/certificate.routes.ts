@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { authenticate } from "../../middleware/authGuards";
+import { requireActiveSchool } from "../../middleware/tenantMiddleware";
 import {
   getCertificateTemplates,
   saveCertificateTemplate,
@@ -13,9 +15,13 @@ import {
 
 const router = Router();
 
-// Public Verification Endpoint
+// ─── PUBLIC VERIFICATION ENDPOINTS (Remains Publicly Accessible) ───
 router.get("/verify/:certificateNumber", verifyCertificatePublic);
 router.get("/verify/:certificateNo", verifyCertificatePublic);
+
+// ─── STEP 24: PROTECTED CERTIFICATE ENDPOINTS ───
+router.use(authenticate);
+router.use(requireActiveSchool);
 
 // Certificate Templates Endpoints
 router.get("/templates", getCertificateTemplates);

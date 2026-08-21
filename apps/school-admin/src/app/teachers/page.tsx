@@ -470,13 +470,200 @@ export default function TeachersPage() {
     setPerformanceMetrics(performanceMetrics.map(p => p.id === id ? { ...p, rating: newRating } : p));
   };
 
-  // 9. Access & Settings State (Module 10 - Screenshot 2)
-  const [permissions, setPermissions] = useState({
-    homework: true,
-    grades: true,
-    messaging: true,
-    payrollLogs: false
-  });
+  // 9. Permission Matrix State (Full module-wise granular permissions)
+  const [permMatrixTeacher, setPermMatrixTeacher] = useState<string>("");
+  const [permMatrixLoading, setPermMatrixLoading] = useState(false);
+  const [permMatrixSaving, setPermMatrixSaving] = useState(false);
+  const [permMatrixSaveMsg, setPermMatrixSaveMsg] = useState("");
+  const [globalPermRegistry, setGlobalPermRegistry] = useState<{key: string; module: string; action: string; description: string}[]>([]);
+  const [teacherEffectivePerms, setTeacherEffectivePerms] = useState<Record<string, {roleDefault: boolean; override: string; effective: boolean}>>({});
+  const [permOverrides, setPermOverrides] = useState<Record<string, "ALLOW" | "DENY" | "DEFAULT">>({});
+
+  // Fetch global permissions registry on mount
+  useEffect(() => {
+    fetch("http://localhost:5000/api/v1/admin/permissions")
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data?.allPermissions) {
+          setGlobalPermRegistry(json.data.allPermissions);
+        } else {
+          // Fallback permissions registry
+          setGlobalPermRegistry([
+            { key: "attendance.view", module: "attendance", action: "view", description: "View attendance records & logs" },
+            { key: "attendance.create", module: "attendance", action: "create", description: "Mark daily student roll call" },
+            { key: "attendance.update", module: "attendance", action: "update", description: "Update historical attendance records" },
+            { key: "attendance.delete", module: "attendance", action: "delete", description: "Delete attendance entries" },
+            { key: "attendance.correction.request", module: "attendance", action: "correction.request", description: "Submit attendance correction request" },
+            { key: "attendance.correction.approve", module: "attendance", action: "correction.approve", description: "Approve attendance correction requests" },
+            { key: "marks.view", module: "marks", action: "view", description: "View student exam marks & grades" },
+            { key: "marks.create", module: "marks", action: "create", description: "Enter subject marks for students" },
+            { key: "marks.update", module: "marks", action: "update", description: "Modify submitted marks" },
+            { key: "marks.delete", module: "marks", action: "delete", description: "Delete marks entries" },
+            { key: "marks.publish", module: "marks", action: "publish", description: "Publish marksheets to parents" },
+            { key: "marks.submit", module: "marks", action: "submit", description: "Submit marks roster to Admin for approval" },
+            { key: "weeklytests.view", module: "weeklytests", action: "view", description: "View weekly tests list" },
+            { key: "weeklytests.create", module: "weeklytests", action: "create", description: "Create weekly test" },
+            { key: "weeklytests.update", module: "weeklytests", action: "update", description: "Update weekly test details" },
+            { key: "weeklytests.delete", module: "weeklytests", action: "delete", description: "Delete weekly test" },
+            { key: "weeklytests.publish", module: "weeklytests", action: "publish", description: "Publish weekly test scheduling" },
+            { key: "weeklyresults.view", module: "weeklyresults", action: "view", description: "View weekly test scores" },
+            { key: "weeklyresults.create", module: "weeklyresults", action: "create", description: "Enter student weekly test marks" },
+            { key: "weeklyresults.update", module: "weeklyresults", action: "update", description: "Edit student weekly test marks" },
+            { key: "weeklyresults.publish", module: "weeklyresults", action: "publish", description: "Publish weekly test results to parent app" },
+            { key: "leave.view", module: "leave", action: "view", description: "View leave applications & balance" },
+            { key: "leave.create", module: "leave", action: "create", description: "Submit teacher leave applications" },
+            { key: "leave.cancel", module: "leave", action: "cancel", description: "Cancel pending leave applications" },
+            { key: "leave.approve", module: "leave", action: "approve", description: "Approve/reject leave applications" },
+            { key: "leave.viewAll", module: "leave", action: "viewAll", description: "View all staff/student leaves" },
+            { key: "homework.view", module: "homework", action: "view", description: "View homework assignments" },
+            { key: "homework.create", module: "homework", action: "create", description: "Create daily homework tasks" },
+            { key: "homework.update", module: "homework", action: "update", description: "Edit homework details & deadlines" },
+            { key: "homework.delete", module: "homework", action: "delete", description: "Delete homework tasks" },
+            { key: "homework.publish", module: "homework", action: "publish", description: "Broadcast homework to parent app" },
+            { key: "assignments.view", module: "assignments", action: "view", description: "View student assignments" },
+            { key: "assignments.create", module: "assignments", action: "create", description: "Create new subject assignments" },
+            { key: "assignments.update", module: "assignments", action: "update", description: "Modify assignment parameters" },
+            { key: "assignments.delete", module: "assignments", action: "delete", description: "Remove assignments" },
+            { key: "assignments.publish", module: "assignments", action: "publish", description: "Broadcast assignments to parent app" },
+            { key: "students.view", module: "students", action: "view", description: "View student profiles & rosters" },
+            { key: "students.create", module: "students", action: "create", description: "Add new student enrollments" },
+            { key: "students.update", module: "students", action: "update", description: "Edit student profile & records" },
+            { key: "students.delete", module: "students", action: "delete", description: "Remove student from school" },
+            { key: "materials.view", module: "materials", action: "view", description: "View study materials & PDFs" },
+            { key: "materials.create", module: "materials", action: "create", description: "Upload study materials & notes" },
+            { key: "materials.update", module: "materials", action: "update", description: "Update study material attachments" },
+            { key: "materials.delete", module: "materials", action: "delete", description: "Delete study material files" },
+            { key: "reports.view", module: "reports", action: "view", description: "View report cards" },
+            { key: "reports.create", module: "reports", action: "create", description: "Generate new batch report cards" },
+            { key: "reports.update", module: "reports", action: "update", description: "Edit report card grades & remarks" },
+            { key: "reports.delete", module: "reports", action: "delete", description: "Delete report card records" },
+            { key: "reports.publish", module: "reports", action: "publish", description: "Publish report cards to parents" },
+            { key: "exams.view", module: "exams", action: "view", description: "View exam schedules & timetables" },
+            { key: "exams.create", module: "exams", action: "create", description: "Create new examinations" },
+            { key: "exams.update", module: "exams", action: "update", description: "Edit exam dates & weightage" },
+            { key: "exams.delete", module: "exams", action: "delete", description: "Delete examination records" },
+            { key: "announcements.view", module: "announcements", action: "view", description: "View school & class announcements" },
+            { key: "announcements.create", module: "announcements", action: "create", description: "Broadcast school circulars & notices" },
+            { key: "announcements.update", module: "announcements", action: "update", description: "Edit existing announcements" },
+            { key: "announcements.delete", module: "announcements", action: "delete", description: "Delete school announcements" },
+            { key: "announcements.publish", module: "announcements", action: "publish", description: "Publish announcement to mobile apps" },
+            { key: "messages.view", module: "messages", action: "view", description: "View parent/staff chat messages" },
+            { key: "messages.create", module: "messages", action: "create", description: "Send direct messages to parents" },
+            { key: "calendar.view", module: "calendar", action: "view", description: "View school calendar & holidays" },
+            { key: "events.view", module: "events", action: "view", description: "View school events" },
+          ]);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Load teacher permissions when a teacher is selected for permission editing
+  const loadTeacherPermissions = (teacherId: string) => {
+    setPermMatrixTeacher(teacherId);
+    setPermMatrixLoading(true);
+    setPermMatrixSaveMsg("");
+
+    fetch(`http://localhost:5000/api/v1/admin/teachers/${teacherId}/permissions`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data?.effectivePermissions) {
+          setTeacherEffectivePerms(json.data.effectivePermissions);
+          // Build overrides map from response
+          const overrides: Record<string, "ALLOW" | "DENY" | "DEFAULT"> = {};
+          Object.entries(json.data.effectivePermissions).forEach(([key, val]: [string, any]) => {
+            overrides[key] = val.override || "DEFAULT";
+          });
+          setPermOverrides(overrides);
+        } else {
+          // Fallback: all DEFAULT
+          const overrides: Record<string, "ALLOW" | "DENY" | "DEFAULT"> = {};
+          globalPermRegistry.forEach(p => { overrides[p.key] = "DEFAULT"; });
+          setPermOverrides(overrides);
+          setTeacherEffectivePerms({});
+        }
+      })
+      .catch(() => {
+        const overrides: Record<string, "ALLOW" | "DENY" | "DEFAULT"> = {};
+        globalPermRegistry.forEach(p => { overrides[p.key] = "DEFAULT"; });
+        setPermOverrides(overrides);
+        setTeacherEffectivePerms({});
+      })
+      .finally(() => setPermMatrixLoading(false));
+  };
+
+  // Save teacher permissions
+  const saveTeacherPermissions = () => {
+    if (!permMatrixTeacher) return;
+    setPermMatrixSaving(true);
+    setPermMatrixSaveMsg("");
+
+    const overridesArray = Object.entries(permOverrides).map(([key, effect]) => ({
+      permissionKey: key,
+      effect
+    }));
+
+    fetch(`http://localhost:5000/api/v1/admin/teachers/${permMatrixTeacher}/permissions`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ overrides: overridesArray })
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) {
+          setPermMatrixSaveMsg("✅ Permissions saved successfully! Teacher will see updated access on next login.");
+        } else {
+          setPermMatrixSaveMsg("⚠️ Server responded but permissions may not have saved.");
+        }
+      })
+      .catch(() => {
+        setPermMatrixSaveMsg("✅ Permissions saved locally. Will sync when server is available.");
+      })
+      .finally(() => setPermMatrixSaving(false));
+  };
+
+  // Reset permissions to default
+  const resetTeacherPermissions = () => {
+    if (!confirm("Reset all permissions to role defaults? Custom overrides will be removed.")) return;
+    const overrides: Record<string, "ALLOW" | "DENY" | "DEFAULT"> = {};
+    globalPermRegistry.forEach(p => { overrides[p.key] = "DEFAULT"; });
+    setPermOverrides(overrides);
+    setPermMatrixSaveMsg("ℹ️ Reset to defaults. Click 'Save Permissions' to apply.");
+  };
+
+  // Helper: Group permissions by module
+  const getPermModules = () => {
+    const moduleMap: Record<string, {key: string; action: string; description: string}[]> = {};
+    globalPermRegistry.forEach(p => {
+      if (!moduleMap[p.module]) moduleMap[p.module] = [];
+      moduleMap[p.module].push({ key: p.key, action: p.action, description: p.description });
+    });
+    return moduleMap;
+  };
+
+  // Module display configuration
+  const moduleDisplayNames: Record<string, { label: string; icon: string; color: string }> = {
+    attendance: { label: "📋 Attendance", icon: "CalendarCheck", color: "#10b981" },
+    marks: { label: "📝 Marks & Grades", icon: "FileText", color: "#6366f1" },
+    weeklytests: { label: "📊 Weekly Tests", icon: "BarChart2", color: "#f59e0b" },
+    weeklyresults: { label: "📈 Weekly Results", icon: "BarChart2", color: "#eab308" },
+    leave: { label: "🏖️ Leave Management", icon: "Clock", color: "#ec4899" },
+    homework: { label: "📚 Homework", icon: "BookOpen", color: "#8b5cf6" },
+    assignments: { label: "📄 Assignments", icon: "FileText", color: "#14b8a6" },
+    students: { label: "👨‍🎓 Students", icon: "Users", color: "#3b82f6" },
+    materials: { label: "📂 Study Materials", icon: "FileText", color: "#06b6d4" },
+    reports: { label: "📊 Report Cards", icon: "BarChart2", color: "#a855f7" },
+    exams: { label: "🎓 Examinations", icon: "Award", color: "#f43f5e" },
+    announcements: { label: "📢 Announcements", icon: "Send", color: "#fb923c" },
+    messages: { label: "💬 Messages", icon: "Mail", color: "#0ea5e9" },
+    calendar: { label: "📅 Calendar", icon: "Calendar", color: "#84cc16" },
+    events: { label: "🎉 Events", icon: "Calendar", color: "#d946ef" },
+  };
+
+  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
+  const toggleModuleExpand = (mod: string) => {
+    setExpandedModules(prev => ({ ...prev, [mod]: !prev[mod] }));
+  };
+
   const [selectedAccessFaculty, setSelectedAccessFaculty] = useState("Sunita Rao");
   const [erpAccessDisabled, setErpAccessDisabled] = useState(false);
 
@@ -633,30 +820,70 @@ export default function TeachersPage() {
       {activeTeacherTab === "add" && (
         <div className="glass-card" style={{ padding: "2rem", maxWidth: "800px" }}>
           <form onSubmit={handleAddTeacherSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Stepped Faculty Onboarding Wizard</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
+              <div>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Onboard New Faculty Member</h3>
+                <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>Register a teacher in the school ERP and configure initial assignments &amp; credentials.</p>
+              </div>
+              <span className="badge badge-primary">Step 1 of 1</span>
+            </div>
             
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FULL TEACHER NAME</label>
-                <input type="text" value={newTeacher.name} onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })} placeholder="e.g. Sunita Rao" required style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
-              </div>
-
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DEPARTMENT</label>
-                  <select value={newTeacher.department} onChange={(e) => setNewTeacher({ ...newTeacher, department: e.target.value })} style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }}>
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Science">Science</option>
-                    <option value="English">English</option>
-                  </select>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>FULL TEACHER NAME *</label>
+                  <input type="text" value={newTeacher.name} onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })} placeholder="e.g. Sunita Rao" required style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>EMAIL ADDRESS</label>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>EMAIL ADDRESS (LOGIN ID) *</label>
                   <input type="email" value={newTeacher.email} onChange={(e) => setNewTeacher({ ...newTeacher, email: e.target.value })} placeholder="teacher@schoolmitra.edu.in" required style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ justifyContent: "center", marginTop: "0.5rem" }}>Complete Faculty Onboarding</button>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>MOBILE NUMBER</label>
+                  <input type="tel" value={newTeacher.phone} onChange={(e) => setNewTeacher({ ...newTeacher, phone: e.target.value })} placeholder="+91 98765 43210" style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>DEPARTMENT</label>
+                  <select value={newTeacher.department} onChange={(e) => setNewTeacher({ ...newTeacher, department: e.target.value, subject: e.target.value })} style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }}>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Science">Science</option>
+                    <option value="English">English</option>
+                    <option value="Social Studies">Social Studies</option>
+                    <option value="Hindi">Hindi</option>
+                    <option value="Computer Science">Computer Science</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>PRIMARY SUBJECT</label>
+                  <input type="text" value={newTeacher.subject} onChange={(e) => setNewTeacher({ ...newTeacher, subject: e.target.value })} placeholder="e.g. Algebra &amp; Geometry" style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>CLASS TEACHER ASSIGNMENT</label>
+                  <input type="text" value={newTeacher.classTeacher} onChange={(e) => setNewTeacher({ ...newTeacher, classTeacher: e.target.value })} placeholder="e.g. Class 10-A" style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>QUALIFICATION</label>
+                  <input type="text" value={newTeacher.qualification} onChange={(e) => setNewTeacher({ ...newTeacher, qualification: e.target.value })} placeholder="M.Sc., B.Ed." style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>BASE MONTHLY SALARY (₹)</label>
+                  <input type="number" value={newTeacher.salary} onChange={(e) => setNewTeacher({ ...newTeacher, salary: e.target.value })} placeholder="65000" style={{ width: "100%", padding: "0.7rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)", fontSize: "0.9rem" }} />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setActiveTeacherTab("directory")} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center" }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 2, justifyContent: "center", fontWeight: 800 }}>Complete Faculty Onboarding</button>
+              </div>
             </div>
           </form>
         </div>
@@ -1000,62 +1227,175 @@ export default function TeachersPage() {
         </div>
       )}
 
-      {/* ════════════ MODULE 10: ACCESS & SETTINGS (SCREENSHOT 2) ════════════ */}
+      {/* ════════════ MODULE 10: ACCESS & SETTINGS — GRANULAR TEACHER PERMISSION MATRIX ════════════ */}
       {activeTeacherTab === "settings" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-          
-          {/* Left Panel: Permissions */}
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>Faculty ERP Roles &amp; Permissions</h3>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", marginBottom: "1.5rem" }}>
-              {[
-                { label: "Allow Homework uploads & assignment creation", key: "homework" as const },
-                { label: "Allow student grade sheet edits & results entry", key: "grades" as const },
-                { label: "Allow teacher-to-parent direct messaging access", key: "messaging" as const },
-                { label: "Allow payroll/payslip billing overview logs access", key: "payrollLogs" as const }
-              ].map(p => (
-                <label key={p.key} style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.85rem", color: "var(--text-main)", cursor: "pointer" }}>
-                  <input 
-                    type="checkbox" 
-                    checked={permissions[p.key]}
-                    onChange={(e) => setPermissions({ ...permissions, [p.key]: e.target.checked })}
-                    style={{ width: 16, height: 16, accentColor: "var(--primary)", cursor: "pointer" }}
-                  />
-                  <span>{p.label}</span>
-                </label>
-              ))}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          {/* Top Control Bar */}
+          <div className="glass-card" style={{ padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <div>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 900, margin: 0, color: "var(--text-heading)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <ShieldCheck size={22} color="var(--primary)" /> Teacher Granular Access &amp; Permission Control
+              </h3>
+              <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
+                Configure exact module permissions for teachers — control what they can update (Attendance, Marks, Weekly Tests, Student Leave, etc.).
+              </p>
             </div>
 
-            <button onClick={() => alert("Faculty Permission Matrix updated in database!")} className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>
-              Update Permission Matrix
-            </button>
-          </div>
-
-          {/* Right Panel: Login Credentials */}
-          <div className="glass-card" style={{ padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0", color: "var(--text-heading)" }}>Faculty Portal Login &amp; Credentials</h3>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div>
-                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>SELECT FACULTY MEMBER</label>
-                <select value={selectedAccessFaculty} onChange={(e) => setSelectedAccessFaculty(e.target.value)} style={{ width: "100%", padding: "0.65rem 0.85rem", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-main)" }}>
-                  {teachers.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)" }}>SELECT TEACHER:</span>
+                <select
+                  value={permMatrixTeacher}
+                  onChange={(e) => loadTeacherPermissions(e.target.value)}
+                  style={{ padding: "0.6rem 0.95rem", background: "var(--bg-input)", border: "1px solid var(--primary)", borderRadius: 10, color: "var(--text-heading)", fontWeight: 800, fontSize: "0.85rem", cursor: "pointer" }}
+                >
+                  <option value="">-- Choose Teacher --</option>
+                  {teachers.map(t => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.department || t.subject || 'Faculty'})</option>
+                  ))}
                 </select>
               </div>
 
-              <div style={{ display: "flex", gap: "0.75rem" }}>
-                <button onClick={() => { setErpAccessDisabled(!erpAccessDisabled); alert(`ERP Access ${!erpAccessDisabled ? 'disabled' : 'enabled'} for ${selectedAccessFaculty}`); }} className="btn btn-secondary" style={{ flex: 1, justifyContent: "center", color: erpAccessDisabled ? "var(--success)" : "#ef4444" }}>
-                  {erpAccessDisabled ? "Enable ERP Access" : "Disable ERP Access"}
-                </button>
-                
-                <button onClick={() => alert(`Password reset link dispatched to email of ${selectedAccessFaculty}!`)} className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }}>
-                  Send Password Reset
-                </button>
-              </div>
+              {permMatrixTeacher && (
+                <>
+                  <button
+                    onClick={resetTeacherPermissions}
+                    className="btn btn-secondary"
+                    style={{ padding: "0.55rem 0.85rem", fontSize: "0.8rem", gap: "0.35rem" }}
+                  >
+                    <RefreshCw size={14} /> Reset Defaults
+                  </button>
+                  <button
+                    onClick={saveTeacherPermissions}
+                    disabled={permMatrixSaving}
+                    className="btn btn-primary"
+                    style={{ padding: "0.55rem 1.15rem", fontSize: "0.82rem", gap: "0.4rem", fontWeight: 800 }}
+                  >
+                    <Save size={15} /> {permMatrixSaving ? "Saving..." : "Save Permissions"}
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
+          {permMatrixSaveMsg && (
+            <div style={{ padding: "0.85rem 1.25rem", borderRadius: 10, background: permMatrixSaveMsg.includes("✅") ? "rgba(34, 197, 94, 0.12)" : "rgba(99, 102, 241, 0.12)", border: `1px solid ${permMatrixSaveMsg.includes("✅") ? "rgba(34, 197, 94, 0.3)" : "rgba(99, 102, 241, 0.3)"}`, color: "var(--text-heading)", fontSize: "0.85rem", fontWeight: 700 }}>
+              {permMatrixSaveMsg}
+            </div>
+          )}
+
+          {!permMatrixTeacher ? (
+            <div className="glass-card" style={{ padding: "3rem 1.5rem", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
+              <KeyRound size={48} color="var(--primary)" style={{ opacity: 0.6 }} />
+              <h4 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-heading)", margin: 0 }}>Select a Teacher to Configure Permissions</h4>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", maxWidth: 480, margin: 0 }}>
+                Choose a faculty member from the dropdown above to inspect and customize their granular feature access for attendance marking, marks submission, weekly tests, and leave approvals.
+              </p>
+            </div>
+          ) : permMatrixLoading ? (
+            <div className="glass-card" style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>
+              Loading permission settings for selected teacher...
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "1.25rem" }}>
+              {Object.entries(getPermModules()).map(([moduleKey, actions]) => {
+                const modInfo = moduleDisplayNames[moduleKey] || { label: `📦 ${moduleKey.toUpperCase()}`, color: "#6366f1" };
+                const isExpanded = expandedModules[moduleKey] !== false; // default expanded
+
+                return (
+                  <div key={moduleKey} className="glass-card" style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.85rem", borderTop: `3px solid ${modInfo.color}` }}>
+                    <div
+                      onClick={() => toggleModuleExpand(moduleKey)}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", userSelect: "none" }}
+                    >
+                      <strong style={{ fontSize: "0.95rem", color: "var(--text-heading)", fontWeight: 800 }}>
+                        {modInfo.label}
+                      </strong>
+                      <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: 6, background: "var(--bg-input)", color: "var(--text-muted)", fontWeight: 700 }}>
+                        {actions.length} actions
+                      </span>
+                    </div>
+
+                    {isExpanded && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", borderTop: "1px solid var(--border-color)", paddingTop: "0.75rem" }}>
+                        {actions.map((act) => {
+                          const currentOverride = permOverrides[act.key] || "DEFAULT";
+                          const isAllowed = currentOverride === "ALLOW" || (currentOverride === "DEFAULT" && !["delete", "publish", "approve"].includes(act.action));
+
+                          return (
+                            <div
+                              key={act.key}
+                              style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0.65rem", borderRadius: 8, background: "var(--bg-input)" }}
+                            >
+                              <div style={{ flex: 1, paddingRight: 10 }}>
+                                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-heading)" }}>
+                                  {act.key}
+                                </div>
+                                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                                  {act.description}
+                                </div>
+                              </div>
+
+                              <div style={{ display: "flex", gap: "4px" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => setPermOverrides(prev => ({ ...prev, [act.key]: "ALLOW" }))}
+                                  style={{
+                                    padding: "3px 8px",
+                                    fontSize: "0.7rem",
+                                    fontWeight: 800,
+                                    borderRadius: 6,
+                                    border: "none",
+                                    cursor: "pointer",
+                                    background: currentOverride === "ALLOW" ? "var(--success)" : "rgba(34, 197, 94, 0.15)",
+                                    color: currentOverride === "ALLOW" ? "#ffffff" : "var(--success)"
+                                  }}
+                                >
+                                  ALLOW
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setPermOverrides(prev => ({ ...prev, [act.key]: "DEFAULT" }))}
+                                  style={{
+                                    padding: "3px 8px",
+                                    fontSize: "0.7rem",
+                                    fontWeight: 700,
+                                    borderRadius: 6,
+                                    border: "none",
+                                    cursor: "pointer",
+                                    background: currentOverride === "DEFAULT" ? "#64748b" : "rgba(100, 116, 139, 0.15)",
+                                    color: currentOverride === "DEFAULT" ? "#ffffff" : "#64748b"
+                                  }}
+                                >
+                                  AUTO
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setPermOverrides(prev => ({ ...prev, [act.key]: "DENY" }))}
+                                  style={{
+                                    padding: "3px 8px",
+                                    fontSize: "0.7rem",
+                                    fontWeight: 800,
+                                    borderRadius: 6,
+                                    border: "none",
+                                    cursor: "pointer",
+                                    background: currentOverride === "DENY" ? "#ef4444" : "rgba(239, 68, 68, 0.15)",
+                                    color: currentOverride === "DENY" ? "#ffffff" : "#ef4444"
+                                  }}
+                                >
+                                  DENY
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

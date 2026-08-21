@@ -27,24 +27,129 @@ export function calculateDynamicETA(speedKmH: number, distanceMeters: number): s
   }
   const hours = (distanceMeters / 1000) / speedKmH;
   const minutes = Math.max(1, Math.round(hours * 60));
-  return `${minutes} min${minutes > 1 ? "s" : ""}`;
-}
+// ──────────── Global Socket Instance & Status Dispatcher ────────────
+let globalIO: SocketIOServer | null = null;
+const suspendedSchoolsSet = new Set<string>();
+
+export const emitSchoolStatusChanged = (
+  schoolId: string,
+  status: string,
+  reason: string,
+  schoolCode?: string
+) => {
+  if (!globalIO) return;
+
+  const normalizedId = String(schoolId);
+  const normalizedCode = schoolCode?.toLowerCase() || "";
+
+  if (status === "SUSPENDED" || status === "EXPIRED" || status === "DEACTIVATED") {
+    suspendedSchoolsSet.add(normalizedId);
+    if (normalizedCode) suspendedSchoolsSet.add(normalizedCode);
+  } else if (status === "ACTIVE" || status === "TRIAL") {
+    suspendedSchoolsSet.delete(normalizedId);
+    if (normalizedCode) suspendedSchoolsSet.delete(normalizedCode);
+  }
+
+  const payload = {
+    schoolId: normalizedId,
+    schoolCode: schoolCode || "",
+    status,
+    reason: reason || `School account status changed to ${status}`,
+    timestamp: new Date().toISOString()
+  };
+
+  logger.warn(`[Socket.IO] Emitting school:status_changed for school ${schoolId} [${status}]`);
+
+  // 1. Emit to tenant-specific room
+  globalIO.to(`school:${normalizedId}`).emit("school:status_changed", payload);
+  if (normalizedCode) {
+    globalIO.to(`school:${normalizedCode}`).emit("school:status_changed", payload);
+  }
+
+  // 2. Global broadcast so all clients can filter by schoolId
+  globalIO.emit("school:status_changed", payload);
+
+  // 3. STEP 16: For suspended schools, disconnect & evict all connected client sockets
+  if (status === "SUSPENDED" || status === "EXPIRED" || status === "DEACTIVATED") {
+    try {
+      const roomSockets = globalIO.sockets.adapter.rooms.get(`school:${normalizedId}`);
+      if (roomSockets) {
+        for (const socketId of roomSockets) {
+          const clientSocket = globalIO.sockets.sockets.get(socketId);
+          if (clientSocket) {
+            logger.info(`[Socket.IO Eviction] Disconnecting suspended tenant socket ${clientSocket.id}`);
+            clientSocket.emit("school:status_changed", payload);
+            clientSocket.disconnect(true);
+          }
+        }
+      }
+    } catch (e) {
+      logger.warn("[Socket.IO Eviction Error]:", e);
+    }
+  }
+};
 
 export const initSocketServer = (io: SocketIOServer) => {
+  globalIO = io;
   logger.info("[Socket.IO] Real-Time Telemetry & Notification Engine initialized.");
 
   io.on("connection", (socket: Socket) => {
     logger.info(`[Socket.IO] Client connected: ${socket.id}`);
 
-    // ──────────── 1. ROOM SUBSCRIPTIONS ────────────
-    socket.on("bus:join_room", (data: { routeId?: string; busId?: string; parentId?: string }) => {
-      // Enforce: "Parent ko sirf apne linked child ki assigned bus ka location mile"
+    // Identify socket tenant
+    const schoolId =
+      (socket.handshake.auth as any)?.schoolId ||
+      (socket.handshake.query as any)?.schoolId;
+
+    if (schoolId) {
+      socket.data.schoolId = String(schoolId);
+      socket.join(`school:${schoolId}`);
+      logger.info(`[Socket.IO] Socket ${socket.id} auto-joined tenant room school:${schoolId}`);
+
+      // If already suspended, immediately emit blocked status and reject operations
+      if (suspendedSchoolsSet.has(String(schoolId))) {
+        socket.emit("school:status_changed", {
+          schoolId: String(schoolId),
+          status: "SUSPENDED",
+          reason: "School account is suspended. Real-time operations are disabled."
+        });
+      }
+    }
+
+    // Tenant check helper
+    const isBlocked = (data?: any): boolean => {
+      const currentSchoolId = socket.data?.schoolId || data?.schoolId || (socket.handshake.auth as any)?.schoolId;
+      if (currentSchoolId && suspendedSchoolsSet.has(String(currentSchoolId))) {
+        logger.warn(`[Socket.IO Barrier] Suppressed event from suspended tenant socket ${socket.id} (School: ${currentSchoolId})`);
+        return true;
+      }
+      return false;
+    };
+
+    // Explicit tenant room join
+    socket.on("school:join", (data: { schoolId: string }) => {
+      if (data?.schoolId) {
+        socket.data.schoolId = String(data.schoolId);
+        socket.join(`school:${data.schoolId}`);
+        logger.info(`[Socket.IO] Socket ${socket.id} subscribed to school:${data.schoolId}`);
+
+        if (suspendedSchoolsSet.has(String(data.schoolId))) {
+          socket.emit("school:status_changed", {
+            schoolId: String(data.schoolId),
+            status: "SUSPENDED",
+            reason: "School account is suspended."
+          });
+        }
+      }
+    });
+
+    socket.on("bus:join_room", (data: { routeId?: string; busId?: string; parentId?: string; schoolId?: string }) => {
+      if (isBlocked(data)) return;
+
       if (data.parentId && data.busId) {
-        logger.info(`[Socket.IO] Security check: Verifying parent ${data.parentId} access to Bus ${data.busId}`);
-        // Standard parent test accounts are linked exclusively to BUS-01 / Bus #01
         if (data.busId.toUpperCase() !== "BUS-01" && data.busId.toUpperCase() !== "BUS #01") {
           logger.warn(`[Socket.IO] Security DENIED: Parent ${data.parentId} unauthorized tracking attempt for Bus ${data.busId}`);
-          return; // block subscription
+          return;
         }
       }
 
@@ -53,13 +158,15 @@ export const initSocketServer = (io: SocketIOServer) => {
       logger.info(`[Socket.IO] Socket ${socket.id} subscribed to room ${room}`);
     });
 
-    socket.on("parent:subscribe", (data: { parentId: string }) => {
+    socket.on("parent:subscribe", (data: { parentId: string; schoolId?: string }) => {
+      if (isBlocked(data)) return;
       const room = `parent:${data.parentId}`;
       socket.join(room);
       logger.info(`[Socket.IO] Parent Socket ${socket.id} subscribed to ${room}`);
     });
 
-    socket.on("chat:join_room", (data: { roomId: string }) => {
+    socket.on("chat:join_room", (data: { roomId: string; schoolId?: string }) => {
+      if (isBlocked(data)) return;
       if (data.roomId) {
         const room = `room:${data.roomId}`;
         socket.join(room);
@@ -67,7 +174,8 @@ export const initSocketServer = (io: SocketIOServer) => {
       }
     });
 
-    socket.on("chat:send_message", (data: { roomId: string; text: string; senderId?: string }) => {
+    socket.on("chat:send_message", (data: { roomId: string; text: string; senderId?: string; schoolId?: string }) => {
+      if (isBlocked(data)) return;
       if (data.roomId) {
         logger.info(`[Socket.IO] Chat message emitted to room:${data.roomId}`);
         io.to(`room:${data.roomId}`).emit("chat:new_message", {
@@ -82,51 +190,47 @@ export const initSocketServer = (io: SocketIOServer) => {
     });
 
     socket.on("message:new", (data: any) => {
+      if (isBlocked(data)) return;
       if (data.roomId || data.conversationId) {
         const room = `room:${data.roomId || data.conversationId}`;
         io.to(room).emit("message:new", data);
       }
     });
 
-    socket.on("message:read", (data: { messageId?: string; roomId?: string; userId?: string }) => {
+    socket.on("message:read", (data: { messageId?: string; roomId?: string; userId?: string; schoolId?: string }) => {
+      if (isBlocked(data)) return;
       const room = data.roomId ? `room:${data.roomId}` : undefined;
       if (room) {
         io.to(room).emit("message:read", data);
-      } else {
-        io.emit("message:read", data);
       }
     });
 
-    socket.on("message:typing", (data: { roomId: string; userId: string; isTyping: boolean }) => {
+    socket.on("message:typing", (data: { roomId: string; userId: string; isTyping: boolean; schoolId?: string }) => {
+      if (isBlocked(data)) return;
       if (data.roomId) {
         socket.to(`room:${data.roomId}`).emit("message:typing", data);
       }
     });
 
     socket.on("notification:new", (data: any) => {
+      if (isBlocked(data)) return;
       if (data.recipientId) {
         io.to(`user:${data.recipientId}`).to(`parent:${data.recipientId}`).emit("notification:new", data);
-      } else {
-        io.emit("notification:new", data);
       }
     });
 
-    socket.on("notification:read", (data: { notificationId?: string; userId?: string }) => {
-      io.emit("notification:read", data);
-    });
-
     socket.on("announcement:published", (data: any) => {
+      if (isBlocked(data)) return;
       logger.info(`[Socket.IO] Announcement published: ${data.title || 'Announcement'}`);
-      io.emit("announcement:published", data);
-      io.emit("parent:live_notification", {
-        title: `📢 Announcement: ${data.title}`,
-        body: data.content || data.message || "",
-        ...data
-      });
+      if (data.schoolId) {
+        io.to(`school:${data.schoolId}`).emit("announcement:published", data);
+      }
     });
 
     // ──────────── 2. DRIVER LIVE GPS LOCATION BROADCAST ────────────
-    socket.on("driver:location_update", (data: GPSLocationUpdatePayload) => {
+    socket.on("driver:location_update", (data: GPSLocationUpdatePayload & { schoolId?: string }) => {
+      if (isBlocked(data)) return;
+
       const calculatedEta = data.etaMinutes
         ? `${data.etaMinutes} mins`
         : calculateDynamicETA(data.speed || 35, data.distanceToNextStopMeters || 1800);
@@ -137,35 +241,28 @@ export const initSocketServer = (io: SocketIOServer) => {
         timestamp: new Date().toISOString(),
       };
 
-      // Broadcast to parents subscribed to this route or bus
       if (data.routeId) {
         io.to(`route:${data.routeId}`).emit("bus:location_changed", enrichedPayload);
       }
       if (data.busId) {
         io.to(`bus:${data.busId}`).emit("bus:location_changed", enrichedPayload);
       }
-
-      // Broadcast to School Admin & Super Admin telemetry dashboards
-      io.emit("admin:bus_location_update", enrichedPayload);
     });
 
-    socket.on("bus:location_changed", (data: { busId: string; tripId?: string; latitude: number; longitude: number; speed: number; heading?: number; timestamp?: string }) => {
-      logger.info(`[Socket.IO] GPS Location Changed event: Bus ${data.busId}`);
+    socket.on("bus:location_changed", (data: { busId: string; tripId?: string; latitude: number; longitude: number; speed: number; heading?: number; timestamp?: string; schoolId?: string }) => {
+      if (isBlocked(data)) return;
       
       const payload = {
         ...data,
         timestamp: data.timestamp || new Date().toISOString()
       };
 
-      // Broadcast to rooms and dashboards
       io.to(`bus:${data.busId}`).emit("bus:location_changed", payload);
-      io.emit("admin:bus_location_update", payload);
-      io.emit("bus:location_changed", payload);
     });
 
-    // ──────────── 3. BUS STATUS UPDATES (ON_ROUTE, ARRIVED, DELAYED) ────────────
-    socket.on("driver:status_changed", (data: { busId: string; status: string; stopName?: string; delayMins?: number }) => {
-      logger.info(`[Socket.IO] Bus ${data.busId} status changed to ${data.status}`);
+    // ──────────── 3. BUS STATUS UPDATES ────────────
+    socket.on("driver:status_changed", (data: { busId: string; status: string; stopName?: string; delayMins?: number; schoolId?: string }) => {
+      if (isBlocked(data)) return;
       
       const payload = {
         ...data,
@@ -175,8 +272,7 @@ export const initSocketServer = (io: SocketIOServer) => {
           : `Bus ${data.busId} status is now ${data.status}.`
       };
 
-      io.emit("bus:status_changed", payload);
-      io.emit("admin:bus_status_changed", payload);
+      io.to(`bus:${data.busId}`).emit("bus:status_changed", payload);
     });
 
     // ──────────── 4. EMERGENCY SOS BROADCAST ────────────
@@ -190,20 +286,23 @@ export const initSocketServer = (io: SocketIOServer) => {
       timestamp: string;
       status: string;
     }) => {
-      logger.error(`[SOS ALERT] Critical Emergency from Bus ${data.busId} by Driver ${data.driverId}. Location: ${data.latitude}, ${data.longitude}`);
+      logger.error(`[SOS ALERT] Emergency from Bus ${data.busId} by Driver ${data.driverId}. Location: ${data.latitude}, ${data.longitude}`);
       
       const sosPayload = {
         ...data,
         timestamp: data.timestamp || new Date().toISOString(),
-        message: `🚨 EMERGENCY SOS ALERT: Bus ${data.busId} reported a critical emergency status: ${data.status}. Control room notified.`
+        message: `🚨 EMERGENCY SOS ALERT: Bus ${data.busId} reported an emergency: ${data.status}.`
       };
 
-      io.emit("alert:emergency_sos", sosPayload);
-      io.emit("parent:live_notification", sosPayload);
+      if (data.schoolId) {
+        io.to(`school:${data.schoolId}`).emit("alert:emergency_sos", sosPayload);
+      }
     });
 
     // ──────────── 5. STUDENT RFID BOARDING / DROP NOTIFICATIONS ────────────
-    socket.on("driver:student_status_changed", (data: { studentId: string; studentName: string; parentId?: string; status: string; timestamp: string }) => {
+    socket.on("driver:student_status_changed", (data: { studentId: string; studentName: string; parentId?: string; status: string; timestamp: string; schoolId?: string }) => {
+      if (isBlocked(data)) return;
+
       const payload = {
         ...data,
         timestamp: data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -213,19 +312,12 @@ export const initSocketServer = (io: SocketIOServer) => {
       if (data.parentId) {
         io.to(`parent:${data.parentId}`).emit("parent:student_status_update", payload);
       }
-
-      // Broadcast globally for live parent feeds
-      io.emit("parent:student_status_update", payload);
-      io.emit("parent:live_notification", {
-        title: "Student Transport Update",
-        body: payload.notificationText,
-        ...payload
-      });
     });
 
     // ──────────── 6. TEACHER REAL-TIME PARENT DATA SYNCHRONIZATION ────────────
     // Attendance Sync
     socket.on("teacher:attendance_updated", (data: any) => {
+      if (isBlocked(data)) return;
       logger.info(`[Socket.IO] Teacher updated Attendance for ${data.className || 'Class'}`);
       const syncPayload = {
         type: "ATTENDANCE",
@@ -234,12 +326,15 @@ export const initSocketServer = (io: SocketIOServer) => {
         timestamp: new Date().toISOString(),
         data
       };
-      io.emit("parent:attendance_update", syncPayload);
-      io.emit("parent:live_notification", syncPayload);
+      if (data.schoolId) {
+        io.to(`school:${data.schoolId}`).emit("parent:attendance_update", syncPayload);
+        io.to(`school:${data.schoolId}`).emit("parent:live_notification", syncPayload);
+      }
     });
 
     // Homework Sync
     socket.on("teacher:homework_published", (data: any) => {
+      if (isBlocked(data)) return;
       logger.info(`[Socket.IO] Teacher published Homework: ${data.title || 'New Homework'}`);
       const syncPayload = {
         type: "HOMEWORK",
@@ -248,12 +343,15 @@ export const initSocketServer = (io: SocketIOServer) => {
         timestamp: new Date().toISOString(),
         data
       };
-      io.emit("parent:homework_update", syncPayload);
-      io.emit("parent:live_notification", syncPayload);
+      if (data.schoolId) {
+        io.to(`school:${data.schoolId}`).emit("parent:homework_update", syncPayload);
+        io.to(`school:${data.schoolId}`).emit("parent:live_notification", syncPayload);
+      }
     });
 
     // Assignments Sync
     socket.on("teacher:assignment_published", (data: any) => {
+      if (isBlocked(data)) return;
       logger.info(`[Socket.IO] Teacher published Assignment: ${data.title || 'New Assignment'}`);
       const syncPayload = {
         type: "ASSIGNMENT",
@@ -262,12 +360,15 @@ export const initSocketServer = (io: SocketIOServer) => {
         timestamp: new Date().toISOString(),
         data
       };
-      io.emit("parent:homework_update", syncPayload);
-      io.emit("parent:live_notification", syncPayload);
+      if (data.schoolId) {
+        io.to(`school:${data.schoolId}`).emit("parent:homework_update", syncPayload);
+        io.to(`school:${data.schoolId}`).emit("parent:live_notification", syncPayload);
+      }
     });
 
     // Weekly Test Sync
     socket.on("teacher:test_published", (data: any) => {
+      if (isBlocked(data)) return;
       logger.info(`[Socket.IO] Teacher published Weekly Test: ${data.title || 'Weekly Test'}`);
       const syncPayload = {
         type: "WEEKLY_TEST",
@@ -276,12 +377,15 @@ export const initSocketServer = (io: SocketIOServer) => {
         timestamp: new Date().toISOString(),
         data
       };
-      io.emit("parent:test_update", syncPayload);
-      io.emit("parent:live_notification", syncPayload);
+      if (data.schoolId) {
+        io.to(`school:${data.schoolId}`).emit("parent:test_update", syncPayload);
+        io.to(`school:${data.schoolId}`).emit("parent:live_notification", syncPayload);
+      }
     });
 
     // Marks Entry Sync
     socket.on("teacher:marks_submitted", (data: any) => {
+      if (isBlocked(data)) return;
       logger.info(`[Socket.IO] Teacher submitted Exam Marks for ${data.examTitle || 'Exam'}`);
       const syncPayload = {
         type: "MARKS",
@@ -290,12 +394,15 @@ export const initSocketServer = (io: SocketIOServer) => {
         timestamp: new Date().toISOString(),
         data
       };
-      io.emit("parent:result_update", syncPayload);
-      io.emit("parent:live_notification", syncPayload);
+      if (data.schoolId) {
+        io.to(`school:${data.schoolId}`).emit("parent:result_update", syncPayload);
+        io.to(`school:${data.schoolId}`).emit("parent:live_notification", syncPayload);
+      }
     });
 
     // Report Card Sync
     socket.on("teacher:report_card_published", (data: any) => {
+      if (isBlocked(data)) return;
       logger.info(`[Socket.IO] Teacher published Report Cards for ${data.className || 'Class'}`);
       const syncPayload = {
         type: "REPORT_CARD",
@@ -304,12 +411,15 @@ export const initSocketServer = (io: SocketIOServer) => {
         timestamp: new Date().toISOString(),
         data
       };
-      io.emit("parent:report_card_update", syncPayload);
-      io.emit("parent:live_notification", syncPayload);
+      if (data.schoolId) {
+        io.to(`school:${data.schoolId}`).emit("parent:report_card_update", syncPayload);
+        io.to(`school:${data.schoolId}`).emit("parent:live_notification", syncPayload);
+      }
     });
 
     // Class Announcement Sync
     socket.on("teacher:announcement_created", (data: any) => {
+      if (isBlocked(data)) return;
       logger.info(`[Socket.IO] Teacher broadcasted Announcement: ${data.title}`);
       const syncPayload = {
         type: "ANNOUNCEMENT",
@@ -318,8 +428,10 @@ export const initSocketServer = (io: SocketIOServer) => {
         timestamp: new Date().toISOString(),
         data
       };
-      io.emit("parent:notification_update", syncPayload);
-      io.emit("parent:live_notification", syncPayload);
+      if (data.schoolId) {
+        io.to(`school:${data.schoolId}`).emit("parent:notification_update", syncPayload);
+        io.to(`school:${data.schoolId}`).emit("parent:live_notification", syncPayload);
+      }
     });
 
     socket.on("disconnect", () => {

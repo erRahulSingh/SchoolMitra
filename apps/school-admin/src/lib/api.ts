@@ -26,6 +26,33 @@ export async function apiRequest<T = any>(
     });
 
     const json = await res.json();
+
+    // ─── STEP 10: CENTRAL TENANT STATUS INTERCEPTOR ───
+    if (
+      res.status === 403 ||
+      json.code === "SCHOOL_ACCESS_SUSPENDED" ||
+      json.code === "SCHOOL_ACCOUNT_EXPIRED" ||
+      json.code === "SCHOOL_ACCOUNT_DEACTIVATED" ||
+      json.code === "SESSION_INVALIDATED" ||
+      json.schoolStatus === "SUSPENDED" ||
+      json.schoolStatus === "EXPIRED" ||
+      json.schoolStatus === "DEACTIVATED"
+    ) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("school_status_blocked", {
+            detail: {
+              code: json.code || "SCHOOL_ACCESS_SUSPENDED",
+              message: json.message || "Your school account is currently inactive.",
+              schoolStatus: json.schoolStatus || "SUSPENDED",
+              schoolName: json.schoolName || localStorage.getItem("schoolName") || "ABC Public School",
+              schoolCode: json.schoolCode || ""
+            }
+          })
+        );
+      }
+    }
+
     return json;
   } catch (err: any) {
     console.warn(`[SchoolAdmin API Error] ${endpoint}:`, err?.message || err);

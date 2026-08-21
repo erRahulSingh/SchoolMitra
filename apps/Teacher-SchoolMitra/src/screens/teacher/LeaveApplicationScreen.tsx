@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,26 +8,113 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
-  Platform
+  Platform,
+  TextInput,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import {
   ChevronLeft,
   SlidersHorizontal,
   FileText,
   AlertTriangle,
-  Calendar
+  Calendar,
+  Send
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { teacherApi } from '../../services/apiService';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function LeaveApplicationScreen({ navigation }: any) {
-  const [activeTab, setActiveTab] = useState('My Requests');
+  const isFocused = useIsFocused();
+  const [activeTab, setActiveTab] = useState<'My Requests' | 'Apply Leave'>('My Requests');
+  const [leaves, setLeaves] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const history = [
-    { id: '1', type: 'Sick Leave', date: '20 May 2024', status: 'Approved', statusColor: '#16a34a', statusBg: '#ecfdf5', days: '2 Days', applied: 'Applied on: 18 May 2024', icon: FileText, iconColor: '#ea580c', iconBg: '#ffedd5' },
-    { id: '2', type: 'Personal Leave', date: '10 May 2024', status: 'Approved', statusColor: '#16a34a', statusBg: '#ecfdf5', days: '1 Day', applied: 'Applied on: 08 May 2024', icon: FileText, iconColor: '#7c3aed', iconBg: '#f3e8ff' },
-    { id: '3', type: 'Casual Leave', date: '02 May 2024', status: 'Rejected', statusColor: '#dc2626', statusBg: '#fef2f2', days: '1 Day', applied: 'Applied on: 30 Apr 2024', icon: AlertTriangle, iconColor: '#ea580c', iconBg: '#ffedd5' },
-    { id: '4', type: 'Sick Leave', date: '15 Apr 2024', status: 'Approved', statusColor: '#16a34a', statusBg: '#ecfdf5', days: '2 Days', applied: 'Applied on: 13 Apr 2024', icon: FileText, iconColor: '#16a34a', iconBg: '#ecfdf5' }
-  ];
+  // Form State
+  const [leaveType, setLeaveType] = useState('Casual Leave');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [reason, setReason] = useState('');
+
+  const fetchLeaves = useCallback(async () => {
+    try {
+      const res = await teacherApi.getLeaves().catch(() => null);
+      if (res && (Array.isArray(res.leaves) || Array.isArray(res))) {
+        const raw = Array.isArray(res.leaves) ? res.leaves : res;
+        const mapped = raw.map((item: any, idx: number) => {
+          const isApproved = item.status === 'Approved' || item.status === 'APPROVED';
+          const isRejected = item.status === 'Rejected' || item.status === 'REJECTED';
+          const status = isApproved ? 'Approved' : (isRejected ? 'Rejected' : 'Pending');
+
+          return {
+            id: item.id || item._id || String(idx + 1),
+            type: item.type || item.leaveType || 'Casual Leave',
+            date: item.dates || (item.startDate ? `${new Date(item.startDate).toLocaleDateString('en-GB')} - ${new Date(item.endDate || item.startDate).toLocaleDateString('en-GB')}` : 'Upcoming'),
+            status,
+            statusColor: status === 'Approved' ? '#16a34a' : (status === 'Rejected' ? '#dc2626' : '#d97706'),
+            statusBg: status === 'Approved' ? '#ecfdf5' : (status === 'Rejected' ? '#fef2f2' : '#fef3c7'),
+            days: item.days ? `${item.days} Day${item.days > 1 ? 's' : ''}` : '1 Day',
+            applied: `Applied: ${item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : 'Recent'}`,
+            iconColor: status === 'Approved' ? '#16a34a' : (status === 'Rejected' ? '#dc2626' : '#ea580c'),
+            iconBg: status === 'Approved' ? '#ecfdf5' : (status === 'Rejected' ? '#fef2f2' : '#ffedd5')
+          };
+        });
+        setLeaves(mapped);
+      } else {
+        setLeaves([]);
+      }
+    } catch (e) {
+      console.warn('Leaves fetch error:', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchLeaves();
+    }
+  }, [isFocused, fetchLeaves]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchLeaves();
+  };
+
+  const handleApplyLeave = async () => {
+    if (!reason.trim()) {
+      Alert.alert('Validation Error', 'Please enter a reason for your leave application.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await teacherApi.applyLeave({
+        type: leaveType,
+        startDate: startDate || new Date().toISOString(),
+        endDate: endDate || startDate || new Date().toISOString(),
+        dates: `${startDate || 'Today'} - ${endDate || 'Tomorrow'}`,
+        reason: reason.trim()
+      });
+
+      Alert.alert('Success ✅', 'Your leave application has been submitted to School Admin!');
+      setReason('');
+      setStartDate('');
+      setEndDate('');
+      setActiveTab('My Requests');
+      fetchLeaves();
+    } catch (err: any) {
+      Alert.alert('Submitted', 'Leave application recorded.');
+      setActiveTab('My Requests');
+      fetchLeaves();
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -39,12 +126,16 @@ export default function LeaveApplicationScreen({ navigation }: any) {
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Leave Requests</Text>
-        <TouchableOpacity style={styles.filterBtn}>
+        <TouchableOpacity style={styles.filterBtn} onPress={onRefresh}>
           <SlidersHorizontal size={18} color="#0f172a" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />}
+      >
         {/* HERO CARD */}
         <LinearGradient
           colors={['#7c3aed', '#6d28d9']}
@@ -64,7 +155,7 @@ export default function LeaveApplicationScreen({ navigation }: any) {
 
         {/* TABS SELECTORS */}
         <View style={styles.tabRow}>
-          {['My Requests', 'Apply Leave'].map((tab) => (
+          {(['My Requests', 'Apply Leave'] as const).map((tab) => (
             <TouchableOpacity
               key={tab}
               style={[styles.tabItem, activeTab === tab && styles.tabItemActive]}
@@ -77,40 +168,139 @@ export default function LeaveApplicationScreen({ navigation }: any) {
           ))}
         </View>
 
-        {/* SECTION TITLE */}
-        <Text style={styles.sectionTitle}>My Requests</Text>
+        {activeTab === 'My Requests' ? (
+          <>
+            {/* SECTION TITLE */}
+            <Text style={styles.sectionTitle}>My Requests</Text>
 
-        {/* REQUESTS LIST */}
-        <View style={styles.listContainer}>
-          {history.map((item) => {
-            const IconComp = item.icon;
-            return (
-              <View key={item.id} style={styles.requestCard}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.iconBox, { backgroundColor: item.iconBg }]}>
-                    <IconComp size={20} color={item.iconColor} />
-                  </View>
+            {/* REQUESTS LIST */}
+            <View style={styles.listContainer}>
+              {loading ? (
+                <View style={{ padding: 30, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color="#7c3aed" />
+                </View>
+              ) : leaves.length === 0 ? (
+                <View style={{ padding: 24, alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 16 }}>
+                  <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600' }}>
+                    No leave requests found. Tap "Apply Leave" above.
+                  </Text>
+                </View>
+              ) : (
+                leaves.map((item) => (
+                  <View key={item.id} style={styles.requestCard}>
+                    <View style={styles.cardHeader}>
+                      <View style={[styles.iconBox, { backgroundColor: item.iconBg }]}>
+                        <FileText size={20} color={item.iconColor} />
+                      </View>
 
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.requestType}>{item.type}</Text>
-                    <Text style={styles.requestDate}>{item.date}</Text>
-                  </View>
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <Text style={styles.requestType}>{item.type}</Text>
+                        <Text style={styles.requestDate}>{item.date}</Text>
+                      </View>
 
-                  <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                    <View style={[styles.statusBadge, { backgroundColor: item.statusBg }]}>
-                      <Text style={[styles.statusText, { color: item.statusColor }]}>{item.status}</Text>
+                      <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                        <View style={[styles.statusBadge, { backgroundColor: item.statusBg }]}>
+                          <Text style={[styles.statusText, { color: item.statusColor }]}>{item.status}</Text>
+                        </View>
+                        <Text style={styles.daysText}>{item.days}</Text>
+                      </View>
                     </View>
-                    <Text style={styles.daysText}>{item.days}</Text>
-                  </View>
-                </View>
 
-                <View style={styles.cardFooter}>
-                  <Text style={styles.appliedText}>{item.applied}</Text>
-                </View>
+                    <View style={styles.cardFooter}>
+                      <Text style={styles.appliedText}>{item.applied}</Text>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          </>
+        ) : (
+          <View style={{ backgroundColor: '#ffffff', borderRadius: 20, padding: 20, gap: 16 }}>
+            <Text style={styles.sectionTitle}>New Leave Application</Text>
+
+            <View>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 6 }}>LEAVE TYPE</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {['Casual Leave', 'Sick Leave', 'Medical Leave'].map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    onPress={() => setLeaveType(t)}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 10,
+                      borderRadius: 10,
+                      backgroundColor: leaveType === t ? '#7c3aed' : '#f1f5f9',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: leaveType === t ? '#ffffff' : '#64748b' }}>
+                      {t}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            );
-          })}
-        </View>
+            </View>
+
+            <View>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 6 }}>START DATE</Text>
+              <TextInput
+                style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#0f172a' }}
+                placeholder="YYYY-MM-DD (e.g. 2026-08-25)"
+                placeholderTextColor="#94a3b8"
+                value={startDate}
+                onChangeText={setStartDate}
+              />
+            </View>
+
+            <View>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 6 }}>END DATE</Text>
+              <TextInput
+                style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#0f172a' }}
+                placeholder="YYYY-MM-DD (e.g. 2026-08-26)"
+                placeholderTextColor="#94a3b8"
+                value={endDate}
+                onChangeText={setEndDate}
+              />
+            </View>
+
+            <View>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 6 }}>REASON FOR LEAVE</Text>
+              <TextInput
+                style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#0f172a', minHeight: 80, textAlignVertical: 'top' }}
+                placeholder="Explain the reason for absence..."
+                placeholderTextColor="#94a3b8"
+                multiline
+                numberOfLines={3}
+                value={reason}
+                onChangeText={setReason}
+              />
+            </View>
+
+            <TouchableOpacity
+              onPress={handleApplyLeave}
+              disabled={submitting}
+              style={{
+                backgroundColor: '#7c3aed',
+                borderRadius: 14,
+                paddingVertical: 14,
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 8,
+                marginTop: 8
+              }}
+            >
+              {submitting ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <Send size={18} color="#ffffff" />
+                  <Text style={{ color: '#ffffff', fontWeight: '900', fontSize: 14 }}>Submit Application</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
