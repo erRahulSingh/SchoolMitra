@@ -1,8 +1,6 @@
-// ═══════════════════════════════════════════════════════════
-// SchoolMitra Backend — Attendance Management Routes (Phase 7)
-// ═══════════════════════════════════════════════════════════
-
 import { Router } from "express";
+import { authenticate } from "../../middleware/authGuards";
+import { requireActiveSchool } from "../../middleware/tenantMiddleware";
 import {
   markStudentAttendance,
   getClassAttendance,
@@ -24,6 +22,10 @@ import {
 } from "./attendance.controller";
 
 const router = Router();
+
+// ─── STEP 18: CENTRAL ATTENDANCE AUTH & TENANT STATUS GUARDS ───
+router.use(authenticate);
+router.use(requireActiveSchool);
 
 // Subject-Wise Attendance & Defaulter Alerts
 router.get("/subject-wise/:studentId?", getSubjectWiseAttendance);

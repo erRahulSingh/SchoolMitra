@@ -11,7 +11,8 @@ import {
   toggleSchoolStatus,
   getSchoolSettings,
   updateSchoolSettings,
-  deleteSchool
+  deleteSchool,
+  getSchoolStatusHistory
 } from "./schools.controller";
 
 const router = Router();
@@ -19,6 +20,7 @@ const router = Router();
 router.get("/", getAllSchools);
 router.post("/", createSchool);
 router.get("/:id", getSchoolById);
+router.get("/:id/status-history", getSchoolStatusHistory);
 router.put("/:id", updateSchool);
 router.patch("/:id/status", toggleSchoolStatus);
 router.get("/:id/settings", getSchoolSettings);

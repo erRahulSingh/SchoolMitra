@@ -1,8 +1,6 @@
-// ═══════════════════════════════════════════════════════════
-// SchoolMitra Backend — Fees & Finance Management Routes (Phase 9)
-// ═══════════════════════════════════════════════════════════
-
 import { Router } from "express";
+import { authenticate } from "../../middleware/authGuards";
+import { requireActiveSchool } from "../../middleware/tenantMiddleware";
 import {
   getFeeStructures,
   createFeeStructure,
@@ -18,6 +16,10 @@ import {
 } from "./fees.controller";
 
 const router = Router();
+
+// ─── STEP 22: CENTRAL FEES & FINANCE AUTH & TENANT STATUS GUARDS ───
+router.use(authenticate);
+router.use(requireActiveSchool);
 
 // Fee Structures & Assignments
 router.get("/structure", getFeeStructures);

@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import { Schema, model, models, Types } from "mongoose";
+import { ALL_SCHOOL_STATUSES, SchoolStatus } from "../constants/schoolStatus.constants";
 
 // ──────────── 1. SCHOOLS (Tenant Root) ────────────
 const schoolSchema = new Schema({
@@ -44,10 +45,19 @@ const schoolSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ["Active", "Suspended", "Trial", "Expired", "PendingEmailVerification"],
-    default: "Trial",
+    enum: ALL_SCHOOL_STATUSES,
+    default: SchoolStatus.ACTIVE,
     index: true,
   },
+  statusReason: { type: String, default: "" },
+  statusChangedBy: { type: Schema.Types.Mixed },
+  statusChangedAt: { type: Date, default: Date.now },
+  statusExpiresAt: { type: Date },
+  suspendedAt: { type: Date },
+  suspendedBy: { type: Schema.Types.Mixed },
+  reactivatedAt: { type: Date },
+  reactivatedBy: { type: Schema.Types.Mixed },
+  sessionVersion: { type: Number, default: 1 },
   trialStartsAt: { type: Date, default: Date.now },
   trialEndsAt: {
     type: Date,

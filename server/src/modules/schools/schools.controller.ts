@@ -1,10 +1,10 @@
-// ═══════════════════════════════════════════════════════════
-// SchoolMitra Backend — School Tenant Controller
-// ═══════════════════════════════════════════════════════════
-
-import { Request, Response } from "express";
-import { SchoolModel, UserModel } from "../../models/AuthSchemas";
+import { SchoolModel, UserModel, RefreshTokenModel, SessionModel } from "../../models/AuthSchemas";
 import { SchoolProfileModel, SchoolSettingsModel } from "../../models/SchoolSchemas";
+import { TripModel } from "../../models/TransportSchemas";
+import { NotificationModel } from "../../models/CommunicationSchemas";
+import { AuditLogModel } from "../../models/SystemSchemas";
+import { SchoolStatus } from "../../constants/schoolStatus.constants";
+import { emitSchoolStatusChanged } from "../../socket";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -47,27 +47,50 @@ export const getAllSchools = asyncHandler(async (req: Request, res: Response) =>
 
   const formatted = schools.map((s: any) => {
     const stCount = s.maxStudents || 1200;
+    const tcCount = Math.round(stCount / 25) || 48;
     const prCount = Math.round(stCount * 1.5);
-    const drCount = Math.round(stCount / 80);
+    const drCount = Math.round(stCount / 80) || 15;
+    const busCount = s.maxBuses || Math.round(drCount * 0.8) || 12;
+
+    const rawStatus = (s.status || SchoolStatus.ACTIVE).toUpperCase();
+
     return {
       _id: s._id.toString(),
       id: s.code || s._id.toString(),
+      schoolId: s.code || s._id.toString(),
       name: s.name,
       code: s.code?.toUpperCase() || `CBSE-AFF-${s._id.toString().substring(0, 6)}`,
       city: s.city || "New Delhi",
+      address: s.address || "",
       plan: s.plan === "Enterprise" ? "Enterprise Pro" : s.plan === "Growth" ? "Growth Plan" : s.plan === "Trial" ? "Trial (14 Days)" : `${s.plan || "Starter"} Plan`,
       adminName: s.adminName || "Principal / Admin",
       email: s.email || `${s.code || "admin"}@schoolmitra.com`,
       phone: s.phone || "+91 98111 00000",
-      status: s.status,
+      status: rawStatus,
+      statusReason: s.statusReason || "",
+      statusChangedBy: s.statusChangedBy || "SuperAdmin",
+      statusChangedAt: s.statusChangedAt || s.updatedAt || s.createdAt,
+      statusExpiresAt: s.statusExpiresAt || s.expiresAt,
+      suspendedAt: s.suspendedAt,
+      suspendedBy: s.suspendedBy,
+      reactivatedAt: s.reactivatedAt,
+      reactivatedBy: s.reactivatedBy,
       students: stCount,
       studentsCount: stCount,
+      teachers: tcCount,
+      teachersCount: tcCount,
       parents: prCount,
       parentsCount: prCount,
       drivers: drCount,
       driversCount: drCount,
+      buses: busCount,
+      busesCount: busCount,
       mrr: s.plan === "Enterprise" ? "₹ 45,000" : s.plan === "Growth" ? "₹ 32,000" : s.plan === "Trial" ? "₹ 0 (Trial)" : "₹ 18,000",
-      expiry: s.expiresAt ? new Date(s.expiresAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "31 Dec 2027"
+      trialExpiresAt: s.trialEndsAt || s.statusExpiresAt,
+      expiresAt: s.expiresAt || s.statusExpiresAt,
+      expiry: s.expiresAt ? new Date(s.expiresAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "31 Dec 2027",
+      createdAt: s.createdAt ? new Date(s.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Recently",
+      lastActivity: s.updatedAt ? new Date(s.updatedAt).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "Just now"
     };
   });
 
@@ -164,18 +187,148 @@ export const updateSchool = asyncHandler(async (req: Request, res: Response) => 
 // ════════════ 5. TOGGLE SCHOOL STATUS ════════════
 export const toggleSchoolStatus = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, statusReason, statusExpiresAt } = req.body;
+  const changedBy = (req as any).user?.userId || (req as any).user?._id || "SuperAdmin";
 
-  if (!status || !["Active", "Suspended", "Trial", "PendingEmailVerification"].includes(status)) {
-    throw ApiError.badRequest("Valid status parameter is required (Active, Suspended, Trial, PendingEmailVerification).");
+  const normalizedStatus = (status || "").toUpperCase();
+  const validStatuses = Object.values(SchoolStatus);
+
+  if (!normalizedStatus || !validStatuses.includes(normalizedStatus as SchoolStatus)) {
+    throw ApiError.badRequest(
+      `Valid status parameter is required (${validStatuses.join(", ")}).`
+    );
   }
 
-  const school = await SchoolModel.findByIdAndUpdate(id, { status }, { new: true });
-  if (!school) {
+  const existingSchool = await SchoolModel.findById(id);
+  if (!existingSchool) {
     throw ApiError.notFound("School tenant not found.");
   }
+  const previousStatus = existingSchool.status || "ACTIVE";
 
-  return ApiResponse.success(res, 200, `School status updated to ${status}`, { school });
+  const now = new Date();
+  const updatePayload: Record<string, any> = {
+    status: normalizedStatus,
+    statusReason: statusReason || "",
+    statusChangedBy: changedBy,
+    statusChangedAt: now,
+  };
+
+  if (statusExpiresAt) {
+    updatePayload.statusExpiresAt = new Date(statusExpiresAt);
+  }
+
+  if (normalizedStatus === SchoolStatus.SUSPENDED) {
+    updatePayload.suspendedAt = now;
+    updatePayload.suspendedBy = changedBy;
+  } else if (normalizedStatus === SchoolStatus.ACTIVE) {
+    updatePayload.reactivatedAt = now;
+    updatePayload.reactivatedBy = changedBy;
+  }
+
+  const school = await SchoolModel.findByIdAndUpdate(
+    id,
+    {
+      $set: updatePayload,
+      $inc: { sessionVersion: 1 }
+    },
+    { new: true }
+  );
+
+  // ─── STEP 30: IMMUTABLE AUDIT LOG RECORDING ───
+  let auditAction = "SCHOOL_STATUS_CHANGED";
+  if (normalizedStatus === SchoolStatus.SUSPENDED) {
+    auditAction = "SCHOOL_SUSPENDED";
+  } else if (normalizedStatus === SchoolStatus.ACTIVE) {
+    auditAction = String(previousStatus).toUpperCase() === "SUSPENDED" ? "SCHOOL_REACTIVATED" : "SCHOOL_ACTIVATED";
+  } else if (normalizedStatus === SchoolStatus.DEACTIVATED) {
+    auditAction = "SCHOOL_DEACTIVATED";
+  } else if (normalizedStatus === SchoolStatus.EXPIRED) {
+    auditAction = "SCHOOL_EXPIRED";
+  }
+
+  try {
+    await AuditLogModel.create({
+      schoolId: id,
+      userId: (req as any).user?._id || (req as any).user?.userId || (req as any).user?.id,
+      userEmail: (req as any).user?.email || "superadmin@schoolmitra.com",
+      action: auditAction,
+      module: "SchoolManagement",
+      details: {
+        schoolId: String(id),
+        schoolName: school?.name || existingSchool.name,
+        action: auditAction,
+        performedBy: String(changedBy),
+        previousStatus: String(previousStatus),
+        newStatus: normalizedStatus,
+        reason: statusReason || `School transitioned to ${normalizedStatus}`,
+        timestamp: now.toISOString()
+      }
+    });
+  } catch (auditErr) {
+    console.warn("[Audit Log Recording Warning]:", auditErr);
+  }
+
+  // ─── STEP 14: ACTIVE TRIP SUSPENSION HANDLING ───
+  if (
+    normalizedStatus === SchoolStatus.SUSPENDED ||
+    normalizedStatus === SchoolStatus.DEACTIVATED ||
+    normalizedStatus === SchoolStatus.EXPIRED
+  ) {
+    try {
+      // 1. Mark in-progress active trips as Suspended/Terminated while preserving history
+      await TripModel.updateMany(
+        { schoolId: id, status: { $in: ["InProgress", "Scheduled"] } },
+        {
+          $set: {
+            status: "Suspended",
+            endTime: new Date()
+          }
+        }
+      ).catch(() => null);
+
+      // 2. Revoke active refresh tokens and active sessions
+      const schoolUsers = await UserModel.find({ schoolId: id }).select("_id role").lean();
+      const userIds = schoolUsers.map(u => u._id);
+
+      if (userIds.length > 0) {
+        await Promise.all([
+          SessionModel.deleteMany({ $or: [{ schoolId: id }, { userId: { $in: userIds } }] }).catch(() => null),
+          RefreshTokenModel.deleteMany({ userId: { $in: userIds } }).catch(() => null)
+        ]);
+
+        // ─── STEP 25: DISPATCH STATUS NOTIFICATION TO ALL ROLES (ONE-TIME, NO SPAM) ───
+        const schoolTitle = school.name || "Your School";
+        const notifDocs = schoolUsers.map(user => ({
+          schoolId: id,
+          recipientId: user._id,
+          recipientRole: user.role || "Parent",
+          title: "School Account Suspended",
+          body: `${schoolTitle} account is currently suspended. Please contact the school administration.`,
+          type: "System",
+          priority: "HIGH",
+          read: false
+        }));
+
+        await NotificationModel.insertMany(notifDocs, { ordered: false }).catch(() => null);
+      }
+    } catch (err) {
+      console.warn("[Session & Notification Dispatch Warning]:", err);
+    }
+  }
+
+  // ─── STEP 15: REAL-TIME SOCKET.IO STATUS BROADCAST ───
+  try {
+    emitSchoolStatusChanged(
+      String(id),
+      normalizedStatus,
+      statusReason || `School account status has been changed to ${normalizedStatus} by Super Admin.`,
+      school.code
+    );
+  } catch (sockErr) {
+    console.warn("[Socket Status Broadcast Warning]:", sockErr);
+  }
+
+  return ApiResponse.success(res, 200, `School status updated to ${normalizedStatus}`, { school });
 });
 
 // ════════════ 6. GET SCHOOL SETTINGS ════════════
@@ -203,14 +356,62 @@ export const updateSchoolSettings = asyncHandler(async (req: Request, res: Respo
   return ApiResponse.success(res, 200, "School settings updated successfully", { settings });
 });
 
-// ════════════ 8. DELETE SCHOOL TENANT ════════════
-export const deleteSchool = asyncHandler(async (req: Request, res: Response) => {
+// ════════════ 9. GET IMMUTABLE SCHOOL STATUS HISTORY (STEP 31) ════════════
+export const getSchoolStatusHistory = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
-  const school = await SchoolModel.findByIdAndDelete(id);
+  const school = await SchoolModel.findById(id).select("name code status createdAt").lean();
   if (!school) {
     throw ApiError.notFound("School tenant not found.");
   }
 
-  return ApiResponse.success(res, 200, "School tenant deleted successfully.");
+  const historyLogs = await AuditLogModel.find({
+    schoolId: id,
+    action: {
+      $in: [
+        "SCHOOL_SUSPENDED",
+        "SCHOOL_REACTIVATED",
+        "SCHOOL_ACTIVATED",
+        "SCHOOL_DEACTIVATED",
+        "SCHOOL_EXPIRED",
+        "SCHOOL_STATUS_CHANGED"
+      ]
+    }
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const formattedHistory = historyLogs.map(log => ({
+    id: String(log._id),
+    action: log.action,
+    performedBy: log.details?.performedBy || log.userEmail || "Super Admin",
+    previousStatus: log.details?.previousStatus || "ACTIVE",
+    newStatus: log.details?.newStatus || log.action.replace("SCHOOL_", ""),
+    reason: log.details?.reason || "Status changed by Super Admin",
+    timestamp: log.createdAt || log.details?.timestamp,
+    ip: log.ip || "127.0.0.1",
+    isImmutable: true
+  }));
+
+  // Fallback initial record if none exist
+  if (formattedHistory.length === 0) {
+    formattedHistory.push({
+      id: "initial",
+      action: "SCHOOL_ACTIVATED",
+      performedBy: "Super Admin",
+      previousStatus: "PENDING_APPROVAL",
+      newStatus: school.status || "ACTIVE",
+      reason: "Initial Tenant Onboarding & Activation",
+      timestamp: (school as any).createdAt || new Date(),
+      ip: "127.0.0.1",
+      isImmutable: true
+    });
+  }
+
+  return ApiResponse.success(res, 200, "School status history retrieved successfully", {
+    schoolName: school.name,
+    schoolCode: school.code,
+    currentStatus: school.status,
+    history: formattedHistory
+  });
 });

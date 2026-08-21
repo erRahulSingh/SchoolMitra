@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
-  Platform
+  Platform,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import {
   ChevronLeft,
@@ -23,93 +25,73 @@ import {
 } from 'lucide-react-native';
 
 import Header from '../../components/Header';
+import { teacherApi } from '../../services/apiService';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function ParentMessagesScreen({ navigation }: any) {
+  const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState('All');
+  const [threads, setThreads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const tabs = ['All', 'School Admin', 'Teachers', 'Parents'];
 
-  const threads = [
-    {
-      id: '1',
-      name: 'School Admin',
-      msg: 'Staff meeting tomorrow at 10 AM',
-      time: '10:30 AM',
-      unread: 2,
-      icon: Building2,
-      iconColor: '#2563eb',
-      iconBg: '#eff6ff'
-    },
-    {
-      id: '2',
-      name: 'Class 8 - A (Parents)',
-      msg: "Thank you ma'am for the notes 🙏",
-      time: '09:15 AM',
-      unread: 5,
-      icon: Users,
-      iconColor: '#ea580c',
-      iconBg: '#ffedd5'
-    },
-    {
-      id: '3',
-      name: 'Diya Verma (Parent)',
-      msg: "Ma'am, can you share homework?",
-      time: 'Yesterday',
-      unread: 1,
-      icon: User,
-      iconColor: '#7c3aed',
-      iconBg: '#f3e8ff'
-    },
-    {
-      id: '4',
-      name: 'Mathematics Dept.',
-      msg: 'New syllabus shared for July',
-      time: 'Yesterday',
-      unread: 0,
-      icon: BookOpen,
-      iconColor: '#16a34a',
-      iconBg: '#ecfdf5'
-    },
-    {
-      id: '5',
-      name: 'Anil Kumar (Teacher)',
-      msg: "Let's prepare for Science Exhibition",
-      time: '19 May',
-      unread: 0,
-      icon: User,
-      iconColor: '#64748b',
-      iconBg: '#f1f5f9'
-    },
-    {
-      id: '6',
-      name: 'Rohan Singh (Parent)',
-      msg: "Yes, thank you ma'am!",
-      time: '18 May',
-      unread: 0,
-      icon: User,
-      iconColor: '#64748b',
-      iconBg: '#f1f5f9'
-    },
-    {
-      id: '7',
-      name: 'Principal Sir',
-      msg: "Good work in last week's event",
-      time: '17 May',
-      unread: 0,
-      icon: User,
-      iconColor: '#64748b',
-      iconBg: '#f1f5f9'
+  const fetchMessages = useCallback(async () => {
+    try {
+      const res = await teacherApi.getMessages().catch(() => null);
+      if (res && (Array.isArray(res.messages) || Array.isArray(res.threads) || Array.isArray(res))) {
+        const raw = Array.isArray(res.messages) ? res.messages : (Array.isArray(res.threads) ? res.threads : res);
+        const mapped = raw.map((item: any, idx: number) => ({
+          id: item.id || item._id || String(idx + 1),
+          name: item.senderName || item.recipientName || item.name || 'School Notice',
+          msg: item.lastMessage || item.message || item.text || 'Tap to view conversation',
+          time: item.createdAt ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today',
+          unread: item.unreadCount || 0,
+          category: item.category || (item.role === 'Admin' ? 'School Admin' : (item.role === 'Teacher' ? 'Teachers' : 'Parents')),
+          iconColor: '#7c3aed',
+          iconBg: '#f3e8ff'
+        }));
+        setThreads(mapped);
+      } else {
+        setThreads([]);
+      }
+    } catch (e) {
+      console.warn('Messages fetch error:', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  ];
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchMessages();
+    }
+  }, [isFocused, fetchMessages]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchMessages();
+  };
+
+  const filteredThreads = threads.filter(t => {
+    if (activeTab === 'All') return true;
+    return t.category === activeTab || t.name.toLowerCase().includes(activeTab.toLowerCase());
+  });
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
       {/* UNIFIED HEADER */}
-      <Header navigation={navigation} title="Messages" currentRoute="ParentMessages" />
+      <Header navigation={navigation} title="Messages" currentRoute="MessagesTab" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />}
+      >
         {/* TABS PILLS */}
         <View style={styles.tabRow}>
           {tabs.map((tab) => (
@@ -127,39 +109,45 @@ export default function ParentMessagesScreen({ navigation }: any) {
 
         {/* THREADS LIST */}
         <View style={styles.listContainer}>
-          {threads.map((item) => {
-            const IconComp = item.icon;
-            return (
+          {loading ? (
+            <View style={{ padding: 30, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#7c3aed" />
+            </View>
+          ) : filteredThreads.length === 0 ? (
+            <View style={{ padding: 24, alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 16 }}>
+              <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600' }}>
+                No active conversations in this category.
+              </Text>
+            </View>
+          ) : (
+            filteredThreads.map((item) => (
               <TouchableOpacity
                 key={item.id}
                 style={styles.threadCard}
-                onPress={() => Alert.alert('Chat Room', `Opening chat thread with ${item.name}...`)}
+                onPress={() => navigation.navigate('ParentCommunication', { thread: item })}
               >
-                <View style={[styles.iconBox, { backgroundColor: item.iconBg }]}>
-                  <IconComp size={20} color={item.color} />
+                <View style={[styles.avatarCircle, { backgroundColor: item.iconBg }]}>
+                  <User size={20} color={item.iconColor} />
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <View style={styles.threadHeaderRow}>
-                    <Text style={styles.threadName} numberOfLines={1}>{item.name}</Text>
-                    <Text style={styles.threadTime}>{item.time}</Text>
+                  <View style={styles.topRow}>
+                    <Text style={styles.senderName}>{item.name}</Text>
+                    <Text style={styles.timeText}>{item.time}</Text>
                   </View>
-
-                  <View style={styles.threadMsgRow}>
-                    <Text style={styles.threadMsg} numberOfLines={1}>{item.msg}</Text>
-                    {item.unread > 0 && (
-                      <View style={styles.unreadBadge}>
-                        <Text style={styles.unreadBadgeText}>{item.unread}</Text>
-                      </View>
-                    )}
-                  </View>
+                  <Text style={styles.lastMsg} numberOfLines={1}>{item.msg}</Text>
                 </View>
+
+                {item.unread > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadText}>{item.unread}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
-            );
-          })}
+            ))
+          )}
         </View>
       </ScrollView>
-
       {/* FLOATING ACTION COMPOSE */}
       <TouchableOpacity
         style={styles.fab}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  RefreshControl,
+  ActivityIndicator
 } from 'react-native';
 import {
   Bell,
@@ -30,49 +32,78 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
+import { teacherApi } from '../../services/apiService';
 
 export default function MainDashboard({ navigation }: any) {
   const isFocused = useIsFocused();
-  const [permissions, setPermissions] = React.useState<string[]>([]);
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [todayClasses, setTodayClasses] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    presentCount: 0,
+    absentCount: 0,
+    leaveCount: 0
+  });
 
-  React.useEffect(() => {
-    const loadPermissions = async () => {
-      try {
-        const storedPerms = await AsyncStorage.getItem('permissions');
-        if (storedPerms) {
-          setPermissions(JSON.parse(storedPerms));
-        } else {
-          setPermissions([
-            "students.view",
-            "attendance.view",
-            "attendance.create",
-            "attendance.update",
-            "homework.view",
-            "homework.create",
-            "marks.view",
-            "marks.create"
-          ]);
-        }
-      } catch (e) {
-        console.log(e);
+  const loadDashboard = useCallback(async () => {
+    try {
+      // 1. Load permissions
+      const storedPerms = await AsyncStorage.getItem('permissions');
+      if (storedPerms) {
+        setPermissions(JSON.parse(storedPerms));
       }
-    };
-    if (isFocused) {
-      loadPermissions();
-    }
-  }, [isFocused]);
 
-  const todayClasses = [
-    { id: 'c1', time: '08:00 AM', subject: 'Maths', class: 'Class 8 - A', icon: BookOpen, color: '#7c3aed', bg: '#f3e8ff' },
-    { id: 'c2', time: '09:30 AM', subject: 'Science', class: 'Class 8 - A', icon: FlaskConical, color: '#16a34a', bg: '#dcfce7' },
-    { id: 'c3', time: '11:00 AM', subject: 'English', class: 'Class 8 - A', icon: BookOpen, color: '#ea580c', bg: '#ffedd5' }
-  ];
+      // 2. Fetch live dashboard metrics from API
+      const res = await teacherApi.getDashboard().catch(() => null);
+      if (res) {
+        setDashboardData(res);
+        if (res.overview || res.stats) {
+          const s = res.overview || res.stats;
+          setStats({
+            totalStudents: s.totalStudents || s.studentsCount || 0,
+            presentCount: s.present || s.presentCount || 0,
+            absentCount: s.absent || s.absentCount || 0,
+            leaveCount: s.leaves || s.leaveCount || 0
+          });
+        }
+        if (Array.isArray(res.todayClasses) && res.todayClasses.length > 0) {
+          setTodayClasses(res.todayClasses);
+        } else if (Array.isArray(res.classes) && res.classes.length > 0) {
+          setTodayClasses(res.classes.map((c: any, i: number) => ({
+            id: c.id || c._id || `c-${i}`,
+            time: c.time || '09:00 AM',
+            subject: c.subject || 'Subject',
+            class: c.className || c.name || `Class ${c.grade || 8}-${c.section || 'A'}`
+          })));
+        }
+      }
+    } catch (e) {
+      console.warn('Dashboard fetch error:', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      loadDashboard();
+    }
+  }, [isFocused, loadDashboard]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadDashboard();
+  };
 
   const overviewStats = [
-    { count: '142', label: 'Total Students', color: '#2563eb', bg: '#eff6ff', icon: Users },
-    { count: '136', label: 'Present', color: '#16a34a', bg: '#dcfce7', icon: CheckCircle2 },
-    { count: '6', label: 'Absent', color: '#dc2626', bg: '#fef2f2', icon: UserCheck },
-    { count: '5', label: 'Leave', color: '#d97706', bg: '#fef3c7', icon: Calendar }
+    { count: String(stats.totalStudents || 0), label: 'Total Students', color: '#2563eb', bg: '#eff6ff', icon: Users },
+    { count: String(stats.presentCount || 0), label: 'Present', color: '#16a34a', bg: '#dcfce7', icon: CheckCircle2 },
+    { count: String(stats.absentCount || 0), label: 'Absent', color: '#dc2626', bg: '#fef2f2', icon: UserCheck },
+    { count: String(stats.leaveCount || 0), label: 'Leave', color: '#d97706', bg: '#fef3c7', icon: Calendar }
   ];
 
   const quickActions = [
@@ -83,7 +114,6 @@ export default function MainDashboard({ navigation }: any) {
   ];
 
   const filteredQuickActions = quickActions.filter(action => {
-    // If user has either view or create for that module, show it
     if (action.label === 'Attendance') {
       return permissions.includes('attendance.view') || permissions.includes('attendance.create');
     }
@@ -91,14 +121,13 @@ export default function MainDashboard({ navigation }: any) {
       return permissions.includes('homework.view') || permissions.includes('homework.create');
     }
     if (action.label === 'Weekly Test') {
-      return permissions.includes('exams.view') || permissions.includes('exams.create');
+      return permissions.includes('weeklytests.view') || permissions.includes('weeklytests.create') || permissions.includes('exams.view');
     }
     if (action.label === 'Marks Entry') {
       return permissions.includes('marks.view') || permissions.includes('marks.create');
     }
     return true;
   });
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -107,7 +136,11 @@ export default function MainDashboard({ navigation }: any) {
       {/* UNIFIED HEADER */}
       <Header navigation={navigation} title="SchoolMitra" currentRoute="MainDashboard" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#7c3aed']} />}
+      >
         {/* PREMIUM GRADIENT HERO BANNER */}
         <LinearGradient
           colors={['#7c3aed', '#6d28d9']}
@@ -116,7 +149,9 @@ export default function MainDashboard({ navigation }: any) {
           style={styles.heroCard}
         >
           <View style={{ flex: 1 }}>
-            <Text style={styles.heroTitle}>You have 3 classes today</Text>
+            <Text style={styles.heroTitle}>
+              {todayClasses.length > 0 ? `You have ${todayClasses.length} class${todayClasses.length > 1 ? 'es' : ''} today` : 'No classes scheduled today'}
+            </Text>
             <Text style={styles.heroSub}>Keep going, you're doing great!</Text>
           </View>
           <View style={styles.heroIconBadge}>
@@ -133,27 +168,43 @@ export default function MainDashboard({ navigation }: any) {
         </View>
 
         <View style={styles.classList}>
-          {todayClasses.map((cls) => {
-            const IconComp = cls.icon;
-            return (
-              <TouchableOpacity
-                key={cls.id}
-                style={styles.classCard}
-                onPress={() => navigation.navigate('Attendance', { classId: cls.id })}
-              >
-                <View style={[styles.classIconCircle, { backgroundColor: cls.bg }]}>
-                  <IconComp size={20} color={cls.color} />
-                </View>
+          {loading ? (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#7c3aed" />
+            </View>
+          ) : todayClasses.length === 0 ? (
+            <View style={[styles.classCard, { justifyContent: 'center', paddingVertical: 18 }]}>
+              <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600', textAlign: 'center' }}>
+                No active periods for today.
+              </Text>
+            </View>
+          ) : (
+            todayClasses.map((cls, index) => {
+              const bgColors = ['#f3e8ff', '#dcfce7', '#ffedd5', '#eff6ff'];
+              const iconColors = ['#7c3aed', '#16a34a', '#ea580c', '#2563eb'];
+              const bg = bgColors[index % bgColors.length];
+              const color = iconColors[index % iconColors.length];
 
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.timeText}>{cls.time}</Text>
-                  <Text style={styles.subjectText}>{cls.subject}</Text>
-                </View>
+              return (
+                <TouchableOpacity
+                  key={cls.id || index}
+                  style={styles.classCard}
+                  onPress={() => navigation.navigate('Attendance', { classId: cls.id, className: cls.class || cls.name })}
+                >
+                  <View style={[styles.classIconCircle, { backgroundColor: bg }]}>
+                    <BookOpen size={20} color={color} />
+                  </View>
 
-                <Text style={styles.classNameText}>{cls.class}</Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.timeText}>{cls.time || 'Schedule TBD'}</Text>
+                    <Text style={styles.subjectText}>{cls.subject || 'General'}</Text>
+                  </View>
+
+                  <Text style={styles.classNameText}>{cls.class || cls.name || 'Class'}</Text>
+                </TouchableOpacity>
+              );
+            })
+          )}
         </View>
 
         {/* TODAY'S OVERVIEW SECTION */}

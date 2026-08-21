@@ -62,29 +62,35 @@ export default function MyProfileScreen({ navigation }: any) {
   React.useEffect(() => {
     const loadProfile = async () => {
       try {
+        // Try fetching live profile from backend
+        const apiRes = await teacherApi.getProfile().catch(() => null) || await teacherApi.getMe().catch(() => null);
+        const apiUser = apiRes?.teacher || apiRes?.user || apiRes;
+
         let userStr = await AsyncStorage.getItem('user');
         if (!userStr) {
           userStr = await AsyncStorage.getItem('lastRegisteredUser');
         }
 
-        if (userStr) {
-          const u = JSON.parse(userStr);
-          if (u) {
-            setTeacher(prev => ({
-              ...prev,
-              name: u.name || prev.name,
-              email: u.email || prev.email,
-              phone: u.phone || prev.phone,
-              empId: u.schoolCode ? `TCH-${u.schoolCode}` : (u.empId || prev.empId),
-              role: u.role ? `${u.role} Educator` : prev.role,
-              qualification: u.qualification || prev.qualification,
-              experience: u.experience || prev.experience,
-              address: u.address || prev.address,
-              subjects: u.subjects || prev.subjects
-            }));
-          }
+        const u = userStr ? JSON.parse(userStr) : {};
+        const merged = { ...u, ...(apiUser || {}) };
+
+        if (merged) {
+          setTeacher(prev => ({
+            ...prev,
+            name: merged.name || prev.name,
+            email: merged.email || prev.email,
+            phone: merged.phone || prev.phone,
+            empId: merged.schoolCode ? `TCH-${merged.schoolCode}` : (merged.empId || prev.empId),
+            role: merged.role ? `${merged.role} Educator` : prev.role,
+            qualification: merged.qualification || prev.qualification,
+            experience: merged.experience || prev.experience,
+            address: merged.address || prev.address,
+            subjects: merged.subjects || merged.subject || prev.subjects
+          }));
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Profile fetch error:', e);
+      }
     };
     loadProfile();
   }, []);
@@ -133,19 +139,21 @@ export default function MyProfileScreen({ navigation }: any) {
       await AsyncStorage.setItem('user', JSON.stringify(updatedObj));
       await AsyncStorage.setItem('lastRegisteredUser', JSON.stringify(updatedObj));
 
-      try {
-        const apiUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api/v1/teacher/profile' : 'http://localhost:5000/api/v1/teacher/profile';
-        await fetch(apiUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedObj)
-        });
-      } catch (e) {}
+      // Save to backend via dynamic apiService
+      await teacherApi.updateProfile({
+        name,
+        email,
+        phone,
+        qualification,
+        experience,
+        address,
+        subject: subjects
+      }).catch(() => null);
 
       setIsEditModalOpen(false);
-      Alert.alert('Success! 🎉', 'Your Profile details have been updated successfully.');
+      Alert.alert('Success ✅', 'Your teacher profile has been updated!');
     } catch (err: any) {
-      Alert.alert('Error', 'Failed to save profile changes.');
+      Alert.alert('Error', err?.message || 'Could not save profile changes.');
     } finally {
       setIsSaving(false);
     }

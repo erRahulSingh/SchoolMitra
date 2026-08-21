@@ -45,7 +45,12 @@ export const superAdminApi = {
   getSchools: (query?: string) => apiRequest(`/schools${query ? `?${query}` : ""}`),
   createSchool: (schoolData: any) => apiRequest("/schools", { method: "POST", body: JSON.stringify(schoolData) }),
   getSchoolDossier: (id: string) => apiRequest(`/schools/${id}`),
-  toggleSchoolStatus: (id: string, status: string) => apiRequest(`/schools/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
+  getSchoolStatusHistory: (id: string) => apiRequest(`/schools/${id}/status-history`),
+  toggleSchoolStatus: (id: string, payload: { status: string; statusReason?: string; statusExpiresAt?: string | Date } | string) =>
+    apiRequest(`/schools/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify(typeof payload === "string" ? { status: payload } : payload)
+    }),
   deleteSchool: (id: string) => apiRequest(`/schools/${id}`, { method: "DELETE" }),
 
   // Subscriptions & Revenue

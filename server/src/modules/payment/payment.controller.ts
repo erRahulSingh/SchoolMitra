@@ -12,10 +12,23 @@ import logger from "../../utils/logger";
 
 // ════════════ 1. CREATE RAZORPAY ORDER ════════════
 export const createRazorpayOrder = asyncHandler(async (req: Request, res: Response) => {
-  const { amount, currency = "INR", receiptId, purpose = "School Fee Payment" } = req.body;
+  const { amount, currency = "INR", receiptId, purpose = "School Fee Payment", schoolId } = req.body;
 
   if (!amount) {
     throw ApiError.badRequest("Amount is required to generate Razorpay Order.");
+  }
+
+  // Check tenant suspension policy: Block new payment orders for suspended school
+  const targetSchoolId = (req as any).user?.schoolId || schoolId;
+  if (targetSchoolId) {
+    const { SchoolModel } = require("../../models/AuthSchemas");
+    const school = await SchoolModel.findById(targetSchoolId).select("status").lean();
+    if (school && (school.status === "SUSPENDED" || school.status === "DEACTIVATED" || school.status === "EXPIRED")) {
+      throw ApiError.forbidden(
+        "Payment initiation blocked: School account is currently inactive. Please contact administration.",
+        "SCHOOL_ACCESS_SUSPENDED"
+      );
+    }
   }
 
   const razorpayKeyId = process.env.RAZORPAY_KEY_ID || "rzp_test_schoolmitra_2026";
@@ -51,28 +64,35 @@ export const verifyRazorpayPayment = asyncHandler(async (req: Request, res: Resp
     }
   }
 
-  const total = amountPaid || 18500;
-  const baseAmount = Math.round(total / 1.18);
-  const gstAmount = total - baseAmount;
-  const receiptNo = `REC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+  const txId = razorpayPaymentId || `pay_${crypto.randomBytes(10).toString("hex")}`;
 
-  const receipt = await FeePaymentReceiptModel.create({
-    receiptNo,
-    invoiceId,
-    studentId,
-    amountPaid: total,
-    baseAmount,
-    gstAmount,
-    paymentMethod: "Razorpay (UPI/Card)",
-    transactionId: razorpayPaymentId || `pay_${crypto.randomBytes(10).toString("hex")}`,
-    paidAt: new Date()
-  });
+  // STEP 22: Safe Idempotent Payment Record — Never lose payment records even during suspension
+  let receipt = await FeePaymentReceiptModel.findOne({ transactionId: txId });
 
-  if (invoiceId) {
-    await StudentFeeInvoiceModel.findByIdAndUpdate(invoiceId, { status: "Paid" });
+  if (!receipt) {
+    const total = amountPaid || 18500;
+    const baseAmount = Math.round(total / 1.18);
+    const gstAmount = total - baseAmount;
+    const receiptNo = `REC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    receipt = await FeePaymentReceiptModel.create({
+      receiptNo,
+      invoiceId,
+      studentId,
+      amountPaid: total,
+      baseAmount,
+      gstAmount,
+      paymentMethod: "Razorpay (UPI/Card)",
+      transactionId: txId,
+      paidAt: new Date()
+    });
+
+    if (invoiceId) {
+      await StudentFeeInvoiceModel.findByIdAndUpdate(invoiceId, { status: "Paid" });
+    }
+
+    logger.info(`[Razorpay Webhook/Verify] Payment Verified & Saved! Receipt ${receiptNo} recorded.`);
   }
-
-  logger.info(`[Razorpay] Payment Verified! Receipt ${receiptNo} issued.`);
 
   return ApiResponse.created(res, "Payment verified & GST receipt generated successfully.", {
     receipt,

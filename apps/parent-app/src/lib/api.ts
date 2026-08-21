@@ -1,6 +1,4 @@
-// ═══════════════════════════════════════════════════════════
-// SchoolMitra — Unified API Client (Parent Mobile PWA)
-// ═══════════════════════════════════════════════════════════
+import { notifyParentSchoolBlocked } from "../components/ParentSchoolStatusGuard";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
@@ -25,7 +23,28 @@ export async function apiRequest<T = any>(
       headers,
     });
 
-    const json = await res.json();
+    const json = await res.json().catch(() => ({}));
+
+    // ─── STEP 12: PARENT APP TENANT STATUS INTERCEPTOR ───
+    if (
+      res.status === 403 ||
+      json.code === "SCHOOL_ACCESS_SUSPENDED" ||
+      json.code === "SCHOOL_ACCOUNT_EXPIRED" ||
+      json.code === "SCHOOL_ACCOUNT_DEACTIVATED" ||
+      json.code === "SESSION_INVALIDATED" ||
+      json.schoolStatus === "SUSPENDED" ||
+      json.schoolStatus === "EXPIRED" ||
+      json.schoolStatus === "DEACTIVATED"
+    ) {
+      notifyParentSchoolBlocked({
+        isBlocked: true,
+        schoolStatus: json.schoolStatus || "SUSPENDED",
+        code: json.code || "SCHOOL_ACCESS_SUSPENDED",
+        message: json.message || "Your school's account is currently inactive. Please contact the school administration.",
+        schoolName: json.schoolName || "Your School"
+      });
+    }
+
     return json;
   } catch (err: any) {
     console.warn(`[ParentApp API Error] ${endpoint}:`, err?.message || err);

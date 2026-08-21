@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { SchoolStatusGuard } from "@/components/guards/SchoolStatusGuard";
 import AppLayout from "@/components/layout/AppLayout";
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ThemeProvider>
-          <AppLayout>{children}</AppLayout>
+          <SchoolStatusGuard>
+            <AppLayout>{children}</AppLayout>
+          </SchoolStatusGuard>
         </ThemeProvider>
       </body>
     </html>

@@ -266,12 +266,15 @@ function AppNavigator() {
 }
 
 import { LanguageProvider } from './src/context/LanguageContext';
+import { DriverSchoolStatusGuard } from './src/components/DriverSchoolStatusGuard';
 
 export default function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <AppNavigator />
+        <DriverSchoolStatusGuard>
+          <AppNavigator />
+        </DriverSchoolStatusGuard>
       </LanguageProvider>
     </ThemeProvider>
   );

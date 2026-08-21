@@ -1,8 +1,6 @@
-// ═══════════════════════════════════════════════════════════
-// SchoolMitra Backend — Transport Fleet Routes (Phase 10)
-// ═══════════════════════════════════════════════════════════
-
 import { Router } from "express";
+import { authenticate } from "../../middleware/authGuards";
+import { requireActiveSchool } from "../../middleware/tenantMiddleware";
 import {
   getBuses,
   createBus,
@@ -25,6 +23,10 @@ import {
 } from "./transport.controller";
 
 const router = Router();
+
+// ─── STEP 23: CENTRAL TRANSPORT AUTH & TENANT STATUS GUARDS ───
+router.use(authenticate);
+router.use(requireActiveSchool);
 
 // Fleet Entities
 router.get("/buses", getBuses);

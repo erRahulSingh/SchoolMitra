@@ -291,7 +291,7 @@ const tripSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ["Scheduled", "InProgress", "Completed", "Cancelled", "Delayed"],
+    enum: ["Scheduled", "InProgress", "Completed", "Cancelled", "Delayed", "Suspended", "Terminated"],
     default: "Scheduled",
     index: true,
   },

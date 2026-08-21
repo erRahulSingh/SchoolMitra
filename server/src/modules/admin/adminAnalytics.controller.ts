@@ -34,7 +34,7 @@ export const getAdminAnalyticsOverview = asyncHandler(async (req: Request, res: 
   try {
     const marksAvg = await MarkModel.aggregate([
       { $match: { schoolId: new mongoose.Types.ObjectId(schoolId) } },
-      { $group: { _id: null, avgMarks: { $avg: { $cond: [{ $gt: ["$maxMarks", 0] }, { $multiply: [{ $divide: ["$marksObtained", "$maxMarks"] }, 100] }, 0] } } }
+      { $group: { _id: null, avgMarks: { $avg: { $cond: [{ $gt: ["$maxMarks", 0] }, { $multiply: [{ $divide: ["$marksObtained", "$maxMarks"] }, 100] }, 0] } } } }
     ]);
     if (marksAvg.length > 0) {
       averageResultStr = `${marksAvg[0].avgMarks.toFixed(1)}%`;

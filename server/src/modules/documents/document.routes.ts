@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { authenticate } from "../../middleware/authGuards";
+import { requireActiveSchool } from "../../middleware/tenantMiddleware";
 import {
   getStudentDocuments,
   uploadStudentDocument,
@@ -12,6 +14,10 @@ import {
 } from "./document.controller";
 
 const router = Router();
+
+// ─── STEP 24: CENTRAL DOCUMENTS AUTH & TENANT STATUS GUARDS ───
+router.use(authenticate);
+router.use(requireActiveSchool);
 
 // Expiring Documents Alert Endpoint
 router.get("/expiring", getExpiringDocumentsAlerts);

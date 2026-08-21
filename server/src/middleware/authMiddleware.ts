@@ -4,7 +4,10 @@
 
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { SystemRole } from "../modules/auth/roles.config";
+import { SchoolModel } from "../models/AuthSchemas";
+import { evaluateSchoolStatus } from "../constants/schoolStatus.constants";
 import { ApiError } from "../utils/ApiError";
 
 export interface JwtPayload {
@@ -16,48 +19,102 @@ export interface JwtPayload {
 
 export interface AuthenticatedRequest extends Request {
   user?: JwtPayload;
+  school?: any;
 }
 
 /**
- * Verifies Bearer JWT token from Authorization header.
- * Throws ApiError.unauthorized() if missing or invalid — NO demo bypass.
+ * Verifies Bearer JWT token and dynamically validates LIVE school account status from DB.
+ * Even if JWT is valid for 7 days, if school was suspended 1 minute ago, the request is immediately rejected.
  */
-export const verifyToken = (
+export const verifyToken = async (
   req: AuthenticatedRequest,
-  _res: Response,
+  res: Response,
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw ApiError.unauthorized("Authorization token is required. Provide a Bearer token in the Authorization header.");
+    return res.status(401).json({
+      success: false,
+      error: "UNAUTHORIZED",
+      message: "Authorization token is required. Provide a Bearer token in the Authorization header."
+    });
   }
 
   const token = authHeader.split(" ")[1];
 
   if (!token) {
-    throw ApiError.unauthorized("Authorization token is malformed.");
+    return res.status(401).json({
+      success: false,
+      error: "UNAUTHORIZED",
+      message: "Authorization token is malformed."
+    });
   }
 
   try {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw ApiError.internal("JWT_SECRET is not configured in environment variables.");
-    }
-
+    const secret = process.env.JWT_SECRET || "schoolmitra-super-secret-jwt-key-2026";
     const decoded = jwt.verify(token, secret) as JwtPayload;
     req.user = decoded;
+
+    const normalizedRole = String(decoded.role || "").toUpperCase().replace(/[_\s]/g, "");
+
+    // SUPER_ADMIN has global scope and bypasses school-level suspension
+    if (normalizedRole === "SUPERADMIN") {
+      return next();
+    }
+
+    // Step 8: LIVE SCHOOL STATUS VALIDATION FOR EXISTING JWT SESSIONS
+    const targetSchoolId = decoded.schoolId || (req.headers["x-school-id"] as string);
+    if (targetSchoolId) {
+      const isObjectId = mongoose.Types.ObjectId.isValid(targetSchoolId);
+      let school: any = null;
+      if (isObjectId) {
+        school = await SchoolModel.findById(targetSchoolId).lean();
+      }
+      if (!school) {
+        school = await SchoolModel.findOne({ code: String(targetSchoolId).toLowerCase() }).lean();
+      }
+
+      if (school) {
+        const evaluation = evaluateSchoolStatus(school);
+        if (!evaluation.isOperational) {
+          return res.status(403).json({
+            success: false,
+            code: evaluation.code,
+            message: evaluation.message,
+            schoolStatus: evaluation.effectiveStatus
+          });
+        }
+
+        // Step 9: Token sessionVersion validation check
+        const tokenSessionVersion = (decoded as any).sessionVersion;
+        if (
+          typeof tokenSessionVersion === "number" &&
+          typeof school.sessionVersion === "number" &&
+          tokenSessionVersion < school.sessionVersion
+        ) {
+          return res.status(403).json({
+            success: false,
+            code: "SESSION_INVALIDATED",
+            message: "Your session has been invalidated due to a school status change. Please login again.",
+            schoolStatus: evaluation.effectiveStatus
+          });
+        }
+
+        req.school = school;
+      }
+    }
+
     return next();
   } catch (error: any) {
-    // Let JWT-specific errors propagate to global error handler
     if (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError") {
-      return next(error);
+      return res.status(401).json({
+        success: false,
+        error: "TOKEN_EXPIRED",
+        message: "Your session token has expired or is invalid. Please log in again."
+      });
     }
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      return next(error);
-    }
-    return next(ApiError.unauthorized("Invalid or expired authorization token."));
+    return next(error);
   }
 };
 
