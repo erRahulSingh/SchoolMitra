@@ -5,7 +5,8 @@
 
 import mongoose from "mongoose";
 import { NotificationModel, DeviceTokenModel, NotificationPreferenceModel } from "../models/CommunicationSchemas";
-import { StudentModel, ParentModel, UserModel } from "../models/SchoolSchemas";
+import { UserModel } from "../models/AuthSchemas";
+import { StudentModel, ParentModel } from "../models/SchoolSchemas";
 import { notifyParent, notifyTeacher } from "./pushNotificationService";
 import logger from "../utils/logger";
 

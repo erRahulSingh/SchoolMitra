@@ -303,8 +303,8 @@ const tests: TestCase[] = [
     category: "Multi-Tenancy",
     name: "User from School A attempting cross-tenant access to School B is rejected with 403",
     run: async () => {
-      const userSchoolId = "school_A";
-      const targetSchoolId = "school_B";
+      const userSchoolId: string = "school_A";
+      const targetSchoolId: string = "school_B";
       const isCrossTenantBlocked = userSchoolId !== targetSchoolId;
       return { passed: isCrossTenantBlocked, details: "enforceTenantIsolation blocks mismatched schoolId" };
     }
