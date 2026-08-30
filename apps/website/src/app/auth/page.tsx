@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, Mail, Lock, Building, Phone, MapPin, X, ShieldCheck } from "lucide-react";
+import { Mail, Lock, Building, Phone, MapPin, X } from "lucide-react";
 
 export default function AuthPage() {
   const searchParams = useSearchParams();
@@ -17,7 +17,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Form Fields
+  // Form Fields (Main Form)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [schoolName, setSchoolName] = useState("");
@@ -27,6 +27,21 @@ export default function AuthPage() {
   // Google Incomplete Profile Modal
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [tempGoogleToken, setTempGoogleToken] = useState("");
+
+  // Email Modal Form State (Email Button Click)
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailFormEmail, setEmailFormEmail] = useState("");
+  const [emailFormPassword, setEmailFormPassword] = useState("");
+  const [emailFormConfirmPassword, setEmailFormConfirmPassword] = useState("");
+  const [emailFormError, setEmailFormError] = useState("");
+  const [emailFormLoading, setEmailFormLoading] = useState(false);
+
+  // Forgot Password Modal State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,41 +74,73 @@ export default function AuthPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  // Google Login: Initiates Google OAuth screen to select device Google accounts
+  const handleGoogleLogin = () => {
+    window.location.href = "http://127.0.0.1:5000/api/v1/auth/google";
+  };
+
+  // Email Modal Submit (Only Email, Password & Confirm Password)
+  const handleEmailFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailFormError("");
+
+    if (emailFormPassword !== emailFormConfirmPassword) {
+      setEmailFormError("Passwords do not match!");
+      return;
+    }
+
     try {
-      setLoading(true);
-      setError("");
+      setEmailFormLoading(true);
 
-      const mockGooglePayload = {
-        token: "mock_jwt_token",
-        email: "googleuser@example.com",
-        name: "Google User",
-        googleId: "1234567890",
-      };
-
-      const res = await fetch("http://127.0.0.1:5000/api/v1/auth/google", {
+      const res = await fetch("http://127.0.0.1:5000/api/v1/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(mockGooglePayload),
+        body: JSON.stringify({
+          email: emailFormEmail,
+          password: emailFormPassword,
+        }),
       });
 
       const data = await res.json();
-      
       if (!res.ok) {
-        throw new Error(data.message || "Google Authentication failed");
+        throw new Error(data.message || "Registration failed");
       }
 
-      if (data.data.isProfileIncomplete) {
-        setTempGoogleToken(data.data.accessToken);
-        setShowProfileModal(true);
-      } else {
+      if (data.data?.accessToken) {
         localStorage.setItem("token", data.data.accessToken);
-        window.location.href = "http://localhost:3000";
       }
+      window.location.href = "http://localhost:3000";
     } catch (err: any) {
-      setError(err.message);
+      setEmailFormError(err.message);
     } finally {
-      setLoading(false);
+      setEmailFormLoading(false);
+    }
+  };
+
+  // Forgot Password Submit Handler
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError("");
+    setForgotSuccess("");
+
+    try {
+      const res = await fetch("http://127.0.0.1:5000/api/v1/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to process request");
+      }
+
+      setForgotSuccess("Password reset instructions have been sent to your email.");
+    } catch (err: any) {
+      setForgotError(err.message);
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -369,7 +416,7 @@ export default function AuthPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-top: 1.5rem;
+          margin-top: 1rem;
           background: var(--auth-blue);
           color: #ffffff;
         }
@@ -443,6 +490,19 @@ export default function AuthPage() {
           padding: 0.8rem;
           border-radius: 8px;
           border: 1px solid #fca5a5;
+          font-size: 0.85rem;
+          font-weight: 600;
+          text-align: center;
+          margin-bottom: 1rem;
+          width: 100%;
+        }
+
+        .auth-success {
+          background: #f0fdf4;
+          color: #16a34a;
+          padding: 0.8rem;
+          border-radius: 8px;
+          border: 1px solid #bbf7d0;
           font-size: 0.85rem;
           font-weight: 600;
           text-align: center;
@@ -596,6 +656,32 @@ export default function AuthPage() {
                   </div>
                 )}
 
+                {/* LOGIN FAIL / ERROR HONE PAR LOGIN BUTTON KE JUST UPER LEFT SIDE ME RED COLOR FORGOT PASSWORD */}
+                {isLogin && error && (
+                  <div style={{ display: "flex", justifyContent: "flex-start", width: "100%", marginTop: "0.25rem" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotEmail(email);
+                        setShowForgotModal(true);
+                      }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#ef4444",
+                        fontSize: "0.85rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        padding: 0,
+                        textAlign: "left",
+                        textDecoration: "underline"
+                      }}
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -619,11 +705,14 @@ export default function AuthPage() {
                   </svg>
                   Google
                 </button>
-                <button type="button" className="auth-social-btn" disabled>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                  Facebook
+                <button 
+                  type="button" 
+                  className="auth-social-btn" 
+                  onClick={() => setShowEmailModal(true)}
+                  disabled={loading}
+                >
+                  <Mail size={18} strokeWidth={2.2} />
+                  Email
                 </button>
               </div>
 
@@ -647,6 +736,125 @@ export default function AuthPage() {
             </div>
           </div>
         </div>
+
+        {/* FORGOT PASSWORD MODAL */}
+        {showForgotModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <button 
+                  onClick={() => setShowForgotModal(false)}
+                  style={{ position: "absolute", top: "1rem", right: "1rem", background: "transparent", border: "none", cursor: "pointer", color: "#64748b" }}
+                >
+                  <X size={24} />
+                </button>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0f172a", marginBottom: "0.25rem" }}>
+                  Reset Your Password
+                </h3>
+                <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0 }}>
+                  Enter your email address to receive password reset instructions.
+                </p>
+              </div>
+              
+              <form onSubmit={handleForgotSubmit} className="modal-body">
+                {forgotError && <div className="auth-error">{forgotError}</div>}
+                {forgotSuccess && <div className="auth-success">{forgotSuccess}</div>}
+                
+                <div className="auth-input-group" style={{ marginBottom: "1.5rem" }}>
+                  <Mail className="auth-input-icon" size={16} strokeWidth={2.5} />
+                  <input
+                    type="email"
+                    required
+                    className="auth-input"
+                    placeholder="Registered Email Address"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="auth-submit-btn"
+                  style={{ marginTop: 0 }}
+                >
+                  {forgotLoading ? "Sending Link..." : "Send Reset Link"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* EMAIL REGISTRATION MODAL (Email, Password & Confirm Password only) */}
+        {showEmailModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <button 
+                  onClick={() => setShowEmailModal(false)}
+                  style={{ position: "absolute", top: "1rem", right: "1rem", background: "transparent", border: "none", cursor: "pointer", color: "#64748b" }}
+                >
+                  <X size={24} />
+                </button>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0f172a", marginBottom: "0.25rem" }}>
+                  Email Registration
+                </h3>
+                <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0 }}>
+                  Enter your email and set a password to create an account.
+                </p>
+              </div>
+              
+              <form onSubmit={handleEmailFormSubmit} className="modal-body">
+                {emailFormError && <div className="auth-error">{emailFormError}</div>}
+                
+                <div className="auth-input-group">
+                  <Mail className="auth-input-icon" size={16} strokeWidth={2.5} />
+                  <input
+                    type="email"
+                    required
+                    className="auth-input"
+                    placeholder="Email Address"
+                    value={emailFormEmail}
+                    onChange={(e) => setEmailFormEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="auth-input-group">
+                  <Lock className="auth-input-icon" size={16} strokeWidth={2.5} />
+                  <input
+                    type="password"
+                    required
+                    className="auth-input"
+                    placeholder="Password"
+                    value={emailFormPassword}
+                    onChange={(e) => setEmailFormPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="auth-input-group" style={{ marginBottom: "1.5rem" }}>
+                  <Lock className="auth-input-icon" size={16} strokeWidth={2.5} />
+                  <input
+                    type="password"
+                    required
+                    className="auth-input"
+                    placeholder="Confirm Password"
+                    value={emailFormConfirmPassword}
+                    onChange={(e) => setEmailFormConfirmPassword(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={emailFormLoading}
+                  className="auth-submit-btn"
+                  style={{ marginTop: 0 }}
+                >
+                  {emailFormLoading ? "Submitting..." : "Submit & Register"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* PROFILE COMPLETION MODAL */}
         {showProfileModal && (

@@ -118,7 +118,7 @@ export default function Footer() {
                   border: "1px solid rgba(255, 255, 255, 0.15)",
                   color: "#ffffff",
                   fontSize: "0.82rem",
-                  outline: "none"
+                  outline: "none",
                 }}
               />
             </div>

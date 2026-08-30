@@ -246,6 +246,7 @@ export default function SchoolRegistrationModal({ onClose }: SchoolRegistrationM
               </div>
 
               {/* Work Email */}
+              
               <div>
                 <label style={{ fontSize: "0.8rem", fontWeight: 700, color: "#cbd5e1", display: "block", marginBottom: "0.35rem" }}>
                   Work Email *
