@@ -1,16 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, TextInput, ActivityIndicator } from 'react-native';
 import { Search, User, ChevronLeft, Phone, Mail, ChevronRight } from 'lucide-react-native';
 
 export default function StudentsScreen({ navigation }: any) {
   const [search, setSearch] = useState('');
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const students = [
-    { id: 'st_1', roll: '01', name: 'Aarav Gupta', class: 'Class 8-A', parent: 'Rajesh Gupta', phone: '+91 98765 11111', attendance: '98%' },
-    { id: 'st_2', roll: '02', name: 'Ananya Patel', class: 'Class 8-A', parent: 'Suresh Patel', phone: '+91 98765 22222', attendance: '95%' },
-    { id: 'st_3', roll: '03', name: 'Devansh Verma', class: 'Class 8-A', parent: 'Vikram Verma', phone: '+91 98765 33333', attendance: '88%' },
-    { id: 'st_4', roll: '04', name: 'Isha Sharma', class: 'Class 8-A', parent: 'Amit Sharma', phone: '+91 98765 44444', attendance: '100%' }
-  ];
+  useEffect(() => {
+    fetchRoster();
+  }, []);
+
+  const fetchRoster = async () => {
+    try {
+      const res = await fetch(`http://10.0.2.2:5000/api/v1/attendance/student/class?classId=Class 8&sectionId=A`);
+      const json = await res.json();
+      if (json.success && json.data.logs) {
+        setStudents(json.data.logs.map((log: any) => ({
+          id: log.studentId,
+          roll: log.rollNo || '00',
+          name: log.studentName,
+          class: 'Class 8-A',
+          parent: 'Parent',
+          phone: '+91 98XXXXXX',
+          attendance: '95%'
+        })));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = students.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.roll.includes(search));
 
@@ -34,28 +55,37 @@ export default function StudentsScreen({ navigation }: any) {
         />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {filtered.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.card} activeOpacity={0.8}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{item.name.split(' ').map(n=>n[0]).join('')}</Text>
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.meta}>Roll No. {item.roll} • {item.class}</Text>
-              <Text style={styles.parentText}>Parent: {item.parent}</Text>
-            </View>
-
-            <View style={styles.rightCol}>
-              <View style={styles.attendanceBadge}>
-                <Text style={styles.attendanceText}>{item.attendance}</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#7c3aed" style={{ marginTop: 40 }} />
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {filtered.map((item) => (
+            <TouchableOpacity key={item.id} style={styles.card} activeOpacity={0.8}>
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarText}>{item.name.split(' ').map((n: string) => n[0]).join('')}</Text>
               </View>
-              <ChevronRight size={18} color="#94a3b8" style={{ marginTop: 6 }} />
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.meta}>Roll No. {item.roll} • {item.class}</Text>
+                <Text style={styles.parentText}>Parent: {item.parent}</Text>
+              </View>
+
+              <View style={styles.rightCol}>
+                <View style={styles.attendanceBadge}>
+                  <Text style={styles.attendanceText}>{item.attendance}</Text>
+                </View>
+                <ChevronRight size={18} color="#94a3b8" style={{ marginTop: 6 }} />
+              </View>
+            </TouchableOpacity>
+          ))}
+          {filtered.length === 0 && (
+            <View style={{ alignItems: 'center', marginTop: 40 }}>
+              <Text style={{ color: '#64748b' }}>No students found.</Text>
             </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

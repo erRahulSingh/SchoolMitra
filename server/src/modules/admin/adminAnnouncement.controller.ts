@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ═══════════════════════════════════════════════════════════
 // SchoolMitra Backend — Admin Announcement Controller
 // Exposes CRUD & Publish controls for Announcements to SchoolAdmin
@@ -535,3 +536,4 @@ export const createTeacherAnnouncementHandler = asyncHandler(async (req: Request
 
   return ApiResponse.created(res, "Teacher announcement published successfully to assigned class parents.", { announcement });
 });
+

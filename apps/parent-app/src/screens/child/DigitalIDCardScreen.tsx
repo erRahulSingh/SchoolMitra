@@ -1,9 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Image } from 'react-native';
 import { ChevronLeft, Share2, ShieldCheck } from 'lucide-react-native';
 import { studentRohan3DUri } from '../../assets/parent3dAssets';
 
 export default function DigitalIDCardScreen({ navigation }: any) {
+  const [student, setStudent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const res = await fetch('http://10.0.2.2:5000/api/v1/students/STU-1001');
+        const data = await res.json();
+        if (data.data?.student) {
+          setStudent(data.data.student);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudentData();
+  }, []);
+
+  if (loading || !student) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>Loading ID Card...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
@@ -45,9 +73,9 @@ export default function DigitalIDCardScreen({ navigation }: any) {
           </View>
 
           {/* Student Name & Class */}
-          <Text style={styles.studentNameText}>Rohan Sharma</Text>
-          <Text style={styles.studentClassText}>Class 5th – A</Text>
-          <Text style={styles.studentRollText}>Roll No. 12</Text>
+          <Text style={styles.studentNameText}>{student.name}</Text>
+          <Text style={styles.studentClassText}>Class {student.class} – {student.section}</Text>
+          <Text style={styles.studentRollText}>Roll No. {student.rollNo?.split('-').pop() || '01'}</Text>
 
           {/* Barcode Mock */}
           <View style={styles.barcodeBox}>
@@ -56,7 +84,7 @@ export default function DigitalIDCardScreen({ navigation }: any) {
                 <View key={idx} style={[styles.barcodeLine, { width: w }]} />
               ))}
             </View>
-            <Text style={styles.barcodeNumberText}>GVPS2024/0512</Text>
+            <Text style={styles.barcodeNumberText}>{student.admissionNo}</Text>
           </View>
 
           <View style={styles.dividerLine} />
@@ -65,22 +93,22 @@ export default function DigitalIDCardScreen({ navigation }: any) {
           <View style={styles.detailsContainer}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabelText}>D.O.B</Text>
-              <Text style={styles.detailValText}>12 Aug 2014</Text>
+              <Text style={styles.detailValText}>{student.dob ? new Date(student.dob).toLocaleDateString() : '12 Aug 2014'}</Text>
             </View>
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabelText}>Blood Group</Text>
-              <Text style={styles.detailValText}>B+</Text>
+              <Text style={styles.detailValText}>{student.bloodGroup || 'B+'}</Text>
             </View>
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabelText}>Address</Text>
-              <Text style={styles.detailValText}>123, Green Park, Lucknow, UP - 226001</Text>
+              <Text style={styles.detailValText}>{student.address}</Text>
             </View>
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabelText}>Phone</Text>
-              <Text style={styles.detailValText}>+91 98765 43210</Text>
+              <Text style={styles.detailValText}>{student.phone}</Text>
             </View>
           </View>
 

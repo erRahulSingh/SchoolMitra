@@ -32,13 +32,49 @@ export default function UploadMaterialScreen({ navigation }: any) {
     { name: 'Photosynthesis.pdf', size: '2.4 MB', type: 'PDF' }
   ]);
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!title.trim() || !desc.trim()) {
       Alert.alert('Validation Error', 'Please complete title and description.');
       return;
     }
-    Alert.alert('Upload Successful 🎉', `Successfully uploaded "${title}" study material!`);
-    navigation.goBack();
+
+    try {
+      // Mock class and subject IDs for demo
+      const classId = '647b0a7d903e1c001f3eabc1'; 
+      const subjectId = '647b0a7d903e1c001f3eabc4';
+      
+      // Determine file type from active tab or file extension
+      const fileType = activeTab === 'File' ? 'PDF' : (activeTab === 'Video' ? 'LINK' : 'LINK');
+
+      const res = await fetch('http://10.0.2.2:5000/api/v1/study-materials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description: desc,
+          classId,
+          subjectId,
+          teacherId: '647b0a7d903e1c001f3eabc3', // Mock teacher ID
+          attachments: attachments.map(a => ({
+            fileName: a.name,
+            fileUrl: 'mock-url.pdf', // Mock URL
+            fileType: fileType,
+            fileSize: a.size
+          }))
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        Alert.alert('Upload Successful 🎉', `Successfully uploaded "${title}" study material!`);
+        navigation.goBack();
+      } else {
+        Alert.alert('Error', data.message || 'Failed to upload material');
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Network Error', 'Could not connect to server.');
+    }
   };
 
   const removeAttachment = (idx: number) => {

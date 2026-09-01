@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 import { 
   Bus, MapPin, Phone, AlertTriangle, ShieldCheck, Navigation, Users, 
   Plus, X, Search, Filter, Fuel, Wrench, CheckCircle2, Clock, 
-  UserCheck, ArrowRight, Radio, Shield, Download, ChevronRight, Eye, Trash2, Settings, Compass, Edit3, Save, Power
+  UserCheck, ArrowRight, Radio, Shield, Download, ChevronRight, Eye, Trash2, Settings, Compass, Edit3, Save, Power, Upload
 } from "lucide-react";
 import { MOCK_STUDENTS } from "@/lib/mockData";
 import { createSocketConnection } from "@/lib/socketClient";
@@ -83,76 +84,35 @@ export default function TransportPage() {
 
   // Fleet command center states
   const [selectedBusId, setSelectedBusId] = useState<string>("Bus 01");
-  const [fleet, setFleet] = useState([
-    {
-      id: "Bus 01",
-      busNumber: "Bus 01",
-      registrationNo: "DL 01 SM 1001",
-      status: "ACTIVE",
-      tripStatus: "IN_PROGRESS",
-      driver: { name: "Amit Kumar", phone: "+91 98765 43210", empId: "DRV-101", license: "DL142021008765" },
-      route: { name: "Route 01 - Dwarka Belt", stops: ["Main Market", "Maple Park", "City Center", "Sector 52", "School"] },
-      latitude: 28.5833,
-      longitude: 77.0667,
-      speed: 35,
-      heading: 90,
-      lastUpdated: "Just now",
-      students: [
-        { name: "Rahul Kumar", class: "8-A", stop: "Main Market" },
-        { name: "Aarav Sharma", class: "5-A", stop: "Maple Park" },
-        { name: "Siya Patel", class: "5-A", stop: "City Center" }
-      ]
-    },
-    {
-      id: "Bus 02",
-      busNumber: "Bus 02",
-      registrationNo: "DL 01 SM 1002",
-      status: "ACTIVE",
-      tripStatus: "STARTED",
-      driver: { name: "Rajesh Kumar", phone: "+91 87654 32109", empId: "DRV-102", license: "DL142021008766" },
-      route: { name: "Route 02 - Vasant Kunj", stops: ["Vasant Kunj Sector 4", "Munirka", "School"] },
-      latitude: 28.5700,
-      longitude: 77.1200,
-      speed: 40,
-      heading: 180,
-      lastUpdated: "1 minute ago",
-      students: [
-        { name: "Ananya Verma", class: "5-B", stop: "Vasant Kunj Sector 4" }
-      ]
-    },
-    {
-      id: "Bus 03",
-      busNumber: "Bus 03",
-      registrationNo: "DL 01 SM 1003",
-      status: "ACTIVE",
-      tripStatus: "SCHEDULED",
-      driver: { name: "Ram Singh", phone: "+91 76543 21098", empId: "DRV-103", license: "DL142021008767" },
-      route: { name: "Route 03 - Rohini Belt", stops: ["Rohini Sector 9", "School"] },
-      latitude: 28.7041,
-      longitude: 77.1025,
-      speed: 0,
-      heading: 0,
-      lastUpdated: "5 minutes ago",
-      students: [
-        { name: "Rohan Mehta", class: "5-B", stop: "Rohini Sector 9" }
-      ]
-    },
-    {
-      id: "Bus 04",
-      busNumber: "Bus 04",
-      registrationNo: "DL 01 SM 1004",
-      status: "MAINTENANCE",
-      tripStatus: "COMPLETED",
-      driver: { name: "Suresh Pal", phone: "+91 65432 10987", empId: "DRV-104", license: "DL142021008768" },
-      route: { name: "Route 04 - Karol Bagh", stops: ["Karol Bagh Metro", "School"] },
-      latitude: 28.6448,
-      longitude: 77.1878,
-      speed: 0,
-      heading: 0,
-      lastUpdated: "Offline",
-      students: []
-    }
-  ]);
+  const [fleet, setFleet] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/v1/transport/buses")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && data.data.buses) {
+          // Initialize fleet from buses
+          const dynamicFleet = data.data.buses.map((bus: any, i: number) => ({
+            id: bus.busNumber || `Bus 0${i + 1}`,
+            busNumber: bus.busNumber || `Bus 0${i + 1}`,
+            registrationNo: bus.registrationNo || "N/A",
+            status: bus.status || "ACTIVE",
+            tripStatus: bus.status === "ACTIVE" ? "IN_PROGRESS" : "OFFLINE",
+            driver: { name: bus.driverName || "Driver Name", phone: "N/A", empId: "N/A", license: "N/A" },
+            route: { name: bus.routeName || "Route", stops: [] },
+            // Assign a center offset for mock bounding box (28.58, 77.06)
+            latitude: 28.5833 + (Math.random() - 0.5) * 0.05,
+            longitude: 77.0667 + (Math.random() - 0.5) * 0.05,
+            speed: 0,
+            heading: 0,
+            lastUpdated: "Just now",
+            students: []
+          }));
+          setFleet(dynamicFleet);
+        }
+      })
+      .catch(e => console.log(e));
+  }, []);
 
   useEffect(() => {
     const socket = createSocketConnection("http://localhost:5000");
@@ -318,6 +278,7 @@ export default function TransportPage() {
       capacity: 40,
       gpsDeviceId: "",
       driverId: "",
+      routeId: "",
       routeName: "",
       status: "ACTIVE"
     });
@@ -333,6 +294,7 @@ export default function TransportPage() {
       capacity: bus.capacity,
       gpsDeviceId: bus.gpsDeviceId || "",
       driverId: bus.driverId?._id || bus.driverId || "",
+      routeId: (bus as any).routeId?._id || (bus as any).routeId || "",
       routeName: bus.routeName || "",
       status: (bus.status?.toUpperCase() || "ACTIVE") as any
     });
@@ -558,6 +520,57 @@ export default function TransportPage() {
     alert("Trip started! Bus checked out from school gate.");
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const data = evt.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const parsedData = XLSX.utils.sheet_to_json(sheet) as any[];
+
+        // Map parsed data to backend schema
+        const mappedAssignments = parsedData.map(row => ({
+          studentId: row.StudentId || row.studentId || row.ID,
+          busId: row.BusId || row.busId || row.Bus || row.bus,
+          routeId: row.RouteId || row.routeId || row.Route || row.route,
+          pickupStopId: row.PickupStopId || row.pickupStopId || row.Pickup || row.pickup,
+          dropStopId: row.DropStopId || row.dropStopId || row.Drop || row.drop,
+          status: "Active"
+        })).filter(a => a.studentId && a.routeId);
+
+        if (mappedAssignments.length === 0) {
+          alert("No valid assignments found in Excel. Ensure columns like StudentId and RouteId exist.");
+          return;
+        }
+
+        const res = await fetch("http://localhost:5000/api/v1/transport/student-assignments/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            assignments: mappedAssignments,
+            academicYearId: "650000000000000000000301"
+          })
+        });
+        const respData = await res.json();
+        if (respData.success) {
+          alert(`Successfully uploaded and assigned ${respData.data?.count || mappedAssignments.length} students to buses!`);
+          fetchStudentAssignments();
+        } else {
+          alert("Failed to upload assignments. Error from server.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to parse Excel file.");
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   const handleEndTrip = () => {
     if (!activeTrip) return;
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -743,7 +756,7 @@ export default function TransportPage() {
             <tbody>
               {drivers.map((drv) => {
                 const busObj = drv.assignedBusId;
-                const busName = busObj && typeof busObj === "object" ? busObj.busNumber : (drv.assignedBus || "—");
+                const busName = busObj && typeof busObj === "object" ? busObj.busNumber : ((drv as any).assignedBus || "—");
                 const statusUpper = drv.status?.toUpperCase() || "ACTIVE";
                 const badgeClass = statusUpper === "ACTIVE" || statusUpper === "ACTIVE ✅" || statusUpper === "Active" ? "badge-success" : statusUpper === "ONLEAVE" || statusUpper === "OnLeave" ? "badge-warning" : statusUpper === "SUSPENDED" || statusUpper === "Suspended" ? "badge-danger" : "badge-secondary";
                 const expiryDisp = drv.licenseExpiry ? new Date(drv.licenseExpiry).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
@@ -809,7 +822,7 @@ export default function TransportPage() {
             <tbody>
               {routes.map((rt) => (
                 <tr key={rt._id || rt.id}>
-                  <td style={{ fontWeight: 800, color: "var(--text-heading)", paddingVertical: "1rem" }}>
+                  <td style={{ fontWeight: 800, color: "var(--text-heading)", padding: "1rem 0" }}>
                     <div style={{ fontSize: "1rem", marginBottom: 6 }}>{rt.routeName}</div>
                     {(rt as any).stops && (rt as any).stops.length > 0 && (
                       <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap", marginTop: 4 }}>
@@ -873,9 +886,15 @@ export default function TransportPage() {
         <div className="glass-card" style={{ padding: "1.5rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
             <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text-heading)" }}>Student Mapped Transport Matrix</h3>
-            <button onClick={handleOpenAssignStudent} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem", gap: "0.35rem" }}>
-              <Plus size={15} /> Assign Student Transport
-            </button>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <label className="btn btn-secondary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem", gap: "0.35rem", cursor: "pointer", display: "inline-flex", alignItems: "center" }}>
+                <Upload size={15} /> Upload Excel
+                <input type="file" accept=".xlsx, .xls, .csv" style={{ display: "none" }} onChange={handleFileUpload} />
+              </label>
+              <button onClick={handleOpenAssignStudent} className="btn btn-primary" style={{ padding: "0.45rem 0.95rem", fontSize: "0.8rem", gap: "0.35rem" }}>
+                <Plus size={15} /> Assign Student Transport
+              </button>
+            </div>
           </div>
 
           <table className="custom-table">
@@ -976,116 +995,6 @@ export default function TransportPage() {
                   <path d="M 50,50 Q 150,200 350,150 T 600,300" fill="none" stroke="var(--primary)" strokeWidth="3" strokeDasharray="6,6" opacity="0.3" />
                 </svg>
 
-                {/* Bus 01 Pin - Active (Moving/Live update) */}
-                {(() => {
-                  const b01 = fleet.find(b => b.id === "Bus 01");
-                  const isSelected = selectedBusId === "Bus 01";
-                  return (
-                    <button
-                      onClick={() => setSelectedBusId("Bus 01")}
-                      style={{
-                        position: "absolute",
-                        top: "35%",
-                        left: "40%",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        zIndex: isSelected ? 10 : 2
-                      }}
-                    >
-                      <div style={{ padding: "0.25rem 0.5rem", background: isSelected ? "var(--primary)" : "var(--bg-card)", border: "1.5px solid var(--success)", borderRadius: 6, color: isSelected ? "#fff" : "var(--text-heading)", fontSize: "0.68rem", fontWeight: 800, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
-                        Bus 01 {isSelected && `(${b01?.speed} km/h)`}
-                      </div>
-                      <Bus size={isSelected ? 28 : 24} color={isSelected ? "var(--primary)" : "#10b981"} style={{ filter: isSelected ? "drop-shadow(0 0 10px var(--primary))" : "none" }} />
-                    </button>
-                  );
-                })()}
-
-                {/* Bus 02 Pin - Active */}
-                {(() => {
-                  const isSelected = selectedBusId === "Bus 02";
-                  return (
-                    <button
-                      onClick={() => setSelectedBusId("Bus 02")}
-                      style={{
-                        position: "absolute",
-                        top: "58%",
-                        left: "22%",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        zIndex: isSelected ? 10 : 2
-                      }}
-                    >
-                      <div style={{ padding: "0.25rem 0.5rem", background: isSelected ? "var(--primary)" : "var(--bg-card)", border: "1.5px solid var(--success)", borderRadius: 6, color: isSelected ? "#fff" : "var(--text-heading)", fontSize: "0.68rem", fontWeight: 800, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
-                        Bus 02
-                      </div>
-                      <Bus size={isSelected ? 28 : 24} color={isSelected ? "var(--primary)" : "#10b981"} />
-                    </button>
-                  );
-                })()}
-
-                {/* Bus 03 Pin - Idle */}
-                {(() => {
-                  const isSelected = selectedBusId === "Bus 03";
-                  return (
-                    <button
-                      onClick={() => setSelectedBusId("Bus 03")}
-                      style={{
-                        position: "absolute",
-                        top: "20%",
-                        left: "72%",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        zIndex: isSelected ? 10 : 2
-                      }}
-                    >
-                      <div style={{ padding: "0.25rem 0.5rem", background: isSelected ? "var(--primary)" : "var(--bg-card)", border: "1.5px solid var(--warning)", borderRadius: 6, color: isSelected ? "#fff" : "var(--text-heading)", fontSize: "0.68rem", fontWeight: 800, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f59e0b", display: "inline-block" }} />
-                        Bus 03
-                      </div>
-                      <Bus size={isSelected ? 28 : 24} color={isSelected ? "var(--primary)" : "#f59e0b"} />
-                    </button>
-                  );
-                })()}
-
-                {/* Bus 04 Pin - Offline */}
-                {(() => {
-                  const isSelected = selectedBusId === "Bus 04";
-                  return (
-                    <button
-                      onClick={() => setSelectedBusId("Bus 04")}
-                      style={{
-                        position: "absolute",
-                        top: "65%",
-                        left: "75%",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        zIndex: isSelected ? 10 : 2
-                      }}
-                    >
-                      <div style={{ padding: "0.25rem 0.5rem", background: isSelected ? "var(--primary)" : "var(--bg-card)", border: "1.5px solid var(--danger)", borderRadius: 6, color: isSelected ? "#fff" : "var(--text-heading)", fontSize: "0.68rem", fontWeight: 800, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
-                        Bus 04
-                      </div>
-                      <Bus size={isSelected ? 28 : 24} color={isSelected ? "var(--primary)" : "#ef4444"} />
-                    </button>
                   );
                 })()}
               </div>
@@ -1190,17 +1099,6 @@ export default function TransportPage() {
                 </div>
               );
             })()}
-          </div>
-        </div>
-      )}" }}>{b.busNumber}</strong>
-                    <span className="badge badge-success">GPS ONLINE</span>
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 4 }}>
-                    Route: {b.routeName || "Route 1 Dwarka"} &bull; Pilot: {b.driverName || "Ram Singh"}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}
@@ -1504,6 +1402,8 @@ export default function TransportPage() {
             </form>
           </div>
         </div>
+      )}
+
       {/* ════════════ ASSIGN STUDENT TRANSPORT MODAL ════════════ */}
       {isAssignModalOpen && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>

@@ -4,8 +4,8 @@
 // ═══════════════════════════════════════════════════════════
 
 import mongoose from "mongoose";
-import { SchoolModel, UserModel, ParentModel, UserPermissionOverrideModel } from "../models/AuthSchemas";
-import { ClassModel, SectionModel, StudentModel, TeacherAssignmentModel } from "../models/SchoolSchemas";
+import { SchoolModel, UserModel, UserPermissionOverrideModel } from "../models/AuthSchemas";
+import { ClassModel, SectionModel, StudentModel, TeacherAssignmentModel , ParentModel } from "../models/SchoolSchemas";
 import { 
   CircularModel, 
   EmergencyBroadcastModel, 
@@ -146,3 +146,4 @@ async function run() {
 }
 
 run();
+

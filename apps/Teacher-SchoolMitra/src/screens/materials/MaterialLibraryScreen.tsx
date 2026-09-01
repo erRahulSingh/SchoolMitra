@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -25,56 +25,57 @@ export default function MaterialLibraryScreen({ navigation }: any) {
 
   const tabs = ['All', 'Notes', 'PDF', 'Video', 'Links'];
 
-  const recentMaterials = [
-    {
-      id: 'mat_1',
-      title: 'Photosynthesis in Plants',
-      sub: 'Science  •  20 May 2024',
-      details: 'PDF  •  2.4 MB',
-      icon: FileText,
-      iconColor: '#dc2626',
-      iconBg: '#fef2f2'
-    },
-    {
-      id: 'mat_2',
-      title: 'Linear Equations Notes',
-      sub: 'Mathematics  •  18 May 2024',
-      details: 'PDF  •  1.8 MB',
-      icon: Folder,
-      iconColor: '#2563eb',
-      iconBg: '#eff6ff'
-    },
-    {
-      id: 'mat_3',
-      title: 'Introduction to Force',
-      sub: 'Science  •  15 May 2024',
-      details: 'Video  •  12:45 min',
-      icon: Video,
-      iconColor: '#16a34a',
-      iconBg: '#ecfdf5'
-    },
-    {
-      id: 'mat_4',
-      title: 'Periodic Table (Interactive)',
-      sub: 'Science  •  14 May 2024',
-      details: 'Link',
-      icon: Link,
-      iconColor: '#ea580c',
-      iconBg: '#ffedd5'
-    }
-  ];
+  const [allMaterials, setAllMaterials] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const allMaterials = [
-    {
-      id: 'mat_5',
-      title: 'Tenses in English Grammar',
-      sub: 'English  •  12 May 2024',
-      details: 'PDF  •  1.2 MB',
-      icon: FileText,
-      iconColor: '#2563eb',
-      iconBg: '#eff6ff'
-    }
-  ];
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        const res = await fetch(`http://10.0.2.2:5000/api/v1/study-materials`);
+        const data = await res.json();
+        
+        if (data.data && data.data.materials) {
+          const formatted = data.data.materials.map((item: any) => {
+            let iconComp = FileText;
+            let iconColor = '#dc2626';
+            let iconBg = '#fef2f2';
+            
+            const fileType = item.attachments[0]?.fileType || 'PDF';
+            if (fileType === 'LINK') {
+              iconComp = Link;
+              iconColor = '#ea580c';
+              iconBg = '#ffedd5';
+            } else if (fileType === 'VIDEO') {
+              iconComp = Video;
+              iconColor = '#16a34a';
+              iconBg = '#ecfdf5';
+            }
+
+            return {
+              id: item._id,
+              title: item.title,
+              sub: `${item.subjectId?.subjectName || 'Subject'}  •  ${new Date(item.createdAt).toLocaleDateString()}`,
+              details: `${fileType}  •  ${item.attachments[0]?.fileSize || 'Unknown Size'}`,
+              icon: iconComp,
+              iconColor: iconColor,
+              iconBg: iconBg,
+              type: fileType === 'LINK' ? 'Links' : fileType
+            };
+          });
+          setAllMaterials(formatted);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMaterials();
+  }, []);
+
+  const filteredMaterials = activeTab === 'All' 
+    ? allMaterials 
+    : allMaterials.filter(m => m.type === activeTab || (activeTab === 'Notes' && m.type === 'PDF'));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -125,35 +126,10 @@ export default function MaterialLibraryScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* RECENT MATERIALS */}
-        <Text style={styles.sectionTitle}>Recent Materials</Text>
-        <View style={styles.listContainer}>
-          {recentMaterials.map((mat) => {
-            const IconComp = mat.icon;
-            return (
-              <View key={mat.id} style={styles.materialCard}>
-                <View style={[styles.iconBox, { backgroundColor: mat.iconBg }]}>
-                  <IconComp size={20} color={mat.iconColor} />
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.materialTitle}>{mat.title}</Text>
-                  <Text style={styles.materialSub}>{mat.sub}</Text>
-                  <Text style={styles.materialDetails}>{mat.details}</Text>
-                </View>
-
-                <TouchableOpacity onPress={() => Alert.alert('Options', 'Action triggers...')}>
-                  <MoreVertical size={18} color="#94a3b8" />
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-        </View>
-
         {/* ALL MATERIALS */}
         <Text style={[styles.sectionTitle, { marginTop: 20 }]}>All Materials</Text>
         <View style={styles.listContainer}>
-          {allMaterials.map((mat) => {
+          {filteredMaterials.map((mat) => {
             const IconComp = mat.icon;
             return (
               <View key={mat.id} style={styles.materialCard}>

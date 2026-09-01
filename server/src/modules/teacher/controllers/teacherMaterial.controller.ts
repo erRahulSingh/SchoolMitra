@@ -8,17 +8,7 @@ import { asyncHandler } from "../../../utils/asyncHandler";
 import { StudyMaterialModel } from "../../../models/AcademicSchemas";
 import { TeacherAssignmentModel } from "../../../models/SchoolSchemas";
 import mongoose from "mongoose";
-
-function emitParentSyncEvent(eventName: string, payload: any) {
-  try {
-    const io = (global as any).io;
-    const now = new Date().toISOString();
-    if (io) {
-      io.emit("teacher:announcement_created", { eventName: "teacher:announcement_created", ...payload, timestamp: now });
-      io.emit("parent:notification_update", { eventName: "parent:notification_update", title: payload.title, body: payload.message, ...payload, timestamp: now });
-    }
-  } catch (err) {}
-}
+import { createNotification } from "../../../services/notificationService";
 
 // ════════════ 1. GET /api/v1/teacher/materials — List Study Materials ════════════
 export const getTeacherMaterials = asyncHandler(async (req: Request, res: Response) => {
@@ -119,12 +109,15 @@ export const uploadTeacherMaterial = asyncHandler(async (req: Request, res: Resp
     status: "Active"
   });
 
-  emitParentSyncEvent("PARENT_MATERIAL_UPLOADED", {
+  await createNotification({
+    schoolId: schoolId.toString(),
+    senderId: teacherId.toString(),
+    recipientId: classId.toString(),
+    recipientRole: "Parent",
+    type: "MESSAGE",
     title: `New Study Material Shared: ${title} 📚`,
-    message: `New study material "${title}" uploaded for class. Check student portal.`,
-    classId,
-    sectionId
-  });
+    message: `New study material "${title}" uploaded for class. Check student portal.`
+  }).catch(() => {});
 
   return ApiResponse.created(res, "Study material metadata uploaded successfully!", { material });
 });

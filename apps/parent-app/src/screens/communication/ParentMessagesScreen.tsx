@@ -1,63 +1,71 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
-import { ChevronLeft, Search, MoreVertical, Building2, Users, Bus, Gift, User } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, ActivityIndicator, Dimensions } from 'react-native';
+import { ChevronLeft, Search, MoreVertical, Building2, Users, Bus, Gift, MessageCircle } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
 
 export default function ParentMessagesScreen({ navigation }: any) {
   const [activeFilter, setActiveFilter] = useState('All');
+  const [messagesList, setMessagesList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filters = ['All', 'School', 'Teachers', 'Class', 'Groups'];
+  const filters = ['All', 'Teachers', 'School', 'Transport'];
 
-  const messagesList = [
-    {
-      sender: 'Mrs. Priya Singh',
-      preview: 'Dear Parent, please remind Rohan to complete the maths homework.',
-      time: '10:30 AM',
-      unreadCount: 2,
-      category: 'Teachers',
-      isTeacher: true,
-      initials: 'PS',
-    },
-    {
-      sender: 'Class 5th – A',
-      preview: 'Reminder: PTM will be held on 20th May 2025.',
-      time: 'Yesterday',
-      unreadCount: 0,
-      category: 'Class',
-      icon: Users,
-      color: '#e11d48',
-      bg: '#ffe4e6',
-    },
-    {
-      sender: 'School Admin',
-      preview: 'Holiday on 15th May 2025 on account of Buddha Purnima.',
-      time: '2 May',
-      unreadCount: 0,
-      category: 'School',
-      icon: Building2,
-      color: '#0284c7',
-      bg: '#e0f2fe',
-    },
-    {
-      sender: 'Transport Dept.',
-      preview: 'Bus route timing changed from 5th May. Please check.',
-      time: '30 Apr',
-      unreadCount: 0,
-      category: 'School',
-      icon: Bus,
-      color: '#16a34a',
-      bg: '#dcfce7',
-    },
-    {
-      sender: 'Events & Activities',
-      preview: 'Annual Sports Day on 25th May 2025. Join us!',
-      time: '28 Apr',
-      unreadCount: 0,
-      category: 'Groups',
-      icon: Gift,
-      color: '#ea580c',
-      bg: '#ffedd5',
-    },
-  ];
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        setLoading(true);
+        // Fetch Chat Conversations
+        const chatRes = await fetch("http://10.0.2.2:5000/api/v1/chat/conversations?userId=parent_1");
+        const chatJson = await chatRes.json();
+        
+        // Fetch Notices
+        const noticeRes = await fetch("http://10.0.2.2:5000/api/v1/communication/notices");
+        const noticeJson = await noticeRes.json();
+
+        let combined: any[] = [];
+
+        if (chatJson.success && chatJson.data.conversations) {
+          const chats = chatJson.data.conversations.map((c: any) => ({
+            id: c._id,
+            isChat: true,
+            sender: c.name,
+            preview: c.lastMessage || 'No messages yet.',
+            time: new Date(c.lastMessageAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+            unreadCount: 1, // Mock unread
+            category: 'Teachers',
+            isTeacher: true,
+            initials: c.name.substring(0, 2).toUpperCase(),
+          }));
+          combined = [...combined, ...chats];
+        }
+
+        if (noticeJson.success && noticeJson.data.notices) {
+          const notices = noticeJson.data.notices.map((n: any) => ({
+            id: n._id,
+            isChat: false,
+            sender: n.title,
+            preview: n.content,
+            time: new Date(n.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+            unreadCount: 0,
+            category: n.targetAudience === 'School' ? 'School' : n.targetAudience,
+            icon: n.targetAudience === 'School' ? Building2 : Bus,
+            color: n.targetAudience === 'School' ? '#0284c7' : '#16a34a',
+            bg: n.targetAudience === 'School' ? '#e0f2fe' : '#dcfce7',
+          }));
+          combined = [...combined, ...notices];
+        }
+
+        setMessagesList(combined);
+      } catch (err) {
+        console.error("Error fetching inbox", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, []);
 
   const filteredMessages = activeFilter === 'All'
     ? messagesList
@@ -72,13 +80,10 @@ export default function ParentMessagesScreen({ navigation }: any) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Messages</Text>
+        <Text style={styles.headerTitle}>Inbox & Notices</Text>
         <View style={styles.headerRightRow}>
           <TouchableOpacity style={styles.iconActionBtn}>
             <Search size={20} color="#0f172a" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconActionBtn}>
-            <MoreVertical size={20} color="#0f172a" />
           </TouchableOpacity>
         </View>
       </View>
@@ -105,46 +110,60 @@ export default function ParentMessagesScreen({ navigation }: any) {
         </ScrollView>
 
         {/* Chat Messages List Card */}
-        <View style={styles.chatListCard}>
-          {filteredMessages.map((item, idx) => {
-            const IconComp = item.icon;
-            return (
-              <TouchableOpacity
-                key={idx}
-                style={[styles.chatRow, idx < filteredMessages.length - 1 && styles.rowBorder]}
-                onPress={() => navigation.navigate('CommunicationHub')}
-                activeOpacity={0.75}
-              >
-                {/* Avatar / Icon Circle */}
-                {item.isTeacher ? (
-                  <View style={styles.avatarTeacherCircle}>
-                    <Text style={styles.avatarTeacherText}>{item.initials}</Text>
-                  </View>
-                ) : (
-                  <View style={[styles.iconCircle, { backgroundColor: item.bg }]}>
-                    <IconComp size={20} color={item.color} strokeWidth={2} />
-                  </View>
-                )}
+        {loading ? (
+           <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
+        ) : (
+          <View style={styles.chatListCard}>
+            {filteredMessages.map((item, idx) => {
+              const IconComp = item.icon || MessageCircle;
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  style={[styles.chatRow, idx < filteredMessages.length - 1 && styles.rowBorder]}
+                  onPress={() => {
+                    if (item.isChat) {
+                      navigation.navigate('ChatDetail', { roomId: item.id, chatName: item.sender });
+                    }
+                  }}
+                  activeOpacity={0.75}
+                >
+                  {/* Avatar / Icon Circle */}
+                  {item.isTeacher ? (
+                    <View style={styles.avatarTeacherCircle}>
+                      <Text style={styles.avatarTeacherText}>{item.initials}</Text>
+                    </View>
+                  ) : (
+                    <View style={[styles.iconCircle, { backgroundColor: item.bg }]}>
+                      <IconComp size={20} color={item.color} strokeWidth={2} />
+                    </View>
+                  )}
 
-                {/* Content */}
-                <View style={styles.chatContentCol}>
-                  <View style={styles.senderTimeRow}>
-                    <Text style={styles.senderNameText}>{item.sender}</Text>
-                    <Text style={styles.timeText}>{item.time}</Text>
+                  {/* Content */}
+                  <View style={styles.chatContentCol}>
+                    <View style={styles.senderTimeRow}>
+                      <Text style={styles.senderNameText} numberOfLines={1}>{item.sender}</Text>
+                      <Text style={styles.timeText}>{item.time}</Text>
+                    </View>
+                    <Text style={styles.previewText} numberOfLines={2}>{item.preview}</Text>
                   </View>
-                  <Text style={styles.previewText} numberOfLines={2}>{item.preview}</Text>
-                </View>
 
-                {/* Unread Red Circle Badge */}
-                {item.unreadCount > 0 && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadBadgeText}>{item.unreadCount}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                  {/* Unread Red Circle Badge */}
+                  {item.unreadCount > 0 && (
+                    <View style={styles.unreadBadge}>
+                      <Text style={styles.unreadBadgeText}>{item.unreadCount}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+
+            {filteredMessages.length === 0 && (
+              <View style={{ padding: 30, alignItems: 'center' }}>
+                <Text style={{ color: '#64748b' }}>No messages found.</Text>
+              </View>
+            )}
+          </View>
+        )}
 
       </ScrollView>
     </View>
@@ -223,7 +242,7 @@ const styles = StyleSheet.create({
   },
   chatContentCol: { flex: 1 },
   senderTimeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  senderNameText: { fontSize: 14, fontWeight: '900', color: '#0f172a' },
+  senderNameText: { fontSize: 14, fontWeight: '900', color: '#0f172a', flex: 1, marginRight: 8 },
   timeText: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
   previewText: { fontSize: 12, color: '#64748b', lineHeight: 17, fontWeight: '500' },
   unreadBadge: {

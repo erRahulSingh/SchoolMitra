@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import mongoose from "mongoose";
-import { SchoolModel, UserModel, ParentModel } from "../models/AuthSchemas";
+import { SchoolModel, UserModel} from "../models/AuthSchemas";
 import { 
   NotificationModel, 
   DeviceTokenModel, 
@@ -172,3 +172,4 @@ async function run() {
 }
 
 run();
+

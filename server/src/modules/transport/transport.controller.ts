@@ -16,6 +16,7 @@ import { ApiResponse } from "../../utils/ApiResponse";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { createNotification } from "../../services/notificationService";
+import { mapRouter } from "../../utils/mapRouter";
 import { Types } from "mongoose";
 
 // In-Memory SOS & Active Trips Store
@@ -427,6 +428,40 @@ export const getStudentTransportAssignments = asyncHandler(async (req: Request, 
   return ApiResponse.success(res, 200, "Student transport assignments list retrieved.", { assignments });
 });
 
+export const assignStudentTransportBulk = asyncHandler(async (req: Request, res: Response) => {
+  const { assignments, academicYearId } = req.body;
+
+  if (!assignments || !Array.isArray(assignments)) {
+    throw ApiError.badRequest("assignments array is required.");
+  }
+
+  // Iterate and upsert all assignments
+  const results = [];
+  for (const assign of assignments) {
+    if (!assign.studentId || !assign.routeId) continue;
+    
+    const payload: any = {
+      schoolId: dummySchoolId,
+      studentId: assign.studentId,
+      busId: assign.busId || undefined,
+      routeId: assign.routeId,
+      pickupStopId: assign.pickupStopId || undefined,
+      dropStopId: assign.dropStopId || undefined,
+      academicYearId: academicYearId || undefined,
+      status: assign.status || "Active"
+    };
+
+    const doc = await StudentRouteModel.findOneAndUpdate(
+      { schoolId: dummySchoolId, studentId: assign.studentId },
+      payload,
+      { new: true, upsert: true }
+    );
+    results.push(doc);
+  }
+
+  return ApiResponse.success(res, 200, "Bulk Student transport settings assigned successfully.", { count: results.length, assignments: results });
+});
+
 // ════════════ 7. SOS EMERGENCY SAFETY ALERTS ════════════
 export const triggerSOSAlert = asyncHandler(async (req: Request, res: Response) => {
   const { busNo = "Bus #01", driverName = "Ram Singh", location = "Dwarka Sector 12 Flyover" } = req.body;
@@ -446,6 +481,7 @@ export const triggerSOSAlert = asyncHandler(async (req: Request, res: Response) 
   const senderId = (req as any).user?.id || (req as any).user?._id;
 
   if ((req as any).user) {
+    // Notify Admin
     createNotification({
       schoolId,
       senderId,
@@ -454,6 +490,18 @@ export const triggerSOSAlert = asyncHandler(async (req: Request, res: Response) 
       type: "TRANSPORT",
       title: `🚨 EMERGENCY SOS BROADCAST: ${busNo}`,
       message: `Emergency Alert from ${busNo} driven by ${driverName} at ${location}. Control room notified.`,
+      referenceType: "buses"
+    }).catch(() => {});
+
+    // Notify Parents
+    createNotification({
+      schoolId,
+      senderId,
+      recipientId: "all_parents_of_bus", // Prototype hook
+      recipientRole: "Parent",
+      type: "TRANSPORT",
+      title: `🚨 BUS EMERGENCY ALERT: ${busNo}`,
+      message: `Driver ${driverName} has triggered an SOS alert at ${location}. School Admin has been notified.`,
       referenceType: "buses"
     }).catch(() => {});
   }
@@ -537,4 +585,16 @@ export const getLiveTransport = asyncHandler(async (req: Request, res: Response)
     { busId: "BUS-02", latitude: 28.5700, longitude: 77.1200, speed: 40, heading: 180, status: "ACTIVE", lastUpdated: "1 minute ago" }
   ];
   return ApiResponse.success(res, 200, "Live transport telemetry active lists.", { liveLocations });
+});
+
+// ════════════ 8. MAP CONFIGURATION (API KEY ROTATION) ════════════
+export const getMapConfig = asyncHandler(async (req: Request, res: Response) => {
+  // Get the next available token from the rotation pool
+  const activeToken = mapRouter.getNextKey();
+  
+  return ApiResponse.success(res, 200, "Map configuration and access token retrieved", {
+    provider: "mapbox",
+    styleUrl: "mapbox://styles/mapbox/streets-v12",
+    accessToken: activeToken
+  });
 });

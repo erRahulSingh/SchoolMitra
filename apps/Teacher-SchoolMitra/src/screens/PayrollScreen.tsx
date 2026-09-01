@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import {
   ChevronLeft,
@@ -20,19 +21,40 @@ import {
   Award
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { teacherApi } from '../services/apiService';
 
 export default function PayrollScreen({ navigation }: any) {
+  const [salary, setSalary] = useState<any>({
+    month: 'May 2024',
+    amount: '₹0',
+    date: 'N/A'
+  });
+  const [recentPayments, setRecentPayments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulated fetch for HR Payroll (since backend mostly handles leaves right now)
+    // We could fetch from /api/v1/leave/balance as a proxy if we wanted real data
+    setTimeout(() => {
+      setSalary({
+        month: 'May 2024',
+        amount: '₹48,000',
+        date: '05 May 2024'
+      });
+      setRecentPayments([
+        { id: '1', month: 'May 2024', date: '05 May 2024', amt: '₹48,000', status: 'Credited', color: '#16a34a', bg: '#ecfdf5' },
+        { id: '2', month: 'April 2024', date: '05 Apr 2024', amt: '₹48,000', status: 'Credited', color: '#16a34a', bg: '#ecfdf5' },
+        { id: '3', month: 'March 2024', date: '05 Mar 2024', amt: '₹47,000', status: 'Credited', color: '#16a34a', bg: '#ecfdf5' }
+      ]);
+      setLoading(false);
+    }, 500);
+  }, []);
+
   const actions = [
     { label: 'Salary Slips', icon: FileText, color: '#7c3aed', bg: '#f3e8ff' },
     { label: 'Payment History', icon: History, color: '#ea580c', bg: '#ffedd5' },
     { label: 'Tax Documents', icon: FileSpreadsheet, color: '#2563eb', bg: '#eff6ff' },
     { label: 'Bank Details', icon: Building, color: '#16a34a', bg: '#ecfdf5' }
-  ];
-
-  const recentPayments = [
-    { id: '1', month: 'May 2024', date: '05 May 2024', amt: '₹48,000', status: 'Credited', color: '#16a34a', bg: '#ecfdf5' },
-    { id: '2', month: 'April 2024', date: '05 Apr 2024', amt: '₹48,000', status: 'Credited', color: '#16a34a', bg: '#ecfdf5' },
-    { id: '3', month: 'March 2024', date: '05 Mar 2024', amt: '₹47,000', status: 'Credited', color: '#16a34a', bg: '#ecfdf5' }
   ];
 
   return (
@@ -72,17 +94,17 @@ export default function PayrollScreen({ navigation }: any) {
         <View style={styles.salaryCard}>
           <View style={styles.salaryHeaderRow}>
             <Text style={styles.salaryLabel}>This Month Salary</Text>
-            <Text style={styles.salaryMonth}>May 2024</Text>
+            <Text style={styles.salaryMonth}>{salary.month}</Text>
           </View>
 
           <View style={styles.amountRow}>
-            <Text style={styles.salaryAmount}>₹48,000</Text>
+            <Text style={styles.salaryAmount}>{salary.amount}</Text>
             <View style={styles.creditedBadge}>
               <Text style={styles.creditedBadgeText}>Credited</Text>
             </View>
           </View>
 
-          <Text style={styles.creditedSubtext}>Credited on 5 May 2024</Text>
+          <Text style={styles.creditedSubtext}>Credited on {salary.date}</Text>
         </View>
 
         {/* ACTIONS GRID (2x2) */}
@@ -114,21 +136,25 @@ export default function PayrollScreen({ navigation }: any) {
 
         {/* LIST CARDS */}
         <View style={styles.listContainer}>
-          {recentPayments.map((p) => (
-            <View key={p.id} style={styles.paymentCard}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.paymentMonth}>{p.month}</Text>
-                <Text style={styles.paymentDate}>{p.date}</Text>
-              </View>
+          {loading ? (
+             <ActivityIndicator size="small" color="#7c3aed" style={{ marginTop: 20 }} />
+          ) : (
+            recentPayments.map((p) => (
+              <View key={p.id} style={styles.paymentCard}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.paymentMonth}>{p.month}</Text>
+                  <Text style={styles.paymentDate}>{p.date}</Text>
+                </View>
 
-              <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                <Text style={styles.paymentAmt}>{p.amt}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: p.bg }]}>
-                  <Text style={[styles.statusText, { color: p.color }]}>{p.status}</Text>
+                <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                  <Text style={styles.paymentAmt}>{p.amt}</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: p.bg }]}>
+                    <Text style={[styles.statusText, { color: p.color }]}>{p.status}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

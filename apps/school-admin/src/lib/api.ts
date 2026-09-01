@@ -144,7 +144,6 @@ export const schoolAdminApi = {
   startTrip: (data: any) => apiRequest("/transport/trip/start", { method: "POST", body: JSON.stringify(data) }),
   endTrip: (data: any) => apiRequest("/transport/trip/end", { method: "POST", body: JSON.stringify(data) }),
   triggerSOS: (data: any) => apiRequest("/transport/sos/trigger", { method: "POST", body: JSON.stringify(data) }),
-  createBus: (payload: any) => apiRequest("/transport/buses", { method: "POST", body: JSON.stringify(payload) }),
   getSOSAlerts: () => apiRequest("/transport/sos/alerts"),
   getLiveMapFleet: () => apiRequest("/gps/live-map"),
 

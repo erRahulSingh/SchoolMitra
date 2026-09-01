@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Animated, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
@@ -108,6 +108,21 @@ function AppNavigator() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerAnim = useRef(new Animated.Value(0)).current;
   const navigationRef = useRef<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { default: Location } = await import('expo-location');
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          // You can also use an Alert here to enforce it
+          console.warn('GPS Location permission is mandatory for Driver tracking.');
+        }
+      } catch (err) {
+        console.error('Failed to request location permissions', err);
+      }
+    })();
+  }, []);
 
   const openDrawer = () => {
     setDrawerOpen(true);

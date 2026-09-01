@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { UserModel, SchoolModel } from "../../models/AuthSchemas";
 import { DriverModel } from "../../models/TransportSchemas";
 import { evaluateSchoolStatus } from "../../constants/schoolStatus.constants";

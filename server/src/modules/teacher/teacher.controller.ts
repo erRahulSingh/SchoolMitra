@@ -246,6 +246,7 @@ export const getStudentPerformanceAnalytics = asyncHandler(async (req: Request, 
   }
 
   const calculated = await AcademicAnalyticsService.calculateStudentPerformance(String(student._id), schoolId);
+  const rc: any = null; // Fallback for report card
 
   return ApiResponse.success(res, 200, `360° Performance Analytics for student ${targetStudentId} retrieved`, {
     studentInfo: {

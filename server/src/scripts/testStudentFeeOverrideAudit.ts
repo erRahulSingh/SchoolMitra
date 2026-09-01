@@ -4,8 +4,8 @@
 // ═══════════════════════════════════════════════════════════
 
 import mongoose from "mongoose";
-import { SchoolModel, UserModel, ParentModel } from "../models/AuthSchemas";
-import { StudentModel } from "../models/SchoolSchemas";
+import { SchoolModel, UserModel} from "../models/AuthSchemas";
+import { StudentModel , ParentModel } from "../models/SchoolSchemas";
 import { FeeAdjustmentAuditModel } from "../models/FeeSchemas";
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/schoolmitra";
@@ -90,3 +90,4 @@ async function run() {
 }
 
 run();
+

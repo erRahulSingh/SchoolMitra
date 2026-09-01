@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,56 +24,37 @@ export default function AssignmentListScreen({ navigation }: any) {
 
   const tabs = ['All', 'Active', 'Submitted', 'Overdue'];
 
-  const assignmentsList = [
-    {
-      id: 'as_1',
-      title: 'Maths Assignment - 3',
-      classSubject: 'Class 8 - A • Mathematics',
-      due: 'Due: 25 May 2024',
-      progress: '32 Submitted / 42',
-      status: 'Active',
-      statusColor: '#16a34a',
-      statusBg: '#ecfdf5',
-      iconColor: '#16a34a',
-      iconBg: '#ecfdf5'
-    },
-    {
-      id: 'as_2',
-      title: 'Science Assignment - 2',
-      classSubject: 'Class 8 - A • Science',
-      due: 'Due: 27 May 2024',
-      progress: '28 Submitted / 42',
-      status: 'Active',
-      statusColor: '#16a34a',
-      statusBg: '#ecfdf5',
-      iconColor: '#7c3aed',
-      iconBg: '#f3e8ff'
-    },
-    {
-      id: 'as_3',
-      title: 'English Assignment - 1',
-      classSubject: 'Class 8 - A • English',
-      due: 'Due: 18 May 2024',
-      progress: '42 Submitted / 42',
-      status: 'Overdue',
-      statusColor: '#dc2626',
-      statusBg: '#fef2f2',
-      iconColor: '#ea580c',
-      iconBg: '#ffedd5'
-    },
-    {
-      id: 'as_4',
-      title: 'Social Science - Project',
-      classSubject: 'Class 8 - A • S.St',
-      due: 'Due: 02 Jun 2024',
-      progress: '0 Submitted / 42',
-      status: 'Draft',
-      statusColor: '#ea580c',
-      statusBg: '#ffedd5',
-      iconColor: '#ef4444',
-      iconBg: '#fef2f2'
-    }
-  ];
+  const [assignmentsList, setAssignmentsList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        const res = await fetch(`http://10.0.2.2:5000/api/v1/assignments?teacherId=647b0a7d903e1c001f3eabc3`); // Mock teacherId
+        const data = await res.json();
+        if (data.data && data.data.assignments) {
+          const formatted = data.data.assignments.map((item: any, idx: number) => ({
+            id: String(item._id),
+            title: item.title,
+            classSubject: `${item.classId?.className || 'Class'} • ${item.subjectId?.subjectName || 'Subject'}`,
+            due: `Due: ${new Date(item.dueDate).toLocaleDateString()}`,
+            progress: `${item.submissions?.length || 0} Submitted / ${item.maxMarks} Marks`,
+            status: item.status === 'PUBLISHED' ? 'Active' : item.status,
+            statusColor: item.status === 'PUBLISHED' ? '#16a34a' : '#ea580c',
+            statusBg: item.status === 'PUBLISHED' ? '#ecfdf5' : '#ffedd5',
+            iconColor: idx % 2 === 0 ? '#16a34a' : '#7c3aed',
+            iconBg: idx % 2 === 0 ? '#ecfdf5' : '#f3e8ff'
+          }));
+          setAssignmentsList(formatted);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAssignments();
+  }, []);
 
   const filtered = assignmentsList.filter(as =>
     activeTab === 'All' ? true : as.status === activeTab || (activeTab === 'Submitted' && as.status === 'Completed')

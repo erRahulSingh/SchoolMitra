@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Linking } from 'react-native';
 import { ChevronLeft, Building, Phone, Mail, MapPin, Globe, Share2, MessageCircle, Youtube, Instagram, Facebook, Twitter, Linkedin } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,9 +14,39 @@ export default function AboutSchoolScreen({ navigation }: any) {
     { name: 'LinkedIn', handle: 'Green Valley Educational Trust', icon: Linkedin, color: '#0a66c2', bg: '#e8f2fe', url: 'https://linkedin.com' },
   ];
 
+  const [schoolInfo, setSchoolInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSchoolInfo = async () => {
+      try {
+        // Fetching the first school or specific tenant ID
+        const res = await fetch('http://10.0.2.2:5000/api/v1/schools');
+        const data = await res.json();
+        if (data.data?.schools?.length > 0) {
+          setSchoolInfo(data.data.schools[0]);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSchoolInfo();
+  }, []);
+
   const handleOpenSocial = (url: string) => {
     Linking.openURL(url).catch(() => {});
   };
+
+  if (loading || !schoolInfo) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>Loading School Info...</Text>
+      </View>
+    );
+  }
+
 
   return (
     <View style={styles.container}>
@@ -31,7 +61,7 @@ export default function AboutSchoolScreen({ navigation }: any) {
           <View style={styles.logoCircle}>
             <Building size={32} color="#1e3a8a" />
           </View>
-          <Text style={styles.schoolName}>Green Valley Public School</Text>
+          <Text style={styles.schoolName}>{schoolInfo.name}</Text>
           <Text style={styles.motto}>Empowering Minds, Shaping Futures</Text>
         </View>
       </LinearGradient>
@@ -66,10 +96,10 @@ export default function AboutSchoolScreen({ navigation }: any) {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Contact Information</Text>
           {[
-            { label: 'Phone', value: '+91 522 234 5678', icon: Phone, color: '#16a34a', bg: '#dcfce7' },
-            { label: 'Email', value: 'info@greenvalley.edu.in', icon: Mail, color: '#2563eb', bg: '#e0f2fe' },
-            { label: 'Address', value: '45, Green Park Colony, Lucknow - 226001', icon: MapPin, color: '#d97706', bg: '#fef3c7' },
-            { label: 'Website', value: 'www.greenvalley.edu.in', icon: Globe, color: '#9333ea', bg: '#f3e8ff' },
+            { label: 'Phone', value: schoolInfo.phone, icon: Phone, color: '#16a34a', bg: '#dcfce7' },
+            { label: 'Email', value: schoolInfo.email, icon: Mail, color: '#2563eb', bg: '#e0f2fe' },
+            { label: 'Address', value: schoolInfo.address || schoolInfo.city, icon: MapPin, color: '#d97706', bg: '#fef3c7' },
+            { label: 'Website', value: `www.${schoolInfo.code}.edu.in`, icon: Globe, color: '#9333ea', bg: '#f3e8ff' },
           ].map((i, idx) => {
             const IconComp = i.icon;
             return (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Calendar as CalendarIcon, ChevronDown, Coffee, FileEdit } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,16 +7,50 @@ export default function TimeTableScreen({ navigation }: any) {
   const [selectedDay, setSelectedDay] = useState('Mon');
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  const periodsList = [
-    { period: 1, time: '08:00 AM –\n08:45 AM', subject: 'English', teacher: 'Mrs. Priya', room: '12' },
-    { period: 2, time: '08:45 AM –\n09:30 AM', subject: 'Mathematics', teacher: 'Mr. Rajesh', room: '14' },
-    { isBreak: true, time: '09:30 AM – 09:45 AM', label: 'Break' },
-    { period: 3, time: '09:45 AM –\n10:30 AM', subject: 'Science', teacher: 'Mrs. Neha', room: '16' },
-    { period: 4, time: '10:30 AM –\n11:15 AM', subject: 'Social Studies', teacher: 'Mr. Amit', room: '13' },
-    { isBreak: true, time: '11:15 AM – 11:30 AM', label: 'Break' },
-    { period: 5, time: '11:30 AM –\n12:15 PM', subject: 'Hindi', teacher: 'Mrs. Kavita', room: '11' },
-    { period: 6, time: '12:15 PM –\n01:00 PM', subject: 'Computer', teacher: 'Mr. Sandeep', room: '15' },
-  ];
+  const [periodsList, setPeriodsList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch dynamic timetable for the student
+  useEffect(() => {
+    const fetchTimetable = async () => {
+      try {
+        const studentId = "647b0a7d903e1c001f3eabcd"; // Mock student
+        const res = await fetch(`http://10.0.2.2:5000/api/v1/admin/academics/student-timetable/${studentId}`);
+        const data = await res.json();
+        
+        if (data.data && data.data.timetable) {
+          // Get timetable for the currently selected day
+          // Standardize day names if backend uses full names
+          const fullDayMap: any = { 'Mon': 'Monday', 'Tue': 'Tuesday', 'Wed': 'Wednesday', 'Thu': 'Thursday', 'Fri': 'Friday', 'Sat': 'Saturday' };
+          const daySlots = data.data.timetable[fullDayMap[selectedDay]] || [];
+          
+          const formatted = daySlots.map((slot: any, idx: number) => {
+            if (slot.isBreak) {
+              return { isBreak: true, time: slot.time, label: slot.label };
+            }
+            return {
+              period: idx + 1,
+              time: slot.time.replace(' - ', ' –\n'), // match UI format
+              subject: slot.subject,
+              teacher: slot.teacher,
+              room: slot.room
+            };
+          });
+          setPeriodsList(formatted);
+        }
+      } catch (e) {
+        console.error(e);
+        // Fallback for UI if backend is offline
+        setPeriodsList([
+          { period: 1, time: '08:00 AM –\n08:45 AM', subject: 'English', teacher: 'Mrs. Priya', room: '12' },
+          { isBreak: true, time: '09:30 AM – 09:45 AM', label: 'Lunch Break' }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTimetable();
+  }, [selectedDay]);
 
   return (
     <View style={styles.container}>

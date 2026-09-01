@@ -1,12 +1,41 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Alert, ActivityIndicator } from 'react-native';
 import { ChevronLeft, MoreVertical, AlertTriangle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function DueInvoicesScreen({ navigation }: any) {
+  const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [totalDue, setTotalDue] = useState(0);
+
+  useEffect(() => {
+    const studentId = "647b0a7d903e1c001f3eabcd"; // Example ID
+    fetch(`http://10.0.2.2:5000/api/v1/fees/ledger/${studentId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && data.data) {
+          setInvoices(data.data.dueInvoices || []);
+          setTotalDue(data.data.totalDues || 0);
+        }
+        setLoading(false);
+      })
+      .catch(e => {
+        console.error("Failed to fetch due invoices", e);
+        setLoading(false);
+      });
+  }, []);
+
   const handlePayNow = () => {
     Alert.alert('Redirecting to Payment Gateway 💳', 'Opening secure payment gateway...');
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#dc2626" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -34,8 +63,8 @@ export default function DueInvoicesScreen({ navigation }: any) {
         >
           <View style={styles.bannerLeft}>
             <Text style={styles.bannerLabelText}>Total Due</Text>
-            <Text style={styles.bannerAmountText}>₹ 8,000</Text>
-            <Text style={styles.bannerSubText}>1 Invoice Pending</Text>
+            <Text style={styles.bannerAmountText}>₹ {totalDue.toLocaleString()}</Text>
+            <Text style={styles.bannerSubText}>{invoices.length} Invoice{invoices.length !== 1 ? 's' : ''} Pending</Text>
           </View>
 
           <TouchableOpacity style={styles.bannerPayBtn} onPress={handlePayNow} activeOpacity={0.85}>
@@ -43,48 +72,56 @@ export default function DueInvoicesScreen({ navigation }: any) {
           </TouchableOpacity>
         </LinearGradient>
 
-        {/* Invoice Card */}
-        <View style={styles.invoiceCard}>
-          <Text style={styles.invoiceNoText}>Invoice #INV12560</Text>
+        {/* Invoice Cards */}
+        {invoices.map((inv: any, idx: number) => (
+          <View key={idx} style={styles.invoiceCard}>
+            <Text style={styles.invoiceNoText}>Invoice #{inv.invoiceNo}</Text>
 
-          <View style={styles.dividerLine} />
+            <View style={styles.dividerLine} />
 
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabelText}>Due Date</Text>
-            <Text style={styles.detailValText}>15 Jun 2025</Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabelText}>Due Date</Text>
+              <Text style={styles.detailValText}>{new Date(inv.dueDate).toLocaleDateString('en-IN')}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabelText}>Fee Type</Text>
+              <Text style={styles.detailValText}>{inv.components?.[0]?.name || 'Term Fee'} ({inv.month || 'Current'})</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabelText}>Amount</Text>
+              <Text style={styles.detailValText}>₹ {inv.totalAmount?.toLocaleString()}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabelText}>Late Fee</Text>
+              <Text style={styles.detailValText}>₹ {inv.lateFee || 0}</Text>
+            </View>
+
+            <View style={[styles.detailRow, { marginTop: 4 }]}>
+              <Text style={[styles.detailLabelText, { fontWeight: '900', color: '#0f172a' }]}>Balance Amount</Text>
+              <Text style={[styles.detailValText, { fontSize: 16, fontWeight: '900', color: '#0f172a' }]}>₹ {inv.balanceAmount?.toLocaleString()}</Text>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.actionsRow}>
+              <TouchableOpacity style={styles.viewInvoiceBtn} activeOpacity={0.75}>
+                <Text style={styles.viewInvoiceBtnText}>View Invoice</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.cardPayBtn} onPress={handlePayNow} activeOpacity={0.85}>
+                <Text style={styles.cardPayBtnText}>Pay Now</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+        ))}
 
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabelText}>Fee Type</Text>
-            <Text style={styles.detailValText}>Tuition Fee (Jun 2025)</Text>
+        {invoices.length === 0 && (
+          <View style={{ alignItems: 'center', marginTop: 20 }}>
+            <Text style={{ color: '#64748b', fontSize: 15 }}>No due invoices found.</Text>
           </View>
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabelText}>Amount</Text>
-            <Text style={styles.detailValText}>₹ 8,000</Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabelText}>Late Fee</Text>
-            <Text style={styles.detailValText}>₹ 0</Text>
-          </View>
-
-          <View style={[styles.detailRow, { marginTop: 4 }]}>
-            <Text style={[styles.detailLabelText, { fontWeight: '900', color: '#0f172a' }]}>Total Amount</Text>
-            <Text style={[styles.detailValText, { fontSize: 16, fontWeight: '900', color: '#0f172a' }]}>₹ 8,000</Text>
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.viewInvoiceBtn} activeOpacity={0.75}>
-              <Text style={styles.viewInvoiceBtnText}>View Invoice</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.cardPayBtn} onPress={handlePayNow} activeOpacity={0.85}>
-              <Text style={styles.cardPayBtnText}>Pay Now</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        )}
 
         {/* Warning Alert Box */}
         <View style={styles.warningAlertBox}>

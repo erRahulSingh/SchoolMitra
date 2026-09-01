@@ -589,7 +589,7 @@ export default function ReportsPage() {
                       <td>{row.className}</td>
                       <td style={{ fontWeight: 800, color: "var(--success)" }}>₹ {Number(row.amountPaid).toLocaleString("en-IN")}</td>
                       <td>₹ {Number(row.baseAmount).toLocaleString("en-IN")}</td>
-                      <td>₹ {Number(row.gst || row.gstAmount || 0).toLocaleString("en-IN")}</td>
+                      <td>₹ {Number(row.gst || (row as any).gstAmount || 0).toLocaleString("en-IN")}</td>
                       <td><span className="badge badge-info">{row.paymentMethod || row.paymentMode || "UPI"}</span></td>
                       <td><span className="badge badge-success">{row.status}</span></td>
                     </tr>

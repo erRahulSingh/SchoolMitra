@@ -15,11 +15,15 @@ import {
   startTrip,
   endTrip,
   assignStudentTransport,
+  assignStudentTransportBulk,
   getStudentTransportAssignments,
   assignBusRoute,
   getBusRouteAssignments,
+  getAssignments,
+  getLiveTransport,
   triggerSOSAlert,
-  getSOSAlerts
+  getSOSAlerts,
+  getMapConfig
 } from "./transport.controller";
 
 const router = Router();
@@ -44,6 +48,7 @@ router.post("/drivers", createDriver);
 router.post("/bus-route-assignments", assignBusRoute);
 router.get("/bus-route-assignments", getBusRouteAssignments);
 router.post("/student-assignments", assignStudentTransport);
+router.post("/student-assignments/bulk", assignStudentTransportBulk);
 router.get("/student-assignments", getStudentTransportAssignments);
 
 // Trips & Legacy Assignments
@@ -54,5 +59,8 @@ router.post("/assign-student", assignStudentTransport);
 // Emergency SOS Safety Alerts
 router.post("/sos/trigger", triggerSOSAlert);
 router.get("/sos/alerts", getSOSAlerts);
+
+// Map Configuration
+router.get("/map-config", getMapConfig);
 
 export default router;

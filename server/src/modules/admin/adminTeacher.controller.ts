@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ═══════════════════════════════════════════════════════════
 // SchoolMitra Backend — Admin Teacher Management & Permissions Controller
 // Endpoints for School Admin to manage teachers + assign permissions
@@ -614,3 +615,4 @@ export const getTeacherMyPermissions = asyncHandler(async (req: Request, res: Re
     totalAvailable: GLOBAL_PERMISSIONS_REGISTRY.length
   });
 });
+

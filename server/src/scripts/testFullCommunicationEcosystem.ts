@@ -5,8 +5,8 @@
 // ═══════════════════════════════════════════════════════════
 
 import mongoose from "mongoose";
-import { SchoolModel, UserModel, ParentModel } from "../models/AuthSchemas";
-import { ClassModel, SectionModel, StudentModel, TeacherAssignmentModel } from "../models/SchoolSchemas";
+import { SchoolModel, UserModel} from "../models/AuthSchemas";
+import { ClassModel, SectionModel, StudentModel, TeacherAssignmentModel , ParentModel } from "../models/SchoolSchemas";
 import { 
   NotificationModel, 
   DeviceTokenModel, 
@@ -231,3 +231,4 @@ async function runMasterE2ETestSuite() {
 }
 
 runMasterE2ETestSuite();
+

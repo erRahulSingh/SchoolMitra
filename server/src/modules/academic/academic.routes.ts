@@ -74,12 +74,56 @@ import {
   getTimetables,
   createTimetableEntry,
   updateTimetableEntry,
-  deleteTimetableEntry
+  deleteTimetableEntry,
+  getStudentTimetableHandler
 } from "./timetable.controller";
 
 router.get("/timetables", adminGuards, getTimetables);
 router.post("/timetables", adminGuards, createTimetableEntry);
 router.put("/timetables/:id", adminGuards, updateTimetableEntry);
 router.delete("/timetables/:id", adminGuards, deleteTimetableEntry);
+router.get("/student-timetable/:studentId", adminGuards, getStudentTimetableHandler);
+
+// ── Report Cards ──
+import {
+  uploadReportCard,
+  getStudentReportCards
+} from "./reportCard.controller";
+
+router.post("/report-card", adminGuards, uploadReportCard);
+router.get("/report-card/:studentId", adminGuards, getStudentReportCards);
+
+// ── Assignments ──
+import {
+  createAssignment,
+  getAssignments,
+  getStudentAssignments
+} from "./assignment.controller";
+
+router.post("/assignments", adminGuards, createAssignment);
+router.get("/assignments", adminGuards, getAssignments);
+router.get("/assignments/student/:studentId", adminGuards, getStudentAssignments);
+
+// ── Study Materials ──
+import {
+  uploadStudyMaterial,
+  getStudyMaterials,
+  getStudentStudyMaterials
+} from "./studyMaterial.controller";
+
+router.post("/study-materials", adminGuards, uploadStudyMaterial);
+router.get("/study-materials", adminGuards, getStudyMaterials);
+router.get("/study-materials/student/:studentId", adminGuards, getStudentStudyMaterials);
+
+// ── Exam Schedules ──
+import {
+  createExamSchedule,
+  getExamSchedules,
+  getStudentExamSchedules
+} from "./examSchedule.controller";
+
+router.post("/exams/schedules", adminGuards, createExamSchedule);
+router.get("/exams/schedules", adminGuards, getExamSchedules);
+router.get("/exams/schedules/student/:studentId", adminGuards, getStudentExamSchedules);
 
 export default router;

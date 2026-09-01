@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Calendar as CalendarIcon, ChevronDown, FileText, ChevronRight, CheckCircle2, Award } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,16 +8,55 @@ export default function ExamsScreen({ navigation }: any) {
 
   const tabs = ['Schedule', 'Results', 'Syllabus'];
 
-  const upcomingExams = [
-    { title: 'Unit Test – 1', date: '20 May 2025 – 24 May 2025', subjects: '4 Subjects', icon: FileText, color: '#7c3aed', bg: '#f3e8ff' },
-    { title: 'Half Yearly Exam', date: '15 Jun 2025 – 25 Jun 2025', subjects: 'All Subjects', icon: CalendarIcon, color: '#16a34a', bg: '#dcfce7' },
-    { title: 'Unit Test – 2', date: '20 Jul 2025 – 24 Jul 2025', subjects: '4 Subjects', icon: Award, color: '#ea580c', bg: '#ffedd5' },
-  ];
+  const [upcomingExams, setUpcomingExams] = useState<any[]>([]);
+  const [pastExams, setPastExams] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const pastExams = [
-    { title: 'Periodic Test – 2', date: '10 Mar 2025 – 14 Mar 2025', subjects: 'All Subjects', status: 'Completed', icon: FileText, color: '#2563eb', bg: '#e0f2fe' },
-    { title: 'Periodic Test – 1', date: '20 Jan 2025 – 24 Jan 2025', subjects: 'All Subjects', status: 'Completed', icon: FileText, color: '#2563eb', bg: '#e0f2fe' },
-  ];
+  useEffect(() => {
+    const fetchExams = async () => {
+      try {
+        const studentId = "647b0a7d903e1c001f3eabcd"; // Mock student
+        const classId = "647b0a7d903e1c001f3eabc1"; // Mock class
+        
+        const res = await fetch(`http://10.0.2.2:5000/api/v1/exams/schedules/student/${studentId}?classId=${classId}`);
+        const data = await res.json();
+        
+        if (data.data && data.data.schedules) {
+          const upcoming: any[] = [];
+          const past: any[] = [];
+          const now = new Date();
+
+          data.data.schedules.forEach((exam: any, idx: number) => {
+            const isPast = new Date(exam.endDate) < now || exam.status === 'Completed';
+            
+            const formatData = {
+              title: exam.examName,
+              date: `${new Date(exam.startDate).toLocaleDateString()} – ${new Date(exam.endDate).toLocaleDateString()}`,
+              subjects: exam.subjects?.length ? `${exam.subjects.length} Subjects` : (exam.examType || 'Exam'),
+              icon: isPast ? FileText : CalendarIcon,
+              color: isPast ? '#2563eb' : (idx % 2 === 0 ? '#7c3aed' : '#16a34a'),
+              bg: isPast ? '#e0f2fe' : (idx % 2 === 0 ? '#f3e8ff' : '#dcfce7'),
+              status: exam.status
+            };
+
+            if (isPast) {
+              past.push(formatData);
+            } else {
+              upcoming.push(formatData);
+            }
+          });
+
+          setUpcomingExams(upcoming);
+          setPastExams(past);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchExams();
+  }, []);
 
   return (
     <View style={styles.container}>

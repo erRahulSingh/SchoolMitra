@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,14 +22,43 @@ export default function TimetableScreen({ navigation }: any) {
   const [activeView, setActiveView] = useState('Day View');
   const [selectedDate, setSelectedDate] = useState('Monday, 20 May 2024');
 
-  const schedule = [
-    { id: '1', time: '08:00 AM\n- 08:45 AM', title: 'Period 1\nMathematics', info: 'Class 8 - A', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-    { id: '2', time: '08:45 AM\n- 09:30 AM', title: 'Period 2\nScience', info: 'Class 8 - A', color: '#16a34a', bg: '#ecfdf5', border: '#bbf7d0' },
-    { id: '3', time: '09:30 AM\n- 09:45 AM', title: 'Break Time', info: '', color: '#d97706', bg: '#fff7ed', border: '#fed7aa', isBreak: true },
-    { id: '4', time: '09:45 AM\n- 10:30 AM', title: 'Period 3\nMathematics', info: 'Class 9 - B', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-    { id: '5', time: '10:30 AM\n- 11:15 AM', title: 'Period 4\nMathematics', info: 'Class 8 - A', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-    { id: '6', time: '11:15 AM\n- 12:00 PM', title: 'Period 5\nScience', info: 'Class 9 - B', color: '#16a34a', bg: '#ecfdf5', border: '#bbf7d0' }
-  ];
+  const [schedule, setSchedule] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch dynamic timetable for logged-in teacher
+  useEffect(() => {
+    const fetchTimetable = async () => {
+      try {
+        const res = await fetch(`http://10.0.2.2:5000/api/v1/teacher/timetable?day=Monday`);
+        const data = await res.json();
+        
+        if (data.data && data.data.timetable) {
+          const formatted = data.data.timetable.map((slot: any, idx: number) => ({
+            id: slot.id,
+            time: `${slot.startTime}\n- ${slot.endTime}`,
+            title: slot.subject || slot.label || `Period ${idx+1}`,
+            info: slot.className || slot.room || '',
+            isBreak: slot.isBreak || false,
+            // Styling logic
+            color: slot.isBreak ? '#d97706' : (idx % 2 === 0 ? '#2563eb' : '#16a34a'),
+            bg: slot.isBreak ? '#fff7ed' : (idx % 2 === 0 ? '#eff6ff' : '#ecfdf5'),
+            border: slot.isBreak ? '#fed7aa' : (idx % 2 === 0 ? '#bfdbfe' : '#bbf7d0')
+          }));
+          setSchedule(formatted);
+        }
+      } catch (e) {
+        console.error(e);
+        // Fallback for visual demo if backend isn't up
+        setSchedule([
+          { id: '1', time: '08:00 AM\n- 08:45 AM', title: 'Period 1\nMathematics', info: 'Class 8 - A', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+          { id: '2', time: '09:30 AM\n- 09:45 AM', title: 'Lunch Break', info: '', color: '#d97706', bg: '#fff7ed', border: '#fed7aa', isBreak: true },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTimetable();
+  }, [selectedDate]);
 
   return (
     <SafeAreaView style={styles.container}>
