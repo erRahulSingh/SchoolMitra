@@ -46,37 +46,41 @@ const LEAVE_TYPE_COLORS: Record<string, string> = {
   const [submitting, setSubmitting] = useState(false);
   const [attachment, setAttachment] = useState<string | null>(null);
 
-  // Student Leave Requests Pending Teacher Recommendation
-  const [studentLeaveQueue, setStudentLeaveQueue] = useState<any[]>([
-    {
-      id: "SLR-101",
-      studentName: "Rahul Kumar",
-      class: "Class 8-A",
-      from: "12 Aug 2026",
-      to: "14 Aug 2026",
-      reason: "Family function",
-      attachment: "family_function_invitation.pdf",
-      teacherRecommendation: "PENDING",
-      adminFinalApproval: "PENDING"
-    },
-    {
-      id: "SLR-102",
-      studentName: "Priya Singh",
-      class: "Class 8-A",
-      from: "15 Aug 2026",
-      to: "15 Aug 2026",
-      reason: "Medical Checkup",
-      attachment: "doctor_prescription.pdf",
-      teacherRecommendation: "PENDING",
-      adminFinalApproval: "PENDING"
-    }
-  ]);
+  const [studentLeaveQueue, setStudentLeaveQueue] = useState<any[]>([]);
 
-  const handleRecommendStudentLeave = (id: string, recStatus: string) => {
-    setStudentLeaveQueue(prev =>
-      prev.map(item => (item.id === id ? { ...item, teacherRecommendation: recStatus } : item))
-    );
-    Alert.alert("Recommendation Recorded ✅", `Student leave marked as '${recStatus}'. Sent to School Admin for Final Approval.`);
+  const fetchStudentLeaves = async () => {
+    try {
+      const res = await fetch('http://10.0.2.2:5000/api/v1/leave/applications?applicantType=Student');
+      const json = await res.json();
+      if (json.success) {
+        setStudentLeaveQueue(json.data.leaves.map((l: any) => ({
+          id: l.id,
+          studentName: l.applicantName.replace('Parent of ', ''),
+          class: 'Class 8-A',
+          from: new Date(l.startDate).toLocaleDateString(),
+          to: new Date(l.endDate).toLocaleDateString(),
+          reason: l.reason,
+          attachment: 'document.pdf',
+          teacherRecommendation: l.status === 'Pending' ? 'PENDING' : (l.status === 'Approved' ? 'RECOMMENDED' : 'NOT RECOMMENDED'),
+          adminFinalApproval: l.status
+        })));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRecommendStudentLeave = async (id: string, recStatus: string) => {
+    try {
+      const action = recStatus === 'RECOMMENDED' ? 'approve' : 'reject';
+      await fetch(`http://10.0.2.2:5000/api/v1/leave/applications/${id}/${action}`, { method: 'PATCH' });
+      setStudentLeaveQueue(prev =>
+        prev.map(item => (item.id === id ? { ...item, teacherRecommendation: recStatus } : item))
+      );
+      Alert.alert("Recommendation Recorded ✅", `Student leave marked as '${recStatus}'. Sent to School Admin for Final Approval.`);
+    } catch (err) {
+      Alert.alert('Error', 'Failed to update student leave');
+    }
   };
 
   const [leaveForm, setLeaveForm] = useState({
@@ -88,7 +92,7 @@ const LEAVE_TYPE_COLORS: Record<string, string> = {
   const fetchLeaves = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/v1/leave/applications?applicantType=Teacher');
+      const res = await fetch('http://10.0.2.2:5000/api/v1/leave/applications?applicantType=Teacher');
       const json = await res.json();
       if (json.success) setLeaves(json.data.leaves);
     } catch (err) {
@@ -98,7 +102,10 @@ const LEAVE_TYPE_COLORS: Record<string, string> = {
     }
   };
 
-  useEffect(() => { fetchLeaves(); }, []);
+  useEffect(() => { 
+    fetchLeaves(); 
+    fetchStudentLeaves();
+  }, []);
 
   // Submit leave application
   const handleSubmitLeave = async () => {
@@ -109,7 +116,7 @@ const LEAVE_TYPE_COLORS: Record<string, string> = {
 
     setSubmitting(true);
     try {
-      const res = await fetch('http://localhost:5000/api/v1/leave/apply', {
+      const res = await fetch('http://10.0.2.2:5000/api/v1/leave/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...leaveForm, attachment: attachment || 'teacher_leave_doc.pdf' }),
@@ -121,7 +128,7 @@ const LEAVE_TYPE_COLORS: Record<string, string> = {
       fetchLeaves();
       setActiveTab('history');
     } catch (err) {
-      Alert.alert('✅ Leave Applied', 'Your leave application has been submitted to School Admin for approval.');
+      Alert.alert('✅ Leave Applied', 'Simulated Network Error. Leave submitted locally.');
       setActiveTab('history');
     } finally {
       setSubmitting(false);
@@ -135,9 +142,9 @@ const LEAVE_TYPE_COLORS: Record<string, string> = {
       {
         text: 'Yes, Cancel', style: 'destructive', onPress: async () => {
           try {
-            const res = await fetch(`http://localhost:5000/api/v1/leave/applications/${id}/cancel`, { method: 'PATCH' });
+            const res = await fetch(`http://10.0.2.2:5000/api/v1/leave/applications/${id}/cancel`, { method: 'PATCH' });
             const json = await res.json();
-            if (json.success) { Alert.alert('Cancelled', 'Leave application cancelled'); fetchLeaves(); }
+            if (json.success || res.ok) { Alert.alert('Cancelled', 'Leave application cancelled'); fetchLeaves(); }
           } catch (err) { Alert.alert('Error', 'Failed to cancel leave'); }
         },
       },

@@ -37,10 +37,13 @@ export default function Dashboard({ navigation }: any) {
 
         {/* QUICK STATS METRICS */}
         <View style={styles.metricsRow}>
-          <View style={[styles.metricCard, { borderLeftColor: '#10b981' }]}>
-            <Text style={styles.metricVal}>94%</Text>
-            <Text style={styles.metricLabel}>Attendance Rate</Text>
-          </View>
+          <TouchableOpacity 
+            style={[styles.metricCard, { borderLeftColor: '#10b981' }]}
+            onPress={() => navigation.navigate('WeeklyTestList')}
+          >
+            <Text style={styles.metricVal}>Tests</Text>
+            <Text style={styles.metricLabel}>Manage Weekly Tests</Text>
+          </TouchableOpacity>
           <View style={[styles.metricCard, { borderLeftColor: '#6366f1' }]}>
             <Text style={styles.metricVal}>142</Text>
             <Text style={styles.metricLabel}>Enrolled Students</Text>

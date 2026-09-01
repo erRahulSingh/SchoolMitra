@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import {
   ChevronLeft,
@@ -28,12 +29,35 @@ import {
 import Header from '../components/Header';
 
 export default function Profile({ navigation }: any) {
-  const teacher = {
-    name: 'Neha Sharma',
-    role: 'Mathematics Teacher',
-    email: 'neha.sharma@schoolmitra.com',
-    phone: '+91 98765 43210'
-  };
+  const [teacher, setTeacher] = useState<any>({
+    name: 'Loading...',
+    role: 'Teacher',
+    email: 'loading@schoolmitra.com',
+    phone: '+91 0000000000'
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('http://10.0.2.2:5000/api/v1/teacher/me');
+        const json = await res.json();
+        if (json.success) {
+          setTeacher({
+            name: json.data.user.name,
+            role: 'Mathematics Teacher', // Usually from backend if provided
+            email: json.data.user.email,
+            phone: json.data.user.phone || '+91 98765 43210'
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleLogout = () => {
     navigation.navigate('LogoutConfirmation');

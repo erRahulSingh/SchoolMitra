@@ -113,14 +113,32 @@ export default function ExamsPage() {
     ]
   });
 
-  // Persistent Cache Load
+  // Fetch from Real APIs
   useEffect(() => {
+    // Fetch Exams
+    fetch("http://localhost:5000/api/v1/exams")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && data.data.exams) {
+          const formattedExams = data.data.exams.map((ex: any) => ({
+            id: ex._id,
+            class: ex.classId?.className || "Class 10",
+            section: "A",
+            subject: ex.examName,
+            date: new Date(ex.startDate).toLocaleDateString(),
+            time: "09:00 AM",
+            room: "Hall A",
+            invigilator: "Admin"
+          }));
+          if (formattedExams.length > 0) setSchedules(formattedExams);
+        }
+      })
+      .catch(e => console.warn(e));
+
+    // Fallback load for types & grades
     try {
       const cachedTypes = localStorage.getItem("sm_exam_types");
       if (cachedTypes) setExamTypes(JSON.parse(cachedTypes));
-
-      const cachedSchedules = localStorage.getItem("sm_exam_schedules");
-      if (cachedSchedules) setSchedules(JSON.parse(cachedSchedules));
 
       const cachedMarks = localStorage.getItem("sm_exam_marks");
       if (cachedMarks) setMarksData(JSON.parse(cachedMarks));
@@ -128,6 +146,23 @@ export default function ExamsPage() {
   }, []);
 
   const [selectedExamTermId, setSelectedExamTermId] = useState("annual");
+  const [activeReportCard, setActiveReportCard] = useState<any>(null);
+
+  useEffect(() => {
+    if (activeTab === "report_cards" && selectedMarkStudentId) {
+      // In a real app we'd use the real DB student ID, but here we'll map the UI dummy ID to our fallback
+      const sid = selectedMarkStudentId === "10-A-01" ? "64d2f8e1234567890abcdef1" : "64d2f8e1234567890abcdef1"; 
+      fetch(`http://localhost:5000/api/v1/exams/report-card/${sid}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data.reportCard) {
+            setActiveReportCard(json.data.reportCard);
+          }
+        })
+        .catch(err => console.warn(err));
+    }
+  }, [activeTab, selectedMarkStudentId]);
+
   const [examTermAnalytics, setExamTermAnalytics] = useState<any>({
     term: "Annual Examination",
     students: 240,
@@ -256,20 +291,45 @@ export default function ExamsPage() {
     setIsScheduleModalOpen(true);
   };
 
-  const handleSaveSchedule = (e: React.FormEvent) => {
+  const handleSaveSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingScheduleId) {
       const updated = schedules.map(s => s.id === editingScheduleId ? { ...s, ...scheduleForm } : s);
       saveSchedules(updated);
+      setIsScheduleModalOpen(false);
     } else {
-      const created: ExamSchedule = {
-        id: `SCH-${Date.now()}`,
-        ...scheduleForm
-      };
-      const updated = [...schedules, created];
-      saveSchedules(updated);
+      try {
+        const res = await fetch("http://localhost:5000/api/v1/exams/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            examName: scheduleForm.subject,
+            classId: "650000000000000000000001", // Dummy class for demo
+            academicYearId: "650000000000000000000010",
+            startDate: scheduleForm.date
+          })
+        });
+        const json = await res.json();
+        if (json.success && json.data.exam) {
+          const ex = json.data.exam;
+          const created: ExamSchedule = {
+            id: ex._id,
+            class: scheduleForm.class,
+            section: scheduleForm.section,
+            subject: scheduleForm.subject,
+            date: new Date(ex.startDate).toLocaleDateString(),
+            time: scheduleForm.time,
+            room: scheduleForm.room,
+            invigilator: scheduleForm.invigilator
+          };
+          const updated = [...schedules, created];
+          setSchedules(updated);
+        }
+      } catch (err) {
+        console.warn("Exam create failed", err);
+      }
+      setIsScheduleModalOpen(false);
     }
-    setIsScheduleModalOpen(false);
   };
 
   const handleDeleteSchedule = (id: string) => {
@@ -652,20 +712,32 @@ export default function ExamsPage() {
                 <thead>
                   <tr style={{ borderBottom: "1.5px solid var(--border-color)", textTransform: "uppercase" }}>
                     <th style={{ textAlign: "left", padding: "0.5rem" }}>Scholastic Stream</th>
-                    <th style={{ padding: "0.5rem" }}>Theory (70)</th>
-                    <th style={{ padding: "0.5rem" }}>Practical (20)</th>
-                    <th style={{ padding: "0.5rem" }}>Internal (10)</th>
+                    <th style={{ padding: "0.5rem" }}>Theory / Ext</th>
+                    <th style={{ padding: "0.5rem" }}>Prac / Int</th>
+                    <th style={{ padding: "0.5rem" }}>Grade</th>
                     <th style={{ textAlign: "right", padding: "0.5rem" }}>Total Score</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
-                    <td style={{ padding: "0.5rem", fontWeight: 700 }}>Physics Paper</td>
-                    <td style={{ textAlign: "center" }}>{selectedDossierStudent.theory}</td>
-                    <td style={{ textAlign: "center" }}>{selectedDossierStudent.practical}</td>
-                    <td style={{ textAlign: "center" }}>{selectedDossierStudent.internal}</td>
-                    <td style={{ textAlign: "right", padding: "0.5rem", fontWeight: 700, color: "var(--primary)" }}>{selectedDossierStudent.theory + selectedDossierStudent.practical + selectedDossierStudent.internal}</td>
-                  </tr>
+                  {activeReportCard ? (
+                    activeReportCard.subjects?.map((sub: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                        <td style={{ padding: "0.5rem", fontWeight: 700 }}>{sub.subjectId?.subjectName || "Subject"}</td>
+                        <td style={{ textAlign: "center" }}>-</td>
+                        <td style={{ textAlign: "center" }}>-</td>
+                        <td style={{ textAlign: "center", color: "var(--primary)" }}>{sub.grade}</td>
+                        <td style={{ textAlign: "right", padding: "0.5rem", fontWeight: 700, color: "var(--primary)" }}>{sub.obtainedMarks} / {sub.maxMarks}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
+                      <td style={{ padding: "0.5rem", fontWeight: 700 }}>Physics Paper</td>
+                      <td style={{ textAlign: "center" }}>{selectedDossierStudent.theory}</td>
+                      <td style={{ textAlign: "center" }}>{selectedDossierStudent.practical}</td>
+                      <td style={{ textAlign: "center" }}>B+</td>
+                      <td style={{ textAlign: "right", padding: "0.5rem", fontWeight: 700, color: "var(--primary)" }}>{selectedDossierStudent.theory + selectedDossierStudent.practical + selectedDossierStudent.internal}</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
 

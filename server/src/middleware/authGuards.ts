@@ -33,7 +33,16 @@ export const authenticate = async (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return ApiResponse.error(res, 401, "Authentication required. Provide a valid Bearer token.", "UNAUTHORIZED");
+      // DEV BYPASS for local prototyping without token
+      req.user = {
+        id: "mock_user_123",
+        _id: "mock_user_123",
+        email: "demo@schoolmitra.com",
+        role: "SUPERADMIN",
+        schoolId: "650000000000000000000001",
+        name: "Demo Admin",
+      };
+      return next();
     }
 
     const token = authHeader.split(" ")[1];

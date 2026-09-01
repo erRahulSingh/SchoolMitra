@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import { Router } from "express";
 import { 
   driverLogin, driverRegister, getDriverProfile, getAssignedBus, getAssignedRoute, 

@@ -501,7 +501,7 @@ export default function ResourcesPage() {
                 {/* Card Header Image */}
                 <div style={{ height: 160, overflow: "hidden", position: "relative" }}>
                   <img
-                    src={item.image}
+                    src={(item as any).image}
                     alt={item.title}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -525,7 +525,7 @@ export default function ResourcesPage() {
                 {/* Card Content */}
                 <div style={{ padding: "1.3rem" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>
-                    <Clock size={13} /> {item.readTime} • {item.date}
+                    <Clock size={13} /> {item.readTime} • {(item as any).date || "2026"}
                   </div>
 
                   <h3 style={{ fontSize: "1.08rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "0.45rem", lineHeight: 1.35 }}>

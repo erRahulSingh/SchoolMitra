@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Filter, Megaphone, BookOpen, Trophy, Bus, FileText, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,58 +8,53 @@ export default function NoticeBoardScreen({ navigation }: any) {
 
   const categories = ['All', 'General', 'Academics', 'Events', 'Transport'];
 
-  const noticesList = [
-    {
-      category: 'General',
-      date: 'Today, 09:30 AM',
-      isNew: true,
-      title: 'Holiday on 15th May 2025',
-      desc: 'School will remain closed on 15th May 2025 on account of Buddha Purnima.',
-      icon: FileText,
-      color: '#2563eb',
-      bg: '#e0f2fe',
-    },
-    {
-      category: 'Academics',
-      date: 'Yesterday, 03:15 PM',
-      isNew: false,
-      title: 'PTM Schedule',
-      desc: 'Parent Teacher Meeting will be held on 20th May 2025.',
-      icon: BookOpen,
-      color: '#16a34a',
-      bg: '#dcfce7',
-    },
-    {
-      category: 'Events',
-      date: '2 May 2025, 11:20 AM',
-      isNew: false,
-      title: 'Annual Sports Day',
-      desc: 'Annual Sports Day will be held on 25th May 2025.',
-      icon: Trophy,
-      color: '#ea580c',
-      bg: '#ffedd5',
-    },
-    {
-      category: 'Transport',
-      date: '1 May 2025, 08:45 AM',
-      isNew: false,
-      title: 'Bus Route Update',
-      desc: 'Route timings for Bus No. UP32 AB 1234 have been changed from 5th May.',
-      icon: Bus,
-      color: '#2563eb',
-      bg: '#e0f2fe',
-    },
-    {
-      category: 'General',
-      date: '28 Apr 2025, 10:10 AM',
-      isNew: false,
-      title: 'Admission Open',
-      desc: 'Admissions are open for academic year 2025-26. Limited seats available.',
-      icon: FileText,
-      color: '#16a34a',
-      bg: '#dcfce7',
-    },
-  ];
+  const [noticesList, setNoticesList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        const res = await fetch('http://10.0.2.2:5000/api/v1/communication/notices');
+        const data = await res.json();
+        
+        if (data.data && data.data.notices) {
+          const formatted = data.data.notices.map((notice: any) => {
+            const isNew = new Date(notice.createdAt).getTime() > Date.now() - 24 * 60 * 60 * 1000;
+            // Map targetAudience to category loosely
+            let cat = 'General';
+            let icon = FileText;
+            let color = '#2563eb';
+            let bg = '#e0f2fe';
+            
+            if (notice.targetAudience === 'Parents' || notice.title.includes('PTM')) {
+              cat = 'Academics'; icon = BookOpen; color = '#16a34a'; bg = '#dcfce7';
+            } else if (notice.title.includes('Event') || notice.title.includes('Sports')) {
+              cat = 'Events'; icon = Trophy; color = '#ea580c'; bg = '#ffedd5';
+            } else if (notice.title.includes('Bus') || notice.title.includes('Transport')) {
+              cat = 'Transport'; icon = Bus; color = '#2563eb'; bg = '#e0f2fe';
+            }
+
+            return {
+              category: cat,
+              date: new Date(notice.createdAt).toLocaleDateString(),
+              isNew,
+              title: notice.title,
+              desc: notice.content || notice.description,
+              icon,
+              color,
+              bg
+            };
+          });
+          setNoticesList(formatted);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNotices();
+  }, []);
 
   const filteredNotices = activeCategory === 'All' 
     ? noticesList 

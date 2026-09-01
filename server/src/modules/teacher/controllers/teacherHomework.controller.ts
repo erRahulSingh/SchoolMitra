@@ -253,8 +253,8 @@ export const updateTeacherHomeworkById = asyncHandler(async (req: Request, res: 
     sendClassNotification(
       schoolId,
       teacherId,
-      hw.classId,
-      hw.sectionId,
+      hw.classId as any,
+      hw.sectionId as any,
       "HOMEWORK",
       "New Homework Published 📚",
       `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,
@@ -317,8 +317,8 @@ export const publishTeacherHomeworkById = asyncHandler(async (req: Request, res:
   sendClassNotification(
     schoolId,
     teacherId,
-    hw.classId,
-    hw.sectionId,
+    hw.classId as any,
+    hw.sectionId as any,
     "HOMEWORK",
     "New Homework Published 📚",
     `New Homework assigned: "${hw.title}". Due Date: ${new Date(hw.dueDate).toDateString()}`,

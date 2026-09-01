@@ -200,22 +200,28 @@ export default function FeesPage() {
       const res = await fetch("http://localhost:5000/api/v1/fees/assign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId: "STU-1001", classId: "10", feeStructureId: "650000000000000000000601" })
+        body: JSON.stringify({ 
+          studentId: "647b0a7d903e1c001f3eabcd", // Example student ID
+          classId: "650000000000000000000002",
+          feeStructureId: feeSlabs[0]?._id // Use first available slab for demo
+        })
       });
       const data = await res.json();
       if (data.success) {
-        alert("Fee mapping assigned & synchronized with DB!");
+        alert("Fee mapping assigned & synchronized with DB! Invoice generated.");
+        // Re-fetch assignments (For demo, add to local state)
+        const created: FeeAssignment = {
+          id: data.data.invoice?._id || `ASG-${Date.now()}`,
+          studentName: assignForm.studentName,
+          rollNo: `10-A-${Math.floor(10 + Math.random() * 80)}`,
+          slabName: assignForm.slabName,
+          totalExpected: Number(assignForm.totalExpected)
+        };
+        setAssignedFees([...assignedFees, created]);
       }
-    } catch (err) {}
-
-    const created: FeeAssignment = {
-      id: `ASG-${Date.now()}`,
-      studentName: assignForm.studentName,
-      rollNo: `10-A-${Math.floor(10 + Math.random() * 80)}`,
-      slabName: assignForm.slabName,
-      totalExpected: Number(assignForm.totalExpected)
-    };
-    setAssignedFees([...assignedFees, created]);
+    } catch (err) {
+      console.warn("Error assigning fees", err);
+    }
     setIsAssignModalOpen(false);
   };
 

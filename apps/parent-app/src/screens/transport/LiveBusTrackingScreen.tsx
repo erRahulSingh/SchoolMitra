@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Dimensions } from 'react-native';
 import { ChevronLeft, Bell, Bus, MapPin, Clock, CheckCircle2, Navigation, ClipboardList } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { WebView } from 'react-native-webview';
 import ParentHeader from '../../components/ParentHeader';
 import { createSocketConnection } from '../../lib/socketClient';
 
@@ -18,6 +19,34 @@ export default function LiveBusTrackingScreen({ navigation }: any) {
   });
 
   const [lastUpdatedText, setLastUpdatedText] = useState("Just now");
+  const [mapConfig, setMapConfig] = useState<any>(null);
+
+  const [assignedBus, setAssignedBus] = useState("BUS-01");
+
+  // Fetch rotating API Key from backend
+  useEffect(() => {
+    fetch("http://10.0.2.2:5000/api/v1/transport/map-config")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success) {
+          setMapConfig(data.data);
+        }
+      })
+      .catch(e => console.error("Map config error", e));
+      
+    // Fetch Assigned Bus
+    fetch("http://10.0.2.2:5000/api/v1/transport/student-assignments")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && data.data.assignments && data.data.assignments.length > 0) {
+          const myAssignment = data.data.assignments.find((a: any) => a.studentId?.name === "Rahul Kumar" || true);
+          if (myAssignment && myAssignment.busId) {
+             setAssignedBus(myAssignment.busId.busNumber || "BUS-01");
+          }
+        }
+      })
+      .catch(e => console.log(e));
+  }, []);
 
   useEffect(() => {
     if (!isTrackingActive) return;
@@ -27,11 +56,11 @@ export default function LiveBusTrackingScreen({ navigation }: any) {
 
     if (socket) {
       if (typeof socket.emit === 'function') {
-        socket.emit("bus:join_room", { busId: "BUS-01", parentId: "PARENT-9942" });
+        socket.emit("bus:join_room", { busId: assignedBus, parentId: "PARENT-9942" });
       }
 
       socket.on("bus:location_changed", (data: any) => {
-        if (data && data.busId === "BUS-01") {
+        if (data && data.busId === assignedBus) {
           setLiveLocation(data);
           lastReceiveTime = Date.now();
           setLastUpdatedText(data.isStale ? "Last updated 2 min ago" : "Just now");
@@ -52,7 +81,7 @@ export default function LiveBusTrackingScreen({ navigation }: any) {
         socket.disconnect();
       }
     };
-  }, [isTrackingActive]);
+  }, [isTrackingActive, assignedBus]);
 
   const routeStops = [
     { name: 'Main Market', time: '07:35 AM', status: 'Completed', completed: true },
@@ -92,7 +121,7 @@ export default function LiveBusTrackingScreen({ navigation }: any) {
           <View style={styles.infoGrid}>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabelText}>Assigned Bus:</Text>
-              <Text style={styles.infoValueText}>🚌 BUS-01</Text>
+              <Text style={styles.infoValueText}>🚌 {assignedBus}</Text>
             </View>
 
             <View style={styles.infoRow}>
@@ -145,35 +174,63 @@ export default function LiveBusTrackingScreen({ navigation }: any) {
               </View>
             </View>
 
-            <View style={styles.mapCard}>
-              {/* Mock Map Vector Graphic */}
-              <LinearGradient
-                colors={['#f1f5f9', '#e2e8f0']}
-                style={styles.mapGraphicBox}
-              >
-                {/* Sector Labels */}
-                <Text style={[styles.mapRoadText, { top: 20, left: 30 }]}>Main Road</Text>
-                <Text style={[styles.mapRoadText, { top: 20, right: 30 }]}>Sector 52</Text>
-                <Text style={[styles.mapRoadText, { bottom: 50, left: 70 }]}>Main Market</Text>
-                <Text style={[styles.mapRoadText, { bottom: 20, right: 20 }]}>Green Valley School</Text>
+            <View style={[styles.mapCard, { height: 260 }]}>
+              {mapConfig ? (
+                <WebView
+                  originWhitelist={['*']}
+                  source={{ html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+                      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                      <style>
+                        body { padding: 0; margin: 0; }
+                        #map { height: 100vh; width: 100vw; }
+                      </style>
+                    </head>
+                    <body>
+                      <div id="map"></div>
+                      <script>
+                        var map = L.map('map').setView([${liveLocation.latitude}, ${liveLocation.longitude}], 14);
+                        
+                        // Mapbox Raster Tiles via rotating Access Token
+                        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${mapConfig.accessToken}', {
+                            maxZoom: 19,
+                            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        }).addTo(map);
 
-                {/* Blue Route Route Path Line */}
-                <View style={styles.routePathLine} />
+                        // Bus Marker
+                        var busIcon = L.divIcon({
+                          html: '<div style="background-color: #2563eb; color: white; width: 30px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold;">🚌</div>',
+                          className: '',
+                          iconSize: [30, 30],
+                          iconAnchor: [15, 15]
+                        });
+                        L.marker([${liveLocation.latitude}, ${liveLocation.longitude}], {icon: busIcon}).addTo(map);
 
-                {/* Route Stop Dots */}
-                <View style={[styles.mapDotCircle, { top: 70, left: 50 }]} />
-                <View style={[styles.mapDotCircle, { top: 40, right: 80 }]} />
-
-                {/* Floating Bus Marker Pin */}
-                <View style={styles.busMarkerPin}>
-                  <Bus size={18} color="#ffffff" />
+                        // Destination Marker
+                        var destIcon = L.divIcon({
+                          html: '<div style="background-color: #9333ea; color: white; width: 24px; height: 24px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid white;">🏫</div>',
+                          className: '',
+                          iconSize: [24, 24],
+                          iconAnchor: [12, 12]
+                        });
+                        L.marker([28.5900, 77.0700], {icon: destIcon}).addTo(map);
+                      </script>
+                    </body>
+                    </html>
+                  ` }}
+                  style={{ flex: 1 }}
+                  scrollEnabled={false}
+                />
+              ) : (
+                <View style={[styles.mapGraphicBox, { height: 260 }]}>
+                  <Text style={{ color: '#64748b' }}>Initializing Map Server...</Text>
                 </View>
+              )}
 
-                {/* Destination School Pin */}
-                <View style={styles.destinationPin}>
-                  <MapPin size={18} color="#ffffff" />
-                </View>
-              </LinearGradient>
 
               {/* Bottom Info Cards (2 Columns) */}
               <View style={styles.mapBottomInfoRow}>

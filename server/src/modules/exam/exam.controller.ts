@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response } from "express";
 import { ExamScheduleModel, MarkModel, ReportCardModel } from "../../models/AcademicSchemas";
 

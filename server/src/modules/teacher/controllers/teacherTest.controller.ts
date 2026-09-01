@@ -321,7 +321,7 @@ export const submitWeeklyTestResults = asyncHandler(async (req: Request, res: Re
       try {
         notifyParent(
           "ExponentPushToken[SampleParentToken]",
-          "TEST_RESULT_PUBLISHED",
+          "EXAM_RESULT_PUBLISHED",
           "Weekly Test Result Shared 📊",
           `Weekly Test results for "${test.title}" is out! Score: ${item.marksObtained}/${test.maxMarks}. Grade: ${resDoc.grade}.`,
           { testId: id, score: `${item.marksObtained}/${test.maxMarks}` }

@@ -5,7 +5,8 @@
 
 import mongoose from "mongoose";
 import { NotificationModel, DeviceTokenModel, NotificationPreferenceModel } from "../models/CommunicationSchemas";
-import { StudentModel, ParentModel, UserModel } from "../models/SchoolSchemas";
+import { StudentModel, ParentModel } from "../models/SchoolSchemas";
+import { UserModel } from "../models/AuthSchemas";
 import { notifyParent, notifyTeacher } from "./pushNotificationService";
 import logger from "../utils/logger";
 
@@ -62,7 +63,7 @@ export const send = async (payload: SendNotificationPayload) => {
   let recipientRole = payload.recipientRole;
 
   if (!schoolId || !recipientRole) {
-    const recipientUser = await UserModel.findById(payload.recipientId).select("schoolId role").lean();
+    const recipientUser: any = await UserModel.findById(payload.recipientId).select("schoolId role").lean();
     if (!schoolId && recipientUser?.schoolId) {
       schoolId = recipientUser.schoolId;
     }

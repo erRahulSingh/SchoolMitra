@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response } from "express";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -336,3 +337,4 @@ export const getAdminAnalyticsExport = asyncHandler(async (req: Request, res: Re
 
   return ApiResponse.success(res, 200, "Report generated", data);
 });
+

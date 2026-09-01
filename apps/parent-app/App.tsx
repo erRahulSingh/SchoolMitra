@@ -30,11 +30,13 @@ import HomeworkScreen from './src/screens/academics/HomeworkScreen';
 import AssignmentsScreen from './src/screens/academics/AssignmentsScreen';
 import ExamsScreen from './src/screens/academics/ExamsScreen';
 import ReportCardScreen from './src/screens/academics/ReportCardScreen';
+import OnlineTestsScreen from './src/screens/academics/OnlineTestsScreen';
+import TestTakingScreen from './src/screens/academics/TestTakingScreen';
+import AiDoubtSolverScreen from './src/screens/academics/AiDoubtSolverScreen';
 import StudyMaterialsScreen from './src/screens/academics/StudyMaterialsScreen';
 import SubjectDetailsScreen from './src/screens/academics/SubjectDetailsScreen';
 import TimeTableScreen from './src/screens/academics/TimeTableScreen';
 import AcademicPerformanceScreen from './src/screens/academics/AcademicPerformanceScreen';
-
 // Fees
 import FeesScreen from './src/screens/fees/FeesScreen';
 import FeeReceiptScreen from './src/screens/fees/FeeReceiptScreen';
@@ -51,6 +53,7 @@ import PickupDropTimelineScreen from './src/screens/transport/PickupDropTimeline
 // Communication
 import ParentMessagesScreen from './src/screens/communication/ParentMessagesScreen';
 import CommunicationHubScreen from './src/screens/communication/CommunicationHubScreen';
+import ChatDetailScreen from './src/screens/communication/ChatDetailScreen';
 
 // School Info
 import AboutSchoolScreen from './src/screens/school/AboutSchoolScreen';
@@ -219,6 +222,9 @@ export default function App() {
                   <Stack.Screen name="Assignments" component={AssignmentsScreen} />
                   <Stack.Screen name="Exams" component={ExamsScreen} />
                   <Stack.Screen name="ReportCard" component={ReportCardScreen} />
+                  <Stack.Screen name="OnlineTests" component={OnlineTestsScreen} />
+                  <Stack.Screen name="TestTaking" component={TestTakingScreen} />
+                  <Stack.Screen name="AiDoubtSolver" component={AiDoubtSolverScreen} />
                   <Stack.Screen name="StudyMaterials" component={StudyMaterialsScreen} />
                   <Stack.Screen name="SubjectDetails" component={SubjectDetailsScreen} />
                   <Stack.Screen name="TimeTable" component={TimeTableScreen} />
@@ -237,6 +243,7 @@ export default function App() {
 
                   <Stack.Screen name="ParentMessages" component={ParentMessagesScreen} />
                   <Stack.Screen name="CommunicationHub" component={CommunicationHubScreen} />
+                  <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
 
                   <Stack.Screen name="AboutSchool" component={AboutSchoolScreen} />
                   <Stack.Screen name="Events" component={EventsScreen} />

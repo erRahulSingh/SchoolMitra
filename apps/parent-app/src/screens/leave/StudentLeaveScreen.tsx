@@ -42,12 +42,12 @@ export default function StudentLeaveScreen({ navigation, route }: any) {
     setLoading(true);
     try {
       const url = studentId
-        ? `http://localhost:5000/api/v1/leave/student/${studentId}`
-        : 'http://localhost:5000/api/v1/leave/applications?applicantType=Student';
+        ? `http://10.0.2.2:5000/api/v1/attendance/leave/list?studentId=${studentId}`
+        : 'http://10.0.2.2:5000/api/v1/attendance/leave/list?applicantName=Rahul';
       const res = await fetch(url);
       const json = await res.json();
       if (json.success) {
-        setLeaves(json.data.history || json.data.leaves || []);
+        setLeaves(json.data.requests || []);
       }
     } catch (err) {
       console.error('Leave history error:', err);
@@ -67,7 +67,7 @@ export default function StudentLeaveScreen({ navigation, route }: any) {
 
     setSubmitting(true);
     try {
-      const res = await fetch('http://localhost:5000/api/v1/attendance/leave/apply', {
+      const res = await fetch('http://10.0.2.2:5000/api/v1/attendance/leave/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -81,14 +81,14 @@ export default function StudentLeaveScreen({ navigation, route }: any) {
           attachment: attachment || 'family_function_invitation.pdf'
         }),
       });
-      const json = await res.json();
-      Alert.alert('✅ Leave Applied', `Leave application for ${selectedStudent} (12 Aug → 14 Aug) has been submitted.`);
+      Alert.alert('✅ Leave Applied', `Leave application for ${selectedStudent} has been submitted.`);
       setLeaveForm({ leaveType: 'Personal', reason: '', startDate: '', endDate: '', isHalfDay: false });
       setAttachment(null);
       fetchLeaveHistory();
       setActiveTab('history');
     } catch (err) {
-      Alert.alert('✅ Leave Applied', `Leave application for ${selectedStudent} (12 Aug → 14 Aug) has been submitted.`);
+      console.error(err);
+      Alert.alert('Error', 'Failed to apply leave. Trying fallback.');
       setActiveTab('history');
     } finally {
       setSubmitting(false);

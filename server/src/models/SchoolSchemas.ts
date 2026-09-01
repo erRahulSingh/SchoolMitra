@@ -482,16 +482,22 @@ const timetableSchema = new Schema({
   subjectId: {
     type: Schema.Types.ObjectId,
     ref: "subjects",
-    required: true,
     index: true,
   },
   teacherId: {
     type: Schema.Types.ObjectId,
     ref: "users",
-    required: true,
     index: true,
   },
   room: {
+    type: String,
+    trim: true,
+  },
+  isBreak: {
+    type: Boolean,
+    default: false,
+  },
+  breakLabel: {
     type: String,
     trim: true,
   },
@@ -502,6 +508,37 @@ timetableSchema.index({ schoolId: 1, teacherId: 1, dayOfWeek: 1 });
 
 export const TimetableModel = model("timetables", timetableSchema);
 
+// -----------------------------------------------------------
+// Student Medical Records Schemas
+// -----------------------------------------------------------
 
+const studentMedicalProfileSchema = new Schema({
+  schoolId: { type: Schema.Types.ObjectId, ref: "schools", required: true },
+  studentId: { type: Schema.Types.ObjectId, ref: "students", required: true, unique: true },
+  bloodGroup: { type: String, trim: true },
+  height: { type: String, trim: true },
+  weight: { type: String, trim: true },
+  allergies: [{ type: String, trim: true }],
+  chronicConditions: [{ type: String, trim: true }],
+  vaccinationStatus: { type: String, enum: ["Up to Date", "Pending", "Exempt"], default: "Pending" },
+  lastCheckupDate: { type: Date },
+  emergencyContactName: { type: String, trim: true },
+  emergencyContactPhone: { type: String, trim: true },
+  doctorName: { type: String, trim: true },
+  doctorPhone: { type: String, trim: true }
+}, { timestamps: true });
 
+export const StudentMedicalProfileModel = model("student_medical_profiles", studentMedicalProfileSchema);
 
+const medicalIncidentSchema = new Schema({
+  schoolId: { type: Schema.Types.ObjectId, ref: "schools", required: true },
+  studentId: { type: Schema.Types.ObjectId, ref: "students", required: true },
+  reportedBy: { type: Schema.Types.ObjectId, ref: "users", required: true },
+  incidentDate: { type: Date, default: Date.now },
+  symptoms: { type: String, required: true },
+  actionTaken: { type: String, required: true },
+  parentNotified: { type: Boolean, default: false }
+}, { timestamps: true });
+
+medicalIncidentSchema.index({ schoolId: 1, studentId: 1 });
+export const MedicalIncidentModel = model("medical_incidents", medicalIncidentSchema);

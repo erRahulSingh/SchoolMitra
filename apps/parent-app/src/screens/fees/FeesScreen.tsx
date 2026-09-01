@@ -1,22 +1,56 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
-import { ChevronLeft, FileText, CheckCircle2, Clock, Info, Bus, Wallet, CreditCard } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, ActivityIndicator } from 'react-native';
+import { ChevronLeft, FileText, CheckCircle2, Info, Bus, Wallet } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function FeesScreen({ navigation }: any) {
-  const feeSummary = [
-    { title: 'Annual Fee', amount: '₹12,000', status: 'Paid', color: '#16a34a', bg: '#dcfce7', icon: FileText },
-    { title: 'Tuition Fee', amount: '₹8,000', status: 'Paid', color: '#16a34a', bg: '#dcfce7', icon: FileText },
-    { title: 'Transport Fee', amount: '₹4,000', status: 'Paid', color: '#16a34a', bg: '#dcfce7', icon: Bus },
-    { title: 'Miscellaneous', amount: '₹1,250', status: 'Pending', color: '#ea580c', bg: '#ffedd5', icon: Wallet },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [ledger, setLedger] = useState<any>(null);
 
-  const paymentHistory = [
-    { title: 'Tuition Fee', date: 'Paid on 15 Apr 2025', amount: '₹8,000' },
-    { title: 'Transport Fee', date: 'Paid on 01 Apr 2025', amount: '₹4,000' },
-    { title: 'Annual Fee', date: 'Paid on 01 Apr 2025', amount: '₹12,000' },
-    { title: 'Miscellaneous', date: 'Paid on 10 Mar 2025', amount: '₹1,000' },
-  ];
+  useEffect(() => {
+    // Dynamic fetch from backend fees ledger
+    const studentId = "647b0a7d903e1c001f3eabcd"; // Example ID
+    fetch(`http://10.0.2.2:5000/api/v1/fees/ledger/${studentId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && data.data) {
+          const apiData = data.data;
+          
+          // Construct feeComponents by flattening the unpaid/partial invoices components
+          let components: any[] = [];
+          if (apiData.allInvoices && apiData.allInvoices.length > 0) {
+            components = apiData.allInvoices[0].components || [];
+          }
+
+          setLedger({
+            due: apiData.totalDues,
+            status: apiData.totalDues > 0 ? "PAYMENT REQUIRED" : "ALL DUES CLEARED",
+            feeComponents: components,
+            recentPayments: apiData.recentPayments
+          });
+        }
+        setLoading(false);
+      })
+      .catch(e => {
+        console.error("Failed to fetch fees ledger", e);
+        setLoading(false);
+      });
+  }, []);
+
+  const getIconForComponent = (name: string) => {
+    const lName = name.toLowerCase();
+    if (lName.includes('transport')) return Bus;
+    if (lName.includes('tuition') || lName.includes('annual')) return FileText;
+    return Wallet;
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#1d4ed8" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -45,56 +79,74 @@ export default function FeesScreen({ navigation }: any) {
           <View style={styles.dueLeft}>
             <Text style={styles.dueLabel}>Total Due</Text>
             <View style={styles.amountRow}>
-              <Text style={styles.dueAmount}>₹1,250</Text>
+              <Text style={styles.dueAmount}>₹{ledger?.due?.toLocaleString() || 0}</Text>
               <Info size={16} color="rgba(255,255,255,0.7)" />
             </View>
-            <Text style={styles.dueDateText}>Due Date: 15 May 2025</Text>
+            <Text style={styles.dueDateText}>Status: {ledger?.status || 'UNKNOWN'}</Text>
           </View>
 
-          <TouchableOpacity style={styles.payNowBtn} activeOpacity={0.85}>
-            <Text style={styles.payNowText}>Pay Now</Text>
-          </TouchableOpacity>
+          {ledger?.due > 0 && (
+            <TouchableOpacity style={styles.payNowBtn} activeOpacity={0.85}>
+              <Text style={styles.payNowText}>Pay Now</Text>
+            </TouchableOpacity>
+          )}
         </LinearGradient>
 
         {/* Fee Summary Section */}
-        <Text style={styles.sectionTitle}>Fee Summary</Text>
+        <Text style={styles.sectionTitle}>Fee Breakdown (Annual)</Text>
         <View style={styles.summaryCard}>
-          {feeSummary.map((item, idx) => {
-            const IconComp = item.icon;
+          {ledger?.feeComponents?.map((item: any, idx: number) => {
+            const IconComp = getIconForComponent(item.name);
             return (
-              <View key={idx} style={[styles.summaryRow, idx < feeSummary.length - 1 && styles.rowBorder]}>
+              <View key={idx} style={[styles.summaryRow, idx < ledger.feeComponents.length - 1 && styles.rowBorder]}>
                 <View style={styles.iconCircle}>
                   <IconComp size={16} color="#2563eb" />
                 </View>
-                <Text style={styles.itemTitle}>{item.title}</Text>
-                <Text style={styles.itemAmount}>{item.amount}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: item.bg }]}>
-                  <Text style={[styles.statusText, { color: item.color }]}>{item.status}</Text>
+                <Text style={styles.itemTitle}>{item.name}</Text>
+                <Text style={styles.itemAmount}>₹{item.amount.toLocaleString()}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: '#dcfce7' }]}>
+                  <Text style={[styles.statusText, { color: '#16a34a' }]}>Billed</Text>
                 </View>
               </View>
             );
           })}
+          {(!ledger?.feeComponents || ledger.feeComponents.length === 0) && (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text style={{ color: '#64748b' }}>No fee structures assigned yet.</Text>
+            </View>
+          )}
         </View>
 
         {/* Payment History Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitleNoMargin}>Payment History</Text>
-          <TouchableOpacity><Text style={styles.viewAll}>View All</Text></TouchableOpacity>
+          <Text style={styles.sectionTitleNoMargin}>Recent Payments</Text>
         </View>
 
         <View style={styles.historyCard}>
-          {paymentHistory.map((item, idx) => (
-            <View key={idx} style={[styles.historyRow, idx < paymentHistory.length - 1 && styles.rowBorder]}>
+          {ledger?.recentPayments?.map((item: any, idx: number) => (
+            <TouchableOpacity 
+              key={idx} 
+              style={[styles.historyRow, idx < ledger.recentPayments.length - 1 && styles.rowBorder]}
+              onPress={() => navigation.navigate('FeeReceipt', { receiptNo: item.receiptNo })}
+              activeOpacity={0.6}
+            >
               <View style={styles.checkIcon}>
                 <CheckCircle2 size={20} color="#16a34a" fill="#dcfce7" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.historyTitle}>{item.title}</Text>
-                <Text style={styles.historyDate}>{item.date}</Text>
+                <Text style={styles.historyDate}>
+                  {item.date ? new Date(item.date).toLocaleDateString() : 'Paid recently'} • {item.method}
+                </Text>
               </View>
-              <Text style={styles.historyAmount}>{item.amount}</Text>
-            </View>
+              <Text style={styles.historyAmount}>₹{item.amount?.toLocaleString()}</Text>
+            </TouchableOpacity>
           ))}
+          {(!ledger?.recentPayments || ledger.recentPayments.length === 0) && (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text style={{ color: '#64748b' }}>No previous payments found.</Text>
+            </View>
+          )}
         </View>
 
       </ScrollView>
@@ -152,7 +204,6 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 15, fontWeight: '900', color: '#0f172a', marginBottom: 12 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, marginBottom: 12 },
   sectionTitleNoMargin: { fontSize: 15, fontWeight: '900', color: '#0f172a' },
-  viewAll: { fontSize: 12, color: '#2563eb', fontWeight: '700' },
 
   // Summary Card
   summaryCard: {

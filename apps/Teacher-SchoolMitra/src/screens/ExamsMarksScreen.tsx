@@ -1,15 +1,40 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, TextInput, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Award, Save, ChevronLeft, ShieldCheck, CheckCircle2 } from 'lucide-react-native';
 
-export default function ExamsMarksScreen({ navigation }: any) {
-  const [studentsMarks, setStudentsMarks] = useState([
-    { id: 'st_1', roll: '01', name: 'Aarav Gupta', theory: '78', practical: '18', total: '96' },
-    { id: 'st_2', roll: '02', name: 'Ananya Patel', theory: '72', practical: '19', total: '91' },
-    { id: 'st_3', roll: '03', name: 'Devansh Verma', theory: '65', practical: '15', total: '80' },
-    { id: 'st_4', roll: '04', name: 'Isha Sharma', theory: '80', practical: '20', total: '100' },
-    { id: 'st_5', roll: '05', name: 'Kavya Singh', theory: '70', practical: '17', total: '87' }
-  ]);
+export default function ExamsMarksScreen({ navigation, route }: any) {
+  const [studentsMarks, setStudentsMarks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const examId = route?.params?.examId || '650000000000000000000010'; // Mock Exam ID
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      // In a real app we fetch students for this specific exam
+      // For demo, we fetch class students and mock marks structure
+      const res = await fetch(`http://10.0.2.2:5000/api/v1/attendance/student/class?classId=Class 8&sectionId=A`);
+      const json = await res.json();
+      if (json.success && json.data.logs) {
+        setStudentsMarks(json.data.logs.map((log: any) => ({
+          id: log.studentId,
+          roll: log.rollNo || '00',
+          name: log.studentName,
+          theory: '',
+          practical: '',
+          total: '0'
+        })));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const updateMarks = (id: string, field: 'theory' | 'practical', value: string) => {
     setStudentsMarks(prev => prev.map(s => {
@@ -22,9 +47,65 @@ export default function ExamsMarksScreen({ navigation }: any) {
     }));
   };
 
-  const handleSaveMarks = () => {
-    Alert.alert('Marks Saved ✅', 'CBSE Mid-Term Examination marks saved and published to Parent App!');
+  const handleSaveMarks = async () => {
+    setSaving(true);
+    try {
+      const marksData = studentsMarks.map(s => ({
+        studentId: s.id,
+        marksObtained: parseInt(s.total || '0'),
+        maxMarks: 100 // Assumption based on mock UI
+      }));
+
+      // Fetch teacher user context to get actual token if available
+      let token = "DEMO_TOKEN";
+      try {
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        const stored = await AsyncStorage.getItem('teacherUser');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.token) token = parsed.token;
+        }
+      } catch (e) {}
+
+      // Hardcoded dummy IDs for class, section, subject if not provided by route params
+      const classId = route?.params?.classId || '650000000000000000000001';
+      const subjectId = route?.params?.subjectId || '650000000000000000000003';
+
+      const res = await fetch(`http://10.0.2.2:5000/api/v1/exams/marks/bulk`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          examId,
+          subjectId,
+          marks: marksData
+        })
+      });
+
+      const json = await res.json();
+      
+      if (json.success || res.ok) {
+        Alert.alert('Marks Saved ✅', 'CBSE Mid-Term Examination marks saved and published to Parent App!');
+        navigation.goBack();
+      } else {
+        Alert.alert('Save Failed', json.message || 'Failed to save marks');
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Network error. Could not connect to server.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#7c3aed" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,9 +159,9 @@ export default function ExamsMarksScreen({ navigation }: any) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveMarks} activeOpacity={0.8}>
-          <Save size={20} color="#ffffff" />
-          <Text style={styles.saveBtnText}>Publish Marks to Student Report Card</Text>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSaveMarks} activeOpacity={0.8} disabled={saving}>
+          {saving ? <ActivityIndicator color="#fff" /> : <Save size={20} color="#ffffff" />}
+          <Text style={styles.saveBtnText}>{saving ? 'Publishing...' : 'Publish Marks to Student Report Card'}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

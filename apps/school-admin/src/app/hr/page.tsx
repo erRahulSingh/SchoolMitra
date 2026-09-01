@@ -851,6 +851,9 @@ export default function HrPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
       {/* MODULE 5: TEACHER & STAFF DOCUMENTS VAULT */}
       {activeTab === "documents" && (
         <div className="glass-card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>

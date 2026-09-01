@@ -10,7 +10,7 @@ const getOrSeedPayroll = async () => {
   const salaries = await SalaryModel.find().populate("staffId", "name role dept email phone").lean();
   if (salaries.length > 0) {
     return salaries.map((s: any) => ({
-      id: s._id.toString(),
+      id: (s as any)._id.toString(),
       empId: s.staffId?._id?.toString() || "EMP-MOCK",
       name: s.staffId?.name || "Sunita Rao",
       role: s.staffId?.role || "Teacher",
@@ -38,7 +38,7 @@ const getOrSeedPayroll = async () => {
 
     const record = await SalaryModel.create({
       schoolId: t.schoolId || dummySchoolId,
-      staffId: t._id,
+      staffId: (t as any)._id,
       month: "2026-07",
       year: 2026,
       basicPay: base,
@@ -51,7 +51,7 @@ const getOrSeedPayroll = async () => {
 
     seededSalaries.push({
       id: record._id.toString(),
-      empId: t._id.toString(),
+      empId: (t as any)._id.toString(),
       name: t.name,
       role: t.role === "Teacher" ? "Senior Faculty" : t.role === "Driver" ? "Bus Pilot" : "Accountant",
       dept: t.role === "Driver" ? "Transport" : t.role === "Accountant" ? "Finance" : "Academics",
@@ -199,7 +199,7 @@ export const getLeaveLedgers = asyncHandler(async (_req: Request, res: Response)
   const leaves = staffMembers.map((s, idx) => {
     const taken = idx % 2 === 0 ? 4 : 1;
     return {
-      id: s._id.toString(),
+      id: (s as any)._id.toString(),
       name: s.name,
       dept: s.role === "Driver" ? "Transport" : s.role === "Accountant" ? "Finance" : "Academics",
       casualLeave: `${12 - taken} / 12 Days`,

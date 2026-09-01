@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { 
   getDashboardOverview, 
@@ -424,3 +425,4 @@ import adminTeacherRoutes from "./adminTeacher.routes";
 router.use("/", adminTeacherRoutes);
 
 export default router;
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Search, Folder, ChevronRight } from 'lucide-react-native';
 
@@ -7,14 +7,50 @@ export default function StudyMaterialsScreen({ navigation }: any) {
 
   const tabs = ['All', 'Subjects', 'Documents', 'Videos'];
 
-  const foldersList = [
-    { subject: 'Mathematics', materialsCount: '12 Materials', color: '#7c3aed', bg: '#f3e8ff' },
-    { subject: 'Science', materialsCount: '15 Materials', color: '#16a34a', bg: '#dcfce7' },
-    { subject: 'English', materialsCount: '10 Materials', color: '#ea580c', bg: '#ffedd5' },
-    { subject: 'Social Studies', materialsCount: '8 Materials', color: '#0284c7', bg: '#e0f2fe' },
-    { subject: 'Hindi', materialsCount: '7 Materials', color: '#d97706', bg: '#ffedd5' },
-    { subject: 'Computer', materialsCount: '9 Materials', color: '#7c3aed', bg: '#f3e8ff' },
-  ];
+  const [foldersList, setFoldersList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        const studentId = "647b0a7d903e1c001f3eabcd"; // Mock student
+        const res = await fetch(`http://10.0.2.2:5000/api/v1/study-materials/student/${studentId}`);
+        const data = await res.json();
+        
+        if (data.data && data.data.materials) {
+          // Group by Subject
+          const subjectMap: Record<string, number> = {};
+          data.data.materials.forEach((mat: any) => {
+            const subName = mat.subjectId?.subjectName || 'General';
+            subjectMap[subName] = (subjectMap[subName] || 0) + 1;
+          });
+
+          const formatted = Object.keys(subjectMap).map((key, idx) => {
+            const colors = [
+              { color: '#7c3aed', bg: '#f3e8ff' },
+              { color: '#16a34a', bg: '#dcfce7' },
+              { color: '#ea580c', bg: '#ffedd5' },
+              { color: '#0284c7', bg: '#e0f2fe' }
+            ];
+            const c = colors[idx % colors.length];
+            return {
+              subject: key,
+              materialsCount: `${subjectMap[key]} Materials`,
+              color: c.color,
+              bg: c.bg
+            };
+          });
+
+          setFoldersList(formatted);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMaterials();
+  }, []);
 
   return (
     <View style={styles.container}>

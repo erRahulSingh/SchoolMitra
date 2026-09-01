@@ -32,11 +32,11 @@ export const getTeacherRolePermissions = asyncHandler(async (req: Request, res: 
   const schoolId = (req as any).user?.schoolId || "sch_default";
 
   // Try to load from DB first
-  const teacherRole = await RoleModel.findOne({ systemRole: "TEACHER", schoolId }).lean();
+  const teacherRole = await RoleModel.findOne({ systemRole: "TEACHER", schoolId }).lean() as any;
   let assignedKeys: string[] = [];
 
   if (teacherRole) {
-    const rolePerms = await RolePermissionModel.find({ roleId: teacherRole._id }).lean();
+    const rolePerms = await RolePermissionModel.find({ roleId: teacherRole._id }).lean() as any;
     assignedKeys = rolePerms.map((rp: any) => rp.permissionKey).filter(Boolean);
   }
 
@@ -102,7 +102,7 @@ export const getUserPermissionOverrides = asyncHandler(async (req: Request, res:
   const schoolId = (req as any).user?.schoolId || "sch_default";
 
   const user = await UserModel.findById(userId).lean().catch(() => null);
-  const overrides = await UserPermissionOverrideModel.find({ userId, schoolId }).lean();
+  const overrides = await UserPermissionOverrideModel.find({ userId, schoolId }).lean() as any;
 
   const formattedOverrides = overrides.map((o: any) => ({
     permissionKey: o.permissionKey,
@@ -167,7 +167,7 @@ export const getTeachersForPermissions = asyncHandler(async (req: Request, res: 
   const teachers = await UserModel.find({
     role: { $in: ["TEACHER", "Teacher", "teacher"] },
     ...(schoolId !== "sch_default" ? { schoolId } : {})
-  }).select("name email phone role status avatar permissions").lean();
+  }).select("name email phone role status avatar permissions").lean() as any;
 
   return ApiResponse.success(res, 200, "Teachers list retrieved for permission management", {
     teachers,

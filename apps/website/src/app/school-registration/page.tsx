@@ -40,7 +40,7 @@ export default function SchoolRegistrationPage() {
       });
 
       if (data.success) {
-        setSchoolCode(data.data?.schoolCode || data.schoolCode || `${schoolName.substring(0, 3).toUpperCase()}-${city ? city.substring(0, 3).toUpperCase() : "DEL"}`);
+        setSchoolCode(data.data?.schoolCode || (data as any).schoolCode || `${schoolName.substring(0, 3).toUpperCase()}-${city ? city.substring(0, 3).toUpperCase() : "DEL"}`);
         setStep(3); // Registration success screen
       } else {
         const errorDetails = (data as any).errors && Array.isArray((data as any).errors) ? (data as any).errors.join(". ") : null;
