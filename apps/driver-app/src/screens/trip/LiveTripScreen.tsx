@@ -5,64 +5,73 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { createSocketConnection } from '../../lib/socketClient';
 
 export default function LiveTripScreen({ navigation }: any) {
+  const [driverUser, setDriverUser] = React.useState<any>({});
+
   useEffect(() => {
+    import('@react-native-async-storage/async-storage').then(({ default: AsyncStorage }) => {
+      AsyncStorage.getItem('driverUser').then(res => {
+        if (res) {
+          try {
+            setDriverUser(JSON.parse(res));
+          } catch (e) {}
+        }
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    let locationSubscription: any;
     const socket = createSocketConnection("http://localhost:5000");
 
-    let lat = 28.5833;
-    let lng = 77.0667;
-    let heading = 90;
-    let isOnline = true;
-    let localQueue: any[] = [];
-
-    // Simulate network connectivity toggle (e.g. offline for 9s, online for 12s)
-    const connToggle = setInterval(() => {
-      isOnline = !isOnline;
-      console.log(`[GPS Telemetry Tracker] Simulated Network Connectivity toggled to: ${isOnline ? 'ONLINE 🟢' : 'OFFLINE 🔴'}`);
-      if (isOnline && localQueue.length > 0) {
-        console.log(`[GPS Telemetry Tracker] Restored network connection! Syncing ${localQueue.length} queued offline coordinates...`);
-        localQueue.forEach(item => {
-          if (socket && typeof socket.emit === 'function') {
-            socket.emit("bus:location_changed", item);
-          }
-        });
-        localQueue = []; // clear cache
-      }
-    }, 12000);
-
-    const interval = setInterval(() => {
-      lat += (Math.random() - 0.5) * 0.0004;
-      lng += (Math.random() - 0.5) * 0.0004;
-      heading = (heading + (Math.random() - 0.5) * 12) % 360;
-
-      const payload = {
-        busId: "BUS-01",
-        tripId: "TRIP-101",
-        latitude: lat,
-        longitude: lng,
-        speed: Math.round(32 + Math.random() * 20),
-        heading: Math.round(heading),
-        timestamp: new Date().toISOString(),
-        isStale: false
-      };
-
-      if (isOnline) {
-        if (socket && typeof socket.emit === 'function') {
-          socket.emit("bus:location_changed", payload);
+    const startTracking = async () => {
+      try {
+        const { default: Location } = await import('expo-location');
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        
+        if (status !== 'granted') {
+          console.warn('Permission to access location was denied');
+          return;
         }
-      } else {
-        console.warn(`[GPS Telemetry Tracker] Offline: Caching coordinates locally: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-        localQueue.push({ ...payload, isStale: true });
+
+        locationSubscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            timeInterval: 5000,
+            distanceInterval: 1,
+          },
+          (location) => {
+            const payload = {
+              busId: driverUser?.assignedBusId || "BUS-01",
+              tripId: "TRIP-101",
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              speed: location.coords.speed ? Math.round(location.coords.speed * 3.6) : 0,
+              heading: location.coords.heading ? Math.round(location.coords.heading) : 0,
+              timestamp: new Date(location.timestamp).toISOString(),
+              isStale: false
+            };
+
+            if (socket && typeof socket.emit === 'function') {
+              socket.emit("bus:location_changed", payload);
+            }
+          }
+        );
+      } catch (err) {
+        console.error("GPS Tracking failed:", err);
       }
-    }, 3000);
+    };
+
+    startTracking();
 
     return () => {
-      clearInterval(interval);
-      clearInterval(connToggle);
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
       if (socket && typeof socket.disconnect === 'function') {
         socket.disconnect();
       }
     };
-  }, []);
+  }, [driverUser]);
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />

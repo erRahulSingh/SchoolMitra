@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import {
   ChevronLeft,
@@ -22,74 +23,44 @@ import {
   Volume2
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { teacherApi } from '../../services/apiService';
 
 export default function ClassAnnouncementsScreen({ navigation }: any) {
   const [activeTab, setActiveTab] = useState('All');
+  const [circulars, setCirculars] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const tabs = ['All', 'Academic', 'Event', 'Holiday', 'Urgent'];
 
-  const circulars = [
-    {
-      id: '1',
-      title: 'New Academic Calendar 2024-25',
-      desc: 'The new academic schedule has been released...',
-      date: '20 May 2024  •  By Admin',
-      badge: 'Academic',
-      badgeColor: '#2563eb',
-      badgeBg: '#eff6ff',
-      icon: FileText,
-      iconColor: '#2563eb',
-      iconBg: '#eff6ff'
-    },
-    {
-      id: '2',
-      title: 'Summer Vacation Notice',
-      desc: 'Summer vacation will begin from 1st June to...',
-      date: '18 May 2024  •  By Principal',
-      badge: 'Holiday',
-      badgeColor: '#db2777',
-      badgeBg: '#fce7f3',
-      icon: Calendar,
-      iconColor: '#db2777',
-      iconBg: '#fce7f3'
-    },
-    {
-      id: '3',
-      title: "Teachers' Workshop",
-      desc: 'Professional Development Workshop for all...',
-      date: '15 May 2024  •  By Admin',
-      badge: 'Event',
-      badgeColor: '#2563eb',
-      badgeBg: '#eff6ff',
-      icon: Trophy,
-      iconColor: '#ea580c',
-      iconBg: '#ffedd5'
-    },
-    {
-      id: '4',
-      title: 'Parent-Teacher Meeting',
-      desc: 'PTM scheduled for all classes next week...',
-      date: '12 May 2024  •  By Admin',
-      badge: 'Meeting',
-      badgeColor: '#7c3aed',
-      badgeBg: '#f3e8ff',
-      icon: Users,
-      iconColor: '#7c3aed',
-      iconBg: '#f3e8ff'
-    },
-    {
-      id: '5',
-      title: 'School Annual Function',
-      desc: 'Annual function will be held on 5th July...',
-      date: '10 May 2024  •  By Principal',
-      badge: 'Event',
-      badgeColor: '#2563eb',
-      badgeBg: '#eff6ff',
-      icon: Volume2,
-      iconColor: '#2563eb',
-      iconBg: '#eff6ff'
-    }
-  ];
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await teacherApi.getAnnouncements().catch(() => null);
+        if (res && res.announcements) {
+          const mapped = res.announcements.map((c: any, idx: number) => ({
+            id: c.id || c._id || String(idx),
+            title: c.title || 'Notice',
+            desc: c.body || c.message || 'No description provided.',
+            date: new Date(c.createdAt || Date.now()).toLocaleDateString() + `  •  By ${c.senderName || 'Admin'}`,
+            badge: c.targetClass || c.type || 'Academic',
+            badgeColor: '#2563eb',
+            badgeBg: '#eff6ff',
+            icon: c.type === 'Holiday' ? Calendar : (c.type === 'Event' ? Trophy : FileText),
+            iconColor: '#2563eb',
+            iconBg: '#eff6ff'
+          }));
+          setCirculars(mapped);
+        } else {
+          setCirculars([]);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnnouncements();
+  }, []);
 
   const filteredCirculars = circulars.filter(c =>
     activeTab === 'All' ? true : c.badge === activeTab

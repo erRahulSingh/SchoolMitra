@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Calendar as CalendarIcon, FileText, FlaskConical, Lightbulb, Monitor } from 'lucide-react-native';
 
@@ -7,52 +7,43 @@ export default function AssignmentsScreen({ navigation }: any) {
 
   const tabs = ['All', 'Upcoming', 'Submitted', 'Graded'];
 
-  const assignmentsList = [
-    {
-      subject: 'Mathematics Project',
-      title: "Create a model on 'Types of Triangles'",
-      dueDate: 'Due Date: 25 May 2025',
-      status: 'Upcoming',
-      icon: FileText,
-      color: '#7c3aed',
-      bg: '#f3e8ff',
-      statusColor: '#7c3aed',
-      statusBg: '#f3e8ff',
-    },
-    {
-      subject: 'Science Activity',
-      title: 'Prepare a working model of Volcano',
-      dueDate: 'Due Date: 28 May 2025',
-      status: 'Upcoming',
-      icon: FlaskConical,
-      color: '#0d9488',
-      bg: '#ccfbf1',
-      statusColor: '#0d9488',
-      statusBg: '#ccfbf1',
-    },
-    {
-      subject: 'English Presentation',
-      title: "Prepare a presentation on 'The Nation Builders'",
-      dueDate: 'Due Date: 30 May 2025',
-      status: 'Upcoming',
-      icon: Lightbulb,
-      color: '#ea580c',
-      bg: '#ffedd5',
-      statusColor: '#ea580c',
-      statusBg: '#ffedd5',
-    },
-    {
-      subject: 'Computer',
-      title: "Make a PPT on 'Uses of Internet'",
-      dueDate: 'Due Date: 02 Jun 2025',
-      status: 'Submitted',
-      icon: Monitor,
-      color: '#0284c7',
-      bg: '#e0f2fe',
-      statusColor: '#0284c7',
-      statusBg: '#e0f2fe',
-    },
-  ];
+  const [assignmentsList, setAssignmentsList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        const studentId = "647b0a7d903e1c001f3eabcd"; // Mock student
+        const res = await fetch(`http://10.0.2.2:5000/api/v1/assignments/student/${studentId}`);
+        const data = await res.json();
+        
+        if (data.data && data.data.assignments) {
+          const formatted = data.data.assignments.map((item: any, idx: number) => ({
+            id: item._id,
+            subject: item.subjectId?.subjectName || 'Subject',
+            title: item.title,
+            dueDate: `Due Date: ${new Date(item.dueDate).toLocaleDateString()}`,
+            status: item.submissions?.some((s:any) => s.studentId === studentId) ? 'Submitted' : 'Upcoming',
+            icon: idx % 2 === 0 ? FileText : FlaskConical,
+            color: idx % 2 === 0 ? '#7c3aed' : '#0d9488',
+            bg: idx % 2 === 0 ? '#f3e8ff' : '#ccfbf1',
+            statusColor: idx % 2 === 0 ? '#7c3aed' : '#0d9488',
+            statusBg: idx % 2 === 0 ? '#f3e8ff' : '#ccfbf1',
+          }));
+          setAssignmentsList(formatted);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAssignments();
+  }, []);
+
+  const handleAction = (type: string, id: string) => {
+    Alert.alert(`${type} Success`, `Action completed for assignment.`);
+  };
 
   const filteredAssignments = activeTab === 'All'
     ? assignmentsList
@@ -116,6 +107,18 @@ export default function AssignmentsScreen({ navigation }: any) {
                     <Text style={[styles.statusBadgeText, { color: item.statusColor }]}>{item.status}</Text>
                   </View>
                 </View>
+
+                {/* Actions Row */}
+                {item.status === 'Upcoming' && (
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity style={styles.actionBtnOutline} onPress={() => handleAction('Upload', item.id)}>
+                      <Text style={styles.actionBtnOutlineText}>Upload File</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionBtnSolid} onPress={() => handleAction('Mark Done', item.id)}>
+                      <Text style={styles.actionBtnSolidText}>Mark as Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             );
           })}
@@ -196,4 +199,31 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   statusBadgeText: { fontSize: 11, fontWeight: '800' },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    paddingTop: 16,
+  },
+  actionBtnOutline: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnOutlineText: { fontSize: 13, fontWeight: '700', color: '#3b82f6' },
+  actionBtnSolid: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnSolidText: { fontSize: 13, fontWeight: '700', color: '#ffffff' },
 });

@@ -36,10 +36,13 @@ export const getTimetables = asyncHandler(async (req: Request, res: Response) =>
 export const createTimetableEntry = asyncHandler(async (req: Request, res: Response) => {
   const user = (req as any).user;
   const schoolId = user?.schoolId || "sch_default";
-  const { dayOfWeek, startTime, endTime, classId, sectionId, subjectId, teacherId, room, academicYearId } = req.body;
+  const { dayOfWeek, startTime, endTime, classId, sectionId, subjectId, teacherId, room, academicYearId, isBreak, breakLabel } = req.body;
 
-  if (!dayOfWeek || !startTime || !endTime || !classId || !sectionId || !subjectId || !teacherId) {
-    return ApiResponse.error(res, 400, "dayOfWeek, startTime, endTime, classId, sectionId, subjectId, and teacherId are required.", "VALIDATION_ERROR");
+  if (!dayOfWeek || !startTime || !endTime || !classId || !sectionId) {
+    return ApiResponse.error(res, 400, "dayOfWeek, startTime, endTime, classId, sectionId are required.", "VALIDATION_ERROR");
+  }
+  if (!isBreak && (!subjectId || !teacherId)) {
+    return ApiResponse.error(res, 400, "subjectId and teacherId are required if it is not a break.", "VALIDATION_ERROR");
   }
 
   // Check duplicate slot to prevent collisions
@@ -63,9 +66,11 @@ export const createTimetableEntry = asyncHandler(async (req: Request, res: Respo
     endTime,
     classId: new mongoose.Types.ObjectId(classId),
     sectionId: new mongoose.Types.ObjectId(sectionId),
-    subjectId: new mongoose.Types.ObjectId(subjectId),
-    teacherId: new mongoose.Types.ObjectId(teacherId),
-    room: room || ""
+    subjectId: subjectId ? new mongoose.Types.ObjectId(subjectId) : undefined,
+    teacherId: teacherId ? new mongoose.Types.ObjectId(teacherId) : undefined,
+    room: room || "",
+    isBreak: isBreak || false,
+    breakLabel: breakLabel || ""
   });
 
   return ApiResponse.created(res, "Timetable slot entry created", { slot });
@@ -168,6 +173,51 @@ export const getTeacherTimetableHandler = asyncHandler(async (req: Request, res:
 
   return ApiResponse.success(res, 200, `Teacher timetable for ${day} retrieved`, {
     timetable: formattedSlots,
+    totalSlotsCount: formattedSlots.length
+  });
+});
+
+// ════════════ 6. GET /api/v1/admin/academics/student-timetable/:studentId — Parent/Student Timetable ════════════
+export const getStudentTimetableHandler = asyncHandler(async (req: Request, res: Response) => {
+  // In a real app we would lookup student's classId and sectionId from the database.
+  // For the sake of this feature, we mock standard IDs or expect them in query.
+  const user = (req as any).user;
+  const schoolId = user?.schoolId || "60f7b1b3b3b3b3b3b3b3b3b3";
+  
+  const classId = req.query.classId || "647b0a7d903e1c001f3eabc1"; // mock
+  const sectionId = req.query.sectionId || "647b0a7d903e1c001f3eabc2"; // mock
+
+  const slots = await TimetableModel.find({ schoolId, classId, sectionId })
+    .populate("subjectId", "subjectName code")
+    .populate("teacherId", "name email")
+    .sort({ dayOfWeek: 1, startTime: 1 })
+    .lean();
+
+  const formattedSlots = slots.map(s => ({
+    id: String(s._id),
+    day: s.dayOfWeek,
+    time: `${s.startTime} - ${s.endTime}`,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    isBreak: s.isBreak || false,
+    label: s.breakLabel || "",
+    subject: s.isBreak ? "" : ((s.subjectId as any)?.subjectName || "Subject"),
+    teacher: s.isBreak ? "" : ((s.teacherId as any)?.name || "Teacher"),
+    room: s.room || "N/A"
+  }));
+
+  // Group by day of week
+  const grouped: Record<string, any[]> = {
+    Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: []
+  };
+  formattedSlots.forEach(s => {
+    if (grouped[s.day]) {
+      grouped[s.day].push(s);
+    }
+  });
+
+  return ApiResponse.success(res, 200, "Student weekly timetable retrieved", {
+    timetable: grouped,
     totalSlotsCount: formattedSlots.length
   });
 });

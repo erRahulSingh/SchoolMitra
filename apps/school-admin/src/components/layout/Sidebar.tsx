@@ -40,6 +40,7 @@ const NAV_ITEMS = [
   { label: "Homework Hub", href: "/homework", icon: FileText },
   { label: "Assignments Desk", href: "/assignments", icon: ClipboardList },
   { label: "Exams & Report Cards", href: "/exams", icon: Award },
+  { label: "Online Tests", href: "/online-tests", icon: Award },
   { label: "Fee Collection", href: "/fees", icon: CreditCard },
   { label: "Live Bus Transport", href: "/transport", icon: Bus },
   { label: "Support Requests", href: "/support", icon: MessageSquare },

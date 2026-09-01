@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Filter, FileText, Shirt, Megaphone } from 'lucide-react-native';
 
@@ -7,38 +7,51 @@ export default function CircularsScreen({ navigation }: any) {
 
   const tabs = ['All', 'General', 'Academics', 'Transport'];
 
-  const circularsList = [
-    {
-      title: 'Fee Submission Reminder',
-      desc: 'Dear Parents, this is a reminder to submit the pending fee before 15th May 2025 to avoid late fee.',
-      date: '12 May 2025',
-      category: 'General',
-      isNew: true,
-      icon: FileText,
-      color: '#7c3aed',
-      bg: '#f3e8ff',
-    },
-    {
-      title: 'Summer Camp Registration',
-      desc: 'Registrations are open for the Summer Camp 2025. Last date to register is 20th May 2025.',
-      date: '10 May 2025',
-      category: 'Academics',
-      isNew: false,
-      icon: Megaphone,
-      color: '#7c3aed',
-      bg: '#f3e8ff',
-    },
-    {
-      title: 'Uniform Update',
-      desc: 'New summer uniform will be applicable from 1st June 2025.',
-      date: '08 May 2025',
-      category: 'General',
-      isNew: false,
-      icon: Shirt,
-      color: '#2563eb',
-      bg: '#e0f2fe',
-    },
-  ];
+  const [circularsList, setCircularsList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCirculars = async () => {
+      try {
+        const res = await fetch('http://10.0.2.2:5000/api/v1/circulars');
+        const data = await res.json();
+        
+        if (data.data && data.data.circulars) {
+          const formatted = data.data.circulars.map((circ: any) => {
+            const isNew = new Date(circ.createdAt).getTime() > Date.now() - 24 * 60 * 60 * 1000;
+            
+            let cat = 'General';
+            let icon = FileText;
+            let color = '#7c3aed';
+            let bg = '#f3e8ff';
+
+            if (circ.targetAudience === 'All Teachers' || circ.title.includes('Academic') || circ.title.includes('Exam')) {
+              cat = 'Academics'; icon = Megaphone;
+            } else if (circ.title.includes('Transport') || circ.title.includes('Bus')) {
+              cat = 'Transport'; icon = Shirt; color = '#2563eb'; bg = '#e0f2fe';
+            }
+
+            return {
+              title: circ.title,
+              desc: circ.content,
+              date: new Date(circ.date || circ.createdAt).toLocaleDateString(),
+              category: cat,
+              isNew,
+              icon,
+              color,
+              bg
+            };
+          });
+          setCircularsList(formatted);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCirculars();
+  }, []);
 
   const filteredCirculars = activeTab === 'All'
     ? circularsList

@@ -12,7 +12,7 @@ import mongoose from "mongoose";
 
 // Helper for Grade calculation
 async function calculateGradeForPercentage(schoolId: string, percentage: number): Promise<string> {
-  const setting = await SettingModel.findOne({ schoolId, key: "grading_rules" }).lean();
+  const setting: any = await SettingModel.findOne({ schoolId, key: "grading_rules" }).lean();
   const rules = setting?.value || [
     { minPercent: 90, maxPercent: 100, grade: "A+" },
     { minPercent: 80, maxPercent: 89.99, grade: "A" },
@@ -84,8 +84,8 @@ export const getTeacherReportCards = asyncHandler(async (req: Request, res: Resp
     });
   }
 
-  const classNameVal = await mongoose.model("classes").findById(classId).select("className").lean();
-  const examVal = await ExamModel.findById(examId).select("examName").lean();
+  const classNameVal: any = await mongoose.model("classes").findById(classId).select("className").lean();
+  const examVal: any = await ExamModel.findById(examId).select("examName").lean();
 
   return ApiResponse.success(res, 200, "Class report cards status retrieved", {
     classId,
@@ -164,7 +164,7 @@ export const submitStudentReportCard = asyncHandler(async (req: Request, res: Re
   }
 
   // 1. Fetch student info
-  const student = await StudentModel.findById(studentId).lean();
+  const student: any = await StudentModel.findById(studentId).lean();
   if (!student) {
     return ApiResponse.error(res, 404, "Student not found.", "NOT_FOUND");
   }

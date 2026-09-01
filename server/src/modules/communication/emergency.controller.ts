@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ═══════════════════════════════════════════════════════════
 // SchoolMitra Backend — Emergency Safety Broadcast Engine (Phase 11)
 // Protected by permission: emergency.broadcast

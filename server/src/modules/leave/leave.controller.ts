@@ -38,9 +38,9 @@ const getOrSeedLeaveApplications = async (schoolId: string) => {
   // Find teachers for demo data
   const teachers = await UserModel.find({
     role: { $in: ["Teacher", "teacher"] }
-  }).limit(4).lean();
+  }).limit(4).lean() as any;
 
-  const students = await StudentModel.find().limit(3).lean();
+  const students = await StudentModel.find().limit(3).lean() as any;
 
   const seedData: any[] = [];
 
@@ -197,7 +197,7 @@ const getOrCreateLeaveBalance = async (schoolId: string, staffId: Types.ObjectId
   let balance = await LeaveBalanceModel.findOne({
     staffId,
     academicYear: "2026-27",
-  }).lean();
+  }).lean() as any;
 
   if (!balance) {
     balance = await LeaveBalanceModel.create({
@@ -264,7 +264,7 @@ export const applyLeave = asyncHandler(async (req: Request, res: Response) => {
   const admins = await UserModel.find({
     role: { $in: ["SchoolAdmin", "Principal"] },
     ...(schoolId !== "sch_default" ? { schoolId } : {}),
-  }).select("_id").lean();
+  }).select("_id").lean() as any;
 
   for (const admin of admins.slice(0, 5)) {
     await send({
@@ -353,7 +353,7 @@ export const getLeaveById = asyncHandler(async (req: Request, res: Response) => 
     return ApiResponse.error(res, 400, "Invalid leave application ID");
   }
 
-  const leave = await LeaveApplicationModel.findById(id).lean();
+  const leave = await LeaveApplicationModel.findById(id).lean() as any;
   if (!leave) {
     return ApiResponse.error(res, 404, "Leave application not found");
   }
@@ -538,7 +538,7 @@ export const getLeaveBalance = asyncHandler(async (req: Request, res: Response) 
     return ApiResponse.error(res, 400, "Invalid staff ID");
   }
 
-  const staff = await UserModel.findById(staffId).select("name role").lean();
+  const staff = await UserModel.findById(staffId).select("name role").lean() as any;
   const staffName = (staff as any)?.name || "Unknown Staff";
 
   const balance = await getOrCreateLeaveBalance(schoolId, new Types.ObjectId(staffId), staffName);
@@ -566,7 +566,7 @@ export const getAllLeaveBalances = asyncHandler(async (req: Request, res: Respon
   const staffMembers = await UserModel.find({
     role: { $in: ["Teacher", "teacher", "Accountant", "Driver"] },
     ...(schoolId !== "sch_default" ? { schoolId } : {}),
-  }).select("_id name role").lean();
+  }).select("_id name role").lean() as any;
 
   const balances = [];
 
@@ -655,7 +655,7 @@ export const applyStudentLeave = asyncHandler(async (req: Request, res: Response
   let studentName = "Student";
   let classId, sectionId;
   if (Types.ObjectId.isValid(studentId)) {
-    const student = await StudentModel.findById(studentId).select("name classId sectionId parentId").lean();
+    const student = await StudentModel.findById(studentId).select("name classId sectionId parentId").lean() as any;
     if (student) {
       studentName = (student as any).name;
       classId = (student as any).classId;
@@ -700,7 +700,7 @@ export const applyStudentLeave = asyncHandler(async (req: Request, res: Response
   const admins = await UserModel.find({
     role: { $in: ["SchoolAdmin", "Principal", "Teacher"] },
     ...(schoolId !== "sch_default" ? { schoolId } : {}),
-  }).select("_id role").limit(5).lean();
+  }).select("_id role").limit(5).lean() as any;
 
   for (const admin of admins) {
     await send({

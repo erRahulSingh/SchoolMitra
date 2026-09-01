@@ -261,7 +261,7 @@ export default function SchoolAdminRequestManagementPage() {
   const pendingCount = requests.filter(r => r.status === "Submitted" || r.status === "Under Review" || r.status === "Open" || r.status === "OPEN").length;
   const progressCount = requests.filter(r => r.status === "In Progress" || r.status === "Waiting For Parent" || r.status === "InProgress").length;
   const resolvedCount = requests.filter(r => r.status === "Resolved" || r.status === "Closed").length;
-  const urgentCount = requests.filter(r => r.priority === "Urgent" || r.priority === "High" || r.priority === "Critical").length;
+  const urgentCount = requests.filter(r => r.priority === "Urgent" || r.priority === "High" || (r.priority as any) === "Critical").length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>

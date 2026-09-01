@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Dimensions, Image as RNImage } from 'react-native';
 import { ChevronLeft, LayoutGrid, Image as ImageIcon } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,50 +11,41 @@ export default function GalleryScreen({ navigation }: any) {
 
   const categories = ['All', 'Events', 'Activities', 'Celebrations', 'Trips'];
 
-  const albumsList = [
-    {
-      title: 'Annual Sports Day 2025',
-      count: '42 Photos',
-      category: 'Events',
-      image: 'https://images.unsplash.com/photo-1576267423445-b2e0074d68a4?w=500&auto=format&fit=crop&q=80',
-      gradient: ['#3b82f6', '#1d4ed8'],
-    },
-    {
-      title: 'Science Exhibition 2025',
-      count: '38 Photos',
-      category: 'Activities',
-      image: 'https://images.unsplash.com/photo-1567168544813-cc03465b4fa8?w=500&auto=format&fit=crop&q=80',
-      gradient: ['#0284c7', '#0369a1'],
-    },
-    {
-      title: 'Independence Day 2024',
-      count: '26 Photos',
-      category: 'Celebrations',
-      image: 'https://images.unsplash.com/photo-1532375810709-75b1da00537c?w=500&auto=format&fit=crop&q=80',
-      gradient: ['#16a34a', '#15803d'],
-    },
-    {
-      title: "Children's Day 2024",
-      count: '31 Photos',
-      category: 'Celebrations',
-      image: 'https://images.unsplash.com/photo-1485546246426-74dc88dec4d9?w=500&auto=format&fit=crop&q=80',
-      gradient: ['#ea580c', '#c2410c'],
-    },
-    {
-      title: 'Educational Trip 2024',
-      count: '27 Photos',
-      category: 'Trips',
-      image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=500&auto=format&fit=crop&q=80',
-      gradient: ['#7c3aed', '#6d28d9'],
-    },
-    {
-      title: 'Diwali Celebration 2024',
-      count: '29 Photos',
-      category: 'Celebrations',
-      image: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=500&auto=format&fit=crop&q=80',
-      gradient: ['#e11d48', '#be123c'],
-    },
-  ];
+  const [albumsList, setAlbumsList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAlbums = async () => {
+      try {
+        const res = await fetch('http://10.0.2.2:5000/api/v1/gallery/albums');
+        const data = await res.json();
+        
+        if (data.data && data.data.albums) {
+          const formatted = data.data.albums.map((album: any) => {
+            let cat = 'Events';
+            if (album.title.includes('Trip')) cat = 'Trips';
+            else if (album.title.includes('Day') || album.title.includes('Celebration')) cat = 'Celebrations';
+            else if (album.title.includes('Exhibition')) cat = 'Activities';
+
+            return {
+              id: album._id,
+              title: album.title,
+              count: `${album.mediaCount || 0} Photos`,
+              category: cat,
+              image: album.coverPhoto || 'https://images.unsplash.com/photo-1576267423445-b2e0074d68a4?w=500&auto=format&fit=crop&q=80',
+              gradient: ['#3b82f6', '#1d4ed8'],
+            };
+          });
+          setAlbumsList(formatted);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAlbums();
+  }, []);
 
   const filteredAlbums = activeCategory === 'All'
     ? albumsList

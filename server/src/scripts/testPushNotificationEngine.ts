@@ -4,8 +4,8 @@
 // ═══════════════════════════════════════════════════════════
 
 import mongoose from "mongoose";
-import { SchoolModel, UserModel, ParentModel } from "../models/AuthSchemas";
-import { ClassModel, SectionModel, StudentModel } from "../models/SchoolSchemas";
+import { SchoolModel, UserModel} from "../models/AuthSchemas";
+import { ClassModel, SectionModel, StudentModel , ParentModel } from "../models/SchoolSchemas";
 import { NotificationModel } from "../models/CommunicationSchemas";
 import { 
   createNotification, 
@@ -182,3 +182,4 @@ async function run() {
 }
 
 run();
+

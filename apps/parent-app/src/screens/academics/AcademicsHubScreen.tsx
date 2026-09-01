@@ -135,6 +135,24 @@ export default function AcademicsHubScreen({ navigation }: any) {
           </View>
         </TouchableOpacity>
 
+        {/* AI Doubt Solver Banner */}
+        <TouchableOpacity 
+          style={[styles.examBanner, { backgroundColor: '#f5f3ff', borderColor: '#d8b4fe' }]} 
+          onPress={() => navigation.navigate('AiDoubtSolver')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.examLeft}>
+            <View style={[styles.iconBox, { backgroundColor: '#e9d5ff' }]}>
+              <Award size={22} color="#9333ea" strokeWidth={2.2} />
+            </View>
+            <View style={styles.examTextContainer}>
+              <Text style={[styles.examTitle, { color: '#7e22ce' }]}>AI Doubt Solver</Text>
+              <Text style={[styles.examDesc, { color: '#9333ea' }]}>Scan, Ask & Learn instantly 🤖</Text>
+            </View>
+          </View>
+          <ChevronRight size={20} color="#9333ea" />
+        </TouchableOpacity>
+
         {/* Subjects Section */}
         <Text style={styles.sectionTitle}>Subjects</Text>
         <View style={styles.subjectsCard}>

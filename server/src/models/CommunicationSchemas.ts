@@ -516,3 +516,32 @@ const notificationPreferenceSchema = new Schema({
 
 export const NotificationPreferenceModel = model("notification_preferences", notificationPreferenceSchema);
 
+// -----------------------------------------------------------
+// Gallery & Event Media Schemas
+// -----------------------------------------------------------
+
+const galleryAlbumSchema = new Schema({
+  schoolId: { type: Schema.Types.ObjectId, ref: "schools", required: true },
+  createdBy: { type: Schema.Types.ObjectId, ref: "users", required: true },
+  title: { type: String, required: true },
+  description: { type: String },
+  coverPhoto: { type: String },
+  eventDate: { type: Date },
+  visibility: { type: String, enum: ["All", "SpecificClasses", "StaffOnly"], default: "All" },
+  classes: [{ type: Schema.Types.ObjectId, ref: "classes" }]
+}, { timestamps: true });
+
+galleryAlbumSchema.index({ schoolId: 1, visibility: 1 });
+export const GalleryAlbumModel = model("gallery_albums", galleryAlbumSchema);
+
+const galleryMediaSchema = new Schema({
+  schoolId: { type: Schema.Types.ObjectId, ref: "schools", required: true },
+  albumId: { type: Schema.Types.ObjectId, ref: "gallery_albums", required: true },
+  uploadedBy: { type: Schema.Types.ObjectId, ref: "users", required: true },
+  mediaType: { type: String, enum: ["Image", "Video"], default: "Image" },
+  url: { type: String, required: true },
+  caption: { type: String }
+}, { timestamps: true });
+
+galleryMediaSchema.index({ schoolId: 1, albumId: 1 });
+export const GalleryMediaModel = model("gallery_media", galleryMediaSchema);

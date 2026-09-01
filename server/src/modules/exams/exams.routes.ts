@@ -6,14 +6,17 @@ import {
   createExam,
   getExamScheduleDetails,
   enterMarks,
+  enterMarksBulk,
   getStudentResult,
   getReportCard,
-  publishExamResults
+  publishExamResults,
+  getStudentPerformance
 } from "./exams.controller";
+import { uploadBulkResults } from "./resultUpload.controller";
+import { uploadCsv } from "../../middleware/uploadMiddleware";
 
 const router = Router();
 
-// ─── STEP 20: CENTRAL EXAMS AUTH & TENANT STATUS GUARDS ───
 router.use(authenticate);
 router.use(requireActiveSchool);
 
@@ -24,10 +27,13 @@ router.get("/schedule", getExamScheduleDetails);
 
 // Marks & Results
 router.post("/marks/entry", enterMarks);
+router.post("/marks/bulk", enterMarksBulk);
+router.post("/:id/results/bulk-upload", uploadCsv.single("file"), uploadBulkResults);
 router.get("/result/:studentId", getStudentResult);
 
 // Report Cards & Publishing
 router.get("/report-card/:studentId", getReportCard);
+router.get("/performance/:studentId", getStudentPerformance);
 router.post("/publish", publishExamResults);
 
 export default router;

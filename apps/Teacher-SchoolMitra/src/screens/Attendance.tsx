@@ -1,39 +1,81 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { Check, X, Clock, Save, ChevronLeft, ShieldCheck } from 'lucide-react-native';
 
-export default function Attendance({ navigation }: any) {
-  const [students, setStudents] = useState([
-    { id: 'st_1', roll: '01', name: 'Aarav Gupta', status: 'Present' },
-    { id: 'st_2', roll: '02', name: 'Ananya Patel', status: 'Present' },
-    { id: 'st_3', roll: '03', name: 'Devansh Verma', status: 'Absent' },
-    { id: 'st_4', roll: '04', name: 'Isha Sharma', status: 'Present' },
-    { id: 'st_5', roll: '05', name: 'Kavya Singh', status: 'Leave' },
-    { id: 'st_6', roll: '06', name: 'Rohan Mehta', status: 'Present' },
-    { id: 'st_7', roll: '07', name: 'Siddharth Rao', status: 'Present' }
-  ]);
+export default function Attendance({ navigation, route }: any) {
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const classId = route?.params?.classId || 'Class 8';
+  const sectionId = route?.params?.sectionId || 'A';
+
+  useEffect(() => {
+    fetchClassRoster();
+  }, []);
+
+  const fetchClassRoster = async () => {
+    try {
+      const res = await fetch(`http://10.0.2.2:5000/api/v1/attendance/student/class?classId=${classId}&sectionId=${sectionId}`);
+      const json = await res.json();
+      if (json.success && json.data.logs) {
+        setStudents(json.data.logs.map((log: any) => ({
+          id: log.studentId,
+          roll: log.rollNo || '00',
+          name: log.studentName,
+          status: log.status || 'Present'
+        })));
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to fetch class roster');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleStatus = (id: string, newStatus: string) => {
     setStudents(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
   };
 
   const handleSaveAttendance = async () => {
+    setSaving(true);
     try {
-      await fetch('http://localhost:5000/api/v1/teacher/attendance', {
+      const records = students.map(s => ({
+        studentId: s.id,
+        status: s.status,
+        className: classId,
+        section: sectionId,
+        date: new Date().toISOString().split('T')[0]
+      }));
+
+      const res = await fetch('http://10.0.2.2:5000/api/v1/attendance/student/mark', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          classId: 'class_8',
-          sectionId: 'sec_a',
-          date: new Date().toISOString().split('T')[0],
-          attendance: students.map(s => ({ studentId: s.id, status: s.status }))
-        })
+        body: JSON.stringify({ records })
       });
-      Alert.alert('Success ✅', 'Attendance saved & broadcasted live to Parent App!');
+      const json = await res.json();
+      
+      if (json.success) {
+        Alert.alert('Success ✅', 'Attendance saved & broadcasted live to Parent App!');
+      } else {
+        Alert.alert('Error', json.message || 'Failed to save attendance');
+      }
     } catch (err) {
-      Alert.alert('Success ✅', 'Attendance saved & broadcasted live to Parent App!');
+      console.error(err);
+      Alert.alert('Error', 'Network error while saving attendance');
+    } finally {
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#7c3aed" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -44,7 +86,7 @@ export default function Attendance({ navigation }: any) {
         </TouchableOpacity>
         <View>
           <Text style={styles.title}>Mark Attendance</Text>
-          <Text style={styles.subtitle}>Class 8-A • Mathematics</Text>
+          <Text style={styles.subtitle}>{classId}-{sectionId} • Live Update</Text>
         </View>
         <View style={styles.lockBadge}>
           <ShieldCheck size={16} color="#166534" />
@@ -66,9 +108,9 @@ export default function Attendance({ navigation }: any) {
         </View>
         <View style={styles.statBox}>
           <Text style={[styles.statVal, { color: '#f59e0b' }]}>
-            {students.filter(s => s.status === 'Leave').length}
+            {students.filter(s => s.status === 'Leave' || s.status === 'Late' || s.status === 'Half Day').length}
           </Text>
-          <Text style={styles.statLabel}>On Leave</Text>
+          <Text style={styles.statLabel}>Other</Text>
         </View>
       </View>
 
@@ -109,9 +151,9 @@ export default function Attendance({ navigation }: any) {
       </ScrollView>
 
       <View style={styles.saveFooter}>
-        <TouchableOpacity onPress={handleSaveAttendance} style={styles.saveBtn} activeOpacity={0.8}>
-          <Save size={20} color="#ffffff" />
-          <Text style={styles.saveBtnText}>Submit & Broadcast Attendance</Text>
+        <TouchableOpacity onPress={handleSaveAttendance} style={styles.saveBtn} activeOpacity={0.8} disabled={saving}>
+          {saving ? <ActivityIndicator color="#fff" /> : <Save size={20} color="#ffffff" />}
+          <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Submit & Broadcast Attendance'}</Text>
         </TouchableOpacity>
       </View>
 

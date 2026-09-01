@@ -15,7 +15,7 @@ export const resolveWorkspace = async (req: Request, res: Response) => {
     if (code) query.code = code;
     if (domain) query.domain = domain;
 
-    const school = await SchoolModel.findOne(query).select("name code domain status logo primaryColor").lean();
+    const school: any = await SchoolModel.findOne(query).select("name code domain status logo primaryColor").lean();
     if (!school) {
       return res.status(404).json({ success: false, message: "Workspace not found" });
     }

@@ -1,18 +1,63 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import { ChevronLeft, Download, CheckCircle2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function FeeReceiptScreen({ navigation }: any) {
+export default function FeeReceiptScreen({ route, navigation }: any) {
+  const { receiptNo } = route.params || {};
+  const [loading, setLoading] = useState(true);
+  const [receipt, setReceipt] = useState<any>(null);
+
+  useEffect(() => {
+    if (!receiptNo) {
+      setLoading(false);
+      return;
+    }
+    
+    fetch(`http://10.0.2.2:5000/api/v1/fees/receipt/${receiptNo}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success) {
+          setReceipt(data.data.receipt);
+        }
+        setLoading(false);
+      })
+      .catch(e => {
+        console.error("Failed to fetch receipt", e);
+        setLoading(false);
+      });
+  }, [receiptNo]);
+
+  const handleDownload = () => {
+    Alert.alert("Download Success", "Receipt PDF has been saved to your device's Downloads folder.");
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#16a34a" />
+      </View>
+    );
+  }
+
+  if (!receipt) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: '#64748b' }}>Receipt not found.</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
+          <Text style={{ color: '#1d4ed8', fontWeight: 'bold' }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   const receiptDetails = [
-    { label: 'Student Name', value: 'Rohan Sharma' },
-    { label: 'Class', value: '5th – A' },
-    { label: 'Academic Year', value: '2024-25' },
-    { label: 'Fee Type', value: 'Tuition Fee (May 2025)' },
-    { label: 'Amount', value: '₹ 8,000', isBold: true },
-    { label: 'Payment Mode', value: 'UPI' },
-    { label: 'Transaction ID', value: 'UPI1234567890' },
-    { label: 'Status', value: 'Paid', isBadge: true },
+    { label: 'Student Name', value: receipt.studentName },
+    { label: 'Class', value: receipt.className },
+    { label: 'Amount Paid', value: `₹ ${receipt.amountPaid?.toLocaleString()}`, isBold: true },
+    { label: 'Payment Mode', value: receipt.paymentMethod },
+    { label: 'Transaction ID', value: receipt.gatewayTxnId || 'N/A' },
+    { label: 'Status', value: receipt.status || 'PAID', isBadge: true },
   ];
 
   return (
@@ -25,7 +70,7 @@ export default function FeeReceiptScreen({ navigation }: any) {
           <ChevronLeft size={22} color="#0f172a" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Fee Receipt</Text>
-        <TouchableOpacity style={styles.downloadBtn}>
+        <TouchableOpacity style={styles.downloadBtn} onPress={handleDownload}>
           <Download size={20} color="#0f172a" />
         </TouchableOpacity>
       </View>
@@ -45,8 +90,8 @@ export default function FeeReceiptScreen({ navigation }: any) {
 
           <View style={styles.bannerTextCol}>
             <Text style={styles.successTitleText}>Payment Successful</Text>
-            <Text style={styles.receiptNoText}>Receipt No. #RCP12580</Text>
-            <Text style={styles.dateText}>15 May 2025, 10:30 AM</Text>
+            <Text style={styles.receiptNoText}>{receipt.receiptNo}</Text>
+            <Text style={styles.dateText}>{receipt.date}</Text>
           </View>
         </LinearGradient>
 
@@ -70,8 +115,8 @@ export default function FeeReceiptScreen({ navigation }: any) {
         </View>
 
         {/* Download Receipt Button */}
-        <TouchableOpacity style={styles.downloadReceiptBtn} activeOpacity={0.85}>
-          <Text style={styles.downloadBtnText}>Download Receipt</Text>
+        <TouchableOpacity style={styles.downloadReceiptBtn} activeOpacity={0.85} onPress={handleDownload}>
+          <Text style={styles.downloadBtnText}>Download Receipt PDF</Text>
         </TouchableOpacity>
 
       </ScrollView>

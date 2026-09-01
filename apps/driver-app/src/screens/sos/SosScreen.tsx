@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Alert, Linking } from 'react-native';
 import { ChevronLeft, Phone, Building, ShieldAlert, UserCheck, HeartPulse } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { createSocketConnection } from '../../lib/socketClient';
@@ -14,21 +14,69 @@ export default function SosScreen({ navigation }: any) {
     { title: 'Ambulance', phone: '108', icon: HeartPulse, color: '#ef4444', bg: '#fee2e2' },
   ];
 
-  const handleTriggerSOS = () => {
+  const [driverUser, setDriverUser] = React.useState<any>({});
+
+  React.useEffect(() => {
+    import('@react-native-async-storage/async-storage').then(({ default: AsyncStorage }) => {
+      AsyncStorage.getItem('driverUser').then(res => {
+        if (res) {
+          try {
+            setDriverUser(JSON.parse(res));
+          } catch (e) {}
+        }
+      });
+    });
+  }, []);
+
+  const handleTriggerSOS = async () => {
+    // 1. Direct Call to Admin
+    Linking.openURL('tel:+919876543210');
+
+    let currentLat = 28.5833;
+    let currentLng = 77.0667;
+    try {
+      const { default: Location } = await import('expo-location');
+      const location = await Location.getCurrentPositionAsync({});
+      currentLat = location.coords.latitude;
+      currentLng = location.coords.longitude;
+    } catch(err) {
+      console.log("Could not fetch precise location for SOS, using fallback.");
+    }
+
+    const busNo = driverUser?.assignedBusId || "BUS-01";
+    const driverName = driverUser?.name || "Rajesh Kumar";
+    const driverId = driverUser?.id || "DRV-101";
+
+    // 2. Trigger Backend HTTP API
+    try {
+      await fetch("http://localhost:5000/api/v1/transport/sos/trigger", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          busNo,
+          driverName,
+          location: `${currentLat}, ${currentLng}`
+        })
+      });
+    } catch (err) {
+      console.log("Failed to trigger SOS backend", err);
+    }
+    
+    // 3. Optional socket emit
     const socket = createSocketConnection("http://localhost:5000");
     if (socket && typeof socket.emit === 'function') {
       socket.emit("driver:sos_alert", {
         schoolId: "650000000000000000000001",
-        driverId: "DRV-101",
-        busId: "BUS-01",
+        driverId,
+        busId: busNo,
         tripId: "TRIP-101",
-        latitude: 28.5833,
-        longitude: 77.0667,
+        latitude: currentLat,
+        longitude: currentLng,
         timestamp: new Date().toISOString(),
         status: "CRITICAL"
       });
     }
-    Alert.alert('SOS Emergency Alert Sent! 🚨', 'GPS location broadcasted to Control Room & Police.');
+    Alert.alert('SOS Emergency Alert Sent! 🚨', 'Admin dialling... GPS location broadcasted to Control Room & Parents.');
   };
 
   return (

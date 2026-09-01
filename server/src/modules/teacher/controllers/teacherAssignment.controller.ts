@@ -141,7 +141,7 @@ export const createTeacherAssignment = asyncHandler(async (req: Request, res: Re
     try {
       notifyParent(
         "ExponentPushToken[SampleParentToken]",
-        "ASSIGNMENT_PUBLISHED",
+        "TEACHER_ANNOUNCEMENT",
         "New Project Assignment 📄",
         `New Assignment announced: "${title}". Max Marks: ${maxMarks}. Due: ${new Date(dueDate).toDateString()}`,
         { assignmentId: String(newAsg._id) }
@@ -255,7 +255,7 @@ export const updateTeacherAssignmentById = asyncHandler(async (req: Request, res
     try {
       notifyParent(
         "ExponentPushToken[SampleParentToken]",
-        "ASSIGNMENT_PUBLISHED",
+        "TEACHER_ANNOUNCEMENT",
         "New Project Assignment 📄",
         `New Assignment announced: "${asg.title}". Max Marks: ${asg.maxMarks}. Due: ${new Date(asg.dueDate!).toDateString()}`,
         { assignmentId: String(asg._id) }
@@ -313,7 +313,7 @@ export const publishTeacherAssignmentById = asyncHandler(async (req: Request, re
   try {
     notifyParent(
       "ExponentPushToken[SampleParentToken]",
-      "ASSIGNMENT_PUBLISHED",
+      "TEACHER_ANNOUNCEMENT",
       "New Project Assignment 📄",
       `New Assignment announced: "${asg.title}". Max Marks: ${asg.maxMarks}. Due: ${new Date(asg.dueDate!).toDateString()}`,
       { assignmentId: String(asg._id) }

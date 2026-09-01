@@ -56,7 +56,7 @@ export default function CreateAssignmentScreen({ navigation }: any) {
     setAttachedFiles(updated);
   };
 
-  const handlePublish = (isDraft = false) => {
+  const handlePublish = async (isDraft = false) => {
     if (!title.trim()) {
       Alert.alert('Validation Error', 'Please enter an assignment title.');
       return;
@@ -66,13 +66,42 @@ export default function CreateAssignmentScreen({ navigation }: any) {
       return;
     }
 
-    if (isDraft) {
-      Alert.alert('Draft Saved 💾', `Assignment "${title}" saved as draft.`);
-    } else {
-      socketService.syncAssignment(title, selectedClass, maxMarks);
-      Alert.alert('Assignment Published 🎉', `Assignment successfully published & broadcasted live via Socket.IO to ${selectedClass} parents!`);
+    try {
+      // Mock class and subject IDs for demo
+      const classId = '647b0a7d903e1c001f3eabc1'; 
+      const subjectId = '647b0a7d903e1c001f3eabc4';
+
+      const res = await fetch('http://10.0.2.2:5000/api/v1/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description,
+          classId,
+          subjectId,
+          maxMarks: Number(maxMarks),
+          dueDate: dueDate,
+          status: isDraft ? 'DRAFT' : 'PUBLISHED',
+          teacherId: '647b0a7d903e1c001f3eabc3' // Mock teacher ID
+        })
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        if (isDraft) {
+          Alert.alert('Draft Saved 💾', `Assignment "${title}" saved as draft.`);
+        } else {
+          socketService.syncAssignment(title, selectedClass, maxMarks);
+          Alert.alert('Assignment Published 🎉', `Assignment successfully published & broadcasted live via Socket.IO to ${selectedClass} parents!`);
+        }
+        navigation.goBack();
+      } else {
+        Alert.alert('Error', data.message || 'Failed to create assignment');
+      }
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Network Error', 'Could not connect to server.');
     }
-    navigation.goBack();
   };
 
   return (

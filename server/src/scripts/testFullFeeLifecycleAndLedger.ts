@@ -8,8 +8,8 @@ import dotenv from "dotenv";
 import path from "path";
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 
-import { SchoolModel, UserModel, ParentModel } from "../models/AuthSchemas";
-import { ClassModel, StudentModel } from "../models/SchoolSchemas";
+import { SchoolModel, UserModel} from "../models/AuthSchemas";
+import { ClassModel, StudentModel , ParentModel } from "../models/SchoolSchemas";
 import { FeeStructureModel, FeeInvoiceModel, PaymentModel, FeeAdjustmentAuditModel } from "../models/FeeSchemas";
 import { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, createRazorpayOrder, verifyPaymentSignature } from "../config/razorpay";
 import crypto from "crypto";
@@ -170,3 +170,4 @@ async function runMasterFeeLifecycleTest() {
 }
 
 runMasterFeeLifecycleTest();
+

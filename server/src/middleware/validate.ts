@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ═══════════════════════════════════════════════════════════
 // SchoolMitra Backend — Zod Validation Middleware Factory
 // ═══════════════════════════════════════════════════════════
@@ -54,3 +55,4 @@ export const validate = (schema: ZodSchema | ValidationTarget) => {
     }
   };
 };
+

@@ -46,16 +46,25 @@ export default function ParentCalendarScreen({ navigation }: any) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [calRes, evtRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/v1/calendar/monthly/${year}/${month}`),
-        fetch('http://localhost:5000/api/v1/events/upcoming?days=30'),
-      ]);
+      // Fetch calendar data
+      const calRes = await fetch(`http://10.0.2.2:5000/api/v1/calendar/monthly/${year}/${month}`);
       const calJson = await calRes.json();
-      const evtJson = await evtRes.json();
       if (calJson.success) setCalendarDays(calJson.data.days);
-      if (evtJson.success) setUpcomingEvents(evtJson.data.events.filter((e: any) =>
-        e.targetAudience === 'All' || e.targetAudience === 'Parents' || e.targetAudience === 'Students'
-      ));
+
+      // Fetch upcoming events safely
+      try {
+        const evtRes = await fetch('http://10.0.2.2:5000/api/v1/events/upcoming?days=30');
+        if (evtRes.ok) {
+          const evtJson = await evtRes.json();
+          if (evtJson.success && evtJson.data?.events) {
+            setUpcomingEvents(evtJson.data.events.filter((e: any) =>
+              e.targetAudience === 'All' || e.targetAudience === 'Parents' || e.targetAudience === 'Students'
+            ));
+          }
+        }
+      } catch (evtErr) {
+        // Silently ignore if events route is missing
+      }
     } catch (err) {
       console.error('Calendar error:', err);
     } finally {
