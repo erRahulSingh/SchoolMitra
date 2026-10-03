@@ -1,25 +1,27 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Alert } from 'react-native';
 import { 
-  User, Lock, Bell, Link, HelpCircle, Info, LogOut, ChevronRight, Shield, Award
+  User, Lock, Bell, Link, HelpCircle, Info, LogOut, ChevronRight, Shield, Award, CheckCircle2
 } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useParentAuth } from '../../context/ParentAuthContext';
 
 export default function ParentProfileScreen({ navigation }: any) {
-  const parent = {
-    name: 'Anjali Sharma',
-    role: 'Mother of Rohan Sharma',
-    phone: '+91 98765 43210',
-    email: 'anjali.sharma@email.com',
-    initials: 'AS',
-  };
+  const { user, parent: parentData, currentChild, children, selectChild, logout } = useParentAuth();
 
-  const child = {
-    name: 'Rohan Sharma',
-    class: 'Class 5th – A',
-    roll: 'Roll No. 12',
-    initials: 'RS',
-  };
+  const parentName = parentData?.name || user?.name || 'Parent User';
+  const relation = parentData?.relation || 'Parent';
+  const childName = currentChild?.name || 'Student';
+  const parentRole = `${relation} of ${childName}`;
+  const parentPhone = parentData?.phone || user?.phone || 'Not available';
+  const parentEmail = parentData?.email || user?.email || 'Not available';
+  const parentInitials = parentName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'P';
+
+  const displayChildren = children && children.length > 0 ? children : (currentChild ? [currentChild] : []);
 
   const handleLogout = async () => {
     Alert.alert('Logout', 'Are you sure you want to logout from Parent Portal?', [
@@ -28,8 +30,11 @@ export default function ParentProfileScreen({ navigation }: any) {
         text: 'Logout',
         style: 'destructive',
         onPress: async () => {
-          await AsyncStorage.removeItem('parentToken');
-          navigation.replace('Login');
+          await logout();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
         }
       }
     ]);
@@ -62,40 +67,73 @@ export default function ParentProfileScreen({ navigation }: any) {
           activeOpacity={0.9}
         >
           <View style={styles.avatarLarge}>
-            <Text style={styles.avatarLargeText}>{parent.initials}</Text>
+            <Text style={styles.avatarLargeText}>{parentInitials}</Text>
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={styles.parentName}>{parent.name}</Text>
-            <Text style={styles.parentRole}>{parent.role}</Text>
-            <Text style={styles.parentContact}>{parent.phone}</Text>
-            <Text style={styles.parentContact}>{parent.email}</Text>
+            <Text style={styles.parentName}>{parentName}</Text>
+            <Text style={styles.parentRole}>{parentRole}</Text>
+            <Text style={styles.parentContact}>{parentPhone}</Text>
+            <Text style={styles.parentContact}>{parentEmail}</Text>
           </View>
 
           <ChevronRight size={22} color="#ffffff" />
         </TouchableOpacity>
 
         {/* 2. MY CHILDREN SECTION */}
-        <Text style={styles.sectionTitle}>My Children</Text>
-        <View style={styles.childrenCard}>
-          <View style={styles.childLeft}>
-            <View style={styles.childAvatar}>
-              <Text style={styles.childAvatarText}>{child.initials}</Text>
-            </View>
-            <View>
-              <Text style={styles.childName}>{child.name}</Text>
-              <Text style={styles.childClass}>{child.class}</Text>
-              <Text style={styles.childRoll}>{child.roll}</Text>
-            </View>
+        <Text style={styles.sectionTitle}>
+          My Children {displayChildren.length > 0 ? `(${displayChildren.length})` : ''}
+        </Text>
+        {displayChildren.length > 0 ? (
+          displayChildren.map((ch, idx) => {
+            const chInitials = ch.name
+              ? ch.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+              : 'ST';
+            const isSelected = ch.id === currentChild?.id;
+
+            return (
+              <View key={ch.id || idx} style={[styles.childrenCard, isSelected && styles.childrenCardActive]}>
+                <View style={styles.childLeft}>
+                  <View style={[styles.childAvatar, isSelected && styles.childAvatarActive]}>
+                    <Text style={[styles.childAvatarText, isSelected && styles.childAvatarTextActive]}>
+                      {chInitials}
+                    </Text>
+                  </View>
+                  <View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.childName}>{ch.name}</Text>
+                      {isSelected && (
+                        <View style={styles.activePill}>
+                          <Text style={styles.activePillText}>Active</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.childClass}>{ch.class || 'Student'}</Text>
+                    <Text style={styles.childRoll}>
+                      {ch.rollNo ? `Roll No. ${ch.rollNo}` : (ch.admissionNo ? `Adm: ${ch.admissionNo}` : 'Roll: N/A')}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity 
+                  style={[styles.viewChildBtn, isSelected && styles.viewChildBtnActive]} 
+                  onPress={() => {
+                    if (ch.id) selectChild(ch.id);
+                    navigation.navigate('ChildProfile');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.viewChildText, isSelected && styles.viewChildTextActive]}>
+                    {isSelected ? 'View Profile' : 'Select'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })
+        ) : (
+          <View style={styles.childrenCard}>
+            <Text style={{ fontSize: 13, color: '#64748b' }}>No linked students found.</Text>
           </View>
-          <TouchableOpacity 
-            style={styles.viewChildBtn} 
-            onPress={() => navigation.navigate('ChildProfile')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.viewChildText}>View</Text>
-          </TouchableOpacity>
-        </View>
+        )}
 
         {/* 3. ACCOUNT SETTINGS LIST */}
         <View style={styles.menuGroupCard}>
@@ -290,6 +328,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: '#2563eb',
+  },
+  childrenCardActive: {
+    borderColor: '#3b82f6',
+    backgroundColor: '#f8faff',
+  },
+  childAvatarActive: {
+    backgroundColor: '#3b82f6',
+    borderColor: '#2563eb',
+  },
+  childAvatarTextActive: {
+    color: '#ffffff',
+  },
+  activePill: {
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  activePillText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#15803d',
+  },
+  viewChildBtnActive: {
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
+  },
+  viewChildTextActive: {
+    color: '#ffffff',
   },
 
   // 3 & 4. Menu Group Cards

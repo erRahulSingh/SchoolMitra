@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboa
 import { ChevronLeft, Send, Camera, Mic, MoreVertical, Sparkles, Volume2, Square, Edit3, HelpCircle, FileText } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import { Audio } from 'expo-av';
+import { useAudioRecorder, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
 import Markdown from 'react-native-markdown-display';
 import * as Speech from 'expo-speech';
 import SignatureScreen from 'react-native-signature-canvas';
@@ -25,7 +25,8 @@ export default function AiDoubtSolverScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [doubtsRemaining, setDoubtsRemaining] = useState(5);
   
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showCanvas, setShowCanvas] = useState(false);
 
@@ -136,11 +137,11 @@ export default function AiDoubtSolverScreen({ navigation }: any) {
   const toggleRecording = async () => {
     if (doubtsRemaining <= 0) { alert("Daily Limit Reached."); return; }
     try {
-      if (recording) {
+      if (isRecording) {
         setLoading(true);
-        await recording.stopAndUnloadAsync();
-        const uri = recording.getURI();
-        setRecording(null);
+        await audioRecorder.stop();
+        setIsRecording(false);
+        const uri = audioRecorder.uri;
 
         const userMessage = { id: Date.now().toString(), sender: 'user', text: "🎤 [Voice Note Attached]", audioUri: uri, mediaType: 'audio', timestamp: new Date().toISOString() };
         setMessages(prev => [...prev, userMessage]);
@@ -152,11 +153,12 @@ export default function AiDoubtSolverScreen({ navigation }: any) {
           streamAiResponse(`### Voice Query Received 🎤\n\n**Photosynthesis** is the process by which green plants transform light energy into chemical energy.`, aiResponseId);
         }, 1500);
       } else {
-        const permission = await Audio.requestPermissionsAsync();
-        if (permission.status === 'granted') {
-          await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-          const { recording: newRecording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-          setRecording(newRecording);
+        const permission = await requestRecordingPermissionsAsync();
+        if (permission.granted) {
+          await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+          await audioRecorder.prepareToRecordAsync();
+          audioRecorder.record();
+          setIsRecording(true);
         }
       }
     } catch (err) { console.error('Failed to record audio', err); }
@@ -261,7 +263,7 @@ export default function AiDoubtSolverScreen({ navigation }: any) {
                     <Text style={styles.subjectBadge}>Tag: {msg.subject}</Text>
                   )}
                   {/* Clean out the JSON quiz from markdown view */}
-                  <Markdown style={markdownStyles}>
+                  <Markdown style={markdownStyles as any}>
                     {msg.text.replace(/```json\n([\s\S]*?)\n```/g, '*[Interactive Quiz Generated Below]*')}
                   </Markdown>
 
@@ -352,7 +354,7 @@ export default function AiDoubtSolverScreen({ navigation }: any) {
             <Send size={20} color="#fff" />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={[styles.micBtn, recording ? styles.recordingBtn : null]} onPress={toggleRecording}>
+          <TouchableOpacity style={[styles.micBtn, isRecording ? styles.recordingBtn : null]} onPress={toggleRecording}>
             <Mic size={22} color="#fff" />
           </TouchableOpacity>
         )}

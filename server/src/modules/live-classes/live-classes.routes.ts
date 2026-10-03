@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Router } from "express";
 import { scheduleClass, getUpcomingClasses, joinClass, endClass } from "./live-classes.controller";
-import { authenticate, requireRole } from "../../middleware/authenticates";
+import { authenticate, requireRole } from "../../middleware/authMiddleware";
 
 const router = Router();
 

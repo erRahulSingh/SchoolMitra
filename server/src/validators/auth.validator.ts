@@ -50,9 +50,8 @@ export const registerSchema = z.object({
 // ──── Login ────
 export const loginSchema = z.object({
   email: z
-    .string({ required_error: "Email is required" })
-    .email("Please provide a valid email address")
-    .toLowerCase()
+    .string({ required_error: "Email or phone is required" })
+    .min(3, "Please provide a valid email or phone number")
     .trim(),
 
   password: z
@@ -66,6 +65,66 @@ export const loginSchema = z.object({
       "Receptionist", "Security"
     ])
     .optional(),
+});
+
+// ──── Register Parent ────
+export const registerParentSchema = z.object({
+  name: z
+    .string({ required_error: "Parent name is required" })
+    .min(2, "Name must be at least 2 characters")
+    .max(80, "Name must be under 80 characters")
+    .trim(),
+
+  email: z
+    .string({ required_error: "Email is required" })
+    .email("Please provide a valid email address")
+    .toLowerCase()
+    .trim(),
+
+  phone: z
+    .string({ required_error: "Phone number is required" })
+    .min(10, "Phone number must be at least 10 digits")
+    .max(15, "Phone number must be under 15 digits")
+    .trim(),
+
+  password: z
+    .string({ required_error: "Password is required" })
+    .min(6, "Password must be at least 6 characters"),
+
+  relation: z
+    .enum(["Father", "Mother", "Guardian"])
+    .optional()
+    .default("Father"),
+
+  schoolCode: z
+    .string()
+    .optional()
+    .or(z.literal("")),
+
+  childName: z
+    .string()
+    .optional()
+    .or(z.literal("")),
+
+  studentAdmissionNo: z
+    .string()
+    .optional()
+    .or(z.literal("")),
+
+  childClass: z
+    .string()
+    .optional()
+    .or(z.literal("")),
+
+  studentId: z
+    .string()
+    .optional()
+    .or(z.literal("")),
+
+  rollNo: z
+    .string()
+    .optional()
+    .or(z.literal("")),
 });
 
 // ──── Send OTP ────

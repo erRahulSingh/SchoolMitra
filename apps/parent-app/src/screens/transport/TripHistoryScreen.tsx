@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Calendar as CalendarIcon, ChevronDown, Bus, ChevronRight } from 'lucide-react-native';
+import { useParentAuth } from '../../context/ParentAuthContext';
 
 export default function TripHistoryScreen({ navigation }: any) {
+  const { currentChild } = useParentAuth();
   const [selectedMonth, setSelectedMonth] = useState('This Month');
+  const busNo = currentChild?.busNo || 'Bus #01';
 
   const tripsList = [
-    { date: '15 May 2025', busNo: 'UP32 AB 1234', route: 'Green Valley Route', time: '07:05 AM – 07:50 AM', status: 'Completed', statusColor: '#16a34a' },
-    { date: '14 May 2025', busNo: 'UP32 AB 1234', route: 'Green Valley Route', time: '07:05 AM – 07:50 AM', status: 'Completed', statusColor: '#16a34a' },
-    { date: '13 May 2025', busNo: 'UP32 AB 1234', route: 'Green Valley Route', time: '07:05 AM – 07:50 AM', status: 'Completed', statusColor: '#16a34a' },
-    { date: '12 May 2025', busNo: 'UP32 AB 1234', route: 'Green Valley Route', time: 'Reason: Maintenance', status: 'Cancelled', statusColor: '#ef4444' },
+    { date: '15 May 2025', busNo: busNo, route: 'Dwarka Belt Route', time: '07:05 AM – 07:50 AM', status: 'Completed', statusColor: '#16a34a' },
+    { date: '14 May 2025', busNo: busNo, route: 'Dwarka Belt Route', time: '07:05 AM – 07:50 AM', status: 'Completed', statusColor: '#16a34a' },
+    { date: '13 May 2025', busNo: busNo, route: 'Dwarka Belt Route', time: '07:05 AM – 07:50 AM', status: 'Completed', statusColor: '#16a34a' },
+    { date: '12 May 2025', busNo: busNo, route: 'Dwarka Belt Route', time: 'Reason: Maintenance', status: 'Cancelled', statusColor: '#ef4444' },
   ];
 
   return (

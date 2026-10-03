@@ -6,6 +6,7 @@ import {
 import {
   Award, FileText, Download, Eye, X, CheckCircle2, ChevronLeft, ShieldCheck, Calendar, Lock
 } from 'lucide-react-native';
+import { useParentAuth } from '../../context/ParentAuthContext';
 
 export default function ParentDocumentsCertificatesScreen({ navigation }: any) {
   const [activeTab, setActiveTab] = useState<'certificates' | 'documents'>('certificates');
@@ -14,13 +15,15 @@ export default function ParentDocumentsCertificatesScreen({ navigation }: any) {
   const [documents, setDocuments] = useState<any[]>([]);
   const [selectedCert, setSelectedCert] = useState<any | null>(null);
 
+  const { currentChild, user } = useParentAuth();
+
   // Linked Child Data (Strict Access Control)
   const child = {
-    id: 's1',
-    name: 'Rohan Sharma',
-    class: 'Class 5th – A',
-    roll: 'Roll No. 12',
-    school: 'ABC PUBLIC SCHOOL'
+    id: currentChild?.id || 's1',
+    name: currentChild?.name || 'Student',
+    class: currentChild?.class || 'Class 10th – A',
+    roll: currentChild?.rollNo ? `Roll No. ${currentChild.rollNo}` : (currentChild?.admissionNo ? `Adm: ${currentChild.admissionNo}` : 'Roll No. 1'),
+    school: currentChild?.schoolName || user?.schoolName || 'SchoolMitra Academy'
   };
 
   const fetchParentCertificatesAndDocs = async () => {

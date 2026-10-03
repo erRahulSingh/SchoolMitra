@@ -1,11 +1,14 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, ActivityIndicator } from 'react-native';
 import { ChevronLeft, TrendingUp, BookOpen, Clock, Award, Activity } from 'lucide-react-native';
+import { useParentAuth } from '../../context/ParentAuthContext';
 
 export default function AcademicPerformanceScreen({ navigation }: any) {
+  const { currentChild } = useParentAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>({
-    studentName: "Aarav Sharma",
+    studentName: currentChild?.name || "Student",
     attendance: "94%",
     overallResult: "88%",
     homework: "87%",

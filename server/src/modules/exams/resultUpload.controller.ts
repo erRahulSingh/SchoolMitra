@@ -2,11 +2,11 @@ import { Request, Response } from "express";
 import fs from "fs";
 import csvParser from "csv-parser";
 import mongoose from "mongoose";
-import { ApiResponse } from "../../../utils/ApiResponse";
-import { asyncHandler } from "../../../utils/asyncHandler";
-import { MarkModel, ReportCardModel, ExamModel } from "../../../models/AcademicSchemas";
-import { StudentModel, SubjectModel } from "../../../models/SchoolSchemas";
-import logger from "../../../utils/logger";
+import { ApiResponse } from "../../utils/ApiResponse";
+import { asyncHandler } from "../../utils/asyncHandler";
+import { MarkModel, ReportCardModel, ExamModel } from "../../models/AcademicSchemas";
+import { StudentModel, SubjectModel } from "../../models/SchoolSchemas";
+import logger from "../../utils/logger";
 
 function calculateGrade(percentage: number): string {
   if (percentage >= 90) return "A+";

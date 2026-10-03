@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e2e8f0',
   },
   albumImage: { width: '100%', height: '100%' },
-  imageOverlay: { ...StyleSheet.absoluteFillObject },
+  imageOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   albumInfoBox: { padding: 12 },
   albumTitleText: { fontSize: 13, fontWeight: '900', color: '#0f172a', lineHeight: 17 },
   albumCountText: { fontSize: 11, color: '#64748b', fontWeight: '600', marginTop: 4 },

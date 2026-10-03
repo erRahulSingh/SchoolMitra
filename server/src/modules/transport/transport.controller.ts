@@ -587,14 +587,24 @@ export const getLiveTransport = asyncHandler(async (req: Request, res: Response)
   return ApiResponse.success(res, 200, "Live transport telemetry active lists.", { liveLocations });
 });
 
-// ════════════ 8. MAP CONFIGURATION (API KEY ROTATION) ════════════
+// ════════════ 8. MAP CONFIGURATION (API KEY ROTATION & MULTI-PROVIDER) ════════════
 export const getMapConfig = asyncHandler(async (req: Request, res: Response) => {
-  // Get the next available token from the rotation pool
+  // Get the next available token from the rotation pool (Round-Robin)
   const activeToken = mapRouter.getNextKey();
+  const provider = activeToken ? "mapbox" : (process.env.MAP_PROVIDER || "osm").toLowerCase();
   
   return ApiResponse.success(res, 200, "Map configuration and access token retrieved", {
-    provider: "mapbox",
-    styleUrl: "mapbox://styles/mapbox/streets-v12",
-    accessToken: activeToken
+    provider, // Automatically uses "mapbox" when keys exist, or falls back to "osm"
+    styleUrl: process.env.MAPBOX_STYLE_URL || "mapbox://styles/mapbox/streets-v12",
+    accessToken: activeToken,
+    mapboxApiKey: activeToken,
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+    olaMapsApiKey: process.env.OLA_MAPS_API_KEY || "",
+    mapplsApiKey: process.env.MAPPLS_API_KEY || "",
+    defaultCenter: {
+      latitude: Number(process.env.MAP_DEFAULT_LAT) || 28.5833,
+      longitude: Number(process.env.MAP_DEFAULT_LNG) || 77.0667,
+    },
+    tileLayer: process.env.MAP_TILE_LAYER || "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
   });
 });

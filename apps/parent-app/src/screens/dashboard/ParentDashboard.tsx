@@ -7,32 +7,37 @@ import {
   Wallet, MapPin, Clock, Trophy, Sparkles, GraduationCap, Heart, Check
 } from 'lucide-react-native';
 import ParentHeader from '../../components/ParentHeader';
-import { motherChild3DUri, motherChild3DAltUri, studentRohan3DUri } from '../../assets/parent3dAssets';
+import { motherChild3DUri, studentRohan3DUri } from '../../assets/parent3dAssets';
+import { useParentAuth } from '../../context/ParentAuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function ParentDashboard({ navigation }: any) {
+  const { user, parent, currentChild, children, selectChild } = useParentAuth();
   const [heroImgUri, setHeroImgUri] = React.useState(motherChild3DUri);
+
+  const parentDisplayName = parent?.name || user?.name || 'Parent';
+
   const child = {
-    name: 'Rohan Sharma',
-    initials: 'RS',
-    class: 'Class 5th – A',
-    roll: '12',
-    school: 'Green Valley Public School',
-    session: '2024–25',
-    teacher: 'Mrs. Priya Singh',
-    busNo: 'UP02 AB 1234',
-    attendanceRate: '96%',
+    name: currentChild?.name || 'Your Child',
+    initials: currentChild?.name ? currentChild.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'ST',
+    class: currentChild?.class || 'Class 10th – A',
+    roll: currentChild?.rollNo || currentChild?.admissionNo || 'N/A',
+    school: currentChild?.schoolName || user?.schoolName || 'SchoolMitra Campus',
+    session: '2025–26',
+    teacher: currentChild?.teacherName || 'Mrs. Priya Singh',
+    busNo: currentChild?.busNo || (currentChild?.status === 'Active' ? 'Bus #01' : 'Self'),
+    attendanceRate: currentChild?.attendanceRate || '96%',
     pendingTasks: 2,
     notifications: 1,
-    dueFee: '₹1,250'
+    dueFee: currentChild?.dueFee || '₹0'
   };
 
   const quickActions = [
     { label: 'Attendance', icon: CalendarCheck, colors: ['#3b82f6', '#2563eb'], screen: 'Attendance' },
     { label: 'Report Card', icon: FileText, colors: ['#22c55e', '#16a34a'], screen: 'ReportCard' },
     { label: 'Fee Payments', icon: CreditCard, colors: ['#f97316', '#ea580c'], screen: 'Fees' },
-    { label: 'Bus Tracking', icon: Bus, colors: ['#06b6d4', '#0891b2'], screen: 'TransportTab' },
+    { label: 'Bus Tracking', icon: Bus, colors: ['#06b6d4', '#0891b2'], screen: 'LiveBusTracking' },
     { label: 'Time Table', icon: Calendar, colors: ['#a855f7', '#9333ea'], screen: 'TimeTable' }
   ];
 
@@ -63,8 +68,10 @@ export default function ParentDashboard({ navigation }: any) {
         >
           <View style={styles.heroLeft}>
             <Text style={styles.heroGreeting}>Good Morning,</Text>
-            <Text style={styles.heroName}>Anjali Sharma 👋</Text>
-            <Text style={styles.heroSub}>Stay updated with your child's activities and school updates</Text>
+            <Text style={styles.heroName}>{parentDisplayName} 👋</Text>
+            <Text style={styles.heroSub}>
+              {parent?.relation ? `${parent.relation} Portal` : 'Parent Portal'} • Stay updated with your child's activities
+            </Text>
           </View>
           
           {/* 3D Mother & Child Illustration Image */}
@@ -77,17 +84,49 @@ export default function ParentDashboard({ navigation }: any) {
           </View>
         </LinearGradient>
 
+        {/* Child Switcher Tabs if multiple children linked */}
+        {children && children.length > 1 && (
+          <View style={styles.childSwitcherWrapper}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.childSwitcherScroll}>
+              {children.map((c) => {
+                const isActive = c.id === currentChild?.id;
+                return (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={[styles.childSwitchChip, isActive && styles.childSwitchChipActive]}
+                    onPress={() => selectChild(c.id)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.childSwitchDot, isActive && styles.childSwitchDotActive]} />
+                    <Text style={[styles.childSwitchText, isActive && styles.childSwitchTextActive]}>
+                      {c.name} {c.class ? `• ${c.class}` : ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
         {/* 2. STUDENT PROFILE CARD (DARK NAVY) */}
         <View style={styles.studentCard}>
           <View style={styles.studentTop}>
             <View style={styles.studentInfo}>
-              {/* 3D Student Rohan Avatar Image */}
+              {/* Dynamic Child Photo or 3D Avatar */}
               <View style={styles.avatar3DBox}>
-                <Image 
-                  source={{ uri: studentRohan3DUri }} 
-                  style={styles.avatar3DImage} 
-                  resizeMode="cover"
-                />
+                {currentChild?.photo ? (
+                  <Image 
+                    source={{ uri: currentChild.photo }} 
+                    style={styles.avatar3DImage} 
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Image 
+                    source={{ uri: studentRohan3DUri }} 
+                    style={styles.avatar3DImage} 
+                    resizeMode="cover"
+                  />
+                )}
               </View>
               <View>
                 <Text style={styles.studentName}>{child.name}</Text>
@@ -126,13 +165,17 @@ export default function ParentDashboard({ navigation }: any) {
                 <Text style={styles.statVal} numberOfLines={1}>{child.teacher}</Text>
               </View>
             </View>
-            <View style={styles.statItem}>
+            <TouchableOpacity 
+              style={styles.statItem} 
+              onPress={() => navigation.navigate('LiveBusTracking')}
+              activeOpacity={0.7}
+            >
               <Bus size={13} color="#fbbf24" />
               <View>
                 <Text style={styles.statLabel}>Bus No.</Text>
                 <Text style={styles.statVal}>{child.busNo}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -152,7 +195,7 @@ export default function ParentDashboard({ navigation }: any) {
             const IconComp = action.icon;
             return (
               <TouchableOpacity key={idx} style={styles.actionCard} onPress={() => navigation.navigate(action.screen)} activeOpacity={0.75}>
-                <LinearGradient colors={action.colors} style={styles.actionIconCircle}>
+                <LinearGradient colors={action.colors as [string, string]} style={styles.actionIconCircle}>
                   <IconComp size={20} color="#ffffff" strokeWidth={2.2} />
                 </LinearGradient>
                 <Text style={styles.actionLabel} numberOfLines={1}>{action.label}</Text>
@@ -314,6 +357,49 @@ const styles = StyleSheet.create({
   avatar3DImage: {
     width: '100%',
     height: '100%',
+  },
+
+  // Child Switcher Tabs
+  childSwitcherWrapper: {
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  childSwitcherScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  childSwitchChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  childSwitchChipActive: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#3b82f6',
+  },
+  childSwitchDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#94a3b8',
+  },
+  childSwitchDotActive: {
+    backgroundColor: '#2563eb',
+  },
+  childSwitchText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  childSwitchTextActive: {
+    color: '#1d4ed8',
+    fontWeight: '800',
   },
 
   // Student Profile Card (Dark Navy)

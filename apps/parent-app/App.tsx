@@ -9,6 +9,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 // Auth Screens
 import LoginScreen from './src/screens/auth/LoginScreen';
+import SignupScreen from './src/screens/auth/SignupScreen';
+import { ParentAuthProvider } from './src/context/ParentAuthContext';
 
 // Dashboard (Home Tab)
 import ParentDashboard from './src/screens/dashboard/ParentDashboard';
@@ -165,46 +167,48 @@ export default function App() {
   };
 
   return (
-    <ParentSchoolStatusGuard>
-      <ParentDrawerProvider value={{ openDrawer, closeDrawer }}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <View style={styles.rootContainer}>
-            <StatusBar style="auto" />
+    <ParentAuthProvider>
+      <ParentSchoolStatusGuard>
+        <ParentDrawerProvider value={{ openDrawer, closeDrawer }}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <View style={styles.rootContainer}>
+              <StatusBar style="auto" />
 
-            {/* Sidebar Drawer */}
-            {drawerOpen && (
+              {/* Sidebar Drawer */}
+              {drawerOpen && (
+                <Animated.View style={[
+                  styles.drawerContainer,
+                  { 
+                    transform: [{ translateX: drawerTranslate }],
+                    width: DRAWER_WIDTH,
+                  }
+                ]}>
+                  <ParentDrawerContent navigation={drawerNavigation} />
+                </Animated.View>
+              )}
+
+              {/* Main App Content Stack */}
               <Animated.View style={[
-                styles.drawerContainer,
-                { 
-                  transform: [{ translateX: drawerTranslate }],
-                  width: DRAWER_WIDTH,
+                styles.mainContainer,
+                {
+                  transform: [
+                    { scale: mainScale },
+                    { translateX: mainTranslate }
+                  ],
+                  borderRadius: drawerOpen ? 16 : 0,
+                  overflow: 'hidden',
                 }
               ]}>
-                <ParentDrawerContent navigation={drawerNavigation} />
-              </Animated.View>
-            )}
-
-            {/* Main App Content Stack */}
-            <Animated.View style={[
-              styles.mainContainer,
-              {
-                transform: [
-                  { scale: mainScale },
-                  { translateX: mainTranslate }
-                ],
-                borderRadius: drawerOpen ? 16 : 0,
-                overflow: 'hidden',
-              }
-            ]}>
-              <NavigationContainer ref={navigationRef}>
-                <Stack.Navigator
-                  initialRouteName="Login"
-                  screenOptions={{
-                    headerShown: false,
-                  }}
-                >
-                  <Stack.Screen name="Login" component={LoginScreen} />
-                  <Stack.Screen name="MainTabs" component={ParentTabNavigator} />
+                <NavigationContainer ref={navigationRef}>
+                  <Stack.Navigator
+                    initialRouteName="Login"
+                    screenOptions={{
+                      headerShown: false,
+                    }}
+                  >
+                    <Stack.Screen name="Login" component={LoginScreen} />
+                    <Stack.Screen name="Signup" component={SignupScreen} />
+                    <Stack.Screen name="MainTabs" component={ParentTabNavigator} />
                   
                   {/* Additional Stack Screens */}
                   <Stack.Screen name="Notifications" component={NotificationsScreen} />
@@ -270,7 +274,7 @@ export default function App() {
               {drawerOpen && (
                 <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
                   <TouchableOpacity 
-                    style={StyleSheet.absoluteFillObject} 
+                    style={StyleSheet.absoluteFill} 
                     onPress={closeDrawer}
                     activeOpacity={1}
                   />
@@ -281,6 +285,7 @@ export default function App() {
         </GestureHandlerRootView>
       </ParentDrawerProvider>
     </ParentSchoolStatusGuard>
+  </ParentAuthProvider>
   );
 }
 
@@ -302,7 +307,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as any),
     backgroundColor: '#000000',
     zIndex: 50,
   },

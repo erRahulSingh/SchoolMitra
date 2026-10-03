@@ -1,36 +1,65 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Image, ActivityIndicator } from 'react-native';
 import { ChevronLeft, Share2, ShieldCheck } from 'lucide-react-native';
 import { studentRohan3DUri } from '../../assets/parent3dAssets';
+import { useParentAuth } from '../../context/ParentAuthContext';
+import { parentApi } from '../../lib/api';
 
 export default function DigitalIDCardScreen({ navigation }: any) {
+  const { currentChild, user, parent } = useParentAuth();
   const [student, setStudent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      try {
-        const res = await fetch('http://10.0.2.2:5000/api/v1/students/STU-1001');
-        const data = await res.json();
-        if (data.data?.student) {
-          setStudent(data.data.student);
+      if (currentChild?.id) {
+        try {
+          setLoading(true);
+          const res = await parentApi.getStudentDossier(currentChild.id);
+          if (res.success && res.data?.student) {
+            setStudent(res.data.student);
+            return;
+          }
+        } catch (e) {
+          console.warn('[DigitalIDCard] Failed to fetch live student dossier:', e);
+        } finally {
+          setLoading(false);
         }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
+      }
+
+      // Fallback to active child in context
+      if (currentChild) {
+        setStudent({
+          name: currentChild.name,
+          rollNo: currentChild.rollNo || '1',
+          admissionNo: currentChild.admissionNo || 'ADM-2026',
+          class: currentChild.class || 'Class 10',
+          section: currentChild.section || 'A',
+          schoolName: currentChild.schoolName || user?.schoolName || 'SchoolMitra Academy',
+          bloodGroup: currentChild.bloodGroup || 'B+',
+          fatherName: currentChild.fatherName || (parent?.relation === 'Father' ? parent.name : 'Father'),
+          motherName: currentChild.motherName || (parent?.relation === 'Mother' ? parent.name : 'Mother'),
+          phone: parent?.phone || user?.phone || 'Not available',
+          address: currentChild.address || `${user?.schoolName || 'SchoolMitra'}, Campus`,
+          photo: currentChild.photo
+        });
       }
     };
+
     fetchStudentData();
-  }, []);
+  }, [currentChild?.id]);
 
   if (loading || !student) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text>Loading ID Card...</Text>
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text style={{ marginTop: 10, fontSize: 13, color: '#64748b', fontWeight: '600' }}>Loading ID Card...</Text>
       </View>
     );
   }
+
+  const schoolName = student.schoolName || user?.schoolName || 'SchoolMitra Academy';
+  const classDisplay = student.class?.toLowerCase().startsWith('class') ? student.class : `Class ${student.class}${student.section ? ' – ' + student.section : ''}`;
 
   return (
     <View style={styles.container}>
@@ -59,23 +88,31 @@ export default function DigitalIDCardScreen({ navigation }: any) {
             <ShieldCheck size={26} color="#2563eb" />
             <View style={styles.schoolTitleCol}>
               <Text style={styles.appNameText}>SchoolMitra</Text>
-              <Text style={styles.schoolNameText}>Green Valley Public School</Text>
+              <Text style={styles.schoolNameText}>{schoolName}</Text>
             </View>
           </View>
 
           {/* Student Photo Avatar */}
           <View style={styles.photoContainer}>
-            <Image
-              source={{ uri: studentRohan3DUri }}
-              style={styles.photoImg}
-              resizeMode="cover"
-            />
+            {student.photo ? (
+              <Image
+                source={{ uri: student.photo }}
+                style={styles.photoImg}
+                resizeMode="cover"
+              />
+            ) : (
+              <Image
+                source={{ uri: studentRohan3DUri }}
+                style={styles.photoImg}
+                resizeMode="cover"
+              />
+            )}
           </View>
 
           {/* Student Name & Class */}
           <Text style={styles.studentNameText}>{student.name}</Text>
-          <Text style={styles.studentClassText}>Class {student.class} – {student.section}</Text>
-          <Text style={styles.studentRollText}>Roll No. {student.rollNo?.split('-').pop() || '01'}</Text>
+          <Text style={styles.studentClassText}>{classDisplay}</Text>
+          <Text style={styles.studentRollText}>Roll No. {student.rollNo?.split('-').pop() || student.rollNo || '01'}</Text>
 
           {/* Barcode Mock */}
           <View style={styles.barcodeBox}>

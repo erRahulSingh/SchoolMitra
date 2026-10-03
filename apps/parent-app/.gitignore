@@ -15,6 +15,7 @@ android/
 ios/
 
 # Environment & Cache
-.env*.local
+.env
+.env.*
 .cache
 *.log

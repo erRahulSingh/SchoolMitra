@@ -6,7 +6,7 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import { UserModel, SchoolModel } from "../../models/AuthSchemas";
-import { StudentModel, ParentModel } from "../../models/SchoolSchemas";
+import { StudentModel, ParentModel, ClassModel, SectionModel } from "../../models/SchoolSchemas";
 import { SettingModel } from "../../models/SystemSchemas";
 import { HomeworkModel, AssignmentModel, WeeklyTestResultModel, MarkModel, ExamModel, ExamMarkSubmissionModel, AttendanceModel } from "../../models/AcademicSchemas";
 import { ApiResponse } from "../../utils/ApiResponse";
@@ -83,17 +83,90 @@ export const createParent = asyncHandler(async (req: Request, res: Response) => 
 export const getParentById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
-  const parent = await UserModel.findById(id).select("-password").lean() as any;
-  if (!parent) {
+  const userDoc = await UserModel.findById(id).select("-password").lean() as any;
+  let parentDoc: any = null;
+  if (userDoc) {
+    parentDoc = await ParentModel.findOne({
+      $or: [
+        { userId: userDoc._id },
+        { email: userDoc.email },
+        { phone: userDoc.phone }
+      ]
+    }).populate("children").lean();
+  } else if (mongoose.Types.ObjectId.isValid(id)) {
+    parentDoc = await ParentModel.findById(id).populate("children").lean();
+  }
+
+  if (!userDoc && !parentDoc) {
     throw ApiError.notFound("Parent account not found.");
   }
 
-  // Linked children
-  const children = await StudentModel.find({ parentName: { $regex: parent.name, $options: "i" } }).lean() as any;
+  let rawStudents: any[] = [];
+  if (parentDoc && Array.isArray(parentDoc.children) && parentDoc.children.length > 0) {
+    if (parentDoc.children[0]?.name) {
+      rawStudents = parentDoc.children;
+    } else {
+      rawStudents = await StudentModel.find({ _id: { $in: parentDoc.children } }).lean();
+    }
+  }
+
+  if (rawStudents.length === 0 && parentDoc?._id) {
+    rawStudents = await StudentModel.find({ parentId: parentDoc._id }).lean();
+  }
+
+  if (rawStudents.length === 0 && (userDoc?.phone || parentDoc?.phone)) {
+    const ph = userDoc?.phone || parentDoc?.phone;
+    rawStudents = await StudentModel.find({
+      $or: [
+        { "parentInfo.phone": ph },
+        { phone: ph }
+      ]
+    }).lean();
+  }
+
+  const school = userDoc?.schoolId ? await SchoolModel.findById(userDoc.schoolId).select("name code").lean() : null;
+
+  const formattedChildren = await Promise.all(rawStudents.map(async (ch: any) => {
+    let className = ch.class;
+    if (!className && ch.classId) {
+      try {
+        const cDoc: any = await ClassModel.findById(ch.classId).lean();
+        const sDoc: any = ch.sectionId ? await SectionModel.findById(ch.sectionId).lean() : null;
+        if (cDoc) {
+          className = `${cDoc.className || cDoc.name}${sDoc ? ' - ' + (sDoc.sectionName || sDoc.name) : ''}`;
+        }
+      } catch (e) {}
+    }
+    return {
+      id: String(ch._id),
+      _id: String(ch._id),
+      name: ch.name,
+      rollNo: ch.rollNo || ch.rollNumber || "1",
+      admissionNo: ch.admissionNo || ch.admissionNumber || "ADM-2026",
+      class: className || "Class 10 - A",
+      section: ch.section || "A",
+      gender: ch.gender || "Male",
+      bloodGroup: ch.bloodGroup || "B+",
+      photo: ch.photo || null,
+      status: ch.status || "Active",
+      schoolName: school?.name || "SchoolMitra Academy",
+      schoolCode: school?.code || "SCH-1000",
+      fatherName: ch.parentInfo?.fatherName || parentDoc?.fatherName || (parentDoc?.relation === "Father" ? parentDoc?.name : undefined),
+      motherName: ch.parentInfo?.motherName || parentDoc?.motherName || (parentDoc?.relation === "Mother" ? parentDoc?.name : undefined)
+    };
+  }));
 
   return ApiResponse.success(res, 200, "Parent dossier retrieved", {
-    parent,
-    children
+    parent: {
+      id: userDoc?._id || parentDoc?._id,
+      name: parentDoc?.name || userDoc?.name,
+      relation: parentDoc?.relation || "Parent",
+      phone: parentDoc?.phone || userDoc?.phone,
+      email: parentDoc?.email || userDoc?.email,
+      fatherName: parentDoc?.fatherName || (parentDoc?.relation === "Father" ? parentDoc?.name : undefined),
+      motherName: parentDoc?.motherName || (parentDoc?.relation === "Mother" ? parentDoc?.name : undefined)
+    },
+    children: formattedChildren
   });
 });
 
@@ -112,20 +185,83 @@ export const updateParent = asyncHandler(async (req: Request, res: Response) => 
 // ════════════ 5. GET LINKED CHILDREN (MOBILE PWA) ════════════
 export const getParentChildren = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
+  const user = (req as any).user;
+  const targetId = id || user?.id || user?._id;
 
-  const parent = await UserModel.findById(id).lean() as any;
-  const parentName = parent ? parent.name : "Parent";
+  let parentDoc: any = null;
+  let userDoc: any = null;
 
-  const children = await StudentModel.find({
-    $or: [{ parentName: { $regex: parentName, $options: "i" } }]
-  }).lean() as any;
+  if (mongoose.Types.ObjectId.isValid(targetId)) {
+    userDoc = await UserModel.findById(targetId).lean();
+    parentDoc = await ParentModel.findOne({
+      $or: [{ _id: targetId }, { userId: targetId }]
+    }).populate("children").lean();
+  }
 
-  const fallbackChildren = [
-    { _id: "650000000000000000000001", id: "STU-1001", name: "Aarav Sharma", class: "10", section: "A", rollNo: "10-A-01", schoolName: "Delhi Public School" }
-  ];
+  if (!parentDoc && user?.email) {
+    parentDoc = await ParentModel.findOne({
+      $or: [{ email: user.email }, { phone: user.phone }]
+    }).populate("children").lean();
+  }
+
+  let rawStudents: any[] = [];
+  if (parentDoc && Array.isArray(parentDoc.children) && parentDoc.children.length > 0) {
+    if (parentDoc.children[0]?.name) {
+      rawStudents = parentDoc.children;
+    } else {
+      rawStudents = await StudentModel.find({ _id: { $in: parentDoc.children } }).lean();
+    }
+  }
+
+  if (rawStudents.length === 0 && parentDoc?._id) {
+    rawStudents = await StudentModel.find({ parentId: parentDoc._id }).lean();
+  }
+
+  if (rawStudents.length === 0 && (user?.phone || userDoc?.phone)) {
+    const ph = user?.phone || userDoc?.phone;
+    rawStudents = await StudentModel.find({
+      $or: [
+        { "parentInfo.phone": ph },
+        { phone: ph }
+      ]
+    }).lean();
+  }
+
+  const schoolId = user?.schoolId || userDoc?.schoolId || parentDoc?.schoolId;
+  const school = schoolId ? await SchoolModel.findById(schoolId).select("name code").lean() : null;
+
+  const formattedChildren = await Promise.all(rawStudents.map(async (ch: any) => {
+    let className = ch.class;
+    if (!className && ch.classId) {
+      try {
+        const cDoc: any = await ClassModel.findById(ch.classId).lean();
+        const sDoc: any = ch.sectionId ? await SectionModel.findById(ch.sectionId).lean() : null;
+        if (cDoc) {
+          className = `${cDoc.className || cDoc.name}${sDoc ? ' - ' + (sDoc.sectionName || sDoc.name) : ''}`;
+        }
+      } catch (e) {}
+    }
+    return {
+      id: String(ch._id),
+      _id: String(ch._id),
+      name: ch.name,
+      rollNo: ch.rollNo || ch.rollNumber || "1",
+      admissionNo: ch.admissionNo || ch.admissionNumber || "ADM-2026",
+      class: className || "Class 10 - A",
+      section: ch.section || "A",
+      gender: ch.gender || "Male",
+      bloodGroup: ch.bloodGroup || "B+",
+      photo: ch.photo || null,
+      status: ch.status || "Active",
+      schoolName: school?.name || "SchoolMitra Academy",
+      schoolCode: school?.code || "SCH-1000",
+      fatherName: ch.parentInfo?.fatherName || parentDoc?.fatherName || (parentDoc?.relation === "Father" ? parentDoc?.name : undefined),
+      motherName: ch.parentInfo?.motherName || parentDoc?.motherName || (parentDoc?.relation === "Mother" ? parentDoc?.name : undefined)
+    };
+  }));
 
   return ApiResponse.success(res, 200, "Parent children retrieved", {
-    children: children.length > 0 ? children : fallbackChildren
+    children: formattedChildren
   });
 });
 

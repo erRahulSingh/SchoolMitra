@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Image, ActivityIndicator } from 'react-native';
 import { ChevronLeft, Download, Share2, ShieldCheck, Award } from 'lucide-react-native';
+import { useParentAuth } from '../../context/ParentAuthContext';
 
 export default function ReportCardScreen({ navigation, route }: any) {
+  const { currentChild, user, parent } = useParentAuth();
   const [reportCard, setReportCard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -66,12 +68,25 @@ export default function ReportCardScreen({ navigation, route }: any) {
         console.error("Failed to fetch report card, using fallback data", e);
         // Provide standard fallback so UI doesn't break
         setReportCard({
-            school: { name: "SANSKAR BHARTI HIGH SCHOOL", address: "123 Education Lane", city: "New Delhi", state: "Delhi", phone: "+91-9876543210", logo: "https://via.placeholder.com/100" },
-            studentName: "Rohan Sharma", fatherName: "Mr. Rajiv Sharma", motherName: "Mrs. Meena Sharma", dateOfBirth: "2010-05-14", rollNo: "10245", rollCode: "SBHS-01",
-            examName: "No Report Card Published Yet", className: "Class 10th - A",
-            attendance: { totalWorkingDays: 220, daysPresent: 198, percentage: "90.0%" }, classRank: 1, totalStudentsInClass: 45,
+            school: { name: user?.schoolName || "SchoolMitra Academy", address: "Campus Road", city: "New Delhi", state: "Delhi", phone: "+91-9876543210", logo: "https://via.placeholder.com/100" },
+            studentName: currentChild?.name || "Student Name",
+            fatherName: currentChild?.fatherName || (parent?.relation === "Father" ? parent.name : "Father"),
+            motherName: currentChild?.motherName || (parent?.relation === "Mother" ? parent.name : "Mother"),
+            dateOfBirth: currentChild?.dateOfBirth || "2012-05-14",
+            rollNo: currentChild?.rollNo || currentChild?.admissionNo || "101",
+            rollCode: "SCH-01",
+            examName: "No Report Card Published Yet",
+            className: currentChild?.class || "Class 10th - A",
+            attendance: { totalWorkingDays: 220, daysPresent: 198, percentage: "90.0%" },
+            classRank: 1,
+            totalStudentsInClass: 45,
             subjects: [],
-            totalMarks: 0, obtainedMarks: 0, percentage: "0%", grade: "-", division: "-", status: "DRAFT"
+            totalMarks: 0,
+            obtainedMarks: 0,
+            percentage: "0%",
+            grade: "-",
+            division: "-",
+            status: "DRAFT"
         });
       } finally {
         setLoading(false);

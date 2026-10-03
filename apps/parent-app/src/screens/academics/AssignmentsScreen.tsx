@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Alert } from 'react-native';
 import { ChevronLeft, Calendar as CalendarIcon, FileText, FlaskConical, Lightbulb, Monitor } from 'lucide-react-native';
 
 export default function AssignmentsScreen({ navigation }: any) {

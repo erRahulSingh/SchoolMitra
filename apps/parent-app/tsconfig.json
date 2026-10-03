@@ -35,7 +35,9 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next",
+    "src/old_next_web_app"
   ],
   "extends": "expo/tsconfig.base"
 }

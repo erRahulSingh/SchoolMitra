@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { createNotice, getNotices } from "./notice.controller";
-import { adminGuards } from "../../middlewares/auth.middleware";
+import { authenticate, requireRole } from "../../middleware/authGuards";
 
 const router = Router();
 
-router.post("/notices", adminGuards, createNotice);
+router.post("/notices", authenticate, requireRole("SchoolAdmin", "SuperAdmin"), createNotice);
 router.get("/notices", getNotices);
 
 export default router;

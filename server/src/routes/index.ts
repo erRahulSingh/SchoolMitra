@@ -6,14 +6,6 @@ import studentRoutes from "../modules/students/students.routes";
 import parentRoutes from "../modules/parents/parents.routes";
 import teacherRoutes from "../modules/teacher/teacher.routes";
 import attendanceRoutes from "../modules/attendance/attendance.routes";
-import { Router } from "express";
-
-import authRoutes from "../modules/auth/auth.routes";
-import schoolRoutes from "../modules/schools/schools.routes";
-import studentRoutes from "../modules/students/students.routes";
-import parentRoutes from "../modules/parents/parents.routes";
-import teacherRoutes from "../modules/teacher/teacher.routes";
-import attendanceRoutes from "../modules/attendance/attendance.routes";
 import examRoutes from "../modules/exams/exams.routes";
 import feeRoutes from "../modules/fees/fees.routes";
 import paymentRoutes from "../modules/payment/payment.routes";

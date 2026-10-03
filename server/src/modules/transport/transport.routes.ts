@@ -27,6 +27,9 @@ import {
 } from "./transport.controller";
 
 const router = Router();
+ 
+// Public Map Configuration Endpoint (No auth barrier so map engines initialize instantly)
+router.get("/map-config", getMapConfig);
 
 // ─── STEP 23: CENTRAL TRANSPORT AUTH & TENANT STATUS GUARDS ───
 router.use(authenticate);
@@ -50,6 +53,10 @@ router.get("/bus-route-assignments", getBusRouteAssignments);
 router.post("/student-assignments", assignStudentTransport);
 router.post("/student-assignments/bulk", assignStudentTransportBulk);
 router.get("/student-assignments", getStudentTransportAssignments);
+router.get("/assignments", getAssignments);
+
+// Live Telemetry
+router.get("/live", getLiveTransport);
 
 // Trips & Legacy Assignments
 router.post("/trip/start", startTrip);
@@ -59,8 +66,5 @@ router.post("/assign-student", assignStudentTransport);
 // Emergency SOS Safety Alerts
 router.post("/sos/trigger", triggerSOSAlert);
 router.get("/sos/alerts", getSOSAlerts);
-
-// Map Configuration
-router.get("/map-config", getMapConfig);
 
 export default router;
