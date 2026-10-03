@@ -123,5 +123,5 @@ const bookReturnSchema = new Schema({
   },
 }, { timestamps: true });
 
-bookReturnSchema.index({ schoolId: 1 });
 export const BookReturnModel = model("bookReturns", bookReturnSchema);
+

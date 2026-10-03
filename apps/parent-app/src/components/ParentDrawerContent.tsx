@@ -8,21 +8,33 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import ParentAppLogo from './ParentAppLogo';
+import { useParentAuth } from '../context/ParentAuthContext';
 
 interface DrawerProps {
   navigation: any;
 }
 
 export default function ParentDrawerContent({ navigation }: DrawerProps) {
+  const { user, parent: parentProfile, currentChild, logout } = useParentAuth();
+
+  const displayName = parentProfile?.name || user?.name || 'Parent User';
+  const childDisplay = currentChild ? `${currentChild.name} (${currentChild.class || 'Student'})` : 'No child selected';
+  const initials = displayName
+    .split(' ')
+    .map((w: string) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'P';
+
   const parent = {
-    name: 'Anjali Sharma',
-    role: 'Parent Portal',
-    child: 'Rohan Sharma (Class 5th-A)',
-    initials: 'AS',
+    name: displayName,
+    role: `${parentProfile?.relation || 'Parent'} Portal`,
+    child: childDisplay,
+    initials,
   };
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('parentToken');
+    await logout();
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }],

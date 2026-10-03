@@ -78,10 +78,34 @@ import {
   getSingleTeacherPerformanceDossier
 } from "./admin.controller";
 
+import {
+  getAdminMarksSubmissions,
+  reviewAdminMarksSubmission,
+  approveAdminMarksSubmission,
+  rejectAdminMarksSubmission,
+  getAdminGradingRules,
+  saveAdminGradingRules,
+  getAdminReportCards,
+  generateAdminReportCards,
+  approveAdminReportCard,
+  publishAdminReportCard
+} from "./adminAcademic.controller";
 
+import {
+  getBuses,
+  createBus,
+  updateBus,
+  getRoutes,
+  createRoute,
+  updateRoute,
+  createStop,
+  updateStop,
+  assignBusRoute,
+  getAssignments,
+  getLiveTransport
+} from "../transport/transport.controller";
 
-
-
+import adminTeacherRoutes from "./adminTeacher.routes";
 
 const router = Router();
 
@@ -337,55 +361,22 @@ router.patch("/report-cards/:id/approve", schoolAdminGuards, approveAdminReportC
 router.patch("/report-cards/:id/publish", schoolAdminGuards, publishAdminReportCard);
 
 // Marks submissions approval controls
-import {
-  getAdminMarksSubmissions,
-  reviewAdminMarksSubmission,
-  approveAdminMarksSubmission,
-  rejectAdminMarksSubmission
-} from "./adminAcademic.controller";
-
 router.get("/academics/marks-submissions", schoolAdminGuards, getAdminMarksSubmissions);
 router.patch("/academics/marks-submissions/:id/review", schoolAdminGuards, reviewAdminMarksSubmission);
 router.patch("/academics/marks-submissions/:id/approve", schoolAdminGuards, approveAdminMarksSubmission);
 router.patch("/academics/marks-submissions/:id/reject", schoolAdminGuards, rejectAdminMarksSubmission);
 
 // Configurable grading system settings
-import {
-  getAdminGradingRules,
-  saveAdminGradingRules
-} from "./adminAcademic.controller";
-
 router.get("/academics/grading-rules", schoolAdminGuards, getAdminGradingRules);
 router.post("/academics/grading-rules", schoolAdminGuards, saveAdminGradingRules);
 
 // Report cards workflow controls
-import {
-  getAdminReportCards,
-  generateAdminReportCards,
-  approveAdminReportCard,
-  publishAdminReportCard
-} from "./adminAcademic.controller";
-
 router.get("/academics/report-cards", schoolAdminGuards, getAdminReportCards);
 router.post("/academics/report-cards/generate", schoolAdminGuards, generateAdminReportCards);
 router.patch("/academics/report-cards/:id/approve", schoolAdminGuards, approveAdminReportCard);
 router.patch("/academics/report-cards/:id/publish", schoolAdminGuards, publishAdminReportCard);
 
 // Active & Completed Trip Management Endpoints
-import {
-  getBuses,
-  createBus,
-  updateBus,
-  getRoutes,
-  createRoute,
-  updateRoute,
-  createStop,
-  updateStop,
-  assignBusRoute,
-  getAssignments,
-  getLiveTransport
-} from "../transport/transport.controller";
-
 router.post("/buses", schoolAdminGuards, createBus);
 router.get("/buses", schoolAdminGuards, getBuses);
 router.put("/buses/:id", schoolAdminGuards, updateBus);
@@ -421,7 +412,6 @@ router.get("/payments", getPaymentsList);
 router.get("/support", getSupportTickets);
 
 // ════════════ Teacher CRUD & Permissions Management (Guarded) ════════════
-import adminTeacherRoutes from "./adminTeacher.routes";
 router.use("/", adminTeacherRoutes);
 
 export default router;

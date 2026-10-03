@@ -137,3 +137,8 @@ export const requireRoles = (...allowedRoles: SystemRole[]) => {
     return next();
   };
 };
+
+// Aliases for compatibility
+export const authenticate = verifyToken;
+export const requireRole = (...roles: any[]) => requireRoles(...(roles as any));
+

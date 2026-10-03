@@ -1,7 +1,7 @@
-// @ts-nocheck
 import { UserModel, SchoolModel } from "../../models/AuthSchemas";
 import { DriverModel } from "../../models/TransportSchemas";
 import { evaluateSchoolStatus } from "../../constants/schoolStatus.constants";
+import { createNotification } from "../../services/notificationService";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mongoose, { Types } from "mongoose";
@@ -306,10 +306,8 @@ export const updateGPSLocation = async (req: Request, res: Response) => {
   });
 };
 
-import { Types } from "mongoose";
-import { createNotification } from "../../services/notificationService";
 
-const dummySchoolId = new Types.ObjectId("650000000000000000000001");
+
 
 export const pickupStudent = async (req: Request, res: Response) => {
   const { studentId, studentName, status = "Picked" } = req.body;

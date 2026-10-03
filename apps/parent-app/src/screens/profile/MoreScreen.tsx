@@ -14,7 +14,7 @@ const cardWidth = (width - 32 - 36) / 4;
 export default function MoreScreen({ navigation }: any) {
   const moreServices = [
     { label: 'Fee Payments', icon: IndianRupee, color: '#16a34a', bg: '#dcfce7', screen: 'Fees' },
-    { label: 'Bus Tracking', icon: Bus, color: '#2563eb', bg: '#e0f2fe', screen: 'TransportTab' },
+    { label: 'Bus Tracking', icon: Bus, color: '#2563eb', bg: '#e0f2fe', screen: 'LiveBusTracking' },
     { label: 'Attendance', icon: CalendarCheck, color: '#ea580c', bg: '#ffedd5', screen: 'Attendance' },
     { label: 'Homework', icon: FileEdit, color: '#7c3aed', bg: '#f3e8ff', screen: 'Homework' },
 

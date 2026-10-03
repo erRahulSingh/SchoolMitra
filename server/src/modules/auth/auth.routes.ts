@@ -7,6 +7,7 @@ import {
   loginUserRole,
   getRolesConfig,
   registerSchool,
+  registerParent,
   refreshAccessToken,
   logoutUser,
   verifyEmail,
@@ -16,12 +17,15 @@ import {
   verifyOTP,
   googleLogin,
   completeProfile,
-  getSessionInfo
+  getSessionInfo,
+  getPublicSchools,
+  lookupStudentPublic
 } from "./auth.controller";
 import { validate } from "../../middleware/validate";
 import { authLimiter } from "../../middleware/rateLimiter";
 import {
   registerSchema,
+  registerParentSchema,
   loginSchema,
   sendOtpSchema,
   verifyOtpSchema,
@@ -37,6 +41,9 @@ router.use(authLimiter);
 
 // Public auth endpoints with Zod validation
 router.post("/register", validate(registerSchema), registerSchool);
+router.post("/parent/register", validate(registerParentSchema), registerParent);
+router.post("/register-parent", validate(registerParentSchema), registerParent);
+router.post("/parent/login", validate(loginSchema), loginUserRole);
 router.post("/login", validate(loginSchema), loginUserRole);
 router.post("/google", googleLogin);
 router.post("/complete-profile", completeProfile);
@@ -49,5 +56,7 @@ router.post("/send-otp", validate(sendOtpSchema), sendOTP);
 router.post("/verify-otp", validate(verifyOtpSchema), verifyOTP);
 router.get("/roles", getRolesConfig);
 router.get("/session", getSessionInfo);
+router.get("/schools", getPublicSchools);
+router.get("/students/lookup", lookupStudentPublic);
 
 export default router;

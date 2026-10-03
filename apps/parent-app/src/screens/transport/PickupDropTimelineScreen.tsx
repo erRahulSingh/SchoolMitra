@@ -2,8 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Image } from 'react-native';
 import { ChevronLeft, Calendar as CalendarIcon, CheckCircle2, Clock } from 'lucide-react-native';
 import { studentRohan3DUri } from '../../assets/parent3dAssets';
+import { useParentAuth } from '../../context/ParentAuthContext';
 
 export default function PickupDropTimelineScreen({ navigation }: any) {
+  const { currentChild } = useParentAuth();
+  const childName = currentChild?.name || 'Student';
+  const childClass = currentChild?.class || 'Class 10th – A';
+  const busNo = currentChild?.busNo || 'Bus No. UP32 AB 1234';
   const timelineSteps = [
     { time: '07:05 AM', title: 'Picked Up', location: 'Maple Park', status: 'completed', isGreen: true },
     { time: '07:12 AM', title: 'Reached', location: 'City Center', status: 'completed', isGreen: true },
@@ -41,9 +46,9 @@ export default function PickupDropTimelineScreen({ navigation }: any) {
           </View>
 
           <View style={styles.studentInfoCol}>
-            <Text style={styles.studentNameText}>Rohan Sharma</Text>
-            <Text style={styles.studentClassText}>Class 5th – A</Text>
-            <Text style={styles.studentBusText}>Bus No. UP32 AB 1234</Text>
+            <Text style={styles.studentNameText}>{childName}</Text>
+            <Text style={styles.studentClassText}>{childClass}</Text>
+            <Text style={styles.studentBusText}>{busNo}</Text>
           </View>
 
           <View style={styles.todayPill}>

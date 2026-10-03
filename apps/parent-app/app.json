@@ -5,14 +5,8 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "schoolmitraparent",
-    "entryPoint": "./index.js",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/parent_app_logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1e1b4b"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.schoolmitra.parent",
@@ -30,13 +24,27 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
+        "VIBRATE",
+        "RECORD_AUDIO"
       ]
     },
     "extra": {
       "eas": {
         "projectId": "ea867b43-9c80-412b-9c84-5fe04755f945"
       }
-    }
+    },
+    "plugins": [
+      "expo-status-bar",
+      "expo-audio",
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/parent_app_logo.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#1e1b4b"
+        }
+      ]
+    ]
   }
 }

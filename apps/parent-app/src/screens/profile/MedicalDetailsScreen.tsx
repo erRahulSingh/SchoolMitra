@@ -3,10 +3,22 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusB
 import { ChevronLeft, Shield, Droplet, Ruler, Scale, AlertCircle, Phone, Info } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { studentRohan3DUri } from '../../assets/parent3dAssets';
+import { useParentAuth } from '../../context/ParentAuthContext';
 
 export default function MedicalDetailsScreen({ navigation }: any) {
+  const { currentChild, parent, user } = useParentAuth();
+
+  const childName = currentChild?.name || 'Student';
+  const childClass = currentChild?.class || 'Class 10th – A';
+  const childRoll = currentChild?.rollNo || currentChild?.admissionNo || 'N/A';
+  const bloodGroup = currentChild?.bloodGroup || 'B+';
+
+  const emergencyName = parent?.name || user?.name || 'Parent Contact';
+  const emergencyRelation = parent?.relation || 'Guardian';
+  const emergencyPhone = parent?.phone || user?.phone || 'Not available';
+
   const medicalDetails = [
-    { label: 'Blood Group', value: 'B+', icon: Droplet },
+    { label: 'Blood Group', value: bloodGroup, icon: Droplet },
     { label: 'Height', value: '142 cm', icon: Ruler },
     { label: 'Weight', value: '32 kg', icon: Scale },
     { label: 'Allergies', value: 'No Known Allergies', icon: AlertCircle },
@@ -37,17 +49,25 @@ export default function MedicalDetailsScreen({ navigation }: any) {
           style={styles.studentBanner}
         >
           <View style={styles.avatarBox}>
-            <Image
-              source={{ uri: studentRohan3DUri }}
-              style={styles.avatarImg}
-              resizeMode="cover"
-            />
+            {currentChild?.photo ? (
+              <Image
+                source={{ uri: currentChild.photo }}
+                style={styles.avatarImg}
+                resizeMode="cover"
+              />
+            ) : (
+              <Image
+                source={{ uri: studentRohan3DUri }}
+                style={styles.avatarImg}
+                resizeMode="cover"
+              />
+            )}
           </View>
 
           <View style={styles.studentInfoCol}>
-            <Text style={styles.studentNameText}>Rohan Sharma</Text>
-            <Text style={styles.studentSubText}>Class 5th – A</Text>
-            <Text style={styles.studentSubText}>Roll No. 12</Text>
+            <Text style={styles.studentNameText}>{childName}</Text>
+            <Text style={styles.studentSubText}>{childClass}</Text>
+            <Text style={styles.studentSubText}>Roll No. {childRoll}</Text>
           </View>
 
           <View style={styles.shieldIconBox}>
@@ -80,12 +100,12 @@ export default function MedicalDetailsScreen({ navigation }: any) {
 
           <View style={styles.contactRow}>
             <Text style={styles.detailLabelText}>Name</Text>
-            <Text style={styles.detailValText}>Anjali Sharma (Mother)</Text>
+            <Text style={styles.detailValText}>{emergencyName} ({emergencyRelation})</Text>
           </View>
 
           <View style={styles.contactRow}>
             <Text style={styles.detailLabelText}>Phone</Text>
-            <Text style={styles.phoneValText}>+91 98765 43210</Text>
+            <Text style={styles.phoneValText}>{emergencyPhone}</Text>
           </View>
         </View>
 

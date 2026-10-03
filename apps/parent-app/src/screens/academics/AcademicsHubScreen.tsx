@@ -6,13 +6,15 @@ import {
   Award, Clock, CheckCircle2, FlaskConical, Calculator, Languages, Globe
 } from 'lucide-react-native';
 import ParentHeader from '../../components/ParentHeader';
+import { useParentAuth } from '../../context/ParentAuthContext';
 
 export default function AcademicsHubScreen({ navigation }: any) {
+  const { currentChild } = useParentAuth();
   const child = {
-    name: 'Rohan Sharma',
-    initials: 'RS',
-    class: 'Class 5th – A',
-    session: 'Academic Year 2024-25',
+    name: currentChild?.name || 'Student',
+    initials: currentChild?.name ? currentChild.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'ST',
+    class: currentChild?.class || 'Class 10th – A',
+    session: 'Academic Year 2025-26',
   };
 
   const academicGrid = [

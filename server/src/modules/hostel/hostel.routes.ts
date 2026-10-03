@@ -5,7 +5,7 @@ import {
   addRoom, getRooms, allocateRoom, 
   requestGatePass, getGatePasses, approveGatePass 
 } from "./hostel.controller";
-import { authenticate, requireRole } from "../../middleware/authenticates";
+import { authenticate, requireRole } from "../../middleware/authMiddleware";
 
 const router = Router();
 
