@@ -360,10 +360,10 @@ export default function FeaturesPage() {
                 src="/images/erp-live-tracking.png"
                 alt="SchoolMitra ERP Dashboard & GPS Bus Tracking Showcase"
                 style={{
-                  width: "100%",
-                  height: "auto",
-                  display: "block",
-                  objectFit: "cover"
+                  // width: "100%",
+                  // height: "auto",
+                  // display: "block",
+                  // objectFit: "cover"
                 }}
               />
             </div>
